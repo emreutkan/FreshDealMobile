@@ -7,5 +7,6 @@
 2. working on a new branch
 
    - ``` git checkout -b FRESHDEAL-20-Github-Jira-Integration ```
-   - ``` git commit -m "commit message" ```
+   - ``` git add .\README.md ```
+   - ``` git commit -m "FRESHDEAL-20 Test" ```
    - ``` git push origin FRESHDEAL-20-Github-Jira-Integration ```
