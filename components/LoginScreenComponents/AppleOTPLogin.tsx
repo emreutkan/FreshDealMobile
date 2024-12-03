@@ -1,8 +1,7 @@
 import * as AppleAuthentication from "expo-apple-authentication";
 import { Alert, Platform, StyleSheet, View } from "react-native";
 import React from "react";
-import {scaleFont} from "../utils/ResponsiveFont";
-
+import {scaleFont} from "@/utils/ResponsiveFont";
 interface AppleOTPProps {
     onSuccess?: (user: string) => void; // Optional success callback
 }

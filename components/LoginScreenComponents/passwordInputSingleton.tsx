@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, TextInput, StyleSheet } from 'react-native';
-import { scaleFont } from '../utils/ResponsiveFont';
-import { UserModel } from '@/models/UserModel';
+import {scaleFont} from "@/utils/ResponsiveFont";
+import {UserModel} from "@/models/UserModel";
 
 class PasswordInputSingleton {
     private static instance: PasswordInputSingleton;

@@ -4,8 +4,8 @@ import React, { useState } from 'react';
 import { View, TextInput, TouchableOpacity, Text, Modal, StyleSheet, Platform, Dimensions } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { countryCodes } from '@/components/constants/countryCodes';
-import { scaleFont } from '@/components/utils/ResponsiveFont';
-import { UserModel } from "@/models/UserModel";
+import {scaleFont} from "@/utils/ResponsiveFont";
+import {UserModel} from "@/models/UserModel";
 import PasswordInputSingleton from './passwordInputSingleton'; // Import your password input component
 
 const PhoneInput = () => {

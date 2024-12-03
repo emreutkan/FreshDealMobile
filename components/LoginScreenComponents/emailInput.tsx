@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, TouchableOpacity, TextInput, StyleSheet, Text, Keyboard } from 'react-native';
-import { scaleFont } from '../utils/ResponsiveFont';
-import { UserModel } from '@/models/UserModel';
+import {scaleFont} from "@/utils/ResponsiveFont";
+import {UserModel} from "@/models/UserModel";
 import PasswordInputSingleton from './passwordInputSingleton'; // Import your password input component
 
 const EmailLoginField: React.FC = () => {

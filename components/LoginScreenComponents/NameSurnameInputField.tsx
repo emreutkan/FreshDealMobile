@@ -2,10 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { TouchableOpacity, TextInput, StyleSheet, View, Keyboard } from 'react-native';
-import { scaleFont } from '../utils/ResponsiveFont';
-import { UserModel } from '@/models/UserModel';
-import { validateName } from '../utils/validationUtils'; // Import your utility
-
+import {scaleFont} from "@/utils/ResponsiveFont";
+import {UserModel} from "@/models/UserModel";
+import {validateName} from "@/components/utils/validationUtils";
 const NameSurnameField = () => {
     const user = UserModel.getInstance();
     const [fullName, setFullName] = useState<string>(user.getFullName() || '');
