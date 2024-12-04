@@ -8,7 +8,7 @@ import { useRouter } from 'expo-router';
 import NameSurnameField from "@/components/LoginScreenComponents/NameSurnameInputField";
 import { UserModel } from "@/models/UserModel";
 import PasswordInputSingleton from '../../components/LoginScreenComponents/passwordInputSingleton'; // Import your password input component
-
+//
 const RegisterScreen: React.FC = () => {
     const router = useRouter();
     const user = UserModel.getInstance(); // Use the singleton instance here
