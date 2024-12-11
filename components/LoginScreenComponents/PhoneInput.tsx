@@ -1,75 +1,55 @@
 // components/LoginScreenComponents/PhoneInput.tsx
 
-import React, { useState } from 'react';
-import { View, TextInput, TouchableOpacity, Text, Modal, StyleSheet, Platform, Dimensions } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
-import { countryCodes } from '@/components/constants/countryCodes';
-import {scaleFont} from "@/utils/ResponsiveFont";
-import {UserModel} from "@/models/UserModel";
-import PasswordInputSingleton from './passwordInputSingleton'; // Import your password input component
+import React, {useState} from 'react';
+import {Dimensions, Modal, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View,} from 'react-native';
+import {Picker} from '@react-native-picker/picker';
+import {countryCodes} from '@/components/constants/countryCodes';
+import {scaleFont} from "@/components/utils/ResponsiveFont";
+import {useDispatch, useSelector} from 'react-redux';
+import {setPhoneNumber, setSelectedCode} from '../../store/userSlice'; // Adjust the path as needed
+import {RootState} from '../../store/store'; // Adjust the path as needed
 
-const PhoneInput = () => {
-    const user = UserModel.getInstance();
+const PhoneInput: React.FC = () => {
+    const dispatch = useDispatch();
 
-    const [tempCode, setTempCode] = useState(user.getSelectedCode());
-    const [isPickerVisible, setIsPickerVisible] = useState(false);
-    const [phoneNumber, setPhoneNumber] = useState(user.getPhoneNumber() || '');
-    const [isTyping, setIsTyping] = useState(user.getPhoneNumber() ? true : false);
-    const passwordInputInstance = PasswordInputSingleton.getInstance();
+    // Access phoneNumber and selectedCode from Redux store
+    const phoneNumber = useSelector((state: RootState) => state.user.phoneNumber);
+    const selectedCode = useSelector((state: RootState) => state.user.selectedCode);
 
+    // Local state for temporary country code selection and picker visibility
+    const [tempCode, setTempCode] = useState<string>(selectedCode);
+    const [isPickerVisible, setIsPickerVisible] = useState<boolean>(false);
+    const [isTyping, setIsTyping] = useState<boolean>(phoneNumber.length > 0);
+
+    // Handle changes in phone number input
     const handleChangeText = (text: string) => {
         const cleanedText = text.replace(/[^0-9]/g, '');
-        if (cleanedText.length <= 10) {
-            setPhoneNumber(cleanedText); // Update local state immediately
-            user.setPhoneNumber(cleanedText); // Update UserModel as needed
-        }
-        if (cleanedText.length == 0) {
-            setIsTyping(false)
-            handleClearText()
-        }
-        else {
-            setIsTyping(true)
-            console.log(user.getPassword() + 'password from phone input handlechangetext')
-
-            user.getPhoneNumber().length == 0 && user.getEmail().length == 0 ? passwordInputInstance.setVisible(false) : passwordInputInstance.setVisible(true);
-
+        if (cleanedText.length <= 15) { // Enforce maximum of 15 characters
+            dispatch(setPhoneNumber(cleanedText));
+            setIsTyping(cleanedText.length > 0);
         }
     };
 
+    // Handle clearing of phone number input
     const handleClearText = () => {
-        setPhoneNumber('');
-        user.setPhoneNumber('');
+        dispatch(setPhoneNumber(''));
         setIsTyping(false);
-        // user.setPassword('');
-        /*
-        * removed this line to allow this scenario to happen:
-        *
-        * user tries to login with phone number and enters the password then decides to login with email (or phone) instead
-        *
-        * and goes on with clicking X button to clear phone number then clicks login with email (or phone) button after that
-        *
-        * password that was entered will consistent
-        *
-        * if you uncomment it then password will reset
-        *
-        * */
-        console.log(user.getPassword() + 'password from phone input handleClearText')
-
-        user.getPhoneNumber().length == 0 && user.getEmail().length == 0 ? passwordInputInstance.setVisible(false) : passwordInputInstance.setVisible(true);
-
     };
 
+    // Handle confirmation of country code selection
     const handleConfirmSelection = () => {
-        user.setSelectedCode(tempCode); // Update code in UserModel
+        dispatch(setSelectedCode(tempCode));
         setIsPickerVisible(false);
     };
 
+    // Render the country code selector button
     const renderCountryCodeSelector = () => (
         <TouchableOpacity onPress={() => setIsPickerVisible(true)} style={styles.countryCodeContainer}>
-            <Text style={styles.countryCodeText}>{user.getSelectedCode()}</Text>
+            <Text style={styles.countryCodeText}>{selectedCode}</Text>
         </TouchableOpacity>
     );
 
+    // Render the country code picker inside a modal
     const renderPicker = () => (
         <Picker
             selectedValue={tempCode}
@@ -77,7 +57,7 @@ const PhoneInput = () => {
             style={styles.picker}
         >
             {countryCodes.map((item) => (
-                <Picker.Item key={item.code} label={`${item.country} (${item.code})`} value={item.code} />
+                <Picker.Item key={item.code} label={`${item.country} (${item.code})`} value={item.code}/>
             ))}
         </Picker>
     );
@@ -85,7 +65,7 @@ const PhoneInput = () => {
     return (
         <View style={[
             styles.inputContainer,
-            isTyping && { borderColor: 'gray' } // Change border color when typing
+            isTyping && {borderColor: 'gray'} // Change border color when typing
         ]}>
             {renderCountryCodeSelector()}
             <TextInput
@@ -94,7 +74,7 @@ const PhoneInput = () => {
                 onChangeText={handleChangeText}
                 value={phoneNumber}
                 keyboardType="phone-pad"
-                maxLength={15} // Enforces maximum of 15 characters
+                maxLength={15} // Enforce maximum of 15 characters
             />
             {isTyping && (
                 <TouchableOpacity onPress={handleClearText} style={styles.clearButton}>
@@ -102,6 +82,7 @@ const PhoneInput = () => {
                 </TouchableOpacity>
             )}
 
+            {/* Country Code Picker Modal */}
             {isPickerVisible && (
                 <Modal visible={isPickerVisible} transparent animationType="slide">
                     <View style={styles.modalOverlay}>
