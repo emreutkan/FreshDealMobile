@@ -37,6 +37,7 @@ const EmailLoginField: React.FC = () => {
                 <TextInput
                     style={styles.inputText}
                     placeholder="Enter your email"
+                    placeholderTextColor="#999"
                     keyboardType="email-address"
                     autoCapitalize="none"
                     autoCorrect={false}
@@ -67,6 +68,7 @@ const styles = StyleSheet.create({
         height: scaleFont(50),
     },
     inputText: {
+
         marginLeft: scaleFont(10),
         flex: 1,
         fontSize: scaleFont(17),

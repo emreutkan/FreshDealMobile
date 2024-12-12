@@ -1,20 +1,10 @@
 // screens/LoginPage.tsx
 
 import React, {useState} from 'react';
-import {
-    ActivityIndicator,
-    Alert,
-    Keyboard,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    TouchableWithoutFeedback,
-    View,
-} from 'react-native';
+import {Alert, Keyboard, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View,} from 'react-native';
 import {useRouter} from 'expo-router';
 import {useDispatch, useSelector} from 'react-redux';
-import {AppDispatch, RootState} from '@/store/store'
-import {loginUser} from '@/store/userSlice';
+import {RootState} from '@/store/store'
 import {scaleFont} from '@/components/utils/ResponsiveFont';
 import LoginButton from '@/components/LoginScreenComponents/loginButton';
 import AppleOTP from '@/components/LoginScreenComponents/AppleOTPLogin';
@@ -29,22 +19,26 @@ import PasswordInput from "@/components/LoginScreenComponents/passwordInput";
 
 const LoginPage: React.FC = () => {
     const router = useRouter();
-    const dispatch = useDispatch<AppDispatch>();
+    const dispatch = useDispatch();
+
+    // Import all user fields from the userSlice
     const {
         phoneNumber,
+        password,
         selectedCode,
         email,
-        name,
-        surname,
-        cart,
-        addresses,
-        currentAddress,
-        loading,
-        error,
+        passwordLogin,
+        verificationCode,
+        step,
+        login_type,
     } = useSelector((state: RootState) => state.user);
 
-    const [phoneLogin, setPhoneLogin] = useState<boolean>(true);
-    const [password, setPassword] = useState<string>(''); // Local state for password
+    const [phoneLogin, setPhoneLogin] = useState<boolean>(login_type == 'phone_number');
+
+    // const handlePasswordChange = (value: string) => {
+    //     dispatch(setPassword(value));
+    // };
+
     const handleLoginButton = async (): Promise<void> => {
         if (phoneLogin) {
             if (!phoneNumber) {
@@ -62,26 +56,8 @@ const LoginPage: React.FC = () => {
                 return;
             }
 
-            const loginData = {
-                phoneNumber,
-                selectedCode,
-                password,
-            };
 
-            try {
-                const resultAction = await dispatch(loginUser(loginData));
-                if (loginUser.fulfilled.match(resultAction)) {
-                    Alert.alert('Success', 'Login successful!');
-                    router.push('../screensAfterLogin/afterlogin');
-                } else {
-                    Alert.alert('Error', resultAction.payload as string);
-                }
-            } catch (err) {
-                console.error('Login Error:', err);
-                Alert.alert('Error', 'An unexpected error occurred.');
-            }
         } else {
-            handleEmailSubmit();
         }
     };
 
@@ -103,10 +79,11 @@ const LoginPage: React.FC = () => {
 
                 {phoneLogin ? <PhoneInput/> : <EmailLoginField/>}
                 {phoneNumber && phoneLogin && (
-                    <PasswordInput password={password} setPassword={setPassword}/>
+                    <PasswordInput password={password}/>
                 )}
                 {email && !phoneLogin && (
-                    <PasswordInput password={password} setPassword={setPassword}/>
+                    <PasswordInput password={password}/>
+
                 )}
                 <View style={styles.buttonRow}>
                     <View style={styles.buttonContainer}>
@@ -120,8 +97,6 @@ const LoginPage: React.FC = () => {
                     </View>
                 </View>
 
-                {loading && <ActivityIndicator size="large" color="#0000ff"/>}
-                {error && <Text style={styles.errorText}>{error}</Text>}
 
                 <View style={styles.registerContainer}>
                     <View style={styles.line}/>
@@ -148,9 +123,11 @@ const LoginPage: React.FC = () => {
 
 const styles = StyleSheet.create({
     bottomContainer: {
+        borderWidth: 11,
+
         flex: 1,
         paddingHorizontal: scaleFont(35),
-        justifyContent: 'center',
+        justifyContent: 'flex-start',
         backgroundColor: '#f5f5f5', // Optional: Add background color for better UI
     },
     welcomeText: {
@@ -158,7 +135,7 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         color: '#000000',
         marginTop: scaleFont(20),
-        marginBottom: scaleFont(5),
+        // marginBottom: scaleFont(5),
     },
     welcomeText2: {
         fontSize: scaleFont(35),

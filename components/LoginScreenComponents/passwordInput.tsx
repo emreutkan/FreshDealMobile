@@ -1,15 +1,16 @@
-// components/LoginScreenComponents/PasswordInput.tsx
-
 import React from 'react';
 import {StyleSheet, TextInput, View} from 'react-native';
 import {scaleFont} from "@/components/utils/ResponsiveFont";
+import {useDispatch} from "react-redux"; // Import useDispatch
+import {setPassword} from "@/store/userSlice"; // Redux action to set the password
 
-interface PasswordInputProps {
-    password: string;
-    setPassword: (password: string) => void;
-}
+const PasswordInput: React.FC<{ password: string }> = ({password}) => {
+    const dispatch = useDispatch();
 
-const PasswordInput: React.FC<PasswordInputProps> = ({password, setPassword}) => {
+    const handlePasswordChange = (value: string) => {
+        dispatch(setPassword(value)); // Update password directly in Redux
+    };
+
     return (
         <View style={styles.inputContainer}>
             <TextInput
@@ -17,7 +18,7 @@ const PasswordInput: React.FC<PasswordInputProps> = ({password, setPassword}) =>
                 placeholder="Enter your password"
                 secureTextEntry
                 value={password}
-                onChangeText={setPassword}
+                onChangeText={handlePasswordChange} // Directly handle changes here
                 autoCapitalize="none"
             />
         </View>

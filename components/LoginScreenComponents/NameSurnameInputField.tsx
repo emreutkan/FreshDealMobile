@@ -1,54 +1,40 @@
-// components/LoginScreenComponents/NameSurnameInputField.tsx
-
 import React, {useEffect, useState} from 'react';
 import {StyleSheet, Text, TextInput, TouchableOpacity, View} from 'react-native';
 import {scaleFont} from "@/components/utils/ResponsiveFont";
 import {useDispatch, useSelector} from 'react-redux';
-import {setName, setSurname} from '../../store/userSlice'; // Adjust the path as needed
+import {setName} from '../../store/userSlice'; // Adjust the path as needed
 import {RootState} from '../../store/store'; // Adjust the path as needed
 
 const NameSurnameInputField: React.FC = () => {
     const dispatch = useDispatch();
-    const name = useSelector((state: RootState) => state.user.name);
-    const surname = useSelector((state: RootState) => state.user.surname);
+    const fullName = useSelector((state: RootState) => state.user.name_surname); // Single name field from Redux
 
-    // Initialize fullName from Redux store
-    const [fullName, setFullName] = useState<string>(`${name} ${surname}`.trim());
-    const [isTyping, setIsTyping] = useState<boolean>(fullName.length > 0);
+    const [inputValue, setInputValue] = useState<string>(fullName); // Local input state
+    const [isTyping, setIsTyping] = useState<boolean>(inputValue.length > 0);
 
     useEffect(() => {
-        // Update local fullName state if Redux store changes
-        setFullName(`${name} ${surname}`.trim());
-    }, [name, surname]);
+        // Sync with Redux store if it changes
+        setInputValue(fullName);
+    }, [fullName]);
 
     const handleTextChange = (text: string) => {
         // Remove any non-letter characters except for spaces
         const cleanedText = text.replace(/[^a-zA-Z\s]/g, '');
-        setFullName(cleanedText);
+        setInputValue(cleanedText);
 
         if (cleanedText.length === 0) {
             setIsTyping(false);
             dispatch(setName(''));
-            dispatch(setSurname(''));
         } else {
             setIsTyping(true);
-            updateReduxStore(cleanedText);
+            dispatch(setName(cleanedText)); // Update Redux store with a single string
         }
     };
 
-    const updateReduxStore = (fullName: string) => {
-        const names = fullName.trim().split(/\s+/);
-        const firstName = names.slice(0, -1).join(' ') || names[0] || '';
-        const lastName = names.length > 1 ? names[names.length - 1] : '';
-        dispatch(setName(firstName));
-        dispatch(setSurname(lastName));
-    };
-
     const handleClearText = () => {
-        setFullName('');
+        setInputValue('');
         setIsTyping(false);
         dispatch(setName(''));
-        dispatch(setSurname(''));
     };
 
     return (
@@ -56,8 +42,8 @@ const NameSurnameInputField: React.FC = () => {
             <View style={[styles.inputContainer, isTyping && {borderColor: 'gray'}]}>
                 <TextInput
                     style={styles.input}
-                    placeholder="Enter your full name"
-                    value={fullName}
+                    placeholder="Enter your name"
+                    value={inputValue}
                     onChangeText={handleTextChange}
                     onFocus={() => console.log("Name Input Focused")}
                     autoCapitalize="words"

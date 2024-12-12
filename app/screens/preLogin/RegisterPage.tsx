@@ -1,6 +1,6 @@
 // screens/RegisterScreen.tsx
 
-import React, {useState} from "react";
+import React from "react";
 import {ActivityIndicator, Alert, Keyboard, StyleSheet, Text, TouchableWithoutFeedback, View,} from "react-native";
 import LoginButton from "../../../components/LoginScreenComponents/loginButton";
 import {scaleFont} from "@/components/utils/ResponsiveFont";
@@ -10,15 +10,14 @@ import {useRouter} from 'expo-router';
 import NameSurnameInputField from "../../../components/LoginScreenComponents/NameSurnameInputField";
 import PasswordInput from "@/components/LoginScreenComponents/passwordInput"; // Import the new PasswordInput component
 import {useDispatch, useSelector} from 'react-redux';
-import {AppDispatch, RootState} from '../../../store/store'; // Adjust the path as needed
-import {registerUser} from '../../../store/userSlice'; // Import the registerUser thunk
+import {AppDispatch, RootState} from '../../../store/store';
 
 const RegisterScreen: React.FC = () => {
     const router = useRouter();
     const dispatch = useDispatch<AppDispatch>();
     const {
-        name,
-        surname,
+        password,
+        name_surname,
         phoneNumber,
         selectedCode,
         email,
@@ -26,11 +25,10 @@ const RegisterScreen: React.FC = () => {
         error,
     } = useSelector((state: RootState) => state.user);
 
-    const [password, setPassword] = useState<string>(''); // Local state for password
 
     const handleRegister = async (): Promise<void> => {
         // Validate data before sending
-        if (!name || !surname || !phoneNumber || !email || !password) {
+        if (!name_surname || !phoneNumber || !email || !password) {
             Alert.alert('Error', 'Please fill in all the required fields.');
             return;
         }
@@ -46,27 +44,7 @@ const RegisterScreen: React.FC = () => {
             return;
         }
 
-        const userData = {
-            name,
-            surname,
-            phoneNumber,
-            selectedCode,
-            email,
-            password,
-        };
 
-        try {
-            const resultAction = await dispatch(registerUser(userData));
-            if (registerUser.fulfilled.match(resultAction)) {
-                Alert.alert('Success', 'Registration successful!');
-                router.push('../screens/LoginPage'); // Navigate to login or another appropriate screen
-            } else {
-                Alert.alert('Error', resultAction.payload as string);
-            }
-        } catch (err) {
-            console.error('Registration Error:', err);
-            Alert.alert('Error', 'An unexpected error occurred.');
-        }
     };
 
     // Utility function to validate phone numbers
@@ -98,7 +76,8 @@ const RegisterScreen: React.FC = () => {
                 </View>
                 {showPasswordInput && (
                     <View style={styles.inputArea}>
-                        <PasswordInput password={password} setPassword={setPassword}/>
+                        <PasswordInput password={password}/>
+
                     </View>
                 )}
 

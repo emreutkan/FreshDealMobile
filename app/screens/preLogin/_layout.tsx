@@ -206,7 +206,7 @@ const styles = StyleSheet.create({
         width: scaleFont(150),
         height: scaleFont(150),
         marginTop: scaleFont(60),
-        marginBottom: scaleFont(0),
+        // marginBottom: scaleFont(0),
     },
     main: {
         overflow: 'hidden',
