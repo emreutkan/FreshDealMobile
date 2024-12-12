@@ -85,6 +85,9 @@ const userSlice = createSlice({
         setPassword(state, action: PayloadAction<string>) { // Keep, but be cautious
             state.password = action.payload;
         },
+        setToken(state, action: PayloadAction<string>) {
+            state.token = action.payload;
+        },
         addToCart(state, action: PayloadAction<CartItem>) {
             const existingItem = state.cart.find(item => item.id === action.payload.id);
             if (existingItem) {
@@ -135,6 +138,7 @@ export const {
     setVerificationCode,
     setStep,       // New
     setLoginType,  // New    // ... other actions
+    setToken
 } = userSlice.actions;
 
 // Export the reducer
