@@ -43,6 +43,8 @@ const NameSurnameInputField: React.FC = () => {
                 <TextInput
                     style={styles.input}
                     placeholder="Enter your name"
+                    placeholderTextColor="#999"
+
                     value={inputValue}
                     onChangeText={handleTextChange}
                     onFocus={() => console.log("Name Input Focused")}

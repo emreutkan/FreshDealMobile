@@ -49,15 +49,21 @@ const PhoneInput: React.FC = () => {
         </TouchableOpacity>
     );
 
-    // Render the country code picker inside a modal
+// Modify renderPicker
     const renderPicker = () => (
         <Picker
             selectedValue={tempCode}
             onValueChange={(itemValue) => setTempCode(itemValue)}
-            style={styles.picker}
+            style={[styles.picker]} // Add iOS-specific style
+            itemStyle={{color: '#000', fontSize: 18}} // Set text color for iOS picker items
         >
             {countryCodes.map((item) => (
-                <Picker.Item key={item.code} label={`${item.country} (${item.code})`} value={item.code}/>
+                <Picker.Item
+                    key={item.code}
+                    label={`${item.country} (${item.code})`}
+                    value={item.code}
+                    color="#000" // Ensure color is set for each item
+                />
             ))}
         </Picker>
     );
@@ -71,6 +77,8 @@ const PhoneInput: React.FC = () => {
             <TextInput
                 style={styles.phoneInput}
                 placeholder="Phone number"
+                placeholderTextColor="#999"
+
                 onChangeText={handleChangeText}
                 value={phoneNumber}
                 keyboardType="phone-pad"
@@ -108,36 +116,55 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
+
     },
     modalContainer: {
-        width: Dimensions.get('window').width * 0.8,
+        width: Dimensions.get('window').width * 0.85,
         backgroundColor: '#fff',
         borderRadius: scaleFont(16),
-        padding: scaleFont(20),
-        alignItems: 'center',
+        paddingVertical: scaleFont(20),
+        paddingHorizontal: scaleFont(15),
+        elevation: 5, // Android shadow
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 4},
+        shadowOpacity: 0.2,
+        shadowRadius: 5,
     },
     picker: {
         width: '100%',
+        height: scaleFont(180),
+        borderRadius: scaleFont(10),
+        backgroundColor: '#F9F9F9',
+        marginVertical: scaleFont(10),
     },
+
     confirmButton: {
         marginTop: scaleFont(10),
-        backgroundColor: '#007AFF',
-        paddingVertical: scaleFont(10),
+        backgroundColor: 'rgba(76,175,80,0.75)',
+        paddingVertical: scaleFont(12),
         paddingHorizontal: scaleFont(20),
-        borderRadius: scaleFont(5),
+        borderRadius: scaleFont(8),
+        width: '100%',
+        alignItems: 'center',
     },
     confirmButtonText: {
         color: '#fff',
-        fontSize: scaleFont(16),
+        fontSize: scaleFont(18),
+        fontWeight: '600',
     },
     cancelButton: {
         marginTop: scaleFont(10),
-        paddingVertical: scaleFont(10),
+        paddingVertical: scaleFont(12),
         paddingHorizontal: scaleFont(20),
+        width: '100%',
+        alignItems: 'center',
+        backgroundColor: '#F2F2F2',
+        borderRadius: scaleFont(8),
     },
     cancelButtonText: {
-        color: '#FF0000',
-        fontSize: scaleFont(16),
+        color: 'rgba(0,0,0,0.82)',
+        fontSize: scaleFont(18),
+        fontWeight: '600',
     },
     inputContainer: {
         flexDirection: 'row',
@@ -155,11 +182,9 @@ const styles = StyleSheet.create({
         paddingVertical: scaleFont(10),
         backgroundColor: 'transparent',
     },
-    countryCodeText: {
-        fontSize: scaleFont(16),
-        color: '#333',
-    },
+
     phoneInput: {
+
         flex: 1,
         fontSize: scaleFont(16),
         color: '#333',
@@ -172,6 +197,11 @@ const styles = StyleSheet.create({
         paddingVertical: scaleFont(5),
         justifyContent: 'center',
         alignItems: 'center',
+    },
+    countryCodeText: {
+        fontSize: scaleFont(16),
+        color: '#333',
+        fontWeight: '500',
     },
     clearButtonText: {
         color: '#999',

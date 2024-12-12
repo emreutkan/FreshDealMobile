@@ -14,6 +14,7 @@ const LoginButton: React.FC<LoginButtonProps> = ({
                                                      onPress,
                                                      title = 'Login',
                                                      children,
+    
                                                  }) => {
     return (
         <TouchableOpacity style={[styles.button]} onPress={onPress}>

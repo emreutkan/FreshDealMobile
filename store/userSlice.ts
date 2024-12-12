@@ -51,14 +51,20 @@ const userSlice = createSlice({
     initialState,
     reducers: {
         // Synchronous actions
-        setPhoneNumber(state, action: PayloadAction<string>) {
-            state.phoneNumber = action.payload.replace(/[^0-9]/g, '').slice(0, 15);
-        },
         setSelectedCode(state, action: PayloadAction<string>) {
             state.selectedCode = action.payload;
         },
+        setPhoneNumber(state, action: PayloadAction<string>) {
+            state.phoneNumber = action.payload.replace(/[^0-9]/g, '').slice(0, 15);
+            if (!state.phoneNumber && !state.email) {
+                state.password = ''; // Clear password when both are empty
+            }
+        },
         setEmail(state, action: PayloadAction<string>) {
             state.email = action.payload;
+            if (!state.phoneNumber && !state.email) {
+                state.password = ''; // Clear password when both are empty
+            }
         },
         setName(state, action: PayloadAction<string>) {
             state.name_surname = action.payload;

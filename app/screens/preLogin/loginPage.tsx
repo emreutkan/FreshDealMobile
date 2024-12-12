@@ -1,10 +1,10 @@
 // screens/LoginPage.tsx
 
-import React, {useState} from 'react';
+import React from 'react';
 import {Alert, Keyboard, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View,} from 'react-native';
 import {useRouter} from 'expo-router';
 import {useDispatch, useSelector} from 'react-redux';
-import {RootState} from '@/store/store'
+import {AppDispatch, RootState} from '@/store/store'
 import {scaleFont} from '@/components/utils/ResponsiveFont';
 import LoginButton from '@/components/LoginScreenComponents/loginButton';
 import AppleOTP from '@/components/LoginScreenComponents/AppleOTPLogin';
@@ -16,10 +16,12 @@ import {
     PhoneSignInButton,
 } from '@/components/LoginScreenComponents/loginButtons';
 import PasswordInput from "@/components/LoginScreenComponents/passwordInput";
+import {loginUser} from '@/store/thunks/userThunks';
+import {setLoginType, setPasswordLogin} from '@/store/userSlice';
 
 const LoginPage: React.FC = () => {
     const router = useRouter();
-    const dispatch = useDispatch();
+    const dispatch = useDispatch<AppDispatch>();
 
     // Import all user fields from the userSlice
     const {
@@ -33,43 +35,80 @@ const LoginPage: React.FC = () => {
         login_type,
     } = useSelector((state: RootState) => state.user);
 
-    const [phoneLogin, setPhoneLogin] = useState<boolean>(login_type == 'phone_number');
 
     // const handlePasswordChange = (value: string) => {
     //     dispatch(setPassword(value));
     // };
-
-    const handleLoginButton = async (): Promise<void> => {
-        if (phoneLogin) {
-            if (!phoneNumber) {
-                Alert.alert('Error', 'Phone number cannot be empty.');
-                return;
-            }
-
-            if (!isValidPhone(phoneNumber)) {
-                Alert.alert('Error', 'Please enter a valid phone number.');
-                return;
-            }
-
-            if (!password) {
-                Alert.alert('Error', 'Password cannot be empty.');
-                return;
-            }
-
-
-        } else {
+    const handleLoginButton = async () => {
+        if (login_type == 'phone_number' && !phoneNumber) {
+            Alert.alert('Error', 'Phone number is required.');
+            return;
         }
+        if (login_type == "email" && !email) {
+            Alert.alert('Error', 'Email is required.');
+            return;
+        }
+        if (passwordLogin) {
+            // Password-based login
+            if (!password) {
+                Alert.alert('Error', 'password is required.');
+                return;
+            }
+            dispatch(
+                loginUser({
+                    email,
+                    password,
+                    step: step,
+                    login_type: login_type,
+                    password_login: true,
+                })
+            );
+        }
+        if (!passwordLogin) {
+            //TODO IMPLEMENT
+            return
+            // if (step === 'send_code') {
+            //     // Send verification code
+            //     if (login_type == 'phone_number' && !phoneNumber) {
+            //         Alert.alert('Error', 'Phone number is required.');
+            //         return;
+            //     }
+            //     if (login_type == "email" && !email) {
+            //         Alert.alert('Error', 'Email is required.');
+            //         return;
+            //     }
+            //
+            //     dispatch(
+            //         loginUser({
+            //             step: 'send_code',
+            //             login_type: login_type,
+            //             phone_number: phoneNumber,
+            //             email,
+            //         })
+            //     );
+            // } else if (step === 'verify_code') {
+            //     // Verify the code
+            //     if (!verificationCode) {
+            //         Alert.alert('Error', 'Verification code is required.');
+            //         return;
+            //     }
+            //
+            //     dispatch(
+            //         loginUser({
+            //             step: 'verify_code',
+            //             login_type: login_type,
+            //             phone_number: phoneNumber,
+            //             email,
+            //             verification_code: verificationCode,
+            //         })
+            //     );
+            // } else {
+            //     Alert.alert('Error', 'Invalid login state. Please try again.');
+            // }
+        }
+
     };
 
-    const handleEmailSubmit = (): void => {
-        Alert.alert('Info', 'Email login is not yet implemented.');
-    };
-
-    // Utility function to validate phone numbers
-    const isValidPhone = (phone: string): boolean => {
-        const phoneRegex = /^[0-9]{10,15}$/; // Adjust the regex as per your requirements
-        return phoneRegex.test(phone);
-    };
 
     return (
         <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
@@ -77,44 +116,91 @@ const LoginPage: React.FC = () => {
                 <Text style={styles.welcomeText}>Last Call,</Text>
                 <Text style={styles.welcomeText2}>Tasty Deals Await!</Text>
 
-                {phoneLogin ? <PhoneInput/> : <EmailLoginField/>}
-                {phoneNumber && phoneLogin && (
-                    <PasswordInput password={password}/>
-                )}
-                {email && !phoneLogin && (
-                    <PasswordInput password={password}/>
+                {/* Input Fields */}
+                {login_type == 'phone_number' ? <PhoneInput/> : <EmailLoginField/>}
 
-                )}
+                {/* Password Field */}
+                {(phoneNumber || email) && <PasswordInput password={password}/>}
+
+                {/* Buttons */}
                 <View style={styles.buttonRow}>
-                    <View style={styles.buttonContainer}>
-                        <LoginButton
-                            onPress={() => router.push('./RegisterPage')}
-                            title={'Sign in'}
-                        />
-                    </View>
-                    <View style={styles.buttonContainer}>
-                        <LoginButton onPress={handleLoginButton}/>
-                    </View>
+                    {/* Sign Up Button */}
+                    {!phoneNumber && !email && (
+                        <>
+                            <View style={styles.buttonContainer}>
+                                <LoginButton
+                                    onPress={() => router.push('./RegisterPage')}
+                                    title="Sign up"
+                                />
+                            </View>
+                            <View style={styles.buttonContainer}>
+                                <LoginButton
+                                    onPress={handleLoginButton}
+                                    title="Login"
+                                />
+                            </View>
+                        </>
+
+
+                    )}
+
+                    {/* Login Button and Sign in without password */}
+                    {(phoneNumber || email) && (
+                        <View style={styles.loginContainer}>
+                            {/*<View style={styles.buttonContainer}>*/}
+                            <LoginButton
+                                onPress={() => {
+                                    dispatch(setPasswordLogin(false));
+                                    handleLoginButton();
+                                }}
+                                title="Login"
+                            />
+                            {/*</View>*/}
+                            {/*<View style={styles.buttonContainer}>*/}
+                            {/*    <LoginButton*/}
+                            {/*        onPress={() => {*/}
+                            {/*            dispatch(setPasswordLogin(true));*/}
+                            {/*            handleLoginButton();*/}
+                            {/*        }}*/}
+                            {/*        title="Passwordless Login"*/}
+
+                            {/*    />*/}
+                            {/*</View>*/}
+                            <TouchableOpacity
+                                style={styles.passwordlessLoginContainer}
+                                onPress={() => {
+                                    dispatch(setPasswordLogin(true));
+                                    handleLoginButton();
+                                }}
+                            >
+                                <Text style={styles.passwordlessLoginText}>Passwordless Login</Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
                 </View>
 
-
+                {/* Divider */}
                 <View style={styles.registerContainer}>
                     <View style={styles.line}/>
                     <Text style={styles.orText}>or with</Text>
                     <View style={styles.line}/>
                 </View>
 
+                {/* Other Login Options */}
                 <AppleOTP/>
                 <GoogleSignInButton/>
 
-                {phoneLogin ? (
-                    <TouchableOpacity onPress={() => setPhoneLogin(false)}>
+                {/* Toggle Between Email and Phone Login */}
+                {login_type == 'phone_number' ? (
+                    <TouchableOpacity onPress={() => dispatch(setLoginType("email"))}>
                         <EmailSignInButton/>
                     </TouchableOpacity>
+
                 ) : (
-                    <TouchableOpacity onPress={() => setPhoneLogin(true)}>
+                    <TouchableOpacity onPress={() => dispatch(setLoginType("phone_number"))}>
                         <PhoneSignInButton/>
                     </TouchableOpacity>
+
                 )}
             </View>
         </TouchableWithoutFeedback>
@@ -123,19 +209,16 @@ const LoginPage: React.FC = () => {
 
 const styles = StyleSheet.create({
     bottomContainer: {
-        borderWidth: 11,
-
         flex: 1,
         paddingHorizontal: scaleFont(35),
         justifyContent: 'flex-start',
-        backgroundColor: '#f5f5f5', // Optional: Add background color for better UI
+        backgroundColor: '#f5f5f5',
     },
     welcomeText: {
         fontSize: scaleFont(35),
         textAlign: 'center',
         color: '#000000',
         marginTop: scaleFont(20),
-        // marginBottom: scaleFont(5),
     },
     welcomeText2: {
         fontSize: scaleFont(35),
@@ -146,12 +229,19 @@ const styles = StyleSheet.create({
     buttonRow: {
         flexDirection: 'row',
         marginTop: scaleFont(10),
-        marginBottom: scaleFont(0),
         justifyContent: 'space-between',
     },
     buttonContainer: {
         flex: 0.5,
         marginHorizontal: scaleFont(5),
+    },
+    loginContainer: {
+        flex: 1,
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        width: '100%',
+
     },
     registerContainer: {
         flexDirection: 'row',
@@ -170,14 +260,24 @@ const styles = StyleSheet.create({
         fontSize: scaleFont(16),
         color: '#666',
     },
-    errorText: {
-        color: 'red',
+    signInWithoutPwd: {
         textAlign: 'center',
+        color: '#50703C',
+        fontSize: scaleFont(14),
+        textDecorationLine: 'underline',
+    },
+    passwordlessLoginContainer: {
         marginTop: scaleFont(10),
+        alignItems: 'center',
     },
-    passwordInput: {
-        // This style is now in the PasswordInput component
+
+    passwordlessLoginText: {
+        fontSize: scaleFont(18),
+        color: '#50703C',
+        textDecorationLine: 'underline',
+        fontWeight: '500',
     },
+
 });
 
 export default LoginPage;
