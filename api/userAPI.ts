@@ -42,7 +42,7 @@ export const registerUserAPI = async (userData: {
     }
 };
 
-// // TODO //
+// // TODO
 // // Fetch user profile API call
 // export const fetchUserProfileAPI = async () => {
 //     const response = await axios.get(`${API_BASE_URL}/profile`);
