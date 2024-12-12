@@ -36,10 +36,17 @@ const LoginPage: React.FC = () => {
     } = useSelector((state: RootState) => state.user);
 
 
+    React.useEffect(() => {
+        if (passwordLogin) {
+            handleLoginButton();
+        }
+    }, [passwordLogin]);
     // const handlePasswordChange = (value: string) => {
     //     dispatch(setPassword(value));
     // };
     const handleLoginButton = async () => {
+        console.log("login button pressed")
+        console.log(passwordLogin)
         if (login_type == 'phone_number' && !phoneNumber) {
             Alert.alert('Error', 'Phone number is required.');
             return;
@@ -56,13 +63,13 @@ const LoginPage: React.FC = () => {
             }
             dispatch(
                 loginUser({
-                    email,
-                    password,
-                    step: step,
+                    email: email,
+                    password: password,
                     login_type: login_type,
                     password_login: true,
                 })
             );
+            console.log("login request sent")
         }
         if (!passwordLogin) {
             //TODO IMPLEMENT
@@ -150,8 +157,7 @@ const LoginPage: React.FC = () => {
                             {/*<View style={styles.buttonContainer}>*/}
                             <LoginButton
                                 onPress={() => {
-                                    dispatch(setPasswordLogin(false));
-                                    handleLoginButton();
+                                    dispatch(setPasswordLogin(true));
                                 }}
                                 title="Login"
                             />
@@ -169,8 +175,7 @@ const LoginPage: React.FC = () => {
                             <TouchableOpacity
                                 style={styles.passwordlessLoginContainer}
                                 onPress={() => {
-                                    dispatch(setPasswordLogin(true));
-                                    handleLoginButton();
+                                    dispatch(setPasswordLogin(false));
                                 }}
                             >
                                 <Text style={styles.passwordlessLoginText}>Passwordless Login</Text>
