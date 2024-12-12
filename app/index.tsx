@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { useRouter } from 'expo-router';
+import {useEffect} from 'react';
+import {useRouter} from 'expo-router';
 
 const Index = () => {
     const router = useRouter();
@@ -16,7 +16,9 @@ const Index = () => {
         // are completed before the navigation logic is triggered.
         const timer = setTimeout(() => {
             // Navigate to the LoginPage after the slight asynchronous break
-            router.push('/screens/preLogin/loginPage');
+            // router.push('/screens/preLogin/loginPage');
+            router.push('/screens/afterLogin/afterlogin');
+
         }, 0); // 0ms delay ensures minimal delay while still deferring execution
 
         // Cleanup function to clear the timer when the component unmounts

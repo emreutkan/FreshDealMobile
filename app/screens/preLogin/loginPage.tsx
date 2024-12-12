@@ -75,7 +75,7 @@ const LoginPage: React.FC = () => {
                             phone_number: phoneNumber,
                             password: password,
                             login_type: login_type,
-                            password_login: true,
+                            password_login: passwordLogin,
                         })
                     ).unwrap(); // Use unwrap() to handle fulfilled/rejected states
                     console.log("Login request successful", result);

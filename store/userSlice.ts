@@ -1,6 +1,7 @@
 // store/userSlice.ts
 
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
+import {v4 as uuidv4} from 'uuid'; // Generate unique IDs
 
 // Define the initial state using TypeScript interfaces
 interface CartItem {
@@ -19,11 +20,13 @@ interface UserState {
     name_surname: string;
     passwordLogin: boolean; // New field
     verificationCode: string; // New field
-    step: "send_code" | "verify_code" | "skip_verification";  // New field
-    login_type: "email" | "phone_number";  // New field
+    step: "send_code" | "verify_code" | "skip_verification";
+    login_type: "email" | "phone_number";
     cart: CartItem[];
-    addresses: string[];
-    currentAddress: string | null;
+    addresses: Address[]; // Updated
+    // currentAddress: Address | null;
+    selectedAddressId: string | null; // ID of selected address
+
     loading: boolean;  // Keep loading and error states for later use
     error: string | null;
 }
@@ -40,10 +43,22 @@ const initialState: UserState = {
     login_type: 'email', // Default
     cart: [],
     addresses: [],
-    currentAddress: null,
+    selectedAddressId: null,
     loading: false,
     error: null,
 };
+
+// Define the address structure
+interface Address {
+    id: string; // Unique identifier, not the id in the data
+    street: string;
+    neighborhood: string;
+    district: string;
+    province: string;
+    country: string;
+    postalCode: string;
+    apartmentNo: string;
+}
 
 
 const userSlice = createSlice({
@@ -102,20 +117,30 @@ const userSlice = createSlice({
         clearCart(state) {
             state.cart = [];
         },
-        addAddress(state, action: PayloadAction<string>) {
-            if (!state.addresses.includes(action.payload)) {
-                state.addresses.push(action.payload);
+        // Add a new address
+        addAddress(state, action: PayloadAction<Omit<Address, 'id'>>) {
+            const newAddress: Address = {...action.payload, id: uuidv4()};
+            state.addresses.push(newAddress);
+            if (state.addresses.length === 1) {
+                state.selectedAddressId = newAddress.id; // Default to first address
             }
         },
+
+        // Remove an address by ID
         removeAddress(state, action: PayloadAction<string>) {
-            state.addresses = state.addresses.filter(address => address !== action.payload);
-            if (state.currentAddress === action.payload) {
-                state.currentAddress = null;
+            state.addresses = state.addresses.filter(
+                (address) => address.id !== action.payload
+            );
+            // Reset selectedAddressId if the current selected address is removed
+            if (state.selectedAddressId === action.payload) {
+                state.selectedAddressId = state.addresses[0]?.id || null;
             }
         },
-        setCurrentAddress(state, action: PayloadAction<string>) {
-            if (state.addresses.includes(action.payload)) {
-                state.currentAddress = action.payload;
+
+        // Set a selected address by ID
+        setSelectedAddress(state, action: PayloadAction<string>) {
+            if (state.addresses.some((address) => address.id === action.payload)) {
+                state.selectedAddressId = action.payload;
             }
         },
 
@@ -138,7 +163,10 @@ export const {
     setVerificationCode,
     setStep,       // New
     setLoginType,  // New    // ... other actions
-    setToken
+    setToken,
+    addAddress,
+    removeAddress,
+    setSelectedAddress,
 } = userSlice.actions;
 
 // Export the reducer

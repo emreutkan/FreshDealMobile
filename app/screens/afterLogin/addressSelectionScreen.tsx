@@ -1,5 +1,3 @@
-// components/LoginScreenComponents/AddressSelectorScreen.tsx
-
 import React, {useEffect, useRef, useState} from 'react';
 import {
     ActivityIndicator,
@@ -17,18 +15,18 @@ import {
     View,
 } from 'react-native';
 import {useDispatch} from 'react-redux';
-import {addAddress, setCurrentAddress} from '@/store/userSlice';
+import {addAddress, setSelectedAddress} from '@/store/userSlice'; // Updated import
 import MapView, {Region} from 'react-native-maps';
 import * as Location from 'expo-location';
 import {MaterialIcons} from '@expo/vector-icons';
-import LoginButton from '@/components/LoginScreenComponents/loginButton';
+import LoginButton from '@/components/LoginScreenComponents/loginButton'; // Keep only one import
 import debounce from 'lodash.debounce';
 import {scaleFont} from '@/components/utils/ResponsiveFont';
-import {router} from "expo-router"; // Adjust the import path as needed
+import {v4 as uuidv4} from 'uuid'; // Import uuid
 
 // Define the Address interface
 interface Address {
-    id?: string; // Optional, can be generated upon adding to Redux
+    id: string; // Ensure id is included
     street: string;
     neighborhood: string;
     district: string;
@@ -41,13 +39,13 @@ interface Address {
 const AddressSelectorScreen: React.FC = () => {
     const dispatch = useDispatch();
     const mapRef = useRef<MapView>(null);
-
     const [isMapInteracted, setIsMapInteracted] = useState<boolean>(false);
     const [initialLoading, setInitialLoading] = useState<boolean>(true);
     const [locationLoading, setLocationLoading] = useState<boolean>(false);
     const [activateAddressDetails, setActivateAddressDetails] = useState<boolean>(false);
 
     const [address, setAddress] = useState<Address>({
+        id: '', // Initialize id
         street: '',
         neighborhood: '',
         district: '',
@@ -56,9 +54,8 @@ const AddressSelectorScreen: React.FC = () => {
         postalCode: '',
         apartmentNo: '',
     });
-
     const [region, setRegion] = useState<Region>({
-        latitude: 37.7749, // Default to San Francisco
+        latitude: 37.7749,
         longitude: -122.4194,
         latitudeDelta: 0.01,
         longitudeDelta: 0.01,
@@ -71,7 +68,19 @@ const AddressSelectorScreen: React.FC = () => {
     const {height, width} = Dimensions.get('window');
 
     // Initialize Animated Value
-    const mapAnimation = useRef(new Animated.Value(0)).current;
+    const [mapAnimation] = useState(new Animated.Value(0));
+
+    // Existing interpolation for the map's translateY
+    const animatedMapTranslateY = mapAnimation.interpolate({
+        inputRange: [0, 1],
+        outputRange: [0, -height * 0.55], // Adjust as needed
+    });
+
+    // New interpolation for the formWrapper's translateY
+    const animatedFormTranslateY = mapAnimation.interpolate({
+        inputRange: [0, 1],
+        outputRange: [0, -height * 0.55], // The same value to sync movement
+    });
 
     // Animate when activateAddressDetails changes
     useEffect(() => {
@@ -82,17 +91,6 @@ const AddressSelectorScreen: React.FC = () => {
             useNativeDriver: true,
         }).start();
     }, [activateAddressDetails]);
-
-    // Interpolations
-    const animatedMapTranslateY = mapAnimation.interpolate({
-        inputRange: [0, 1],
-        outputRange: [0, -height * 0.55], // Adjust as needed
-    });
-
-    const animatedFormTranslateY = mapAnimation.interpolate({
-        inputRange: [0, 1],
-        outputRange: [0, -height * 0.55], // Sync with map movement
-    });
 
     // Function to handle fetching location and reverse geocoding
     const fetchLocation = async () => {
@@ -128,7 +126,7 @@ const AddressSelectorScreen: React.FC = () => {
             setRegion(newRegion);
             mapRef.current?.animateToRegion(newRegion, 1000);
 
-            await handleAddressUpdate(latitude, longitude); // Fetch address details
+            await handleAddressUpdate(latitude, longitude); // Reset is desired on initial fetch
 
             setInitialLoading(false);
             setLocationLoading(false);
@@ -166,11 +164,17 @@ const AddressSelectorScreen: React.FC = () => {
             return;
         }
 
-        dispatch(addAddress(JSON.stringify({...address, id: Date.now().toString()}))); // Assign a unique ID
-        dispatch(setCurrentAddress(JSON.stringify({...address, id: Date.now().toString()})));
+        // Generate a unique ID for the new address
+        const id = uuidv4();
+
+        const newAddress: Address = {...address, id};
+
+        dispatch(addAddress(newAddress));
+        dispatch(setSelectedAddress(id));
 
         Alert.alert('Success', 'Address has been set!');
-        router.push('/home'); // Navigate to the home screen or desired screen
+        // Optionally navigate back or reset the form
+        // navigation.goBack();
     };
 
     /**
@@ -178,12 +182,13 @@ const AddressSelectorScreen: React.FC = () => {
      * @param latitude
      * @param longitude
      */
-    const handleAddressUpdate = async (latitude: number, longitude: number) => {
+    const handleAddressUpdate = async (latitude: number, longitude: number,) => {
         try {
             setIsReverseGeocoding(true); // Start loading
             const [addressData] = await Location.reverseGeocodeAsync({latitude, longitude});
             if (addressData) {
                 setAddress({
+                    id: '', // Clear or keep existing id
                     street: addressData.street || '',
                     neighborhood: addressData.subregion || '',
                     district: addressData.city || '',
@@ -230,51 +235,26 @@ const AddressSelectorScreen: React.FC = () => {
         setActivateAddressDetails(false);
     };
 
-    // Handle selecting an address from the list
-    const handleSelectAddress = (addressId: string) => {
-        dispatch(setCurrentAddress(addressId));
-        Alert.alert('Address Selected', `Address ID: ${addressId} has been selected.`);
-        router.push('/home'); // Adjust the path as needed
-    };
-
-    // Render a single address item (if multiple addresses are allowed)
-    const renderAddressItem = ({item}: { item: Address }) => (
-        <View style={styles.addressItem}>
-            <Text style={styles.addressText}>{`${item.street}, ${item.district} ${item.postalCode}`}</Text>
-            <TouchableOpacity
-                style={styles.selectButton}
-                onPress={() => handleSelectAddress(item.id || '')}
-            >
-                <Text style={styles.selectButtonText}>Select</Text>
-            </TouchableOpacity>
-        </View>
-    );
-
     const styles = StyleSheet.create({
         container: {
             flex: 1,
-            backgroundColor: '#f5f5f5',
         },
         mapContainer: {
+            flex: 0.85,
             borderBottomLeftRadius: 20,
-            height: height * 0.805, // Pushes the formWrapper further down; adjust if needed
             borderWidth: 0,
             borderBottomRightRadius: 20,
             overflow: 'hidden',
-            backgroundColor: '#000',
         },
         formWrapper: {
-            backgroundColor: "#ffffff",
-            flex: 1,
-            paddingHorizontal: scaleFont(20),
-            paddingTop: scaleFont(20),
+            flex: 0.1,
+            marginBottom: scaleFont(10),
+
         },
         belowMap: {
-            backgroundColor: "#ffffff",
             flex: 1,
-            paddingBottom: scaleFont(50),
-            justifyContent: 'center',
-            alignItems: 'center',
+            paddingVertical: scaleFont(10),
+
         },
         map: {
             ...StyleSheet.absoluteFillObject,
@@ -290,36 +270,41 @@ const AddressSelectorScreen: React.FC = () => {
             position: 'absolute',
             bottom: 15,
             right: 15,
-            backgroundColor: '#007AFF',
-            padding: scaleFont(12),
-            borderRadius: scaleFont(30),
+            // backgroundColor: '#000',
+            padding: 12,
+            borderRadius: 30,
             justifyContent: 'center',
             alignItems: 'center',
-            shadowColor: '#000',
+            // shadowColor: '#000',
             shadowOffset: {width: 0, height: 2},
             shadowOpacity: 0.3,
-            shadowRadius: scaleFont(4),
+            shadowRadius: 2,
             elevation: 5,
+        },
+
+        title: {
+            fontSize: 20,
+            fontWeight: 'bold',
+            // marginBottom: 12,
+            textAlign: 'center',
         },
         addressPreviewContainer: {
             marginHorizontal: scaleFont(20),
             position: 'relative',
-            flex: 1,
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            width: '100%',
+            // marginBottom: 16,
+            flex: 1, // Take available space
+            // marginRight: 8, // Add some margin to separate from the loading overlay or button
+            flexDirection: 'row', // Arrange children in a row
+            alignItems: 'center', // Vertically center the items
+            justifyContent: 'space-between', // Optional: Adjust spacing between items if needed
         },
         addressText: {
-            fontSize: scaleFont(16),
-            color: '#333',
-            flex: 1,
-            marginRight: scaleFont(10),
+            color: 'white',
         },
         addressSubText: {
             color: 'gray',
             fontWeight: '300',
-            fontSize: scaleFont(12),
+            fontSize: 12,
         },
         addressLoadingOverlay: {
             position: 'absolute',
@@ -327,23 +312,24 @@ const AddressSelectorScreen: React.FC = () => {
             left: 0,
             right: 0,
             bottom: 0,
+            // backgroundColor: 'rgba(255, 255, 255, 0.6)',
             justifyContent: 'center',
             alignItems: 'center',
             borderRadius: 8,
-            backgroundColor: 'rgba(255, 255, 255, 0.7)',
+            marginLeft: 8, // Space between address preview and loading overlay
         },
         loadingText: {
             marginTop: 5,
-            fontSize: scaleFont(14),
-            color: '#000',
+            fontSize: 14,
+            // color: '#000',
         },
         input: {
             borderColor: '#ccc',
             borderWidth: 1,
             borderRadius: 8,
-            padding: scaleFont(12),
-            marginBottom: scaleFont(12),
-            fontSize: scaleFont(16),
+            padding: 12,
+            marginBottom: 12,
+            fontSize: 16,
         },
         loadingContainer: {
             flex: 1,
@@ -361,51 +347,18 @@ const AddressSelectorScreen: React.FC = () => {
             justifyContent: 'center',
             alignItems: 'center',
         },
-        selectButton: {
-            backgroundColor: '#007AFF',
-            paddingVertical: scaleFont(6),
-            paddingHorizontal: scaleFont(12),
-            borderRadius: scaleFont(4),
-        },
-        selectButtonText: {
-            color: '#fff',
-            fontSize: scaleFont(14),
-        },
-        addButton: {
-            marginTop: scaleFont(20),
-            backgroundColor: '#34C759',
-            paddingVertical: scaleFont(12),
-            paddingHorizontal: scaleFont(20),
-            borderRadius: scaleFont(8),
-            alignItems: 'center',
-        },
-        addButtonText: {
-            color: '#fff',
-            fontSize: scaleFont(16),
-        },
-        addressItem: {
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            padding: scaleFont(10),
-            marginBottom: scaleFont(10),
-            backgroundColor: '#fff',
-            borderRadius: scaleFont(8),
-            shadowColor: '#000',
-            shadowOpacity: 0.1,
-            shadowRadius: scaleFont(4),
-            shadowOffset: {width: 0, height: 2},
-            elevation: 2,
-        },
-        listContent: {
-            paddingBottom: scaleFont(20),
-        },
+        loginButton: {
+            // flex: 2/3,
+            width: '35%',
+            borderWidth: 1,
+            marginLeft: scaleFont(8)
+        }
     });
 
     if (initialLoading) {
         return (
             <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#007AFF"/>
+                <ActivityIndicator size="large" color="#0000ff"/>
                 <Text>Loading...</Text>
             </View>
         );
@@ -420,8 +373,8 @@ const AddressSelectorScreen: React.FC = () => {
                         width: width,
                         transform: [{translateY: animatedMapTranslateY}],
                     },
-                ]}
-            >
+                ]}>
+
                 <MapView
                     ref={mapRef}
                     style={styles.map}
@@ -433,7 +386,7 @@ const AddressSelectorScreen: React.FC = () => {
                             debouncedHandleAddressUpdate(latitude, longitude);
                         }
                     }}
-                    onTouchStart={mapOntouchEvent}
+                    onTouchStart={() => mapOntouchEvent()}
                     mapType="terrain"
                     showsUserLocation={true}
                     followsUserLocation={false}
@@ -450,7 +403,7 @@ const AddressSelectorScreen: React.FC = () => {
                     disabled={locationLoading}
                 >
                     {locationLoading ? (
-                        <ActivityIndicator size="small" color="#fff"/>
+                        <ActivityIndicator size="small" color="#0000ff"/>
                     ) : (
                         <MaterialIcons name="my-location" size={24} color="#fff"/>
                     )}
@@ -461,38 +414,31 @@ const AddressSelectorScreen: React.FC = () => {
                 behavior={Platform.OS === 'ios' ? 'padding' : undefined}
                 keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
             >
-                {!activateAddressDetails ? (
+                {!activateAddressDetails && (
                     <View style={styles.belowMap}>
                         <View style={styles.addressPreviewContainer}>
                             <View>
-                                <Text style={styles.addressText}>
-                                    {`${address.street}, ${address.district} ${address.postalCode}`}
-                                </Text>
-                                <Text style={styles.addressSubText}>
-                                    {`${address.province}, ${address.country}`}
-                                </Text>
+                                <Text
+                                    style={styles.addressText}>{`${address.street}, ${address.district} ${address.postalCode}`}</Text>
+                                <Text style={styles.addressSubText}>{`${address.province}, ${address.country}`}</Text>
                             </View>
                             {isReverseGeocoding && (
                                 <View style={styles.addressLoadingOverlay}>
-                                    <ActivityIndicator size="small" color="#007AFF"/>
+                                    <ActivityIndicator size="small" color="#0000ff"/>
                                     <Text style={styles.loadingText}>Fetching address...</Text>
                                 </View>
                             )}
-                            <View>
+                            <View style={styles.loginButton}>
                                 <LoginButton
                                     onPress={toggleAddressDetails}
-                                    title={'Edit'}
+                                    title={'Select'}
                                 />
                             </View>
                         </View>
-                        <View style={{marginTop: scaleFont(20), width: '100%'}}>
-                            <LoginButton
-                                onPress={handleAddressConfirm}
-                                title={'Confirm Address'}
-                            />
-                        </View>
                     </View>
-                ) : (
+                )}
+
+                {activateAddressDetails && (
                     <Animated.View
                         style={[
                             styles.formWrapper,
@@ -557,7 +503,6 @@ const AddressSelectorScreen: React.FC = () => {
             </KeyboardAvoidingView>
         </View>
     );
-
 };
 
 export default AddressSelectorScreen;
