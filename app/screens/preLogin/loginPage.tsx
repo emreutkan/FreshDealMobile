@@ -44,6 +44,12 @@ const LoginPage: React.FC = () => {
     // const handlePasswordChange = (value: string) => {
     //     dispatch(setPassword(value));
     // };
+
+    /**
+     * Handles the login button click.
+     * Performs validation checks and dispatches the login request.
+     * Resets `passwordLogin` state to `false` after the login attempt.
+     */
     const handleLoginButton = async () => {
         console.log("login button pressed")
         console.log(passwordLogin)
@@ -56,20 +62,35 @@ const LoginPage: React.FC = () => {
             return;
         }
         if (passwordLogin) {
-            // Password-based login
-            if (!password) {
-                Alert.alert('Error', 'password is required.');
-                return;
+            if (passwordLogin) {
+                // Password-based login
+                if (!password) {
+                    Alert.alert('Error', 'Password is required.');
+                    return;
+                }
+                try {
+                    const result = await dispatch(
+                        loginUser({
+                            email: email,
+                            phone_number: phoneNumber,
+                            password: password,
+                            login_type: login_type,
+                            password_login: true,
+                        })
+                    ).unwrap(); // Use unwrap() to handle fulfilled/rejected states
+                    console.log("Login request successful", result);
+
+                    // Navigate back if login is successful
+                    if (result.success) { // Adjust based on your API response structure
+                        router.push('../afterLogin/afterlogin');
+                    } else {
+                        Alert.alert("Login Failed", result.message || "Something went wrong.");
+                    }
+                } catch (error) {
+                    console.error("Login failed", error);
+                    Alert.alert("Error", "Failed to login. Please try again.");
+                }
             }
-            dispatch(
-                loginUser({
-                    email: email,
-                    password: password,
-                    login_type: login_type,
-                    password_login: true,
-                })
-            );
-            console.log("login request sent")
         }
         if (!passwordLogin) {
             //TODO IMPLEMENT
@@ -113,9 +134,18 @@ const LoginPage: React.FC = () => {
             //     Alert.alert('Error', 'Invalid login state. Please try again.');
             // }
         }
+        dispatch(setPasswordLogin(false));
+
 
     };
+    const handleLoginTypeChange = (type: "email" | "phone_number") => {
+        dispatch(setLoginType(type));
+    };
 
+// Monitor login_type changes
+    React.useEffect(() => {
+        console.log("Login type updated:", login_type);
+    }, [login_type]);
 
     return (
         <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
@@ -197,12 +227,12 @@ const LoginPage: React.FC = () => {
 
                 {/* Toggle Between Email and Phone Login */}
                 {login_type == 'phone_number' ? (
-                    <TouchableOpacity onPress={() => dispatch(setLoginType("email"))}>
+                    <TouchableOpacity onPress={() => handleLoginTypeChange("email")}>
                         <EmailSignInButton/>
                     </TouchableOpacity>
 
                 ) : (
-                    <TouchableOpacity onPress={() => dispatch(setLoginType("phone_number"))}>
+                    <TouchableOpacity onPress={() => handleLoginTypeChange("phone_number")}>
                         <PhoneSignInButton/>
                     </TouchableOpacity>
 
