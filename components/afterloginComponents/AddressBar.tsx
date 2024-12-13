@@ -59,7 +59,8 @@ const AddressBar: React.FC = () => {
     };
 
     const switchToAddAddress = () => {
-        router.push('./addressSelectionScreen');
+        router.push("../afterLogin/addressSelectionScreen");
+
     };
 
     const handleAddNewAddress = () => {

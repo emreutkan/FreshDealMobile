@@ -23,7 +23,12 @@ import {addAddressAsync, Address} from "@/store/userSlice";
 import InputField from "@/components/defaultInput";
 import {AppDispatch} from "@/store/store";
 
-const AddressSelectorScreen: React.FC = () => {
+interface AddressSelectionScreenProps {
+    onDone?: () => void; // Callback to signal completion
+}
+
+const AddressSelectionScreen: React.FC<AddressSelectionScreenProps> = ({onDone}) => {
+
     const dispatch = useDispatch<AppDispatch>();
     const mapRef = useRef<MapView>(null);
     const [isMapInteracted, setIsMapInteracted] = useState<boolean>(false);
@@ -123,6 +128,9 @@ const AddressSelectorScreen: React.FC = () => {
             Alert.alert('Error', 'An error occurred while fetching the location.');
             setInitialLoading(false);
             setLocationLoading(false);
+        }
+        if (onDone) {
+            onDone();
         }
     };
 
@@ -477,44 +485,37 @@ const AddressSelectorScreen: React.FC = () => {
                             value={selectedAddress.street}
                             onChange={(text) => handleAddressChange('street', text)}
                             placeholder="Street"
-                            returnKeyType="next"
                         />
                         <InputField
                             value={selectedAddress.neighborhood}
                             onChange={(text) => handleAddressChange('neighborhood', text)}
                             placeholder="Neighborhood"
-                            returnKeyType="next"
                         />
                         <InputField
                             value={selectedAddress.district}
                             onChange={(text) => handleAddressChange('district', text)}
                             placeholder="City"
-                            returnKeyType="next"
                         />
                         <InputField
                             value={selectedAddress.province}
                             onChange={(text) => handleAddressChange('province', text)}
                             placeholder="Region"
-                            returnKeyType="next"
                         />
                         <InputField
                             value={selectedAddress.country}
                             onChange={(text) => handleAddressChange('country', text)}
                             placeholder="Country"
-                            returnKeyType="next"
                         />
                         <InputField
                             value={selectedAddress.postalCode}
                             onChange={(text) => handleAddressChange('postalCode', text)}
                             placeholder="Postal Code"
                             keyboardType="numeric"
-                            returnKeyType="next"
                         />
                         <InputField
                             value={selectedAddress.apartmentNo}
                             onChange={(text) => handleAddressChange('apartmentNo', text)}
                             placeholder="Apartment Number"
-                            returnKeyType="done"
                         />
                         <LoginButton onPress={handleAddressConfirm} title={'Confirm Address'}/>
                     </Animated.View>
@@ -524,4 +525,4 @@ const AddressSelectorScreen: React.FC = () => {
     );
 };
 
-export default AddressSelectorScreen;
+export default AddressSelectionScreen;

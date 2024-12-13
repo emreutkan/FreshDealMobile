@@ -4,8 +4,8 @@ import React, {useState} from 'react';
 import {StyleSheet, Text, TextInput, TouchableOpacity, View} from 'react-native';
 import {scaleFont} from "@/components/utils/ResponsiveFont";
 import {useDispatch, useSelector} from 'react-redux';
-import {setEmail} from '../../store/userSlice'; // Adjust the path as needed
-import {RootState} from '../../store/store'; // Adjust the path as needed
+import {setEmail} from '@/store/userSlice'; // Adjust the path as needed
+import {RootState} from '@/store/store'; // Adjust the path as needed
 
 const EmailLoginField: React.FC = () => {
     const dispatch = useDispatch();

@@ -10,7 +10,7 @@ const AfterLoginScreen = () => {
 
 
     function handleAddressSelection() {
-        router.push('../addressSelectionScreen');
+        router.push("/screens/afterLogin/addressSelectionScreen");
     }
 
     return (

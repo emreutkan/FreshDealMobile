@@ -1,34 +1,36 @@
-import React from 'react';
-import {Slot} from 'expo-router';
-import {useSelector} from 'react-redux'; // Import for accessing Redux state
+import React, {useState} from 'react';
+import {useSelector} from 'react-redux';
 import {RootState} from '@/store/store';
 import AddressSelectionScreen from "@/app/screens/afterLogin/addressSelectionScreen";
 import {Platform, StyleSheet} from "react-native";
-import {scaleFont} from "@/components/utils/ResponsiveFont"; // Adjust path as needed
+import {scaleFont} from "@/components/utils/ResponsiveFont";
 import Header from "@/components/afterloginComponents/Header";
 
 const Layout = () => {
-    // Access user addresses from the Redux state
     const addresses = useSelector((state: RootState) => state.user.addresses);
+    const [headerVisible, setHeaderVisible] = useState(addresses && addresses.length > 0);
+
+    // Function to hide the header when adding a new address
+    const hideHeader = () => {
+        setHeaderVisible(false);
+    };
+
+    const showHeader = () => {
+        setHeaderVisible(true);
+    };
 
     return (
         <>
-            {addresses && addresses.length > 0 ? (
-                <>
-                    <Header/>
-                    <Slot/>
-                </>
-            ) : (
-                <>
-                    <AddressSelectionScreen/>
-                    {/*<AfterLoginScreen/>*/}
-                </>
 
-            )}
+            <Header/>
+            {/* Pass hideHeader function to the AddressBar */}
+            {/*<Slot/>*/}
+
+            <AddressSelectionScreen onDone={showHeader}/>
+
         </>
     );
 };
-
 
 const styles = StyleSheet.create({
     container: {
@@ -39,29 +41,26 @@ const styles = StyleSheet.create({
         width: scaleFont(150),
         height: scaleFont(150),
         marginTop: scaleFont(60),
-        // marginBottom: scaleFont(0),
     },
     main: {
         overflow: 'hidden',
-        flex: 1, // Fill available space
-        width: '100%', // Full width
-        backgroundColor: '#FFFFFF', // White background
-        borderTopLeftRadius: scaleFont(25), // Rounded top-left corner
-        borderTopRightRadius: scaleFont(25), // Rounded top-right corner
-        // Platform-specific shadow styles
+        flex: 1,
+        width: '100%',
+        backgroundColor: '#FFFFFF',
+        borderTopLeftRadius: scaleFont(25),
+        borderTopRightRadius: scaleFont(25),
         ...Platform.select({
             ios: {
-                shadowColor: '#000', // Shadow color for iOS
-                shadowOffset: {width: 0, height: -3}, // Shadow offset for iOS
-                shadowOpacity: 0.1, // Shadow opacity for iOS
-                shadowRadius: 5, // Shadow radius for iOS
+                shadowColor: '#000',
+                shadowOffset: {width: 0, height: -3},
+                shadowOpacity: 0.1,
+                shadowRadius: 5,
             },
             android: {
-                elevation: 10, // Elevation for Android shadows
+                elevation: 10,
             },
         }),
     },
 });
-
 
 export default Layout;
