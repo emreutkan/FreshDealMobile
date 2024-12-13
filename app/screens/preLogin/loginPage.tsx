@@ -26,11 +26,8 @@ const LoginPage: React.FC = () => {
     const {
         phoneNumber,
         password,
-        selectedCode,
         email,
         passwordLogin,
-        verificationCode,
-        step,
         login_type,
     } = useSelector((state: RootState) => state.user);
 
@@ -159,9 +156,7 @@ const LoginPage: React.FC = () => {
                 {/* Password Field */}
                 {(phoneNumber || email) && <PasswordInput password={password}/>}
 
-                {/* Buttons */}
                 <View style={styles.buttonRow}>
-                    {/* Sign Up Button */}
                     {!phoneNumber && !email && (
                         <>
                             <View style={styles.buttonContainer}>
@@ -181,27 +176,14 @@ const LoginPage: React.FC = () => {
 
                     )}
 
-                    {/* Login Button and Sign in without password */}
                     {(phoneNumber || email) && (
                         <View style={styles.loginContainer}>
-                            {/*<View style={styles.buttonContainer}>*/}
                             <LoginButton
                                 onPress={() => {
                                     dispatch(setPasswordLogin(true));
                                 }}
                                 title="Login"
                             />
-                            {/*</View>*/}
-                            {/*<View style={styles.buttonContainer}>*/}
-                            {/*    <LoginButton*/}
-                            {/*        onPress={() => {*/}
-                            {/*            dispatch(setPasswordLogin(true));*/}
-                            {/*            handleLoginButton();*/}
-                            {/*        }}*/}
-                            {/*        title="Passwordless Login"*/}
-
-                            {/*    />*/}
-                            {/*</View>*/}
                             <TouchableOpacity
                                 style={styles.passwordlessLoginContainer}
                                 onPress={() => {

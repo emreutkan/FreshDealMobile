@@ -10,8 +10,6 @@ import {RootState} from '@/store/store'; // Adjust the path as needed
 const EmailLoginField: React.FC = () => {
     const dispatch = useDispatch();
     const email = useSelector((state: RootState) => state.user.email);
-    const phoneNumber = useSelector((state: RootState) => state.user.phoneNumber);
-
     const [isTyping, setIsTyping] = useState<boolean>(!!email);
 
     const handleEmailChange = (text: string) => {
