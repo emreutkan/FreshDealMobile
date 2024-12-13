@@ -6,8 +6,8 @@ import {Picker} from '@react-native-picker/picker';
 import {countryCodes} from '@/components/constants/countryCodes';
 import {scaleFont} from "@/components/utils/ResponsiveFont";
 import {useDispatch, useSelector} from 'react-redux';
-import {setPhoneNumber, setSelectedCode} from '../../store/userSlice'; // Adjust the path as needed
-import {RootState} from '../../store/store'; // Adjust the path as needed
+import {setPhoneNumber, setSelectedCode} from '@/store/userSlice'; // Adjust the path as needed
+import {RootState} from '@/store/store'; // Adjust the path as needed
 
 const PhoneInput: React.FC = () => {
     const dispatch = useDispatch();
