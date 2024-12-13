@@ -16,8 +16,7 @@ import {
     PhoneSignInButton,
 } from '@/components/LoginScreenComponents/loginButtons';
 import PasswordInput from "@/components/LoginScreenComponents/passwordInput";
-import {loginUser} from '@/store/thunks/userThunks';
-import {setLoginType, setPasswordLogin, setToken} from '@/store/userSlice';
+import {loginUser, setLoginType, setPasswordLogin, setToken} from '@/store/userSlice';
 
 const LoginPage: React.FC = () => {
     const router = useRouter();
@@ -75,7 +74,7 @@ const LoginPage: React.FC = () => {
                             phone_number: phoneNumber,
                             password: password,
                             login_type: login_type,
-                            password_login: true,
+                            password_login: passwordLogin,
                         })
                     ).unwrap(); // Use unwrap() to handle fulfilled/rejected states
                     console.log("Login request successful", result);

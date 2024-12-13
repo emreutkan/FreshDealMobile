@@ -1,12 +1,11 @@
+// Header.tsx
 import React from 'react';
-import { View, StyleSheet, Dimensions } from 'react-native';
-import { scaleFont } from "@/components/utils/ResponsiveFont";
+import {Dimensions, StyleSheet, View} from 'react-native';
+import {scaleFont} from "@/components/utils/ResponsiveFont";
 import AddressBar from "@/components/afterloginComponents/AddressBar";
-// import NotificationIcon from "@/components/afterloginComponents/NotificationIcon";
-// import ProfileIcon from "@/components/afterloginComponents/ProfileIcon";
 
-const { height: screenHeight } = Dimensions.get('window');
-const HEADER_HEIGHT = screenHeight * scaleFont(0.14);
+const {height: screenHeight} = Dimensions.get('window');
+const HEADER_HEIGHT = screenHeight * 0.14; // Adjusted to a direct proportion for clarity
 
 const Header = () => {
     return (
@@ -14,15 +13,16 @@ const Header = () => {
             <View style={styles.rowContainer}>
                 {/* Left Section: AddressBar */}
                 <View style={styles.leftContainer}>
-
-                    <AddressBar />
+                    <AddressBar/>
+                    
                 </View>
 
                 {/* Right Section: Notification and Profile Icons */}
                 <View style={styles.rightContainer}>
 
-                    {/*<NotificationIcon />*/}
-                    {/*<ProfileIcon />*/}
+                    {/* Uncomment and add your icons here */}
+                    {/* <NotificationIcon /> */}
+                    {/* <ProfileIcon /> */}
                 </View>
             </View>
         </View>
@@ -33,11 +33,16 @@ const styles = StyleSheet.create({
     headerContainer: {
         height: HEADER_HEIGHT,
         backgroundColor: '#ffffff',
-        justifyContent: 'flex-end', // Positions children towards the end
-        paddingHorizontal: scaleFont(15),
-        paddingBottom: HEADER_HEIGHT / scaleFont(15), // Adjusts padding to create a 3/4 positioning effect
-        borderBottomRightRadius: scaleFont(15),
-        borderBottomLeftRadius: scaleFont(15),
+        justifyContent: 'flex-end',
+        paddingHorizontal: scaleFont(20),
+        paddingBottom: scaleFont(10),
+        borderBottomRightRadius: scaleFont(20),
+        borderBottomLeftRadius: scaleFont(20),
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
     },
     rowContainer: {
         flexDirection: 'row',
@@ -46,18 +51,13 @@ const styles = StyleSheet.create({
         width: '100%',
     },
     leftContainer: {
-        //  borderWidth: 1,
-        // height: scaleFont(60), // set this in addressbar.tsx
-
-        width: scaleFont(100),
-
+        flex: 1, // Allows the AddressBar to take up available space
+        marginRight: scaleFont(10),
     },
     rightContainer: {
-        borderWidth: 1,
-        width: scaleFont(100),
-        overflow: 'hidden',
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'flex-end',
     },
 });
 

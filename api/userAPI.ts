@@ -1,10 +1,12 @@
 // api/userAPI.ts
 import axios from 'axios';
 import API from './API';
+import {Address} from "@/store/userSlice";
 
 
 const LOGIN_API_ENDPOINT = `${API.API_BASE_URL}/v1/login`;
 const REGISTER_API_ENDPOINT = `${API.API_BASE_URL}/v1/register`;
+const ADD_ADDRESS_API_ENDPOINT = `${API.API_BASE_URL}/v1/addresses`;
 
 
 // Flexible Login API Call
@@ -41,6 +43,25 @@ export const registerUserAPI = async (userData: {
         throw error; // Re-throw error for thunk to handle
     }
 };
+
+
+export async function addAddressAPI(address: Omit<Address, 'id'>, token: string): Promise<Address> {
+    const response = await fetch(ADD_ADDRESS_API_ENDPOINT, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(address),
+    });
+
+    if (!response.ok) {
+        throw new Error('Failed to add address');
+    }
+
+    return await response.json(); // Ensure it matches `Address` structure
+}
+
 
 // // TODO
 // // Fetch user profile API call

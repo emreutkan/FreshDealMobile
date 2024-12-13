@@ -1,6 +1,13 @@
 // store/userSlice.ts
 
-import {createSlice, PayloadAction} from '@reduxjs/toolkit';
+import {ActionReducerMapBuilder, createAsyncThunk, createSlice, PayloadAction} from '@reduxjs/toolkit';
+import 'react-native-get-random-values'; // This package polyfills crypto.getRandomValues() for React Native.
+// Polyfill crypto Before Importing uuid otherwise it will crash
+import {v4 as uuidv4} from 'uuid';
+import {RootState} from "@/store/store";
+import {addAddressAPI, loginUserAPI, registerUserAPI} from "@/api/userAPI"; // Generate unique IDs
+const id = uuidv4();
+console.log(id);
 
 // Define the initial state using TypeScript interfaces
 interface CartItem {
@@ -19,11 +26,13 @@ interface UserState {
     name_surname: string;
     passwordLogin: boolean; // New field
     verificationCode: string; // New field
-    step: "send_code" | "verify_code" | "skip_verification";  // New field
-    login_type: "email" | "phone_number";  // New field
+    step: "send_code" | "verify_code" | "skip_verification";
+    login_type: "email" | "phone_number";
     cart: CartItem[];
-    addresses: string[];
-    currentAddress: string | null;
+    addresses: Address[]; // Updated
+    // currentAddress: Address | null;
+    selectedAddressId: string | null; // ID of selected address
+    token: string | null;
     loading: boolean;  // Keep loading and error states for later use
     error: string | null;
 }
@@ -40,10 +49,24 @@ const initialState: UserState = {
     login_type: 'email', // Default
     cart: [],
     addresses: [],
-    currentAddress: null,
+    selectedAddressId: null,
     loading: false,
     error: null,
+    token: null,
 };
+
+// Define the address structure
+export interface Address {
+    id: string; // Unique identifier, not the id in the data
+    street: string;
+    neighborhood: string;
+    district: string;
+    province: string;
+    country: string;
+    postalCode: string;
+    apartmentNo: string;
+    doorNo: string,
+}
 
 
 const userSlice = createSlice({
@@ -102,20 +125,30 @@ const userSlice = createSlice({
         clearCart(state) {
             state.cart = [];
         },
-        addAddress(state, action: PayloadAction<string>) {
-            if (!state.addresses.includes(action.payload)) {
-                state.addresses.push(action.payload);
+        // Add a new address
+        addAddress(state, action: PayloadAction<Omit<Address, 'id'>>) {
+            const newAddress: Address = {...action.payload, id: uuidv4()};
+            state.addresses.push(newAddress);
+            if (state.addresses.length === 1) {
+                state.selectedAddressId = newAddress.id; // Default to first address
             }
         },
+
+        // Remove an address by ID
         removeAddress(state, action: PayloadAction<string>) {
-            state.addresses = state.addresses.filter(address => address !== action.payload);
-            if (state.currentAddress === action.payload) {
-                state.currentAddress = null;
+            state.addresses = state.addresses.filter(
+                (address) => address.id !== action.payload
+            );
+            // Reset selectedAddressId if the current selected address is removed
+            if (state.selectedAddressId === action.payload) {
+                state.selectedAddressId = state.addresses[0]?.id || null;
             }
         },
-        setCurrentAddress(state, action: PayloadAction<string>) {
-            if (state.addresses.includes(action.payload)) {
-                state.currentAddress = action.payload;
+
+        // Set a selected address by ID
+        setSelectedAddress(state, action: PayloadAction<string>) {
+            if (state.addresses.some((address) => address.id === action.payload)) {
+                state.selectedAddressId = action.payload;
             }
         },
 
@@ -123,6 +156,23 @@ const userSlice = createSlice({
             state.phoneNumber = '';
             // ... reset other fields as needed
         },
+    },
+    extraReducers: (builder: ActionReducerMapBuilder<UserState>) => {
+        builder
+            .addCase(addAddressAsync.fulfilled, (state, action) => {
+                const index = state.addresses.findIndex(addr => addr.id.startsWith('temp-'));
+                if (index !== -1) {
+                    state.addresses[index] = action.payload; // Replace temp with actual address
+                }
+            })
+        // .addCase(deleteAddressAsync.rejected, (state, action) => {
+        //     // Rollback handling for delete failure, if needed
+        //     console.error('Failed to delete address:', action.payload);
+        // })
+        // .addCase(editAddressAsync.rejected, (state, action) => {
+        //     // Rollback handling for edit failure, if needed
+        //     console.error('Failed to edit address:', action.payload);
+        // });
     },
 });
 
@@ -138,9 +188,101 @@ export const {
     setVerificationCode,
     setStep,       // New
     setLoginType,  // New    // ... other actions
-    setToken
+    setToken,
+    addAddress,
+    removeAddress,
+    setSelectedAddress,
 } = userSlice.actions;
 
 // Export the reducer
 export default userSlice.reducer;
 
+// Thunks
+
+export const addAddressAsync = createAsyncThunk<
+    Address,                      // Return type
+    Omit<Address, 'id'>,          // Payload type
+    { rejectValue: string; state: RootState }
+>(
+    'user/addAddressAsync',
+    async (address, {rejectWithValue, getState, dispatch}) => {
+        // Generate a temporary ID
+        const tempId = `temp-${Date.now()}`;
+        const tempAddress = {...address, id: tempId};
+
+        // Optimistically add the address
+        dispatch(addAddress(tempAddress));
+
+        try {
+            const token = getState().user.token;
+            if (!token) {
+                throw new Error('Authentication token is missing.');
+            }
+
+            // Send API request
+            const response = await addAddressAPI(address, token);
+            return response as Address;
+        } catch (error: any) {
+            dispatch(removeAddress(tempId)); // Rollback if API fails
+            const errorMessage = error.response?.data?.message || 'Failed to add address';
+            return rejectWithValue(errorMessage);
+        }
+    }
+);
+
+export const loginUser = createAsyncThunk(
+    'user/loginUser',
+    async (
+        payload: {
+            email?: string;
+            phone_number?: string;
+            password?: string;
+            verification_code?: string;
+            step?: "send_code" | "verify_code" | "skip_verification";
+            login_type?: "email" | "phone_number";
+            password_login?: boolean;
+        },
+        {rejectWithValue}
+    ) => {
+        console.log('loginUser thunk initiated with payload:', payload); // Log input payload
+        try {
+            const data = await loginUserAPI(payload);
+            console.log('loginUserAPI response:', data); // Log successful response
+            return data; // Return API response
+        } catch (error: any) {
+            console.error('loginUserAPI error:', error); // Log error details
+            console.error('Error response data:', error.response?.data); // Log API error response if available
+            return rejectWithValue(error.response?.data || 'Login failed');
+        }
+    }
+);
+
+export const registerUser = createAsyncThunk(
+    'user/registerUser',
+    async (
+        userData: {
+            name_surname: string;
+            email?: string;
+            phone_number?: string;
+            password: string;
+        },
+        {rejectWithValue}
+    ) => {
+        console.log('registerUser thunk initiated with payload:', userData);
+        try {
+            const data = await registerUserAPI(userData);
+            console.log('registerUserAPI successful response:', data);
+            return data;
+        } catch (error: any) {
+            console.error('registerUserAPI error details:', {
+                message: error.message,
+                response: error.response?.data,
+                status: error.response?.status,
+                config: error.config,
+            });
+            return rejectWithValue(
+                error.response?.data || 'Network Error or API failure'
+            );
+        }
+    }
+);

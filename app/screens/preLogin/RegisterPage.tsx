@@ -19,8 +19,8 @@ import {useRouter} from "expo-router";
 import NameSurnameInputField from "../../../components/LoginScreenComponents/NameSurnameInputField";
 import PasswordInput from "@/components/LoginScreenComponents/passwordInput";
 import {useDispatch, useSelector} from "react-redux";
-import {AppDispatch, RootState} from "../../../store/store";
-import {registerUser} from "../../../store/thunks/userThunks"; // Assuming you have a thunk
+import {AppDispatch, RootState} from "@/store/store";
+import {registerUser} from "@/store/userSlice"; // Assuming you have a thunk
 
 const RegisterScreen: React.FC = () => {
     const router = useRouter();
