@@ -1,16 +1,15 @@
 // components/LoginScreenComponents/AddressBar.tsx
-
 import React, {useState} from 'react';
 import {FlatList, Modal, StyleSheet, Text, TouchableOpacity, View,} from 'react-native';
 import {useSelector} from 'react-redux';
-import {RootState} from '@/store/store'; // Ensure this path is correct based on your project structure
+import {RootState} from '@/store/store';
 import {scaleFont} from '@/components/utils/ResponsiveFont';
 import {Ionicons} from '@expo/vector-icons';
-import LoginButton from "@/components/LoginScreenComponents/loginButton";
-import {router} from 'expo-router'; // Use the useRouter hook for navigation
+import {useRouter} from 'expo-router'; // Corrected to useRouter hook
+import LoginButton from '@/components/LoginScreenComponents/loginButton';
 
 interface Address {
-    id: string; // Ensure each address has a unique ID
+    id: string;
     street: string;
     neighborhood: string;
     district: string;
@@ -21,10 +20,11 @@ interface Address {
 }
 
 const AddressBar: React.FC = () => {
-    const addresses = useSelector((state: RootState) => state.user.addresses) as unknown as Address[];
-    const [selectedAddress, setSelectedAddress] = useState<Address | null>(addresses.length > 0 ? addresses[0] : null);
+    const addresses = useSelector((state: RootState) => state.user.addresses) as Address[];
+    const [selectedAddress, setSelectedAddress] = useState<Address | null>(addresses[0] || null);
     const [modalVisible, setModalVisible] = useState<boolean>(false);
     const [textWidth, setTextWidth] = useState<number>(0);
+    const router = useRouter();
 
     const handleAddressSelect = (address: Address) => {
         setSelectedAddress(address);
@@ -35,7 +35,7 @@ const AddressBar: React.FC = () => {
         if (!selectedAddress) return 'No address selected';
         if (textWidth <= scaleFont(100)) {
             return selectedAddress.street;
-        } else if (textWidth > scaleFont(100) && textWidth <= scaleFont(200)) {
+        } else if (textWidth <= scaleFont(200)) {
             return `${selectedAddress.street}`;
         } else {
             return `${selectedAddress.street}, ${selectedAddress.district}`;
@@ -44,7 +44,6 @@ const AddressBar: React.FC = () => {
 
     const switchToAddAddress = () => {
         router.push("../addressScreen/addressSelectionScreen");
-
     };
 
     const handleAddNewAddress = () => {
@@ -52,7 +51,6 @@ const AddressBar: React.FC = () => {
         switchToAddAddress();
     };
 
-    // Render each address item in the FlatList
     const renderAddressItem = ({item}: { item: Address }) => (
         <TouchableOpacity
             onPress={() => handleAddressSelect(item)}
@@ -71,13 +69,15 @@ const AddressBar: React.FC = () => {
             <View
                 style={[
                     styles.addressBar,
-                    {minWidth: textWidth + scaleFont(40)} // Ensure minWidth doesn't break layout
+                    {minWidth: textWidth + scaleFont(40)}
                 ]}
             >
                 <Ionicons name="location-sharp" size={scaleFont(20)} color="#666" style={styles.icon}/>
                 <Text
                     style={styles.addressText}
                     onLayout={(event) => setTextWidth(event.nativeEvent.layout.width)}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
                 >
                     {renderAddressContent()}
                 </Text>
@@ -85,7 +85,9 @@ const AddressBar: React.FC = () => {
                 <TouchableOpacity
                     onPress={() => setModalVisible(true)}
                     style={styles.touchableOverlay}
-                    activeOpacity={1} // Ensure touchable area
+                    activeOpacity={1}
+                    accessibilityLabel="Open Address Selector"
+                    accessibilityHint="Opens a modal to select or add a new address"
                 />
             </View>
 
@@ -99,7 +101,7 @@ const AddressBar: React.FC = () => {
                     <TouchableOpacity
                         style={styles.modalOverlay}
                         activeOpacity={1}
-                        onPressOut={() => setModalVisible(false)} // Close modal when tapping outside
+                        onPressOut={() => setModalVisible(false)}
                     >
                         <View style={styles.modalContainer}>
                             <Text style={styles.modalTitle}>Select Address</Text>
@@ -137,7 +139,6 @@ const AddressBar: React.FC = () => {
 
 const styles = StyleSheet.create({
     container: {
-        // Ensure the AddressBar is positioned correctly within its parent
         padding: scaleFont(10),
     },
     addressBar: {
@@ -146,14 +147,14 @@ const styles = StyleSheet.create({
         paddingVertical: scaleFont(10),
         paddingHorizontal: scaleFont(15),
         borderRadius: scaleFont(20),
-        backgroundColor: '#f1f1f1',
-        borderColor: '#ccc',
+        backgroundColor: '#f9f9f9',
+        borderColor: '#e0e0e0',
         borderWidth: 1,
         shadowColor: '#000',
-        shadowOffset: {width: 0, height: 2},
-        shadowOpacity: 0.3,
-        shadowRadius: 3,
-        elevation: 2,
+        shadowOffset: {width: 0, height: 1},
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+        elevation: 1,
         maxHeight: scaleFont(60),
         minWidth: scaleFont(120),
     },
@@ -163,7 +164,7 @@ const styles = StyleSheet.create({
     addressText: {
         fontSize: scaleFont(16),
         color: '#333',
-        flexShrink: 1, // Prevent text overflow
+        flexShrink: 1,
     },
     touchableOverlay: {
         position: 'absolute',
@@ -179,51 +180,53 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
     },
     modalContainer: {
-        width: '80%',
+        width: '85%',
         maxHeight: '80%',
         backgroundColor: '#fff',
         borderRadius: scaleFont(10),
-        padding: scaleFont(15),
+        padding: scaleFont(20),
     },
     modalTitle: {
-        fontSize: scaleFont(18),
-        fontWeight: 'bold',
-        marginBottom: scaleFont(10),
+        fontSize: scaleFont(20),
+        fontWeight: '600',
+        marginBottom: scaleFont(15),
         textAlign: 'center',
+        color: '#333',
     },
     flatListContent: {
         paddingBottom: scaleFont(10),
     },
     addressOption: {
-        paddingVertical: scaleFont(10),
+        paddingVertical: scaleFont(12),
         borderBottomWidth: 1,
-        borderColor: '#ddd',
+        borderColor: '#e0e0e0',
     },
     addressOptionText: {
         fontSize: scaleFont(16),
-        color: '#333',
+        color: '#444',
     },
     addAddressButton: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: scaleFont(10),
-        marginTop: scaleFont(10),
+        paddingVertical: scaleFont(12),
+        marginTop: scaleFont(15),
+        justifyContent: 'center',
     },
     addAddressText: {
         fontSize: scaleFont(16),
         color: '#007AFF',
-        marginLeft: scaleFont(5),
+        marginLeft: scaleFont(8),
     },
     closeButton: {
-        marginTop: scaleFont(10),
+        marginTop: scaleFont(20),
         alignItems: 'center',
-        padding: scaleFont(10),
-        backgroundColor: '#ccc',
+        paddingVertical: scaleFont(10),
+        backgroundColor: '#f0f0f0',
         borderRadius: scaleFont(5),
     },
     noAddressesText: {
         fontSize: scaleFont(16),
-        color: '#555',
+        color: '#666',
         textAlign: 'center',
         marginVertical: scaleFont(10),
     },

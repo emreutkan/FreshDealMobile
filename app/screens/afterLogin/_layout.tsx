@@ -1,6 +1,5 @@
 import React from 'react';
 import Header from "@/components/afterloginComponents/Header";
-import {Slot} from 'expo-router';
 import {useSelector} from 'react-redux'; // Import for accessing Redux state
 import {RootState} from '@/store/store'; // Adjust path as needed
 import AddressSelectorScreen from "@/app/screens/addressScreen/addressSelectionScreen"; // Import your address selection screen
@@ -14,7 +13,7 @@ const Layout = () => {
             {addresses && addresses.length > 0 ? (
                 <>
                     <Header/>
-                    <Slot/>
+                    {/*<Slot/>*/}
                 </>
             ) : (
                 <AddressSelectorScreen/>
