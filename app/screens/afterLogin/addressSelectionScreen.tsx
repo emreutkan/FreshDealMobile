@@ -3,48 +3,35 @@ import {
     ActivityIndicator,
     Alert,
     Animated,
-    Button,
     Dimensions,
     Easing,
     KeyboardAvoidingView,
     Platform,
     StyleSheet,
     Text,
-    TextInput,
     TouchableOpacity,
     View,
 } from 'react-native';
 import {useDispatch} from 'react-redux';
-import {addAddress, setSelectedAddress} from '@/store/userSlice'; // Updated import
 import MapView, {Region} from 'react-native-maps';
 import * as Location from 'expo-location';
 import {MaterialIcons} from '@expo/vector-icons';
 import LoginButton from '@/components/LoginScreenComponents/loginButton'; // Keep only one import
 import debounce from 'lodash.debounce';
 import {scaleFont} from '@/components/utils/ResponsiveFont';
-import {v4 as uuidv4} from 'uuid'; // Import uuid
-
-// Define the Address interface
-interface Address {
-    id: string; // Ensure id is included
-    street: string;
-    neighborhood: string;
-    district: string;
-    province: string;
-    country: string;
-    postalCode: string;
-    apartmentNo: string;
-}
+import {addAddressAsync, Address} from "@/store/userSlice";
+import InputField from "@/components/defaultInput";
+import {AppDispatch} from "@/store/store";
 
 const AddressSelectorScreen: React.FC = () => {
-    const dispatch = useDispatch();
+    const dispatch = useDispatch<AppDispatch>();
     const mapRef = useRef<MapView>(null);
     const [isMapInteracted, setIsMapInteracted] = useState<boolean>(false);
     const [initialLoading, setInitialLoading] = useState<boolean>(true);
     const [locationLoading, setLocationLoading] = useState<boolean>(false);
     const [activateAddressDetails, setActivateAddressDetails] = useState<boolean>(false);
-
-    const [address, setAddress] = useState<Address>({
+    //
+    const [selectedAddress, setSelectedAddress] = useState<Address>({
         id: '', // Initialize id
         street: '',
         neighborhood: '',
@@ -53,6 +40,7 @@ const AddressSelectorScreen: React.FC = () => {
         country: '',
         postalCode: '',
         apartmentNo: '',
+        doorNo: '',
     });
     const [region, setRegion] = useState<Region>({
         latitude: 37.7749,
@@ -149,32 +137,68 @@ const AddressSelectorScreen: React.FC = () => {
     }, []);
 
     const handleAddressChange = (field: keyof Address, value: string) => {
-        setAddress(prevAddress => ({
+        setSelectedAddress(prevAddress => ({
             ...prevAddress,
             [field]: value,
         }));
     };
 
-    const handleAddressConfirm = () => {
-        const {street, district, country} = address;
 
-        // Validate required fields; adjust as necessary
-        if (street.trim() === '' || district.trim() === '' || country.trim() === '') {
-            Alert.alert('Error', 'Please fill in at least Street, City, and Country.');
+    const handleAddressConfirm = async () => {
+        // Extract the necessary fields from the address state
+        const {id, ...addressPayload} = selectedAddress;
+
+        // Basic validation to check required fields
+        if (!addressPayload.street || !addressPayload.district || !addressPayload.postalCode) {
+            Alert.alert('Error', 'Please fill in all required fields (Street, City, Postal Code).');
             return;
         }
 
-        // Generate a unique ID for the new address
-        const id = uuidv4();
+        try {
+            console.log('Submitting address:', addressPayload);
+            try {
+                const result = await dispatch(addAddressAsync(addressPayload)).unwrap();
+                if (result) { // Check if the result was successfully returned
+                    console.log('Address added successfully:', result);
+                }
+            } catch (error) {
+                console.error('Failed to add address:', error);
+                // Handle rejection (e.g., display error message)
+                setSelectedAddress({
+                    id: '',
+                    street: '',
+                    neighborhood: '',
+                    district: '',
+                    province: '',
+                    country: '',
+                    postalCode: '',
+                    apartmentNo: '',
+                    doorNo: '',
 
-        const newAddress: Address = {...address, id};
+                });
+            }
 
-        dispatch(addAddress(newAddress));
-        dispatch(setSelectedAddress(id));
+            // Optional: Reset form or navigate
 
-        Alert.alert('Success', 'Address has been set!');
-        // Optionally navigate back or reset the form
-        // navigation.goBack();
+            setActivateAddressDetails(false); // Collapse form
+        } catch (error) {
+            setSelectedAddress({
+                id: '',
+                street: '',
+                neighborhood: '',
+                district: '',
+                province: '',
+                country: '',
+                postalCode: '',
+                apartmentNo: '',
+                doorNo: '',
+
+            });
+            console.error('Address submission failed:', error);
+            // @ts-ignore
+            Alert.alert('Error', error || 'Failed to add the address. Please try again.');
+        }
+
     };
 
     /**
@@ -187,15 +211,16 @@ const AddressSelectorScreen: React.FC = () => {
             setIsReverseGeocoding(true); // Start loading
             const [addressData] = await Location.reverseGeocodeAsync({latitude, longitude});
             if (addressData) {
-                setAddress({
+                setSelectedAddress({
                     id: '', // Clear or keep existing id
                     street: addressData.street || '',
                     neighborhood: addressData.subregion || '',
-                    district: addressData.city || '',
+                    district: addressData.city || '', // same thing as province
                     province: addressData.region || '',
                     country: addressData.country || '',
                     postalCode: addressData.postalCode || '',
-                    apartmentNo: '', // Typically not available via reverse geocoding
+                    apartmentNo: '', // not available via reverse geocoding
+                    doorNo: '',
                 });
             } else {
                 Alert.alert('No Address Found', 'Unable to retrieve address for the selected location.');
@@ -419,8 +444,9 @@ const AddressSelectorScreen: React.FC = () => {
                         <View style={styles.addressPreviewContainer}>
                             <View>
                                 <Text
-                                    style={styles.addressText}>{`${address.street}, ${address.district} ${address.postalCode}`}</Text>
-                                <Text style={styles.addressSubText}>{`${address.province}, ${address.country}`}</Text>
+                                    style={styles.addressText}>{`${selectedAddress.street}, ${selectedAddress.district} ${selectedAddress.postalCode}`}</Text>
+                                <Text
+                                    style={styles.addressSubText}>{`${selectedAddress.province}, ${selectedAddress.country}`}</Text>
                             </View>
                             {isReverseGeocoding && (
                                 <View style={styles.addressLoadingOverlay}>
@@ -447,57 +473,50 @@ const AddressSelectorScreen: React.FC = () => {
                             },
                         ]}
                     >
-                        <TextInput
-                            style={styles.input}
+                        <InputField
+                            value={selectedAddress.street}
+                            onChange={(text) => handleAddressChange('street', text)}
                             placeholder="Street"
-                            value={address.street}
-                            onChangeText={(text) => handleAddressChange('street', text)}
                             returnKeyType="next"
                         />
-                        <TextInput
-                            style={styles.input}
+                        <InputField
+                            value={selectedAddress.neighborhood}
+                            onChange={(text) => handleAddressChange('neighborhood', text)}
                             placeholder="Neighborhood"
-                            value={address.neighborhood}
-                            onChangeText={(text) => handleAddressChange('neighborhood', text)}
                             returnKeyType="next"
                         />
-                        <TextInput
-                            style={styles.input}
+                        <InputField
+                            value={selectedAddress.district}
+                            onChange={(text) => handleAddressChange('district', text)}
                             placeholder="City"
-                            value={address.district}
-                            onChangeText={(text) => handleAddressChange('district', text)}
                             returnKeyType="next"
                         />
-                        <TextInput
-                            style={styles.input}
+                        <InputField
+                            value={selectedAddress.province}
+                            onChange={(text) => handleAddressChange('province', text)}
                             placeholder="Region"
-                            value={address.province}
-                            onChangeText={(text) => handleAddressChange('province', text)}
                             returnKeyType="next"
                         />
-                        <TextInput
-                            style={styles.input}
+                        <InputField
+                            value={selectedAddress.country}
+                            onChange={(text) => handleAddressChange('country', text)}
                             placeholder="Country"
-                            value={address.country}
-                            onChangeText={(text) => handleAddressChange('country', text)}
                             returnKeyType="next"
                         />
-                        <TextInput
-                            style={styles.input}
+                        <InputField
+                            value={selectedAddress.postalCode}
+                            onChange={(text) => handleAddressChange('postalCode', text)}
                             placeholder="Postal Code"
-                            value={address.postalCode}
-                            onChangeText={(text) => handleAddressChange('postalCode', text)}
                             keyboardType="numeric"
                             returnKeyType="next"
                         />
-                        <TextInput
-                            style={styles.input}
+                        <InputField
+                            value={selectedAddress.apartmentNo}
+                            onChange={(text) => handleAddressChange('apartmentNo', text)}
                             placeholder="Apartment Number"
-                            value={address.apartmentNo}
-                            onChangeText={(text) => handleAddressChange('apartmentNo', text)}
                             returnKeyType="done"
                         />
-                        <Button title="Confirm Address" onPress={handleAddressConfirm}/>
+                        <LoginButton onPress={handleAddressConfirm} title={'Confirm Address'}/>
                     </Animated.View>
                 )}
             </KeyboardAvoidingView>

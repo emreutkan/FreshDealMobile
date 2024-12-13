@@ -1,11 +1,10 @@
 import React from 'react';
-import { View, StyleSheet, Dimensions } from 'react-native';
-import { scaleFont } from "@/components/utils/ResponsiveFont";
+import {Dimensions, StyleSheet, View} from 'react-native';
+import {scaleFont} from "@/components/utils/ResponsiveFont";
 import AddressBar from "@/components/afterloginComponents/AddressBar";
-// import NotificationIcon from "@/components/afterloginComponents/NotificationIcon";
-// import ProfileIcon from "@/components/afterloginComponents/ProfileIcon";
 
-const { height: screenHeight } = Dimensions.get('window');
+
+const {height: screenHeight} = Dimensions.get('window');
 const HEADER_HEIGHT = screenHeight * scaleFont(0.14);
 
 const Header = () => {
@@ -15,7 +14,7 @@ const Header = () => {
                 {/* Left Section: AddressBar */}
                 <View style={styles.leftContainer}>
 
-                    <AddressBar />
+                    <AddressBar/>
                 </View>
 
                 {/* Right Section: Notification and Profile Icons */}

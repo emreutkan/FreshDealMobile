@@ -16,8 +16,7 @@ import {
     PhoneSignInButton,
 } from '@/components/LoginScreenComponents/loginButtons';
 import PasswordInput from "@/components/LoginScreenComponents/passwordInput";
-import {loginUser} from '@/store/thunks/userThunks';
-import {setLoginType, setPasswordLogin, setToken} from '@/store/userSlice';
+import {loginUser, setLoginType, setPasswordLogin, setToken} from '@/store/userSlice';
 
 const LoginPage: React.FC = () => {
     const router = useRouter();

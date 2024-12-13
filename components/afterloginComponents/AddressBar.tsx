@@ -59,7 +59,7 @@ const AddressBar: React.FC = () => {
     };
 
     const switchToAddAddress = () => {
-        router.push('/addressSelection'); // Use absolute path
+        router.push('./addressSelectionScreen');
     };
 
     const handleAddNewAddress = () => {
