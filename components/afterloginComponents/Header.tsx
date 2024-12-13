@@ -6,21 +6,19 @@ import AddressBar from "@/components/afterloginComponents/AddressBar";
 const {height: screenHeight} = Dimensions.get('window');
 const HEADER_HEIGHT = screenHeight * scaleFont(0.14);
 
-const Header = ({visible = true,}) => {
-    if (!visible) {
-        return null; // If visible is false, do not render the header
-    }
-
+const Header = () => {
     return (
         <View style={styles.headerContainer}>
             <View style={styles.rowContainer}>
                 {/* Left Section: AddressBar */}
                 <View style={styles.leftContainer}>
+
                     <AddressBar/>
                 </View>
 
                 {/* Right Section: Notification and Profile Icons */}
                 <View style={styles.rightContainer}>
+
                     {/*<NotificationIcon />*/}
                     {/*<ProfileIcon />*/}
                 </View>
@@ -33,9 +31,9 @@ const styles = StyleSheet.create({
     headerContainer: {
         height: HEADER_HEIGHT,
         backgroundColor: '#ffffff',
-        justifyContent: 'flex-end',
+        justifyContent: 'flex-end', // Positions children towards the end
         paddingHorizontal: scaleFont(15),
-        paddingBottom: HEADER_HEIGHT / scaleFont(15),
+        paddingBottom: HEADER_HEIGHT / scaleFont(15), // Adjusts padding to create a 3/4 positioning effect
         borderBottomRightRadius: scaleFont(15),
         borderBottomLeftRadius: scaleFont(15),
     },
@@ -46,7 +44,11 @@ const styles = StyleSheet.create({
         width: '100%',
     },
     leftContainer: {
+        //  borderWidth: 1,
+        // height: scaleFont(60), // set this in addressbar.tsx
+
         width: scaleFont(100),
+
     },
     rightContainer: {
         borderWidth: 1,

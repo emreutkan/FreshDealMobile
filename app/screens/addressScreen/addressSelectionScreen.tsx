@@ -22,12 +22,10 @@ import {scaleFont} from '@/components/utils/ResponsiveFont';
 import {addAddressAsync, Address} from "@/store/userSlice";
 import InputField from "@/components/defaultInput";
 import {AppDispatch} from "@/store/store";
+import {router} from "expo-router";
 
-interface AddressSelectionScreenProps {
-    onDone?: () => void; // Callback to signal completion
-}
 
-const AddressSelectionScreen: React.FC<AddressSelectionScreenProps> = ({onDone}) => {
+const AddressSelectionScreen: React.FC = () => {
 
     const dispatch = useDispatch<AppDispatch>();
     const mapRef = useRef<MapView>(null);
@@ -129,9 +127,7 @@ const AddressSelectionScreen: React.FC<AddressSelectionScreenProps> = ({onDone})
             setInitialLoading(false);
             setLocationLoading(false);
         }
-        if (onDone) {
-            onDone();
-        }
+
     };
 
     const getUserLocation = async () => {
@@ -206,6 +202,7 @@ const AddressSelectionScreen: React.FC<AddressSelectionScreenProps> = ({onDone})
             // @ts-ignore
             Alert.alert('Error', error || 'Failed to add the address. Please try again.');
         }
+        router.back()
 
     };
 

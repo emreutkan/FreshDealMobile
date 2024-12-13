@@ -1,13 +1,13 @@
 // components/LoginScreenComponents/AddressBar.tsx
 
-import React, {useEffect, useState} from 'react';
+import React, {useState} from 'react';
 import {FlatList, Modal, StyleSheet, Text, TouchableOpacity, View,} from 'react-native';
 import {useSelector} from 'react-redux';
 import {RootState} from '@/store/store'; // Ensure this path is correct based on your project structure
 import {scaleFont} from '@/components/utils/ResponsiveFont';
 import {Ionicons} from '@expo/vector-icons';
 import LoginButton from "@/components/LoginScreenComponents/loginButton";
-import {useRouter} from 'expo-router'; // Use the useRouter hook for navigation
+import {router} from 'expo-router'; // Use the useRouter hook for navigation
 
 interface Address {
     id: string; // Ensure each address has a unique ID
@@ -22,44 +22,28 @@ interface Address {
 
 const AddressBar: React.FC = () => {
     const addresses = useSelector((state: RootState) => state.user.addresses) as unknown as Address[];
-    const router = useRouter();
-
-    const [selectedAddress, setSelectedAddress] = useState<Address | null>(
-        addresses.length > 0 ? addresses[0] : null
-    );
+    const [selectedAddress, setSelectedAddress] = useState<Address | null>(addresses.length > 0 ? addresses[0] : null);
     const [modalVisible, setModalVisible] = useState<boolean>(false);
     const [textWidth, setTextWidth] = useState<number>(0);
-
-    // Update selectedAddress if addresses change
-    useEffect(() => {
-        if (addresses.length > 0 && !selectedAddress) {
-            setSelectedAddress(addresses[0]);
-        } else if (addresses.length === 0) {
-            setSelectedAddress(null);
-        }
-    }, [addresses, selectedAddress]);
 
     const handleAddressSelect = (address: Address) => {
         setSelectedAddress(address);
         setModalVisible(false);
     };
 
-    // Improved address rendering logic
     const renderAddressContent = () => {
         if (!selectedAddress) return 'No address selected';
-
-        // Optional: Adjust based on actual screen sizes and font scaling
-        if (textWidth <= scaleFont(120)) {
+        if (textWidth <= scaleFont(100)) {
             return selectedAddress.street;
-        } else if (textWidth > scaleFont(120) && textWidth <= scaleFont(220)) {
-            return `${selectedAddress.street}, ${selectedAddress.district}`;
+        } else if (textWidth > scaleFont(100) && textWidth <= scaleFont(200)) {
+            return `${selectedAddress.street}`;
         } else {
-            return `${selectedAddress.street}, ${selectedAddress.district}, ${selectedAddress.province}`;
+            return `${selectedAddress.street}, ${selectedAddress.district}`;
         }
     };
 
     const switchToAddAddress = () => {
-        router.push("../afterLogin/addressSelectionScreen");
+        router.push("../addressScreen/addressSelectionScreen");
 
     };
 
