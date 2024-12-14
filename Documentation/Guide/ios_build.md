@@ -1,4 +1,4 @@
-# Sideload Expo Development Build to iOS instead of using Expo go
+# Side load Expo Development Build to iOS instead of using Expo go
 
 This guide covers setting up Java, Ruby, CocoaPods, and Xcode for building and sideloading an iOS project locally.
 
@@ -6,7 +6,7 @@ This guide covers setting up Java, Ruby, CocoaPods, and Xcode for building and s
 
 ## 1. Install Java
 
-Install latest version of Java
+Install the latest version of Java
 
 ```bash
 brew install openjdk@17
@@ -38,7 +38,7 @@ Install the latest version of Ruby using Homebrew:
 brew install ruby
 ```
 
-After installing, Homebrew will output the installation path, usually:
+After installing, Homebrew will usually output the installation path:
 
 ```
 /opt/homebrew/opt/ruby/bin
