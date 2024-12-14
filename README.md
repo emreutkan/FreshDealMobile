@@ -64,4 +64,18 @@ eas build --platform android --profile production
 | **Size**         | Larger, contains all resources. | Smaller after optimization.                |
 | **Use Case**     | Local testing, sideloading.     | Publishing on Google Play Store.           |
 
+# Clean local build android
 
+type this in powershell to set JAVA_HOME
+
+```powershell
+
+$env:JAVA_HOME="C:\Program Files\Android\Android Studio\jbr"
+$env:Path="$env:JAVA_HOME\bin;$env:Path"
+```
+
+```aiignore
+cd android
+./gradle clean
+./gradlew assembleDebug
+```
