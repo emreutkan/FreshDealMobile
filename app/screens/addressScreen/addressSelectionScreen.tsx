@@ -23,9 +23,11 @@ import {addAddressAsync, Address} from "@/store/userSlice";
 import InputField from "@/components/defaultInput";
 import {AppDispatch} from "@/store/store";
 import {router} from "expo-router";
+import Constants from 'expo-constants'; // Import for app config
 
 
 const AddressSelectionScreen: React.FC = () => {
+    const GOOGLE_MAPS_API_KEY = Constants?.manifest?.extra?.googleMapsApiKey || '';
 
     const dispatch = useDispatch<AppDispatch>();
     const mapRef = useRef<MapView>(null);

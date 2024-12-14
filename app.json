@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "reactnativeexpoapp",
-    "slug": "reactnativeexpoapp",
+    "name": "FreshDeal",
+    "slug": "FreshDeal",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -10,7 +10,7 @@
     "splash": {
       "image": "./assets/images/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#fff"
     },
     "ios": {
       "supportsTablet": true
@@ -18,7 +18,9 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#fff",
+        "backgroundImage": "",
+        "monochromeImage": ""
       },
       "package": "com.emreutkan.freshdeal"
     },
@@ -35,6 +37,7 @@
       "typedRoutes": true
     },
     "extra": {
+      "googleMapsApiKey": "YOUR_GOOGLE_MAPS_API_KEY",
       "router": {
         "origin": false
       },
