@@ -26,7 +26,6 @@ import {router} from "expo-router";
 
 
 const AddressSelectionScreen: React.FC = () => {
-
     const dispatch = useDispatch<AppDispatch>();
     const mapRef = useRef<MapView>(null);
     const [isMapInteracted, setIsMapInteracted] = useState<boolean>(false);
