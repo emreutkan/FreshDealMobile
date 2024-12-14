@@ -1,75 +1,130 @@
-# for macos (APPLE SILICON)
+# Android Build Setup for macOS (Apple Silicon)
 
-# android build
+This guide will walk you through setting up your environment for building and running Android projects on **Apple
+Silicon**.
 
-## installs
+---
 
-1. homebrew
+## 1. Install Homebrew
 
- ```aiignore
+First, install Homebrew (a package manager for macOS):
+
+```bash
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-
 ```
 
-2. Android Studio
-3. Java
+---
 
-```aiignore
+## 2. Install Required Tools
+
+### Install Java (OpenJDK 17)
+
+```bash
 brew install openjdk@17
 ```
 
-## Setup JAVA_HOME
+---
 
-```aiignore
+### 3. Set Up `JAVA_HOME`
+
+Add the Java environment variable to your shell configuration:
+
+```bash
 echo 'export JAVA_HOME=$(/usr/libexec/java_home -v 17)' >> ~/.zshrc
 source ~/.zshrc
 ```
 
-## Setup ANDROID_SDK_ROOT
+Verify the Java version:
 
-On older systems, ANDROID_HOME was used. Most modern builds prefer ANDROID_SDK_ROOT.
+```bash
+java -version
+```
 
-```aiignore
+---
+
+### 4. Install Android Studio
+
+1. Download and install [Android Studio](https://developer.android.com/studio).
+2. Follow the installation prompts to set up the **SDK**.
+
+---
+
+## 5. Set Up `ANDROID_SDK_ROOT`
+
+Modern builds use `ANDROID_SDK_ROOT` instead of `ANDROID_HOME`. Add this to your shell configuration:
+
+```bash
 echo 'export ANDROID_SDK_ROOT=~/Library/Android/sdk' >> ~/.zshrc
 source ~/.zshrc
 ```
 
-## setup adb
+---
 
-```aiignore
+## 6. Set Up `adb` (Android Debug Bridge)
+
+Add the `platform-tools` path to your system's PATH variable:
+
+```bash
 echo 'export PATH=$PATH:$HOME/Library/Android/sdk/platform-tools' >> ~/.zshrc
 source ~/.zshrc
-
 ```
 
-## open terminal cd to project root
+Verify the `adb` installation:
 
-```aiignore
-brew install openjdk@17
+```bash
+adb version
 ```
 
-```aiignore
+---
+
+## 7. Prepare Your Project
+
+Navigate to your project root in the terminal:
+
+```bash
+cd /path/to/your/project
+```
+
+Generate the native Android directories:
+
+```bash
 npx expo prebuild
 ```
 
-## for aab
+---
 
-```aiignore
+## 8. Build the App
+
+### Build AAB (Android App Bundle)
+
+To create an AAB file:
+
+```bash
 eas build --local
 ```
 
-## for apk
+---
 
-```aiignore
+### Build APK (Preview Profile)
+
+To create an APK file:
+
+```bash
 eas build --local --profile preview
 ```
 
-## installing apk to device
+---
 
-!!!! start an emulator
+## 9. Install the APK on an Emulator or Device
 
-locate the apk file and run
+### Start the Emulator
 
-```aiignore
+Ensure your Android emulator is running or connect a physical device via USB.
+
+### Install the APK
+
+Locate the generated APK file (usually in the `build` folder) and run:
+
+```bash
 adb install build.apk
 ```
