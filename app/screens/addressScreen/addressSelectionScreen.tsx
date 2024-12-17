@@ -23,9 +23,12 @@ import {addAddressAsync, Address} from "@/store/userSlice";
 import InputField from "@/components/defaultInput";
 import {AppDispatch} from "@/store/store";
 import {router} from "expo-router";
+import {useNavigationState} from "@react-navigation/core";
 
 
 const AddressSelectionScreen: React.FC = () => {
+    const navigationState = useNavigationState((state) => state);
+
     const dispatch = useDispatch<AppDispatch>();
     const mapRef = useRef<MapView>(null);
     const [isMapInteracted, setIsMapInteracted] = useState<boolean>(false);
@@ -201,10 +204,21 @@ const AddressSelectionScreen: React.FC = () => {
             // @ts-ignore
             Alert.alert('Error', error || 'Failed to add the address. Please try again.');
         }
-        router.back()
+        handleBack()
 
     };
-
+    const handleBack = () => {
+        // Get the previous screen name
+        const prevScreen = navigationState.routes[navigationState.index - 1]?.name;
+        console.log('Previous screen:', prevScreen);
+        // Check if the previous screen is NOT 'Login'
+        if (prevScreen && prevScreen !== 'screens/preLogin') {
+            router.back();
+        } else {
+            console.log('Already at LoginPage, cannot go back.');
+            // Optionally navigate to a safe page
+        }
+    };
     /**
      * Updated handleAddressUpdate function to handle both map press and drag end
      * @param latitude
