@@ -281,6 +281,8 @@ const AddressSelectionScreen: React.FC = () => {
     const styles = StyleSheet.create({
         container: {
             flex: 1,
+            backgroundColor: 'rgb(239,235,235)',
+
         },
         mapContainer: {
             flex: 0.85,
@@ -288,15 +290,20 @@ const AddressSelectionScreen: React.FC = () => {
             borderWidth: 0,
             borderBottomRightRadius: 20,
             overflow: 'hidden',
-        },
-        formWrapper: {
-            flex: 0.1,
-            marginBottom: scaleFont(10),
+            // backgroundColor: 'rgba(136,136,136,0.4)',
 
         },
+        formWrapper: {
+            marginVertical: scaleFont(16),
+            flex: 0.1,
+            // marginBottom: scaleFont(20),
+            // alignSelf: 'center',
+            paddingHorizontal: scaleFont(16),
+            gap: scaleFont(16),
+        },
         belowMap: {
-            flex: 1,
-            paddingVertical: scaleFont(10),
+
+            paddingVertical: scaleFont(8),
 
         },
         map: {
@@ -313,7 +320,6 @@ const AddressSelectionScreen: React.FC = () => {
             position: 'absolute',
             bottom: 15,
             right: 15,
-            // backgroundColor: '#000',
             padding: 12,
             borderRadius: 30,
             justifyContent: 'center',
@@ -332,17 +338,19 @@ const AddressSelectionScreen: React.FC = () => {
             textAlign: 'center',
         },
         addressPreviewContainer: {
-            marginHorizontal: scaleFont(20),
-            position: 'relative',
+            marginHorizontal: scaleFont(16),
+            // position: 'relative',
             // marginBottom: 16,
-            flex: 1, // Take available space
+            // flex: 1, // Take available space
             // marginRight: 8, // Add some margin to separate from the loading overlay or button
             flexDirection: 'row', // Arrange children in a row
             alignItems: 'center', // Vertically center the items
             justifyContent: 'space-between', // Optional: Adjust spacing between items if needed
+            // backgroundColor: 'rgba(136,136,136,0.4)',
+
         },
         addressText: {
-            color: 'white',
+            // color: 'white',
         },
         addressSubText: {
             color: 'gray',
@@ -355,7 +363,7 @@ const AddressSelectionScreen: React.FC = () => {
             left: 0,
             right: 0,
             bottom: 0,
-            backgroundColor: 'rgba(255, 255, 255, 0.6)',
+            backgroundColor: 'rgba(136,136,136,0.4)',
             justifyContent: 'center',
             alignItems: 'center',
             borderRadius: 8,
