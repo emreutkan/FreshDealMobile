@@ -25,10 +25,10 @@ const Layout = () => {
             case 'Restaurants':
                 return (
                     <View style={styles.screen}>
-                        <SafeAreaView>
-                            <Header isScrolled={isScrolled}/>
 
-                        </SafeAreaView>
+                        <Header isScrolled={isScrolled}/>
+
+
                         <ScrollView
                             onScroll={handleScroll}
                             scrollEventThrottle={16} // For smooth performance
@@ -51,7 +51,7 @@ const Layout = () => {
         <>
             <View style={styles.container}>{renderContent()}</View>
 
-            <View style={styles.navbar}>
+            <SafeAreaView style={styles.navbar}>
                 <TouchableOpacity
                     style={[styles.navItem, selectedTab === 'Restaurants' && styles.selectedItem]}
                     onPress={() => setSelectedTab('Restaurants')}
@@ -64,17 +64,13 @@ const Layout = () => {
                 >
                     <Text>Market</Text>
                 </TouchableOpacity>
-            </View>
+            </SafeAreaView>
         </>
     );
 };
 
 const styles = StyleSheet.create({
-    safeArea: {
-        backgroundColor: '#ffffff',
-        borderWidth: 1,
-        borderColor: '#FF0000', // Red
-    },
+
     container: {
         flex: 1,
         backgroundColor: '#f5f5f5',
@@ -84,43 +80,28 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-around',
         backgroundColor: '#fff',
-        paddingVertical: 10,
-        borderTopWidth: 1,
-        borderColor: '#0000FF', // Blue
-        borderWidth: 1,
     },
     navItem: {
         padding: 10,
         alignItems: 'center',
-        borderWidth: 1,
-        borderColor: '#FFA500', // Orange
+
     },
     selectedItem: {
         borderBottomWidth: 2,
-        // borderColor: '#50703C',
-        borderWidth: 1,
-        borderColor: '#800080', // Purple
+
     },
     screen: {
         flex: 1,
-        borderWidth: 1,
-        borderColor: '#FFC0CB', // Pink
+
     },
 
 
     text: {
         fontSize: 20,
         fontWeight: 'bold',
-        borderWidth: 1,
-        borderColor: '#4B0082', // Indigo
+
     },
-    rightContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'flex-end',
-        borderWidth: 1,
-        borderColor: '#DA70D6', // Orchid
-    },
+
 
 });
 

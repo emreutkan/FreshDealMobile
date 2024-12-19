@@ -4,28 +4,27 @@ import {Ionicons} from '@expo/vector-icons';
 import {scaleFont} from "@/components/utils/ResponsiveFont";
 import {useRouter} from "expo-router";
 
-const AccountBar: React.FC = () => {
+const FavoritesBar: React.FC = () => {
     const router = useRouter();
 
-    const handleRouteToAccountScreen = () => {
-        router.push('/screens/tabs/account/accountScreen');
+    const handleRouteToFavoritesScreen = () => {
+
     };
 
     return (
         <TouchableOpacity
-            onPress={handleRouteToAccountScreen}
-            style={styles.accountBarContainer}
+            onPress={handleRouteToFavoritesScreen}
+            style={styles.favoritesBarContainer}
         >
-            <Ionicons name="person" size={scaleFont(24)} color="#999"/>
-
+            <Ionicons name="heart-outline" size={scaleFont(24)} color="#000"/>
         </TouchableOpacity>
     );
 };
 
 const styles = StyleSheet.create({
-    accountBarContainer: {
+    favoritesBarContainer: {
         padding: scaleFont(10),
     },
 });
 
-export default AccountBar;
+export default FavoritesBar;
