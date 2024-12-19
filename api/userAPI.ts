@@ -1,12 +1,14 @@
 // api/userAPI.ts
 import axios from 'axios';
-import API from './API';
 import {Address} from "@/store/userSlice";
 
-
-const LOGIN_API_ENDPOINT = `${API.API_BASE_URL}/v1/login`;
-const REGISTER_API_ENDPOINT = `${API.API_BASE_URL}/v1/register`;
-const ADD_ADDRESS_API_ENDPOINT = `${API.API_BASE_URL}/v1/addresses`;
+const API_BASE_URL = 'https://freshdealapi-fkfaajfaffh4c0ex.uksouth-01.azurewebsites.net';
+const CHANGE_USERNAME = `${API_BASE_URL}/v1/user/changeUsername`;
+const CHANGE_PASSWORD = `${API_BASE_URL}/v1/user/changePassword`;
+const CHANGE_EMAIL = `${API_BASE_URL}/v1/user/changeUsername`;
+const LOGIN_API_ENDPOINT = `${API_BASE_URL}/v1/login`;
+const REGISTER_API_ENDPOINT = `${API_BASE_URL}/v1/register`;
+const ADD_ADDRESS_API_ENDPOINT = `${API_BASE_URL}/v1/addresses`;
 
 
 // Flexible Login API Call
@@ -62,22 +64,27 @@ export async function addAddressAPI(address: Omit<Address, 'id'>, token: string)
     return await response.json(); // Ensure it matches `Address` structure
 }
 
+export const updateUsernameAPI = async (newUsername: string, token: string) => {
+    const response = await axios.post(CHANGE_USERNAME,
+        {username: newUsername},
+        {headers: {Authorization: `Bearer ${token}`}}
+    );
+    return response.data;
+};
 
-// // TODO
-// // Fetch user profile API call
-// export const fetchUserProfileAPI = async () => {
-//     const response = await axios.get(`${API_BASE_URL}/profile`);
-//     return response.data;
-// };
-//
-// // Update user data API call
-// export const updateUserAPI = async (payload: any) => {
-//     const response = await axios.put(`${API_BASE_URL}/profile`, payload);
-//     return response.data;
-// };
-//
-// // Logout user API call
-// export const logoutUserAPI = async () => {
-//     const response = await axios.post(`${API_BASE_URL}/logout`);
-//     return response.data;
-// };
+export const updateEmailAPI = async (oldEmail: string, newEmail: string, token: string) => {
+    const response = await axios.post(CHANGE_EMAIL,
+        {old_email: oldEmail, new_email: newEmail},
+        {headers: {Authorization: `Bearer ${token}`}}
+    );
+    return response.data;
+};
+
+export const updatePasswordAPI = async (oldPassword: string, newPassword: string, token: string) => {
+    const response = await axios.post(CHANGE_PASSWORD,
+        {old_password: oldPassword, new_password: newPassword},
+        {headers: {Authorization: `Bearer ${token}`}}
+    );
+    return response.data;
+};
+

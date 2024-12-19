@@ -5,7 +5,14 @@ import 'react-native-get-random-values'; // This package polyfills crypto.getRan
 // Polyfill crypto Before Importing uuid otherwise it will crash
 import {v4 as uuidv4} from 'uuid';
 import {RootState} from "@/store/store";
-import {addAddressAPI, loginUserAPI, registerUserAPI} from "@/api/userAPI"; // Generate unique IDs
+import {
+    addAddressAPI,
+    loginUserAPI,
+    registerUserAPI,
+    updateEmailAPI,
+    updatePasswordAPI,
+    updateUsernameAPI
+} from "@/api/userAPI"; // Generate unique IDs
 const id = uuidv4();
 console.log(id);
 
@@ -68,6 +75,19 @@ export interface Address {
     doorNo: string,
 }
 
+interface UpdateUsernamePayload {
+    newUsername: string;
+}
+
+interface UpdateEmailPayload {
+    oldEmail: string;
+    newEmail: string;
+}
+
+interface UpdatePasswordPayload {
+    oldPassword: string;
+    newPassword: string;
+}
 
 const userSlice = createSlice({
     name: 'user',
@@ -153,8 +173,7 @@ const userSlice = createSlice({
         },
 
         logout(state) {
-            state.phoneNumber = '';
-            // ... reset other fields as needed
+            return {...initialState}
         },
     },
     extraReducers: (builder: ActionReducerMapBuilder<UserState>) => {
@@ -165,14 +184,51 @@ const userSlice = createSlice({
                     state.addresses[index] = action.payload; // Replace temp with actual address
                 }
             })
-        // .addCase(deleteAddressAsync.rejected, (state, action) => {
-        //     // Rollback handling for delete failure, if needed
-        //     console.error('Failed to delete address:', action.payload);
-        // })
-        // .addCase(editAddressAsync.rejected, (state, action) => {
-        //     // Rollback handling for edit failure, if needed
-        //     console.error('Failed to edit address:', action.payload);
-        // });
+            // .addCase(deleteAddressAsync.rejected, (state, action) => {
+            //     // Rollback handling for delete failure, if needed
+            //     console.error('Failed to delete address:', action.payload);
+            // })
+            // .addCase(editAddressAsync.rejected, (state, action) => {
+            //     // Rollback handling for edit failure, if needed
+            //     console.error('Failed to edit address:', action.payload);
+            // });
+            .addCase(updateUsername.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(updateUsername.fulfilled, (state, action) => {
+                state.loading = false;
+                state.name_surname = action.payload.username;
+            })
+            .addCase(updateUsername.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload || 'Failed to update username';
+            })
+            // Email update
+            .addCase(updateEmail.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(updateEmail.fulfilled, (state, action) => {
+                state.loading = false;
+                state.email = action.payload.email;
+            })
+            .addCase(updateEmail.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload || 'Failed to update email';
+            })
+            // Password update
+            .addCase(updatePassword.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(updatePassword.fulfilled, (state) => {
+                state.loading = false;
+            })
+            .addCase(updatePassword.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload || 'Failed to update password';
+            });
     },
 });
 
@@ -192,6 +248,7 @@ export const {
     addAddress,
     removeAddress,
     setSelectedAddress,
+    logout
 } = userSlice.actions;
 
 // Export the reducer
@@ -286,3 +343,51 @@ export const registerUser = createAsyncThunk(
         }
     }
 );
+
+export const updateUsername = createAsyncThunk<
+    { username: string },
+    UpdateUsernamePayload,
+    { state: RootState; rejectValue: string }
+>('user/updateUsername', async ({newUsername}, {getState, rejectWithValue}) => {
+    try {
+        const token = getState().user.token;
+        if (!token) throw new Error('No authentication token');
+
+        const response = await updateUsernameAPI(newUsername, token);
+        return response;
+    } catch (error: any) {
+        return rejectWithValue(error.response?.data?.message || 'Failed to update username');
+    }
+});
+
+export const updateEmail = createAsyncThunk<
+    { email: string },
+    UpdateEmailPayload,
+    { state: RootState; rejectValue: string }
+>('user/updateEmail', async ({oldEmail, newEmail}, {getState, rejectWithValue}) => {
+    try {
+        const token = getState().user.token;
+        if (!token) throw new Error('No authentication token');
+
+        const response = await updateEmailAPI(oldEmail, newEmail, token);
+        return response;
+    } catch (error: any) {
+        return rejectWithValue(error.response?.data?.message || 'Failed to update email');
+    }
+});
+
+export const updatePassword = createAsyncThunk<
+    { message: string },
+    UpdatePasswordPayload,
+    { state: RootState; rejectValue: string }
+>('user/updatePassword', async ({oldPassword, newPassword}, {getState, rejectWithValue}) => {
+    try {
+        const token = getState().user.token;
+        if (!token) throw new Error('No authentication token');
+
+        const response = await updatePasswordAPI(oldPassword, newPassword, token);
+        return response;
+    } catch (error: any) {
+        return rejectWithValue(error.response?.data?.message || 'Failed to update password');
+    }
+});
