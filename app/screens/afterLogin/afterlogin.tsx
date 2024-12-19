@@ -38,7 +38,7 @@ const AfterLoginScreen = () => {
                 source={item.image}
                 style={styles.cardImage}
                 // Add loading optimization for images
-                loading="lazy"
+                // loading="lazy"
                 // Add fade-in animation for images
                 fadeDuration={300}
             />
