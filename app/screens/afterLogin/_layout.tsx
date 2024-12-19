@@ -3,15 +3,20 @@ import {useSelector} from 'react-redux';
 import {RootState} from '@/store/store';
 import AddressSelectorScreen from "@/app/screens/addressScreen/addressSelectionScreen";
 import AfterLoginScreen from "@/app/screens/afterLogin/afterlogin";
-import {SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {LayoutAnimation, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import Header from "@/components/afterloginComponents/Header";
 
 const Layout = () => {
     const addresses = useSelector((state: RootState) => state.user.addresses);
     const [selectedTab, setSelectedTab] = useState<'Restaurants' | 'Market'>('Restaurants');
-    const handleScroll = (event: any) => {
-        const offsetY = event.nativeEvent.contentOffset.y;
-        setIsScrolled(offsetY > 50); // Set to true when scrolled more than 10 pixels
+    // const handleScroll = (event: any) => {
+    //     const offsetY = event.nativeEvent.contentOffset.y;
+    //     setIsScrolled(offsetY > 50); // Set to true when scrolled more than 10 pixels
+    // };
+    const handleScroll = (e) => {
+        const scrolled = e.nativeEvent.contentOffset.y > 50;
+        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+        setIsScrolled(scrolled);
     };
     const [isScrolled, setIsScrolled] = useState(false);
 
