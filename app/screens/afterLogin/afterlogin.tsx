@@ -15,7 +15,104 @@ const AfterLoginScreen = () => {
                         <Text>No address found. Please select your address.</Text>
                     </View>
                 ) : (
-                    <Text>Welcome back! Your address is already set.</Text>
+                    <>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+                        <Text>Welcome back! Your address is already set.</Text>
+
+                    </>
+
+
                 )}
             </View>
         </>
