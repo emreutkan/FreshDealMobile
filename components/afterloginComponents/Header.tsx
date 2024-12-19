@@ -35,8 +35,8 @@ const Header: React.FC<HeaderProps> = ({isScrolled}) => {
 const styles = StyleSheet.create({
 
     container: {
-        width: '100%',
-        padding: scaleFont(10),
+        // width: '100%',
+        paddingHorizontal: scaleFont(10),
     },
     containerScrolled: {
         flexDirection: 'row',
