@@ -1,8 +1,7 @@
 // Header.tsx
 import React from 'react';
-import {StyleSheet, TouchableOpacity, View} from 'react-native';
+import {StyleSheet, View} from 'react-native';
 import AddressBar from "@/components/afterloginComponents/AddressBar";
-import {Feather} from "@expo/vector-icons";
 import SearchBar from "@/components/afterloginComponents/SearchBar";
 import {scaleFont} from "@/components/utils/ResponsiveFont";
 
@@ -11,35 +10,29 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({isScrolled}) => {
-
-
     return (
-        <View style={[styles.rowContainer, isScrolled && styles.rowScrolled]}>
-            <View style={styles.addressContainer}>
+        <View style={[styles.rowContainer,
+            isScrolled && styles.rowScrolled]}>
+            <View style={[
+                styles.addressContainer,
+                isScrolled && styles.addressContainerScrolled
+            ]}>
                 <AddressBar/>
+                <SearchBar isScrolled={isScrolled}/>
             </View>
-            {isScrolled ? (
-                <TouchableOpacity style={styles.searchIcon}>
-                    <Feather name="search" size={24} color="#999"/>
-                </TouchableOpacity>
-            ) : (
-                <View style={styles.searchBarFull}>
-                    <SearchBar isScrolled={isScrolled}/>
-                </View>
-            )}
         </View>
     );
 };
 
 const styles = StyleSheet.create({
 
-    rowScrolled: {
+    rowScrolled: {},
+
+    addressContainerScrolled: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
     },
-
-
     addressContainer: {
         // flex: 1, // Take remaining width
         justifyContent: 'center',
