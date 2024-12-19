@@ -4,57 +4,56 @@ import {StyleSheet, View} from 'react-native';
 import AddressBar from "@/components/afterloginComponents/AddressBar";
 import SearchBar from "@/components/afterloginComponents/SearchBar";
 import {scaleFont} from "@/components/utils/ResponsiveFont";
+import AccountBar from "@/components/afterloginComponents/AccountBar";
 
 interface HeaderProps {
     isScrolled: boolean;
 }
 
 const Header: React.FC<HeaderProps> = ({isScrolled}) => {
-    return (
-        <View style={[styles.rowContainer,
-            isScrolled && styles.rowScrolled]}>
-            <View style={[
-                styles.addressContainer,
-                isScrolled && styles.addressContainerScrolled
-            ]}>
-                <AddressBar/>
+    return isScrolled ? (
+        // Scrolled Layout: All components inline
+        <View style={[styles.container, styles.containerScrolled]}>
+            <AddressBar/>
+            <View style={styles.inlineRightSection}>
+                <AccountBar/>
                 <SearchBar isScrolled={isScrolled}/>
             </View>
+        </View>
+    ) : (
+        // Default Layout: Stacked SearchBar
+        <View style={styles.container}>
+            <View style={styles.row}>
+                <AddressBar/>
+                <AccountBar/>
+            </View>
+            <SearchBar isScrolled={isScrolled}/>
         </View>
     );
 };
 
 const styles = StyleSheet.create({
 
-    rowScrolled: {},
-
-    addressContainerScrolled: {
+    container: {
+        width: '100%',
+        padding: scaleFont(10),
+    },
+    containerScrolled: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    row: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    inlineRightSection: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-between',
-    },
-    addressContainer: {
-        // flex: 1, // Take remaining width
-        justifyContent: 'center',
-    },
-    rowContainer: {
-        flexDirection: 'column', // Default: AddressBar + SearchBar stacked
-        justifyContent: 'flex-start',
-        width: '100%',
-        borderWidth: 1,
-        borderColor: '#FFD700', // Gold
-        paddingRight: scaleFont(10),
-
-    },
-    searchIcon: {
-
-        marginRight: scaleFont(10),
-
     },
     searchBarFull: {
         marginTop: scaleFont(10),
-        width: '100%', // Full width below AddressBar
-        paddingHorizontal: scaleFont(15),
     },
 });
 

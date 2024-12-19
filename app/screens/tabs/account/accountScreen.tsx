@@ -2,7 +2,7 @@ import React from 'react';
 import {Alert, Image, SafeAreaView, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import {useSelector} from 'react-redux';
 import {RootState} from '@/store/store';
-import {Feather} from '@expo/vector-icons'; // For the gear icon
+import {Feather} from '@expo/vector-icons'; // For the gear icon and back arrow
 import {useRouter} from 'expo-router';
 
 const AccountScreen: React.FC = () => {
@@ -29,8 +29,11 @@ const AccountScreen: React.FC = () => {
     return (
         <SafeAreaView style={styles.safeArea}>
             <View style={styles.container}>
-                {/* Top Bar with Gear Icon */}
+                {/* Top Bar with Back Arrow and Gear Icon */}
                 <View style={styles.topBar}>
+                    <TouchableOpacity onPress={() => router.back()}>
+                        <Feather name="arrow-left" size={24} color="black"/>
+                    </TouchableOpacity>
                     <Text style={styles.title}>Account</Text>
                     <TouchableOpacity onPress={handleEditInfo}>
                         <Feather name="settings" size={24} color="black"/>

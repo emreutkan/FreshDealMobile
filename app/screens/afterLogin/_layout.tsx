@@ -4,7 +4,6 @@ import {RootState} from '@/store/store';
 import AddressSelectorScreen from "@/app/screens/addressScreen/addressSelectionScreen";
 import AfterLoginScreen from "@/app/screens/afterLogin/afterlogin";
 import {SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
-import AccountScreen from "@/app/screens/tabs/account/accountScreen";
 import Header from "@/components/afterloginComponents/Header";
 
 const Layout = () => {
@@ -41,7 +40,6 @@ const Layout = () => {
             case 'Market':
                 return (
                     <View style={styles.screen}>
-                        <AccountScreen/>
                     </View>
                 );
             default:
