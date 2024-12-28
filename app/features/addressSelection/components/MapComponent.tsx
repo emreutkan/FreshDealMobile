@@ -1,5 +1,4 @@
-// components/MapComponent.tsx
-import React, {useEffect, useRef} from 'react';
+import React, {useCallback, useEffect, useRef} from 'react';
 import {ActivityIndicator, Animated, StyleSheet, TouchableOpacity, View} from 'react-native';
 import MapView, {Region} from 'react-native-maps';
 import {MaterialIcons} from '@expo/vector-icons';
@@ -26,15 +25,33 @@ const MapComponent: React.FC<MapComponentProps> = ({
                                                        locationLoading,
                                                    }) => {
     const mapRef = useRef<MapView>(null);
+    const previousRegion = useRef<Region>(region);
 
     const debouncedHandleAddressUpdate = debounce((lat: number, lng: number) => {
         onAddressUpdate(lat, lng);
-    }, 0);
+    }, 100);
 
+    const animateToRegion = useCallback((newRegion: Region) => {
+        if (mapRef.current && (
+            previousRegion.current.latitude !== newRegion.latitude ||
+            previousRegion.current.longitude !== newRegion.longitude
+        )) {
+            mapRef.current.animateToRegion(newRegion);
+            console.log('Animating to region:', newRegion);
+            debouncedHandleAddressUpdate(newRegion.latitude, newRegion.longitude);
+            previousRegion.current = newRegion;
+        }
+    }, []);
+
+    // Handle natural map movements
     const handleRegionChangeComplete = (newRegion: Region) => {
         setRegion(newRegion);
-        debouncedHandleAddressUpdate(newRegion.latitude, newRegion.longitude);
     };
+
+    // Watch for external region changes (like from the location button)
+    useEffect(() => {
+        animateToRegion(region);
+    }, [region, animateToRegion]);
 
     useEffect(() => {
         return () => {
@@ -42,15 +59,9 @@ const MapComponent: React.FC<MapComponentProps> = ({
         };
     }, []);
 
-    useEffect(() => {
-        if (mapRef.current) {
-            mapRef.current.animateToRegion(region); // 1 second animation
-            console.log('Animating to region:', region);
-            debouncedHandleAddressUpdate(region.latitude, region.longitude); // set the data as users address at launch
-
-        }
-    }, [region]);
-
+    const handleLocationPress = () => {
+        fetchLocation();
+    };
 
     return (
         <Animated.View style={styles.mapContainer}>
@@ -68,7 +79,7 @@ const MapComponent: React.FC<MapComponentProps> = ({
             <MaterialIcons name="place" size={48} color="#FF0000" style={styles.centerMarker}/>
             <TouchableOpacity
                 style={styles.myLocationButton}
-                onPress={fetchLocation}
+                onPress={handleLocationPress}
                 accessibilityLabel="Use My Location"
                 accessibilityHint="Centers the map on your current location and fills in your address"
                 disabled={locationLoading}
@@ -88,13 +99,14 @@ const MapComponent: React.FC<MapComponentProps> = ({
     );
 };
 
+// ... styles remain the same
 const styles = StyleSheet.create({
     mapContainer: {
         flex: 1,
         borderBottomLeftRadius: 20,
         borderBottomRightRadius: 20,
         overflow: 'hidden',
-        
+
     },
     map: {
         ...StyleSheet.absoluteFillObject,

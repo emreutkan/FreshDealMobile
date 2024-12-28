@@ -207,6 +207,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: scaleFont(16)
     },
     inputContent: {
+        flex: 0.15
         // paddingHorizontal: scaleFont(16)
     },
 });
