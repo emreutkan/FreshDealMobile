@@ -8,6 +8,7 @@ interface InputFieldProps {
     placeholder: string;
     keyboardType?: 'default' | 'email-address' | 'numeric' | 'phone-pad' | 'visible-password';
     secureTextEntry?: boolean;
+    borderColor?: string
 }
 
 const InputField: React.FC<InputFieldProps> = ({
@@ -15,7 +16,7 @@ const InputField: React.FC<InputFieldProps> = ({
                                                    onChange,
                                                    placeholder,
                                                    keyboardType = 'default',
-                                                   secureTextEntry = false
+                                                   secureTextEntry = false, borderColor
                                                }) => {
     const [isTyping, setIsTyping] = useState<boolean>(!!value);
 
@@ -35,7 +36,7 @@ const InputField: React.FC<InputFieldProps> = ({
     };
 
     return (
-        <View style={[styles.inputContainer, isTyping && {borderColor: 'gray'}]}>
+        <View style={[styles.inputContainer, {borderColor: borderColor}, isTyping && {borderColor: 'gray'}]}>
             <TextInput
                 style={styles.inputText}
                 placeholder={placeholder}
@@ -66,7 +67,7 @@ const styles = StyleSheet.create({
         borderRadius: scaleFont(16),
         paddingHorizontal: scaleFont(15),
         backgroundColor: '#fff',
-        width: '100%',
+        flex: 1,
         height: scaleFont(50),
     },
     inputText: {
