@@ -263,6 +263,9 @@ const userSlice = createSlice({
                 // Update addresses
                 state.addresses = action.payload.user_address_list.map((address) => ({
                     id: address.id.toString(),
+                    title: address.title,
+                    longitude: address.longitude,
+                    latitude: address.latitude,
                     street: address.street,
                     neighborhood: address.neighborhood,
                     district: address.district,
