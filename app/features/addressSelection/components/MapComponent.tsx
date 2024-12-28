@@ -1,9 +1,56 @@
-import React, {useCallback, useEffect, useRef} from 'react';
-import {ActivityIndicator, Animated, StyleSheet, TouchableOpacity, View} from 'react-native';
+// Updated hooks/useLocation.ts
+import React, {useCallback, useEffect, useRef, useState} from 'react';
+import {ActivityIndicator, Alert, Animated, StyleSheet, TouchableOpacity, View} from 'react-native';
 import MapView, {Region} from 'react-native-maps';
 import {MaterialIcons} from '@expo/vector-icons';
 import debounce from 'lodash.debounce';
 import {scaleFont} from "@/app/utils/ResponsiveFont";
+import * as Location from 'expo-location';
+
+export const useLocation = () => {
+    const [location, setLocation] = useState<Location.LocationObject | null>(null);
+    const [loading, setLoading] = useState<boolean>(true);
+
+    const fetchLocation = useCallback(async () => {
+        try {
+            console.log('Fetching location...');
+            const {status: existingStatus} = await Location.getForegroundPermissionsAsync();
+            console.log('Existing permission status:', existingStatus);
+            let finalStatus = existingStatus;
+
+            if (existingStatus !== 'granted') {
+                const {status} = await Location.requestForegroundPermissionsAsync();
+                console.log('Requested permission status:', status);
+                finalStatus = status;
+            }
+
+            if (finalStatus !== 'granted') {
+                Alert.alert('Permission Denied', 'Location permission is required to use this feature.');
+                setLoading(false);
+                return;
+            }
+
+            const lastKnown = await Location.getLastKnownPositionAsync();
+            if (lastKnown) setLocation(lastKnown);
+            else {
+                const loc = await Location.getCurrentPositionAsync({accuracy: Location.Accuracy.Highest});
+                setLocation(loc);
+            }
+
+        } catch (error) {
+            console.error('Error fetching location:', error);
+            Alert.alert('Error', 'An error occurred while fetching the location.');
+        } finally {
+            setLoading(false);
+        }
+    }, []); // Memoize fetchLocation
+
+    useEffect(() => {
+        fetchLocation();
+    }, [fetchLocation]); // Ensure useEffect only runs once
+
+    return {location, loading, fetchLocation};
+};
 
 interface MapComponentProps {
     region: Region;
@@ -59,9 +106,6 @@ const MapComponent: React.FC<MapComponentProps> = ({
         };
     }, []);
 
-    const handleLocationPress = () => {
-        fetchLocation();
-    };
 
     return (
         <Animated.View style={styles.mapContainer}>
@@ -79,7 +123,7 @@ const MapComponent: React.FC<MapComponentProps> = ({
             <MaterialIcons name="place" size={48} color="#FF0000" style={styles.centerMarker}/>
             <TouchableOpacity
                 style={styles.myLocationButton}
-                onPress={handleLocationPress}
+                onPress={fetchLocation}
                 accessibilityLabel="Use My Location"
                 accessibilityHint="Centers the map on your current location and fills in your address"
                 disabled={locationLoading}

@@ -203,13 +203,21 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgb(239,235,235)',
     },
     selectedAddressDisplay: {
-        flex: 0.15,
-        paddingHorizontal: scaleFont(16)
+        // position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        backgroundColor: 'rgb(239,235,235)',
+        paddingHorizontal: scaleFont(16),
+        paddingVertical: scaleFont(8)
     },
     inputContent: {
-        flex: 0.15
-        // paddingHorizontal: scaleFont(16)
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        backgroundColor: 'rgb(239,235,235)',
+        paddingHorizontal: scaleFont(16)
     },
 });
-
 export default AddressSelectionScreen;
