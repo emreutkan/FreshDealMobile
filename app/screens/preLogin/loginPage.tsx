@@ -16,7 +16,7 @@ import {
     PhoneSignInButton,
 } from '@/components/LoginScreenComponents/loginButtons';
 import PasswordInput from "@/components/LoginScreenComponents/passwordInput";
-import {loginUser, setLoginType, setPasswordLogin, setToken} from '@/store/userSlice';
+import {getUserData, loginUser, setLoginType, setPasswordLogin, setToken} from '@/store/userSlice';
 
 const LoginPage: React.FC = () => {
     const router = useRouter();
@@ -79,6 +79,7 @@ const LoginPage: React.FC = () => {
                     // Navigate back if login is successful
                     if (result.success) { // Adjust based on your API response structure
                         dispatch(setToken(result.token));
+                        dispatch(getUserData({token: result.token}));
                         router.push('../afterLogin/afterlogin');
                     } else {
                         Alert.alert("Login Failed", result.message || "Something went wrong.");

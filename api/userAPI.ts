@@ -2,13 +2,18 @@
 import axios from 'axios';
 import {Address} from "@/store/userSlice";
 
-const API_BASE_URL = 'https://freshdealapi-fkfaajfaffh4c0ex.uksouth-01.azurewebsites.net';
+// const API_BASE_URL = 'https://freshdealapi-fkfaajfaffh4c0ex.uksouth-01.azurewebsites.net';
+const API_BASE_URL = 'http://192.168.1.3:8080';
+
 const CHANGE_USERNAME = `${API_BASE_URL}/v1/user/changeUsername`;
 const CHANGE_PASSWORD = `${API_BASE_URL}/v1/user/changePassword`;
 const CHANGE_EMAIL = `${API_BASE_URL}/v1/user/changeUsername`;
 const LOGIN_API_ENDPOINT = `${API_BASE_URL}/v1/login`;
 const REGISTER_API_ENDPOINT = `${API_BASE_URL}/v1/register`;
-const ADD_ADDRESS_API_ENDPOINT = `${API_BASE_URL}/v1/addresses`;
+const ADD_ADDRESS_API_ENDPOINT = `${API_BASE_URL}/v1/addresses/add_customer_address`;
+const GET_ADDRESSES_API_ENDPOINT = `${API_BASE_URL}/v1/addresses/get_customer_addresses`;
+const DELETE_ADDRESS_API_ENDPOINT = `${API_BASE_URL}/v1/addresses/delete_customer_address`;
+const GET_USER_DATA_API_ENDPOINT = `${API_BASE_URL}/v1/user/data`;
 
 
 // Flexible Login API Call
@@ -45,7 +50,6 @@ export const registerUserAPI = async (userData: {
         throw error; // Re-throw error for thunk to handle
     }
 };
-
 
 export async function addAddressAPI(address: Omit<Address, 'id'>, token: string): Promise<Address> {
     const response = await fetch(ADD_ADDRESS_API_ENDPOINT, {
@@ -87,4 +91,27 @@ export const updatePasswordAPI = async (oldPassword: string, newPassword: string
     );
     return response.data;
 };
+
+export const getUserDataAPI = async (token: string) => {
+    const response = await axios.get(GET_USER_DATA_API_ENDPOINT, {
+        headers: {Authorization: `Bearer ${token}`}
+    });
+    return response.data;
+}
+
+export const getAddressAPI = async (token: string) => {
+    const response = await axios.get(GET_ADDRESSES_API_ENDPOINT, {
+        headers: {Authorization: `Bearer ${token}`}
+    });
+    return response.data;
+}
+
+export const deleteAddressAPI = async (addressId: string, token: string) => {
+    const response = await axios.delete(DELETE_ADDRESS_API_ENDPOINT, {
+        headers: {Authorization: `Bearer ${token}`},
+        data: {address_id: addressId}
+    });
+    return response.data;
+}
+
 

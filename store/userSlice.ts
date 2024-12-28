@@ -7,6 +7,7 @@ import {v4 as uuidv4} from 'uuid';
 import {RootState} from "@/store/store";
 import {
     addAddressAPI,
+    getUserDataAPI,
     loginUserAPI,
     registerUserAPI,
     updateEmailAPI,
@@ -42,6 +43,7 @@ interface UserState {
     token: string | null;
     loading: boolean;  // Keep loading and error states for later use
     error: string | null;
+    role: string | null;
 }
 
 const initialState: UserState = {
@@ -60,6 +62,7 @@ const initialState: UserState = {
     loading: false,
     error: null,
     token: null,
+    role: null,
 };
 
 // Define the address structure
@@ -74,6 +77,32 @@ export interface Address {
     apartmentNo: string;
     doorNo: string,
 }
+
+// Define the structure of the user data received from the API /user/data endpoint
+interface UserDataResponse {
+    user_data: {
+        id: number;
+        name: string;
+        email: string;
+        phone_number: string;
+        role: string;
+    };
+    user_address_list: Array<{
+        id: number;
+        title: string;
+        longitude: number;
+        latitude: number;
+        street: string;
+        neighborhood: string;
+        district: string;
+        province: string;
+        country: string;
+        postalCode: number;
+        apartmentNo: number;
+        doorNo: string;
+    }>;
+}
+
 
 interface UpdateUsernamePayload {
     newUsername: string;
@@ -217,6 +246,39 @@ const userSlice = createSlice({
                 state.loading = false;
                 state.error = action.payload || 'Failed to update email';
             })
+            .addCase(getUserData.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(getUserData.fulfilled, (state, action: PayloadAction<UserDataResponse>) => {
+                state.loading = false;
+                // Update user data
+                state.name_surname = action.payload.user_data.name;
+                state.email = action.payload.user_data.email;
+                state.phoneNumber = action.payload.user_data.phone_number;
+                state.role = action.payload.user_data.role;
+                // Update addresses
+                state.addresses = action.payload.user_address_list.map((address) => ({
+                    id: address.id.toString(),
+                    street: address.street,
+                    neighborhood: address.neighborhood,
+                    district: address.district,
+                    province: address.province,
+                    country: address.country,
+                    postalCode: address.postalCode.toString(),
+                    apartmentNo: address.apartmentNo.toString(),
+                    doorNo: address.doorNo,
+                }));
+                // Set the first address as selected if none is selected
+                if (state.addresses.length > 0 && !state.selectedAddressId) {
+                    state.selectedAddressId = state.addresses[0].id;
+                }
+            })
+            .addCase(getUserData.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload || 'Failed to fetch user data';
+            })
+
             // Password update
             .addCase(updatePassword.pending, (state) => {
                 state.loading = true;
@@ -322,6 +384,7 @@ export const registerUser = createAsyncThunk(
             email?: string;
             phone_number?: string;
             password: string;
+            role: string;
         },
         {rejectWithValue}
     ) => {
@@ -391,3 +454,20 @@ export const updatePassword = createAsyncThunk<
         return rejectWithValue(error.response?.data?.message || 'Failed to update password');
     }
 });
+
+export const getUserData = createAsyncThunk<
+    UserDataResponse, // return type
+    { token: string }, // argument type
+    { rejectValue: string } // reject value type
+>(
+    'user/getUserData',
+    async ({token}, {rejectWithValue}) => {
+        try {
+            const data = await getUserDataAPI(token);
+            return data as UserDataResponse;
+        } catch (error: any) {
+            console.error('Error fetching user data (userSlice/getUserData):', error); // Log the error
+            return rejectWithValue(error.response?.data || 'Failed to fetch user data');
+        }
+    }
+);
