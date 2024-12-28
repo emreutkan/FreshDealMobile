@@ -10,9 +10,9 @@ const CHANGE_PASSWORD = `${API_BASE_URL}/v1/user/changePassword`;
 const CHANGE_EMAIL = `${API_BASE_URL}/v1/user/changeUsername`;
 const LOGIN_API_ENDPOINT = `${API_BASE_URL}/v1/login`;
 const REGISTER_API_ENDPOINT = `${API_BASE_URL}/v1/register`;
-const ADD_ADDRESS_API_ENDPOINT = `${API_BASE_URL}/v1/addresses/add_customer_address`;
-const GET_ADDRESSES_API_ENDPOINT = `${API_BASE_URL}/v1/addresses/get_customer_addresses`;
-const DELETE_ADDRESS_API_ENDPOINT = `${API_BASE_URL}/v1/addresses/delete_customer_address`;
+const ADD_ADDRESS_API_ENDPOINT = `${API_BASE_URL}/v1/add_customer_address`;
+const GET_ADDRESSES_API_ENDPOINT = `${API_BASE_URL}/v1/get_customer_addresses`;
+const DELETE_ADDRESS_API_ENDPOINT = `${API_BASE_URL}/v1/delete_customer_address`;
 const GET_USER_DATA_API_ENDPOINT = `${API_BASE_URL}/v1/user/data`;
 
 
@@ -60,9 +60,9 @@ export async function addAddressAPI(address: Omit<Address, 'id'>, token: string)
         },
         body: JSON.stringify(address),
     });
-
+    console.log(response)
     if (!response.ok) {
-        throw new Error('Failed to add address');
+        throw new Error(response.toString());
     }
 
     return await response.json(); // Ensure it matches `Address` structure

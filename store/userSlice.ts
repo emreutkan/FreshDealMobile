@@ -162,6 +162,9 @@ const userSlice = createSlice({
         },
         setToken(state, action: PayloadAction<string>) {
             state.token = action.payload;
+            console.log('user token set as', action.payload)
+            console.log('state.token = ', state.token)
+
         },
         addToCart(state, action: PayloadAction<CartItem>) {
             const existingItem = state.cart.find(item => item.id === action.payload.id);
@@ -263,6 +266,9 @@ const userSlice = createSlice({
                 // Update addresses
                 state.addresses = action.payload.user_address_list.map((address) => ({
                     id: address.id.toString(),
+                    title: address.title,
+                    longitude: address.longitude,
+                    latitude: address.latitude,
                     street: address.street,
                     neighborhood: address.neighborhood,
                     district: address.district,
@@ -338,6 +344,7 @@ export const addAddressAsync = createAsyncThunk<
         try {
             const token = getState().user.token;
             if (!token) {
+                console.log('address was not added due to missing token')
                 throw new Error('Authentication token is missing.');
             }
 
@@ -347,6 +354,7 @@ export const addAddressAsync = createAsyncThunk<
         } catch (error: any) {
             dispatch(removeAddress(tempId)); // Rollback if API fails
             const errorMessage = error.response?.data?.message || 'Failed to add address';
+            console.log('error userslice/addaddressasync', error)
             return rejectWithValue(errorMessage);
         }
     }
@@ -467,6 +475,8 @@ export const getUserData = createAsyncThunk<
     async ({token}, {rejectWithValue}) => {
         try {
             const data = await getUserDataAPI(token);
+            console.log('userslice/getUserData success', data)
+
             return data as UserDataResponse;
         } catch (error: any) {
             console.error('Error fetching user data (userSlice/getUserData):', error); // Log the error
