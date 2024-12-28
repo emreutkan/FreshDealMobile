@@ -68,6 +68,9 @@ const initialState: UserState = {
 // Define the address structure
 export interface Address {
     id: string; // Unique identifier, not the id in the data
+    title: string;
+    longitude: number;
+    latitude: number;
     street: string;
     neighborhood: string;
     district: string;
@@ -471,3 +474,4 @@ export const getUserData = createAsyncThunk<
         }
     }
 );
+
