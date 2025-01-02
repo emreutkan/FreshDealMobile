@@ -5,7 +5,15 @@ import 'react-native-get-random-values'; // This package polyfills crypto.getRan
 // Polyfill crypto Before Importing uuid otherwise it will crash
 import {v4 as uuidv4} from 'uuid';
 import {RootState} from "@/store/store";
-import {addAddressAPI, loginUserAPI, registerUserAPI} from "@/api/userAPI"; // Generate unique IDs
+import {
+    addAddressAPI,
+    getUserDataAPI,
+    loginUserAPI,
+    registerUserAPI,
+    updateEmailAPI,
+    updatePasswordAPI,
+    updateUsernameAPI
+} from "@/api/userAPI"; // Generate unique IDs
 const id = uuidv4();
 console.log(id);
 
@@ -35,6 +43,7 @@ interface UserState {
     token: string | null;
     loading: boolean;  // Keep loading and error states for later use
     error: string | null;
+    role: string | null;
 }
 
 const initialState: UserState = {
@@ -53,11 +62,15 @@ const initialState: UserState = {
     loading: false,
     error: null,
     token: null,
+    role: null,
 };
 
 // Define the address structure
 export interface Address {
     id: string; // Unique identifier, not the id in the data
+    title: string;
+    longitude: number;
+    latitude: number;
     street: string;
     neighborhood: string;
     district: string;
@@ -68,6 +81,45 @@ export interface Address {
     doorNo: string,
 }
 
+// Define the structure of the user data received from the API /user/data endpoint
+interface UserDataResponse {
+    user_data: {
+        id: number;
+        name: string;
+        email: string;
+        phone_number: string;
+        role: string;
+    };
+    user_address_list: Array<{
+        id: number;
+        title: string;
+        longitude: number;
+        latitude: number;
+        street: string;
+        neighborhood: string;
+        district: string;
+        province: string;
+        country: string;
+        postalCode: number;
+        apartmentNo: number;
+        doorNo: string;
+    }>;
+}
+
+
+interface UpdateUsernamePayload {
+    newUsername: string;
+}
+
+interface UpdateEmailPayload {
+    oldEmail: string;
+    newEmail: string;
+}
+
+interface UpdatePasswordPayload {
+    oldPassword: string;
+    newPassword: string;
+}
 
 const userSlice = createSlice({
     name: 'user',
@@ -110,6 +162,9 @@ const userSlice = createSlice({
         },
         setToken(state, action: PayloadAction<string>) {
             state.token = action.payload;
+            console.log('user token set as', action.payload)
+            console.log('state.token = ', state.token)
+
         },
         addToCart(state, action: PayloadAction<CartItem>) {
             const existingItem = state.cart.find(item => item.id === action.payload.id);
@@ -153,8 +208,7 @@ const userSlice = createSlice({
         },
 
         logout(state) {
-            state.phoneNumber = '';
-            // ... reset other fields as needed
+            return {...initialState}
         },
     },
     extraReducers: (builder: ActionReducerMapBuilder<UserState>) => {
@@ -165,14 +219,87 @@ const userSlice = createSlice({
                     state.addresses[index] = action.payload; // Replace temp with actual address
                 }
             })
-        // .addCase(deleteAddressAsync.rejected, (state, action) => {
-        //     // Rollback handling for delete failure, if needed
-        //     console.error('Failed to delete address:', action.payload);
-        // })
-        // .addCase(editAddressAsync.rejected, (state, action) => {
-        //     // Rollback handling for edit failure, if needed
-        //     console.error('Failed to edit address:', action.payload);
-        // });
+            // .addCase(deleteAddressAsync.rejected, (state, action) => {
+            //     // Rollback handling for delete failure, if needed
+            //     console.error('Failed to delete address:', action.payload);
+            // })
+            // .addCase(editAddressAsync.rejected, (state, action) => {
+            //     // Rollback handling for edit failure, if needed
+            //     console.error('Failed to edit address:', action.payload);
+            // });
+            .addCase(updateUsername.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(updateUsername.fulfilled, (state, action) => {
+                state.loading = false;
+                state.name_surname = action.payload.username;
+            })
+            .addCase(updateUsername.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload || 'Failed to update username';
+            })
+            // Email update
+            .addCase(updateEmail.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(updateEmail.fulfilled, (state, action) => {
+                state.loading = false;
+                state.email = action.payload.email;
+            })
+            .addCase(updateEmail.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload || 'Failed to update email';
+            })
+            .addCase(getUserData.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(getUserData.fulfilled, (state, action: PayloadAction<UserDataResponse>) => {
+                state.loading = false;
+                // Update user data
+                state.name_surname = action.payload.user_data.name;
+                state.email = action.payload.user_data.email;
+                state.phoneNumber = action.payload.user_data.phone_number;
+                state.role = action.payload.user_data.role;
+                // Update addresses
+                state.addresses = action.payload.user_address_list.map((address) => ({
+                    id: address.id.toString(),
+                    title: address.title,
+                    longitude: address.longitude,
+                    latitude: address.latitude,
+                    street: address.street,
+                    neighborhood: address.neighborhood,
+                    district: address.district,
+                    province: address.province,
+                    country: address.country,
+                    postalCode: address.postalCode.toString(),
+                    apartmentNo: address.apartmentNo.toString(),
+                    doorNo: address.doorNo,
+                }));
+                // Set the first address as selected if none is selected
+                if (state.addresses.length > 0 && !state.selectedAddressId) {
+                    state.selectedAddressId = state.addresses[0].id;
+                }
+            })
+            .addCase(getUserData.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload || 'Failed to fetch user data';
+            })
+
+            // Password update
+            .addCase(updatePassword.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(updatePassword.fulfilled, (state) => {
+                state.loading = false;
+            })
+            .addCase(updatePassword.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload || 'Failed to update password';
+            });
     },
 });
 
@@ -192,6 +319,7 @@ export const {
     addAddress,
     removeAddress,
     setSelectedAddress,
+    logout
 } = userSlice.actions;
 
 // Export the reducer
@@ -216,6 +344,7 @@ export const addAddressAsync = createAsyncThunk<
         try {
             const token = getState().user.token;
             if (!token) {
+                console.log('address was not added due to missing token')
                 throw new Error('Authentication token is missing.');
             }
 
@@ -225,6 +354,7 @@ export const addAddressAsync = createAsyncThunk<
         } catch (error: any) {
             dispatch(removeAddress(tempId)); // Rollback if API fails
             const errorMessage = error.response?.data?.message || 'Failed to add address';
+            console.log('error userslice/addaddressasync', error)
             return rejectWithValue(errorMessage);
         }
     }
@@ -265,6 +395,7 @@ export const registerUser = createAsyncThunk(
             email?: string;
             phone_number?: string;
             password: string;
+            role: string;
         },
         {rejectWithValue}
     ) => {
@@ -286,3 +417,71 @@ export const registerUser = createAsyncThunk(
         }
     }
 );
+
+export const updateUsername = createAsyncThunk<
+    { username: string },
+    UpdateUsernamePayload,
+    { state: RootState; rejectValue: string }
+>('user/updateUsername', async ({newUsername}, {getState, rejectWithValue}) => {
+    try {
+        const token = getState().user.token;
+        if (!token) throw new Error('No authentication token');
+
+        const response = await updateUsernameAPI(newUsername, token);
+        return response;
+    } catch (error: any) {
+        return rejectWithValue(error.response?.data?.message || 'Failed to update username');
+    }
+});
+
+export const updateEmail = createAsyncThunk<
+    { email: string },
+    UpdateEmailPayload,
+    { state: RootState; rejectValue: string }
+>('user/updateEmail', async ({oldEmail, newEmail}, {getState, rejectWithValue}) => {
+    try {
+        const token = getState().user.token;
+        if (!token) throw new Error('No authentication token');
+
+        const response = await updateEmailAPI(oldEmail, newEmail, token);
+        return response;
+    } catch (error: any) {
+        return rejectWithValue(error.response?.data?.message || 'Failed to update email');
+    }
+});
+
+export const updatePassword = createAsyncThunk<
+    { message: string },
+    UpdatePasswordPayload,
+    { state: RootState; rejectValue: string }
+>('user/updatePassword', async ({oldPassword, newPassword}, {getState, rejectWithValue}) => {
+    try {
+        const token = getState().user.token;
+        if (!token) throw new Error('No authentication token');
+
+        const response = await updatePasswordAPI(oldPassword, newPassword, token);
+        return response;
+    } catch (error: any) {
+        return rejectWithValue(error.response?.data?.message || 'Failed to update password');
+    }
+});
+
+export const getUserData = createAsyncThunk<
+    UserDataResponse, // return type
+    { token: string }, // argument type
+    { rejectValue: string } // reject value type
+>(
+    'user/getUserData',
+    async ({token}, {rejectWithValue}) => {
+        try {
+            const data = await getUserDataAPI(token);
+            console.log('userslice/getUserData success', data)
+
+            return data as UserDataResponse;
+        } catch (error: any) {
+            console.error('Error fetching user data (userSlice/getUserData):', error); // Log the error
+            return rejectWithValue(error.response?.data || 'Failed to fetch user data');
+        }
+    }
+);
+
