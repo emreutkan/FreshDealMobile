@@ -13,18 +13,21 @@ import store from '@/store/store';
  * store represents the entire state of your application. It manages the state through reducers, actions, and middleware, if present.
  * The store is passed to the Provider as a prop, making it accessible to the app's components.
  * **/
-import {Slot} from 'expo-router'; // Importing Slot from expo-router, which acts as a placeholder for nested routes
+import {Slot} from 'expo-router';
+import {GestureHandlerRootView} from "react-native-gesture-handler"; // Importing Slot from expo-router, which acts as a placeholder for nested routes
 /**
  * In this context, it serves as the entry point for rendering different screens or routes within the application.
  * **/
 
 const Layout = () => {
     return (
-        <Provider store={store}>
+        <GestureHandlerRootView style={{borderWidth: 1, flex: 1}}>
+            <Provider store={store}>
 
 
-            <Slot/>
-        </Provider>
+                <Slot/>
+            </Provider>
+        </GestureHandlerRootView>
     );
 };
 

@@ -4,7 +4,7 @@ import {useSelector} from 'react-redux';
 import {RootState} from '@/store/store';
 import AddressSelectorScreen from "@/app/features/addressSelection/screens/addressSelectionScreen";
 import AfterLoginScreen from "@/app/features/homeScreen/screens/home";
-import {LayoutAnimation, Platform, ScrollView, StyleSheet, UIManager, View,} from 'react-native';
+import {LayoutAnimation, Platform, SafeAreaView, ScrollView, StyleSheet, UIManager, View,} from 'react-native';
 import Header from "@/app/features/homeScreen/components/Header";
 
 // Enable LayoutAnimation on Android
@@ -43,16 +43,19 @@ const Layout = () => {
     }
 
     return (
-        <View style={styles.container}>
+        <SafeAreaView style={styles.container}>
             <Header isScrolled={isScrolled}/>
-            <ScrollView
-                onScroll={handleScroll}
-                scrollEventThrottle={16} // For smooth performance
-                contentContainerStyle={{paddingBottom: 50}} // Ensure content isn't hidden behind navbar
-            >
-                <AfterLoginScreen/>
-            </ScrollView>
-        </View>
+            <View style={styles.contentContainer}>
+                <ScrollView
+                    style={styles.scrollView}
+                    onScroll={handleScroll}
+                    scrollEventThrottle={16} // For smooth performance
+                    contentContainerStyle={styles.scrollContent}
+                >
+                    <AfterLoginScreen/>
+                </ScrollView>
+            </View>
+        </SafeAreaView>
     );
 };
 
@@ -60,6 +63,15 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#f5f5f5',
+    },
+    contentContainer: {
+        flex: 1,
+    },
+    scrollView: {
+        flex: 1,
+    },
+    scrollContent: {
+        paddingBottom: 50, // Ensure content isn't hidden behind navbar
     },
     screen: {
         flex: 1,
