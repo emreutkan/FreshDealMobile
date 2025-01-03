@@ -1,6 +1,6 @@
 // api/userAPI.ts
 import axios from 'axios';
-import {Address} from "@/store/userSlice";
+import {Address, Restaurant} from "@/store/userSlice";
 
 const API_BASE_URL = 'https://freshdealapi-fkfaajfaffh4c0ex.uksouth-01.azurewebsites.net';
 // const API_BASE_URL = 'http://192.168.1.3:8080';
@@ -14,7 +14,7 @@ const ADD_ADDRESS_API_ENDPOINT = `${API_BASE_URL}/v1/add_customer_address`;
 const GET_ADDRESSES_API_ENDPOINT = `${API_BASE_URL}/v1/get_customer_addresses`;
 const DELETE_ADDRESS_API_ENDPOINT = `${API_BASE_URL}/v1/delete_customer_address`;
 const GET_USER_DATA_API_ENDPOINT = `${API_BASE_URL}/v1/user/data`;
-const GET_RESTAURANTS_IN_PROXIMITY_API_ENDPOINT = `${API_BASE_URL}/v1/user/data`;
+const GET_RESTAURANTS_IN_PROXIMITY_API_ENDPOINT = `${API_BASE_URL}/v1/get_restaurants_proximity`;
 
 // Flexible Login API Call
 export const loginUserAPI = async (payload: {
@@ -113,5 +113,34 @@ export const deleteAddressAPI = async (addressId: string, token: string) => {
     });
     return response.data;
 }
+export const getRestaurantsByProximityAPI = async (
+    latitude: number,
+    longitude: number,
+    radius: number, // 10 defaults
+    token: string // Required for authentication
+): Promise<Restaurant[]> => {
+    try {
+        const body = {
+            latitude,
+            longitude,
+            radius,
+        };
 
+        const config = {
+            headers: {
+                Authorization: `Bearer ${token.trim()}`, // Ensure proper format
+            },
+        };
 
+        const response = await axios.post(GET_RESTAURANTS_IN_PROXIMITY_API_ENDPOINT, body, config);
+        return response.data.restaurants; // Adjust based on your API's response structure
+    } catch (error: any) {
+        console.error('getRestaurantsAPI Error:', {
+            message: error.message,
+            config: error.config,
+            response: error.response ? error.response.data : null,
+            stack: error.stack,
+        });
+        throw error;
+    }
+};

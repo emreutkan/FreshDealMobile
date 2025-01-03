@@ -7,6 +7,7 @@ import {v4 as uuidv4} from 'uuid';
 import {RootState} from "@/store/store";
 import {
     addAddressAPI,
+    getRestaurantsByProximityAPI,
     getUserDataAPI,
     loginUserAPI,
     registerUserAPI,
@@ -44,6 +45,7 @@ interface UserState {
     loading: boolean;  // Keep loading and error states for later use
     error: string | null;
     role: string | null;
+    restaurantsProximity: Restaurant[]; // New field
 }
 
 const initialState: UserState = {
@@ -63,6 +65,7 @@ const initialState: UserState = {
     error: null,
     token: null,
     role: null,
+    restaurantsProximity: [],
 };
 
 // Define the address structure
@@ -79,6 +82,24 @@ export interface Address {
     postalCode: string;
     apartmentNo: string;
     doorNo: string,
+}
+
+
+export interface Restaurant {
+    id: string; // Unique identifier, not the id in the data
+    owner_id: number;
+    restaurantName: string;
+    restaurantDescription: string;
+    longitude: number;
+    latitude: number;
+    category: string;
+    workingDays: string[];
+    workingHoursStart: string;
+    workingHoursEnd: string;
+    listings: number;
+    rating: number;
+    ratingCount: number;
+    distance_km: number;
 }
 
 // Define the structure of the user data received from the API /user/data endpoint
@@ -288,6 +309,7 @@ const userSlice = createSlice({
                 state.error = action.payload || 'Failed to fetch user data';
             })
 
+
             // Password update
             .addCase(updatePassword.pending, (state) => {
                 state.loading = true;
@@ -299,7 +321,23 @@ const userSlice = createSlice({
             .addCase(updatePassword.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload || 'Failed to update password';
+            })
+            .addCase(getRestaurantsByProximity.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(
+                getRestaurantsByProximity.fulfilled,
+                (state, action: PayloadAction<Restaurant[]>) => {
+                    state.loading = false;
+                    state.restaurantsProximity = action.payload;
+                }
+            )
+            .addCase(getRestaurantsByProximity.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload || 'Failed to fetch restaurants';
             });
+
     },
 });
 
@@ -484,4 +522,26 @@ export const getUserData = createAsyncThunk<
         }
     }
 );
+
+export const getRestaurantsByProximity = createAsyncThunk<
+    Restaurant[], // Return type
+    { latitude: number; longitude: number; radius: number }, // Argument type
+    { state: RootState; rejectValue: string } // Reject value type
+>(
+    'user/getRestaurantsByProximity',
+    async ({latitude, longitude, radius,}, {rejectWithValue, getState}) => {
+        try {
+            const token = getState().user.token;
+            if (!token) {
+                throw new Error('Authentication token is missing.');
+            }
+
+            const data = await getRestaurantsByProximityAPI(latitude, longitude, radius, token);
+            return data as Restaurant[];
+        } catch (error: any) {
+            return rejectWithValue(error.response?.data || 'Failed to fetch restaurants');
+        }
+    }
+);
+
 
