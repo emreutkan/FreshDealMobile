@@ -228,6 +228,7 @@ const userSlice = createSlice({
             }
         },
 
+
         logout(state) {
             return {...initialState}
         },

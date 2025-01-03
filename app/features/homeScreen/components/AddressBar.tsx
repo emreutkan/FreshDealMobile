@@ -1,33 +1,29 @@
 // components/LoginScreenComponents/AddressBar.tsx
 import React, {useState} from 'react';
 import {FlatList, Modal, StyleSheet, Text, TouchableOpacity, View,} from 'react-native';
-import {useSelector} from 'react-redux';
+import {useDispatch, useSelector} from 'react-redux';
 import {RootState} from '@/store/store';
 import {scaleFont} from '@/app/utils/ResponsiveFont';
 import {Ionicons} from '@expo/vector-icons';
 import {useRouter} from 'expo-router'; // Corrected to useRouter hook
 import DefaultButton from '@/app/features/DefaultButton';
+import {Address, setSelectedAddress} from "@/store/userSlice";
 
-interface Address {
-    id: string;
-    street: string;
-    neighborhood: string;
-    district: string;
-    province: string;
-    country: string;
-    postalCode: string;
-    apartmentNo: string;
-}
 
 const AddressBar: React.FC = () => {
+    const dispatch = useDispatch();
     const addresses = useSelector((state: RootState) => state.user.addresses) as Address[];
-    const [selectedAddress, setSelectedAddress] = useState<Address | null>(addresses[0] || null);
+    // const [selectedAddress, setSelectedAddress] = useState<Address | null>(addresses[0] || null);
+
+    const selectedAddressID = useSelector((state: RootState) => state.user.selectedAddressId);
+    const selectedAddress = addresses.find((address) => address.id === selectedAddressID) || addresses[0];
+
     const [modalVisible, setModalVisible] = useState<boolean>(false);
     const [textWidth, setTextWidth] = useState<number>(0);
     const router = useRouter();
 
     const handleAddressSelect = (address: Address) => {
-        setSelectedAddress(address);
+        dispatch(setSelectedAddress(address.id));
         setModalVisible(false);
     };
 
