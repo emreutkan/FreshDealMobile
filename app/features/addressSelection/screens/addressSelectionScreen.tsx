@@ -18,7 +18,7 @@ import {MaterialIcons} from '@expo/vector-icons';
 import debounce from 'lodash.debounce';
 import {addAddressAsync, Address} from "@/store/userSlice";
 import {scaleFont} from "@/app/utils/ResponsiveFont";
-import store, {AppDispatch} from "@/store/store";
+import {AppDispatch, store} from "@/store/store";
 import {router} from "expo-router";
 import {useNavigationState} from "@react-navigation/core";
 import DefaultButton from "@/app/features/DefaultButton";

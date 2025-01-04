@@ -8,7 +8,7 @@ import {Provider} from 'react-redux'; // Importing Provider from react-redux to 
  * Provider is a component from the react-redux library. It makes the Redux store available to any nested components within your app that are connected to the Redux store using the connect function or useSelector and useDispatch hooks.
  * By wrapping the app in a Provider, any React component within this tree can access the global state managed by Redux, making it easier to manage and share state across components.
  * **/
-import store from '@/store/store';
+import {store} from "@/store/store";
 /**
  * store represents the entire state of your application. It manages the state through reducers, actions, and middleware, if present.
  * The store is passed to the Provider as a prop, making it accessible to the app's components.

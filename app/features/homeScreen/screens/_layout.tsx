@@ -1,11 +1,19 @@
 // Layout.tsx
 import React, {useCallback, useState} from 'react';
-import {useSelector} from 'react-redux';
-import {RootState} from '@/store/store';
-import AddressSelectorScreen from "@/app/features/addressSelection/screens/addressSelectionScreen";
-import AfterLoginScreen from "@/app/features/homeScreen/screens/home";
-import {LayoutAnimation, Platform, SafeAreaView, StyleSheet, UIManager, View,} from 'react-native';
+import {
+    LayoutAnimation,
+    NativeScrollEvent,
+    NativeSyntheticEvent,
+    Platform,
+    SafeAreaView,
+    StyleSheet,
+    UIManager,
+} from 'react-native';
 import Header from "@/app/features/homeScreen/components/Header";
+import Home from "@/app/features/homeScreen/screens/Home";
+import {useSelector} from "react-redux";
+import {RootState} from "@/store/store";
+import AddressSelectorScreen from "@/app/features/addressSelection/screens/addressSelectionScreen";
 
 // Enable LayoutAnimation on Android
 if (
@@ -20,23 +28,26 @@ const customLayoutAnimation = {
     duration: 200,
     update: {
         type: LayoutAnimation.Types.easeInEaseOut,
-        property: LayoutAnimation.Properties.opacity, // We'll manage opacity separately
+        property: LayoutAnimation.Properties.opacity,
     },
 };
 
-const Layout = () => {
+const Layout: React.FC = () => {
     const addresses = useSelector((state: RootState) => state.user.addresses);
-    const [isScrolled, setIsScrolled] = useState(false);
+    const [isScrolled, setIsScrolled] = useState(false); // Default to not scrolled
 
     // Handle scroll event
-    const handleScroll = useCallback((e: { nativeEvent: { contentOffset: { y: number; }; }; }) => {
-        const scrolled = e.nativeEvent.contentOffset.y > 50;
-        // Only trigger animation if scrolled state changes
-        if (scrolled !== isScrolled) {
-            LayoutAnimation.configureNext(customLayoutAnimation);
-            setIsScrolled(scrolled);
-        }
-    }, [isScrolled]);
+    const handleScroll = useCallback(
+        (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+            const scrolled = e.nativeEvent.contentOffset.y > 50;
+            // Only trigger animation if scrolled state changes
+            if (scrolled !== isScrolled) {
+                LayoutAnimation.configureNext(customLayoutAnimation);
+                setIsScrolled(scrolled);
+            }
+        },
+        [isScrolled]
+    );
 
     if (!addresses || addresses.length === 0) {
         return <AddressSelectorScreen/>;
@@ -45,17 +56,7 @@ const Layout = () => {
     return (
         <SafeAreaView style={styles.container}>
             <Header isScrolled={isScrolled}/>
-            <View style={styles.contentContainer}>
-                {/*<ScrollView*/}
-                {/*    style={styles.scrollView}*/}
-                {/*    onScroll={handleScroll}*/}
-                {/*    scrollEventThrottle={16} // For smooth performance*/}
-                {/*    contentContainerStyle={styles.scrollContent}*/}
-                {/*>*/}
-                {/*</ScrollView>*/}
-                <AfterLoginScreen/>
-
-            </View>
+            <Home onScroll={handleScroll}/>
         </SafeAreaView>
     );
 };

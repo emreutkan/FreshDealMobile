@@ -4,7 +4,7 @@ import React from 'react';
 import {Alert, Keyboard, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View,} from 'react-native';
 import {useRouter} from 'expo-router';
 import {useDispatch, useSelector} from 'react-redux';
-import store, {AppDispatch, RootState} from '@/store/store'
+import {AppDispatch, RootState, store} from '@/store/store'
 import {scaleFont} from '@/app/utils/ResponsiveFont';
 import DefaultButton from '@/app/features/DefaultButton';
 import AppleOTP from '@/app/features/LoginRegister/components/AppleOTPLogin';
@@ -84,7 +84,7 @@ const LoginPage: React.FC = () => {
                         dispatch(getUserData({token: result.token}));
                         console.log('store.getState().user = after setToken', store.getState().user);
 
-                        router.push('/features/homeScreen/screens/home');
+                        router.push('/features/homeScreen/screens/Home');
                     } else {
                         Alert.alert("Login Failed", result.message || "Something went wrong.");
                     }

@@ -1,28 +1,26 @@
 import React, {useMemo} from 'react';
-import {FlatList, Image, StyleSheet, Text, View,} from 'react-native';
+import {FlatList, StyleSheet, Text, View,} from 'react-native';
 import {useSelector} from 'react-redux';
 import {RootState} from '@/store/store';
 import {Restaurant} from '@/store/userSlice';
-import RestaurantsOnMap from "@/app/features/homeScreen/components/RestaurantsOnMap";
 import RestaurantsBottomSheet from "@/app/features/homeScreen/components/RestaurantsBottomSheet";
+import RestaurantsOnMap from "@/app/features/homeScreen/components/RestaurantsOnMap";
 
-const AfterLoginScreen = () => {
-
+const HomeMapView = () => {
 
     const restaurants = useSelector((state: RootState) => state.user.restaurantsProximity || []);
-
 
     // Render the restaurant item
     const renderRestaurantItem = useMemo(
         () => ({item}: { item: Restaurant }) => (
             <View style={styles.restaurantCard}>
-                <Image
-                    // source={{uri: item.restaurantImageUrl || ''}}
-                    style={styles.restaurantImage}
-                    fadeDuration={300}
-                />
+                {/*<Image*/}
+                {/*    // source={{uri: item.restaurantImageUrl || ''}}*/}
+                {/*    style={styles.restaurantImage}*/}
+                {/*    fadeDuration={300}*/}
+                {/*/>*/}
                 <View style={styles.restaurantInfo}>
-                    <Text style={styles.restaurantName}>{item.restaurantName}</Text>
+                    <Text style={styles.restaurantName}>{item.restaurantDescription}</Text>
                     <View style={styles.restaurantDetails}>
                         {item.rating !== undefined && (
                             <Text style={styles.detailText}>⭐ {item.rating}</Text>
@@ -59,7 +57,9 @@ const AfterLoginScreen = () => {
         );
     };
 
-    return <View style={styles.container}>{renderMapView()}</View>;
+    return <View style={styles.container}>
+        {renderMapView()}
+    </View>;
 };
 
 const styles = StyleSheet.create({
@@ -126,4 +126,4 @@ const styles = StyleSheet.create({
 
 });
 
-export default AfterLoginScreen;
+export default HomeMapView;

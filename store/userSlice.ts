@@ -327,13 +327,10 @@ const userSlice = createSlice({
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(
-                getRestaurantsByProximity.fulfilled,
-                (state, action: PayloadAction<Restaurant[]>) => {
-                    state.loading = false;
-                    state.restaurantsProximity = action.payload;
-                }
-            )
+            .addCase(getRestaurantsByProximity.fulfilled, (state, action) => {
+                state.loading = false;
+                state.restaurantsProximity = action.payload; // Update with fetched restaurants
+            })
             .addCase(getRestaurantsByProximity.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload || 'Failed to fetch restaurants';
@@ -534,12 +531,19 @@ export const getRestaurantsByProximity = createAsyncThunk<
         try {
             const token = getState().user.token;
             if (!token) {
+                console.log('getRestaurantsByProximity failed due to missing token')
+                console.log('getRestaurantsByProximity failed due to missing token')
+                console.log('getRestaurantsByProximity failed due to missing token')
+                console.log('getRestaurantsByProximity failed due to missing token')
+
                 throw new Error('Authentication token is missing.');
+
             }
 
             const data = await getRestaurantsByProximityAPI(latitude, longitude, radius, token);
             return data as Restaurant[];
         } catch (error: any) {
+            console.error('Failed to fetch restaurants:', error);
             return rejectWithValue(error.response?.data || 'Failed to fetch restaurants');
         }
     }
