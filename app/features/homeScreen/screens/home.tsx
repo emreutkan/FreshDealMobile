@@ -35,9 +35,7 @@ const AfterLoginScreen = () => {
     );
 
     // Fallback or loading content
-    const renderContent = () => {
-
-
+    const renderMapView = () => {
         return (
             <>
                 <RestaurantsOnMap restaurants={restaurants}
@@ -61,7 +59,7 @@ const AfterLoginScreen = () => {
         );
     };
 
-    return <View style={styles.container}>{renderContent()}</View>;
+    return <View style={styles.container}>{renderMapView()}</View>;
 };
 
 const styles = StyleSheet.create({
