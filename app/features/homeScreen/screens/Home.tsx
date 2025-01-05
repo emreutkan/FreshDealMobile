@@ -1,115 +1,106 @@
-// Layout.tsx
-import React from 'react';
-import HomeCardView from "@/app/features/homeScreen/screens/HomeCardView";
-import HomeMapView from "@/app/features/homeScreen/screens/HomeMapView";
-import AccountScreen from "@/app/features/accountDetails/components/accountScreen";
-import {NativeScrollEvent, NativeSyntheticEvent, StyleSheet,} from 'react-native';
+import React, {useCallback, useState} from 'react';
+import {
+    LayoutAnimation,
+    NativeScrollEvent,
+    NativeSyntheticEvent,
+    Platform,
+    StyleSheet,
+    UIManager,
+    View,
+} from 'react-native';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
+import HomeCardView from '@/app/features/homeScreen/screens/HomeCardView';
+import HomeMapView from '@/app/features/homeScreen/screens/HomeMapView';
+import AccountScreen from '@/app/features/accountDetails/components/accountScreen';
+import Header from '@/app/features/homeScreen/components/Header';
 
-const Tab = createBottomTabNavigator();
-
-interface HomeProps {
-    onScroll: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
+// Enable LayoutAnimation on Android
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+    UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
-const Home: React.FC<HomeProps> = ({onScroll}) => {
+const SCROLL_THRESHOLD = 50;
+const Tab = createBottomTabNavigator();
 
-    const renderTabNavigator = () => {
-        return (
-            <Tab.Navigator
-                screenOptions={{
-                    headerShown: false,
-                    tabBarStyle: {
-                        backgroundColor: '#fff',
-                        borderTopWidth: 0,
-                    },
-                    tabBarLabelStyle: {
-                        fontSize: 14,
-                        fontWeight: 'bold',
-                    },
-                }}
-            >
+const HomeScreen: React.FC = () => {
+    const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(false);
+    const [isHeaderVisible, setIsHeaderVisible] = useState(true);
 
-                <Tab.Screen
-                    name="HomeCardView"
-                    options={{tabBarLabel: 'Home'}}
-                >
-                    {() => <HomeCardView onScroll={onScroll}/>}
-                </Tab.Screen>
-                <Tab.Screen
-                    name="HomeMapView"
-                    options={{tabBarLabel: 'Map'}}
-                >
-                    {() => <HomeMapView/>}
-                </Tab.Screen>
-                <Tab.Screen
-                    name="Account"
-                    component={AccountScreen}
-                />
-            </Tab.Navigator>
-        );
-    }
+    const insets = useSafeAreaInsets(); // Get safe area insets
 
+    // Reset header position when switching tabs
+    const handleTabChange = (routeName: string) => {
+        setIsHeaderVisible(routeName !== 'Account');
+        if (routeName === 'HomeCardView') {
+            setIsHeaderCollapsed(false); // Reset collapsed state
+        }
+    };
+
+    // Handle scroll events
+    const handleScroll = useCallback(
+        (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+            const currentOffsetY = e.nativeEvent.contentOffset.y;
+            const shouldCollapseHeader = currentOffsetY > SCROLL_THRESHOLD;
+
+            if (shouldCollapseHeader !== isHeaderCollapsed) {
+                LayoutAnimation.configureNext({
+                    duration: 200,
+                    update: {type: LayoutAnimation.Types.easeInEaseOut},
+                });
+                setIsHeaderCollapsed(shouldCollapseHeader);
+            }
+        },
+        [isHeaderCollapsed],
+    );
 
     return (
-        <Tab.Navigator
-            screenOptions={{
-                headerShown: false,
-                tabBarStyle: {
-                    backgroundColor: '#fff',
-                    borderTopWidth: 0,
-                },
-                tabBarLabelStyle: {
-                    fontSize: 14,
-                    fontWeight: 'bold',
-                },
-            }}
-        >
+        <View style={[styles.container, {paddingTop: insets.top}]}>
+            {isHeaderVisible && <Header isScrolled={isHeaderCollapsed}/>}
 
-            <Tab.Screen
-                name="HomeCardView"
-                options={{tabBarLabel: 'Home'}}
-            >
-                {() => <HomeCardView onScroll={onScroll}/>}
-            </Tab.Screen>
-            <Tab.Screen
-                name="HomeMapView"
-                options={{tabBarLabel: 'Map'}}
-            >
-                {() => <HomeMapView/>}
-            </Tab.Screen>
-            <Tab.Screen
-                name="Account"
-                component={AccountScreen}
-            />
-        </Tab.Navigator>
+            <View style={styles.contentContainer}>
+                <Tab.Navigator
+                    screenListeners={{
+                        state: (e) => {
+                            const routeName = e.data.state?.routes[e.data.state.index]?.name;
+                            handleTabChange(routeName);
+                        },
+                    }}
+                    screenOptions={({route}) => ({
+                        headerShown: false,
+                        tabBarIcon: ({focused, color}) => {
+                            const iconMap = {
+                                HomeCardView: focused ? 'home' : 'home-outline',
+                                HomeMapView: focused ? 'map' : 'map-outline',
+                                Account: focused ? 'person' : 'person-outline',
+                            };
+                            return <Ionicons name={iconMap[route.name]} size={20} color={color}/>;
+                        },
+                        tabBarActiveTintColor: '#007AFF',
+                        tabBarInactiveTintColor: '#8e8e8e',
+                    })}
+                >
+                    <Tab.Screen name="HomeCardView" options={{tabBarLabel: 'Home'}}>
+                        {() => <HomeCardView onScroll={handleScroll}/>}
+                    </Tab.Screen>
+                    <Tab.Screen name="HomeMapView" component={HomeMapView} options={{tabBarLabel: 'Map'}}/>
+                    <Tab.Screen name="Account" component={AccountScreen} options={{tabBarLabel: 'Account'}}/>
+                </Tab.Navigator>
+            </View>
+        </View>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f5f5f5',
+        backgroundColor: '#F3F3F3',
     },
     contentContainer: {
         flex: 1,
     },
-    scrollView: {
-        flex: 1,
-    },
-    scrollContent: {
-        paddingBottom: 50, // Ensure content isn't hidden behind navbar
-    },
-    screen: {
-        flex: 1,
-    },
-    placeholderText: {
-        marginTop: 20,
-        textAlign: 'center',
-        fontSize: 18,
-        color: '#888',
-    },
 });
 
-export default Home;
+export default HomeScreen;

@@ -1,6 +1,8 @@
 // api/userAPI.ts
 import axios from 'axios';
-import {Address, Restaurant} from "@/store/userSlice";
+// import {Address, Restaurant} from "@/store/userSlice";
+import {Address} from "@/store/slices/addressSlice";
+import {Restaurant} from "@/store/slices/restaurantSlice";
 
 const API_BASE_URL = 'https://freshdealapi-fkfaajfaffh4c0ex.uksouth-01.azurewebsites.net';
 // const API_BASE_URL = 'http://192.168.1.3:8080';

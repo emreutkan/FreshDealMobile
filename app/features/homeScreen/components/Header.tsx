@@ -1,9 +1,7 @@
-// Header.tsx
 import React from 'react';
 import {SafeAreaView, StyleSheet, View} from 'react-native';
 import AddressBar from "@/app/features/homeScreen/components/AddressBar";
 import SearchBar from "@/app/features/homeScreen/components/SearchBar";
-import {scaleFont} from "@/app/utils/ResponsiveFont";
 import AccountBar from "@/app/features/homeScreen/components/AccountBar";
 import FavoritesBar from "@/app/features/homeScreen/components/FavoritesBar";
 
@@ -13,9 +11,9 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({isScrolled}) => {
     return (
-        <SafeAreaView style={styles.header}>
+        <SafeAreaView style={styles.safeArea}>
             {isScrolled ? (
-                // Scrolled Layout: All components inline
+                // Scrolled Layout: Inline components
                 <View style={[styles.container, styles.containerScrolled]}>
                     <AddressBar/>
                     <View style={styles.inlineRightSection}>
@@ -39,17 +37,14 @@ const Header: React.FC<HeaderProps> = ({isScrolled}) => {
             )}
         </SafeAreaView>
     );
-}
+};
 
 const styles = StyleSheet.create({
-    header: {
-        marginTop: scaleFont(-10), // Moves the header upwards
-
+    safeArea: {
         backgroundColor: "#fff",
     },
     container: {
-        // width: '100%',
-        paddingHorizontal: scaleFont(10),
+        paddingHorizontal: 10,
     },
     containerScrolled: {
         flexDirection: 'row',
@@ -64,9 +59,6 @@ const styles = StyleSheet.create({
     inlineRightSection: {
         flexDirection: 'row',
         alignItems: 'center',
-    },
-    searchBarFull: {
-        marginTop: scaleFont(10),
     },
 });
 
