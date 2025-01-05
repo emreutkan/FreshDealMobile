@@ -14,7 +14,9 @@ import {useDispatch, useSelector} from 'react-redux';
 import {AppDispatch, RootState} from '@/store/store';
 import {Feather} from '@expo/vector-icons';
 import {useRouter} from 'expo-router';
-import {logout, updateEmail, updatePassword, updateUsername} from '@/store/userSlice';
+import {updateEmail, updatePassword, updateUsername} from '@/store/thunks/userThunks';
+import {logout} from '@/store/slices/userSlice';
+
 
 const AccountScreen: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();

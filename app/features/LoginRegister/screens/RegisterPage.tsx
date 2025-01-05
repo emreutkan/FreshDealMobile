@@ -20,7 +20,7 @@ import NameSurnameInputField from "../components/NameSurnameInputField";
 import PasswordInput from "@/app/features/LoginRegister/components/PasswordInput";
 import {useDispatch, useSelector} from "react-redux";
 import {AppDispatch, RootState} from "@/store/store";
-import {registerUser} from "@/store/userSlice"; // Assuming you have a thunk
+import {registerUser} from "@/store/thunks/userThunks";
 
 const RegisterScreen: React.FC = () => {
     const router = useRouter();

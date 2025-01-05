@@ -2,13 +2,13 @@ import React, {useMemo} from 'react';
 import {FlatList, StyleSheet, Text, View,} from 'react-native';
 import {useSelector} from 'react-redux';
 import {RootState} from '@/store/store';
-import {Restaurant} from '@/store/userSlice';
+import {Restaurant} from '@/store/slices/restaurantSlice';
 import RestaurantsBottomSheet from "@/app/features/homeScreen/components/RestaurantsBottomSheet";
 import RestaurantsOnMap from "@/app/features/homeScreen/components/RestaurantsOnMap";
 
 const HomeMapView = () => {
 
-    const restaurants = useSelector((state: RootState) => state.user.restaurantsProximity || []);
+    const restaurants = useSelector((state: RootState) => state.restaurant.restaurantsProximity || []);
 
     // Render the restaurant item
     const renderRestaurantItem = useMemo(

@@ -4,7 +4,9 @@ import React, {useEffect, useRef} from 'react';
 import {StyleSheet, Text, TouchableOpacity,} from 'react-native';
 import MapView, {Marker} from 'react-native-maps';
 import {AppDispatch, RootState} from '@/store/store';
-import {Address, getRestaurantsByProximity, Restaurant} from '@/store/userSlice';
+import {Address} from "@/store/slices/addressSlice";
+import {getRestaurantsByProximity} from "@/store/thunks/restaurantThunks";
+import {Restaurant} from "@/store/slices/restaurantSlice";
 import {useDispatch, useSelector} from "react-redux";
 
 interface MapProps {
@@ -22,9 +24,8 @@ const RestaurantsOnMap = ({
 
     const dispatch: AppDispatch = useDispatch();
     const mapRef = useRef<MapView>(null);
-    const userState = useSelector((state: RootState) => state.user);
-
-    const selectedAddress = userState.addresses.find((address) => address.id === userState.selectedAddressId) as Address;
+    const addressState = useSelector((state: RootState) => state.address);
+    const selectedAddress = addressState.addresses.find((address) => address.id === addressState.selectedAddressId) as Address;
     const latitude = selectedAddress.latitude;
     const longitude = selectedAddress.longitude;
     const relocateToUserLocation = () => {

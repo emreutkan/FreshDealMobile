@@ -15,6 +15,42 @@ interface HomeProps {
 
 const Home: React.FC<HomeProps> = ({onScroll}) => {
 
+    const renderTabNavigator = () => {
+        return (
+            <Tab.Navigator
+                screenOptions={{
+                    headerShown: false,
+                    tabBarStyle: {
+                        backgroundColor: '#fff',
+                        borderTopWidth: 0,
+                    },
+                    tabBarLabelStyle: {
+                        fontSize: 14,
+                        fontWeight: 'bold',
+                    },
+                }}
+            >
+
+                <Tab.Screen
+                    name="HomeCardView"
+                    options={{tabBarLabel: 'Home'}}
+                >
+                    {() => <HomeCardView onScroll={onScroll}/>}
+                </Tab.Screen>
+                <Tab.Screen
+                    name="HomeMapView"
+                    options={{tabBarLabel: 'Map'}}
+                >
+                    {() => <HomeMapView/>}
+                </Tab.Screen>
+                <Tab.Screen
+                    name="Account"
+                    component={AccountScreen}
+                />
+            </Tab.Navigator>
+        );
+    }
+
 
     return (
         <Tab.Navigator
@@ -30,7 +66,7 @@ const Home: React.FC<HomeProps> = ({onScroll}) => {
                 },
             }}
         >
-            
+
             <Tab.Screen
                 name="HomeCardView"
                 options={{tabBarLabel: 'Home'}}

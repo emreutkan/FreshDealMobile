@@ -33,7 +33,7 @@ const customLayoutAnimation = {
 };
 
 const Layout: React.FC = () => {
-    const addresses = useSelector((state: RootState) => state.user.addresses);
+    const addresses = useSelector((state: RootState) => state.address.addresses);
     const [isScrolled, setIsScrolled] = useState(false); // Default to not scrolled
 
     // Handle scroll event

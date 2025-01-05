@@ -9,7 +9,7 @@ import {
     Text,
     View
 } from 'react-native';
-import {Restaurant} from "@/store/userSlice";
+import {Restaurant} from "@/store/slices/restaurantSlice";
 import {useSelector} from "react-redux";
 import {RootState} from "@/store/store";
 
@@ -18,7 +18,7 @@ interface HomeCardViewProps {
 }
 
 const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll}) => {
-    const restaurants = useSelector((state: RootState) => state.user.restaurantsProximity || []);
+    const restaurants = useSelector((state: RootState) => state.restaurant.restaurantsProximity || []);
     console.log(restaurants);
 
     const renderContent = useCallback(({restaurant}: { restaurant: Restaurant }) => (

@@ -1,5 +1,6 @@
 import {useEffect} from 'react';
 import {useRouter} from 'expo-router';
+import 'react-native-get-random-values'; // this is needed for the uuid package to work
 
 const Index = () => {
     const router = useRouter();
