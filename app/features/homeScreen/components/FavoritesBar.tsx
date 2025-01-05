@@ -23,7 +23,7 @@ const FavoritesBar: React.FC = () => {
 
 const styles = StyleSheet.create({
     favoritesBarContainer: {
-        padding: scaleFont(10),
+        paddingHorizontal: scaleFont(10),
     },
 });
 

@@ -170,7 +170,8 @@ const AddressBar: React.FC = () => {
 
 const styles = StyleSheet.create({
     container: {
-        padding: scaleFont(10),
+        paddingHorizontal: scaleFont(10),
+
     },
     addressBar: {
         flexDirection: 'row',

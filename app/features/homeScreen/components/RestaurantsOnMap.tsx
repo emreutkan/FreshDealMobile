@@ -13,13 +13,15 @@ interface MapProps {
     restaurants: Restaurant[];
     setLatitudeDelta: number;
     setLongitudeDelta: number;
+    coverEntireScreen: boolean;
 
 }
 
 const RestaurantsOnMap = ({
                               restaurants,
                               setLatitudeDelta,
-                              setLongitudeDelta
+                              setLongitudeDelta,
+                              coverEntireScreen
                           }: MapProps) => {
 
     const dispatch: AppDispatch = useDispatch();
@@ -56,7 +58,11 @@ const RestaurantsOnMap = ({
 
         <>
             <MapView
-                style={styles.map}
+                style={[
+                    coverEntireScreen ? StyleSheet.absoluteFillObject : styles.map,
+
+                ]}
+                // style={{...styles.map, ...styles.map}}
                 ref={mapRef}
                 initialRegion={{
                     latitude: latitude,

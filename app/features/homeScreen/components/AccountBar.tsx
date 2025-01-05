@@ -24,7 +24,7 @@ const AccountBar: React.FC = () => {
 
 const styles = StyleSheet.create({
     accountBarContainer: {
-        padding: scaleFont(10),
+        paddingHorizontal: scaleFont(10),
     },
 });
 

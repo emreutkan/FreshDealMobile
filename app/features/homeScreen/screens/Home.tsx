@@ -28,18 +28,20 @@ const Tab = createBottomTabNavigator();
 const HomeScreen: React.FC = () => {
     const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(false);
     const [isHeaderVisible, setIsHeaderVisible] = useState(true);
+    const [homeCardHeaderState, setHomeCardHeaderState] = useState(false); // Preserve HomeCardView header state
 
-    const insets = useSafeAreaInsets(); // Get safe area insets
+    const insets = useSafeAreaInsets();
 
-    // Reset header position when switching tabs
     const handleTabChange = (routeName: string) => {
         setIsHeaderVisible(routeName !== 'Account');
+
         if (routeName === 'HomeCardView') {
-            setIsHeaderCollapsed(false); // Reset collapsed state
+            setIsHeaderCollapsed(homeCardHeaderState); // Restore HomeCardView header state
+        } else if (routeName === 'HomeMapView') {
+            setIsHeaderCollapsed(true); // Always collapse header for HomeMapView
         }
     };
 
-    // Handle scroll events
     const handleScroll = useCallback(
         (e: NativeSyntheticEvent<NativeScrollEvent>) => {
             const currentOffsetY = e.nativeEvent.contentOffset.y;
@@ -51,9 +53,12 @@ const HomeScreen: React.FC = () => {
                     update: {type: LayoutAnimation.Types.easeInEaseOut},
                 });
                 setIsHeaderCollapsed(shouldCollapseHeader);
+
+                // Save the state for HomeCardView
+                setHomeCardHeaderState(shouldCollapseHeader);
             }
         },
-        [isHeaderCollapsed],
+        [isHeaderCollapsed]
     );
 
     return (
@@ -93,10 +98,11 @@ const HomeScreen: React.FC = () => {
     );
 };
 
+
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F3F3F3',
+        backgroundColor: '#ffffff',
     },
     contentContainer: {
         flex: 1,

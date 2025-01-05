@@ -1,9 +1,10 @@
 import React from 'react';
-import {SafeAreaView, StyleSheet, View} from 'react-native';
+import {StyleSheet, View} from 'react-native';
 import AddressBar from "@/app/features/homeScreen/components/AddressBar";
 import SearchBar from "@/app/features/homeScreen/components/SearchBar";
 import AccountBar from "@/app/features/homeScreen/components/AccountBar";
 import FavoritesBar from "@/app/features/homeScreen/components/FavoritesBar";
+import {scaleFont} from "@/app/utils/ResponsiveFont";
 
 interface HeaderProps {
     isScrolled: boolean;
@@ -11,7 +12,8 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({isScrolled}) => {
     return (
-        <SafeAreaView style={styles.safeArea}>
+
+        <View style={styles.header}>
             {isScrolled ? (
                 // Scrolled Layout: Inline components
                 <View style={[styles.container, styles.containerScrolled]}>
@@ -35,13 +37,26 @@ const Header: React.FC<HeaderProps> = ({isScrolled}) => {
                     <SearchBar isScrolled={isScrolled}/>
                 </View>
             )}
-        </SafeAreaView>
+        </View>
     );
 };
 
 const styles = StyleSheet.create({
-    safeArea: {
+    header: {
         backgroundColor: "#fff",
+        borderBottomWidth: 1,
+        borderRightWidth: 1,
+        borderLeftWidth: 1,
+        borderColor: '#b2f7a5',
+        paddingBottom: scaleFont(10),
+        borderBottomLeftRadius: scaleFont(20),
+        borderBottomRightRadius: scaleFont(20),
+        // shadowColor: "#000",
+        shadowOffset: {width: 0, height: 8}, // Offset downward to apply shadow only below
+        shadowOpacity: 0.08, // Slightly stronger shadow
+        shadowRadius: 4,
+        elevation: 5, // For Android shadow
+        zIndex: 9999, // Ensures it is above other elements visually
     },
     container: {
         paddingHorizontal: 10,

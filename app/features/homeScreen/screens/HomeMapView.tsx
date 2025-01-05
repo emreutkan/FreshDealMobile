@@ -37,7 +37,11 @@ const HomeMapView = () => {
         return (
             <>
                 <RestaurantsOnMap restaurants={restaurants}
-                                  setLatitudeDelta={0.01} setLongitudeDelta={0.01}></RestaurantsOnMap>
+                                  setLatitudeDelta={0.01} setLongitudeDelta={0.01}
+                                  coverEntireScreen={true}
+                >
+
+                </RestaurantsOnMap>
 
 
                 <RestaurantsBottomSheet children={
