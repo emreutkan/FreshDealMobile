@@ -9,6 +9,7 @@ import HomeScreen from './features/homeScreen/screens/Home';
 import Landing from './features/LoginRegister/screens/Landing';
 import AddressSelectionScreen from "@/src/features/homeScreen/screens/addressSelectionScreen"; // Renamed from _layout
 import {RootStackParamList} from '@/src/types/navigation';
+import UpdateAddress from "@/src/features/homeScreen/screens/UpdateAddress";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -26,6 +27,7 @@ const App: React.FC = () => {
                         name="AddressSelectionScreen"
                         component={AddressSelectionScreen}
                     />
+                    <Stack.Screen name="UpdateAddress" component={UpdateAddress}/>
                 </Stack.Navigator>
             </NavigationContainer>
         </Provider>

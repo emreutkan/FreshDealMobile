@@ -15,7 +15,9 @@ import {RootStackParamList} from '@/src/types/navigation';
 
 const AddressBar: React.FC = () => {
     const dispatch = useDispatch();
-    const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+    type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'UpdateAddress'>;
+
+    const navigation = useNavigation<NavigationProp>();
 
     const addresses = useSelector(
         (state: RootState) => state.address.addresses
