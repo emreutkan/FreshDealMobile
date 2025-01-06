@@ -17,7 +17,10 @@ export const addAddressAsync = createAsyncThunk<
 
         try {
             const token = getState().user.token;
-            if (!token) throw new Error('Authentication token is missing.');
+            if (!token) {
+                console.error('Authentication token is missing.');
+                return rejectWithValue('Authentication token is missing.');
+            }
             const response = await addAddressAPI(address, token);
             return response as Address;
         } catch (error: any) {

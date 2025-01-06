@@ -81,7 +81,8 @@ const HomeScreen: React.FC = () => {
                                 HomeMapView: focused ? 'map' : 'map-outline',
                                 Account: focused ? 'person' : 'person-outline',
                             };
-                            return <Ionicons name={iconMap[route.name]} size={20} color={color}/>;
+                            return <Ionicons name={iconMap[route.name as keyof typeof iconMap]} size={20}
+                                             color={color}/>;
                         },
                         tabBarActiveTintColor: '#007AFF',
                         tabBarInactiveTintColor: '#8e8e8e',

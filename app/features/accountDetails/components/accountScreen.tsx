@@ -25,7 +25,6 @@ const AccountScreen: React.FC = () => {
         email,
         phoneNumber,
         loading,
-        error
     } = useSelector((state: RootState) => state.user);
 
     const router = useRouter();
@@ -247,9 +246,7 @@ const AccountScreen: React.FC = () => {
                 >
                     <Text style={styles.logoutButtonText}>Logout</Text>
                 </TouchableOpacity>
-                {error && (
-                    <Text style={styles.errorText}>{error}</Text>
-                )}
+
             </View>
         </SafeAreaView>
     );

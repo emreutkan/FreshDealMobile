@@ -29,7 +29,6 @@ const RegisterScreen: React.FC = () => {
         password,
         name_surname,
         phoneNumber,
-        selectedCode,
         email,
         loading,
         error,

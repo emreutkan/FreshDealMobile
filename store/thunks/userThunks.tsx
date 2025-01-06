@@ -66,9 +66,11 @@ export const updateUsername = createAsyncThunk<
     async ({newUsername}, {getState, rejectWithValue}) => {
         try {
             const token = getState().user.token;
-            if (!token) throw new Error('No authentication token');
-            const response = await updateUsernameAPI(newUsername, token);
-            return response;
+            if (!token) {
+                console.error('Authentication token is missing.');
+                return rejectWithValue('Authentication token is missing.');
+            }
+            return await updateUsernameAPI(newUsername, token);
         } catch (error: any) {
             return rejectWithValue(error.response?.data?.message || 'Failed to update username');
         }
@@ -85,9 +87,11 @@ export const updateEmail = createAsyncThunk<
     async ({oldEmail, newEmail}, {getState, rejectWithValue}) => {
         try {
             const token = getState().user.token;
-            if (!token) throw new Error('No authentication token');
-            const response = await updateEmailAPI(oldEmail, newEmail, token);
-            return response;
+            if (!token) {
+                console.error('Authentication token is missing.');
+                return rejectWithValue('Authentication token is missing.');
+            }
+            return await updateEmailAPI(oldEmail, newEmail, token);
         } catch (error: any) {
             return rejectWithValue(error.response?.data?.message || 'Failed to update email');
         }
@@ -104,9 +108,11 @@ export const updatePassword = createAsyncThunk<
     async ({oldPassword, newPassword}, {getState, rejectWithValue}) => {
         try {
             const token = getState().user.token;
-            if (!token) throw new Error('No authentication token');
-            const response = await updatePasswordAPI(oldPassword, newPassword, token);
-            return response;
+            if (!token) {
+                console.error('Authentication token is missing.');
+                return rejectWithValue('Authentication token is missing.');
+            }
+            return await updatePasswordAPI(oldPassword, newPassword, token);
         } catch (error: any) {
             return rejectWithValue(error.response?.data?.message || 'Failed to update password');
         }

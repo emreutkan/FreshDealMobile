@@ -118,7 +118,7 @@ const userSlice = createSlice({
         setToken(state, action: PayloadAction<string>) {
             state.token = action.payload;
         },
-        logout(state) {
+        logout() {
             return {...initialState};
         },
     },
@@ -133,7 +133,7 @@ const userSlice = createSlice({
                 state.token = action.payload.token;
                 state.role = action.payload.role;
             })
-            .addCase(loginUser.rejected, (state, action) => {
+            .addCase(loginUser.rejected, (state) => {
                 state.loading = false;
                 // state.error = action.payload || 'Login failed';
                 state.error = 'Login failed';
@@ -145,7 +145,7 @@ const userSlice = createSlice({
             .addCase(registerUser.fulfilled, (state) => {
                 state.loading = false;
             })
-            .addCase(registerUser.rejected, (state, action) => {
+            .addCase(registerUser.rejected, (state) => {
                 state.loading = false;
                 // state.error = action.payload || 'Registration failed';
                 state.error = 'Registration failed';

@@ -2,10 +2,8 @@ import React from 'react';
 import {StyleSheet, TouchableOpacity} from 'react-native';
 import {Ionicons} from '@expo/vector-icons';
 import {scaleFont} from "@/app/utils/ResponsiveFont";
-import {useRouter} from "expo-router";
 
 const FavoritesBar: React.FC = () => {
-    const router = useRouter();
 
     const handleRouteToFavoritesScreen = () => {
 

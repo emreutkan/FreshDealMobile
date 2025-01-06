@@ -16,6 +16,7 @@ export interface Restaurant {
     rating: number;
     ratingCount: number;
     distance_km: number;
+    image_url: string;
 }
 
 interface RestaurantState {

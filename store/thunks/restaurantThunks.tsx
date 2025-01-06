@@ -13,7 +13,10 @@ export const getRestaurantsByProximity = createAsyncThunk<
     async ({latitude, longitude, radius}, {rejectWithValue, getState}) => {
         try {
             const token = getState().user.token;
-            if (!token) throw new Error('Authentication token is missing.');
+            if (!token) {
+                console.error('Authentication token is missing.');
+                return rejectWithValue('Authentication token is missing.');
+            }
             const data = await getRestaurantsByProximityAPI(latitude, longitude, radius, token);
             return data as Restaurant[];
         } catch (error: any) {
