@@ -34,17 +34,37 @@ const HomeMapView = () => {
 
     // Fallback or loading content
     const renderMapView = () => {
+        if (!restaurants.length) {
+            return (
+                <View style={styles.noRestaurantsContainer}>
+                    <View style={StyleSheet.absoluteFillObject}>
+                        <RestaurantsOnMap
+                            restaurants={[]}
+                            setLatitudeDelta={0.01}
+                            setLongitudeDelta={0.01}
+                            coverEntireScreen={true}
+                        />
+                    </View>
+                    <View style={styles.blurOverlay}/>
+                    <View style={styles.messageBox}>
+                        <Text style={styles.noRestaurantsTitle}>Sorry!</Text>
+                        <Text style={styles.noRestaurantsMessage}>
+                            We are currently not operating in this area. Check back soon as we expand our services!
+                        </Text>
+                    </View>
+                </View>
+            );
+        }
+
         return (
             <>
-                <RestaurantsOnMap restaurants={restaurants}
-                                  setLatitudeDelta={0.01} setLongitudeDelta={0.01}
-                                  coverEntireScreen={true}
-                >
-
-                </RestaurantsOnMap>
-
-
-                <RestaurantsBottomSheet children={
+                <RestaurantsOnMap
+                    restaurants={restaurants}
+                    setLatitudeDelta={0.01}
+                    setLongitudeDelta={0.01}
+                    coverEntireScreen={true}
+                />
+                <RestaurantsBottomSheet>
                     <>
                         <Text style={styles.sectionTitle}>Restaurants in Area</Text>
                         <FlatList
@@ -55,11 +75,11 @@ const HomeMapView = () => {
                             contentContainerStyle={styles.listContainer}
                         />
                     </>
-                }></RestaurantsBottomSheet>
-
+                </RestaurantsBottomSheet>
             </>
         );
     };
+
 
     return <View style={styles.container}>
         {renderMapView()}
@@ -121,6 +141,35 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+    },
+    blurOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(255, 255, 255, 0.7)', // Semi-transparent white overlay
+        backdropFilter: 'blur(10px)', // Blurring effect
+    },
+    messageBox: {
+        width: '90%',
+        backgroundColor: '#fff',
+        borderRadius: 16,
+        padding: 20,
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 4},
+        shadowOpacity: 0.2,
+        shadowRadius: 6,
+        elevation: 5,
+        alignItems: 'center',
+    },
+    noRestaurantsTitle: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: '#FF6347', // Tomato red for a friendly alert
+        marginBottom: 8,
+    },
+    noRestaurantsMessage: {
+        fontSize: 16,
+        color: '#555',
+        textAlign: 'center',
+        lineHeight: 22,
     },
     noRestaurantsText: {
         textAlign: 'center',

@@ -19,6 +19,12 @@ export interface Restaurant {
     image_url: string;
 }
 
+export interface RestaurantCreateResponse {
+    success: boolean;
+    message: string;
+    image_url?: string;
+}
+
 interface RestaurantState {
     restaurantsProximity: Restaurant[];
     status: 'idle' | 'loading' | 'succeeded' | 'failed';

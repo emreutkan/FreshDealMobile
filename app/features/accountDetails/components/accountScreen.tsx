@@ -17,9 +17,10 @@ import {useRouter} from 'expo-router';
 import {updateEmail, updatePassword, updateUsername} from '@/store/thunks/userThunks';
 import {logout} from '@/store/slices/userSlice';
 
-
 const AccountScreen: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
+    const router = useRouter();
+
     const {
         name_surname,
         email,
@@ -27,7 +28,6 @@ const AccountScreen: React.FC = () => {
         loading,
     } = useSelector((state: RootState) => state.user);
 
-    const router = useRouter();
     const [isEditing, setIsEditing] = useState(false);
     const [editedValues, setEditedValues] = useState({
         name_surname: name_surname,
@@ -49,7 +49,7 @@ const AccountScreen: React.FC = () => {
                     style: 'destructive',
                     onPress: () => {
                         dispatch(logout());
-                        router.replace('/features/LoginRegister/screens/loginPage'); // Navigate to login page
+                        router.replace('/features/LoginRegister/screens/loginPage');
                     }
                 }
             ]
@@ -57,7 +57,7 @@ const AccountScreen: React.FC = () => {
     };
 
     const handleCancel = () => {
-        // Reset edited values to current values in Redux store
+        // Reset to original Redux values
         setEditedValues({
             name_surname: name_surname,
             email: email,
@@ -172,65 +172,66 @@ const AccountScreen: React.FC = () => {
 
     return (
         <SafeAreaView style={styles.safeArea}>
-            <View style={styles.container}>
-                <View style={styles.topBar}>
-                    <TouchableOpacity onPress={() => router.back()}>
-                        <Feather name="arrow-left" size={24} color="black"/>
-                    </TouchableOpacity>
-                    <Text style={styles.title}>Account</Text>
-                    <TouchableOpacity onPress={handleEditInfo}>
-                        <Feather
-                            name={isEditing ? "check" : "settings"}
-                            size={24}
-                            color="black"
-                        />
-                    </TouchableOpacity>
-                </View>
-
-                <View style={styles.profileSection}>
-                    <Image
-                        source={{uri: 'https://via.placeholder.com/100'}}
-                        style={styles.profileImage}
+            <View style={styles.topBar}>
+                <TouchableOpacity onPress={() => router.back()} style={styles.iconButton}>
+                    <Feather name="arrow-left" size={24} color="#333"/>
+                </TouchableOpacity>
+                <Text style={styles.title}>Account</Text>
+                <TouchableOpacity onPress={handleEditInfo} style={styles.iconButton}>
+                    <Feather
+                        name={isEditing ? "check" : "settings"}
+                        size={24}
+                        color="#333"
                     />
-                    {isEditing ? (
-                        <TextInput
-                            style={[styles.userName, styles.input]}
-                            value={editedValues.name_surname}
-                            onChangeText={(text) =>
-                                setEditedValues({...editedValues, name_surname: text})
-                            }
-                            placeholder="Enter your name"
-                        />
-                    ) : (
-                        <Text style={styles.userName}>{name_surname}</Text>
-                    )}
-                </View>
+                </TouchableOpacity>
+            </View>
 
-                <View style={styles.infoSection}>
-                    <View style={styles.infoItem}>
-                        <Text style={styles.infoTitle}>Email</Text>
+            <View style={styles.container}>
+                <View style={styles.profileCard}>
+                    <View style={styles.profileHeader}>
+                        <Image
+                            source={{uri: 'https://via.placeholder.com/100'}}
+                            style={styles.profileImage}
+                        />
                         {isEditing ? (
                             <TextInput
-                                style={[styles.infoText, styles.input]}
-                                value={editedValues.email}
+                                style={[styles.userName, styles.input]}
+                                value={editedValues.name_surname}
                                 onChangeText={(text) =>
-                                    setEditedValues({...editedValues, email: text})
+                                    setEditedValues({...editedValues, name_surname: text})
                                 }
-                                keyboardType="email-address"
-                                placeholder="Enter your email"
+                                placeholder="Enter your name"
                             />
                         ) : (
-                            <Text style={styles.infoText}>
-                                {email || 'No email provided'}
-                            </Text>
+                            <Text style={styles.userName}>{name_surname}</Text>
                         )}
                     </View>
+                    <View style={styles.infoSection}>
+                        <View style={styles.infoItem}>
+                            <Text style={styles.infoTitle}>Email</Text>
+                            {isEditing ? (
+                                <TextInput
+                                    style={[styles.infoText, styles.input]}
+                                    value={editedValues.email}
+                                    onChangeText={(text) =>
+                                        setEditedValues({...editedValues, email: text})
+                                    }
+                                    keyboardType="email-address"
+                                    placeholder="Enter your email"
+                                />
+                            ) : (
+                                <Text style={styles.infoText}>
+                                    {email || 'No email provided'}
+                                </Text>
+                            )}
+                        </View>
 
-                    <View style={styles.infoItem}>
-                        <Text style={styles.infoTitle}>Phone Number</Text>
-                        <Text style={styles.infoText}>
-                            {phoneNumber || 'No phone number provided'}
-                        </Text>
+                        <View style={styles.infoItem}>
+                            <Text style={styles.infoTitle}>Phone Number</Text>
+                            <Text style={styles.infoText}>
+                                {phoneNumber || 'No phone number provided'}
+                            </Text>
+                        </View>
                     </View>
                 </View>
 
@@ -240,113 +241,135 @@ const AccountScreen: React.FC = () => {
                 >
                     <Text style={styles.resetButtonText}>Reset Password</Text>
                 </TouchableOpacity>
+
                 <TouchableOpacity
                     style={styles.logoutButton}
                     onPress={handleLogout}
                 >
                     <Text style={styles.logoutButtonText}>Logout</Text>
                 </TouchableOpacity>
-
             </View>
         </SafeAreaView>
     );
 };
 
-
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
-        backgroundColor: '#f5f5f5',
-    },
-    container: {
-        flex: 1,
-        padding: 20,
-        backgroundColor: '#f5f5f5',
+        backgroundColor: '#F9FAFB',
     },
     topBar: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 20,
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        backgroundColor: '#FFFFFF',
+        // Drop shadow for iOS
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.15,
+        shadowRadius: 2,
+        // Elevation for Android
+        elevation: 2,
+    },
+    iconButton: {
+        padding: 8,
     },
     title: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: '#333',
-    },
-    profileSection: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 20,
-    },
-    profileImage: {
-        width: 100,
-        height: 100,
-        borderRadius: 50,
-        backgroundColor: '#ccc',
-    },
-    userName: {
-        fontSize: 22,
-        fontWeight: 'bold',
-        marginLeft: 15,
-        color: '#333',
-    },
-    infoSection: {
-        width: '100%',
-    },
-    infoItem: {
-        marginBottom: 15,
-    },
-    infoTitle: {
-        fontSize: 16,
+        flex: 1,
+        textAlign: 'center',
+        fontSize: 20,
         fontWeight: '600',
-        color: '#555',
-    },
-    infoText: {
-        fontSize: 14,
         color: '#333',
     },
-    resetButton: {
-        marginTop: 30,
-        backgroundColor: '#50703C',
-        paddingVertical: 12,
-        borderRadius: 8,
-        alignItems: 'center',
-    },
-    resetButtonText: {
-        fontSize: 16,
-        color: '#fff',
-        fontWeight: 'bold',
-    },
-    input: {
-        borderWidth: 1,
-        borderColor: '#ddd',
-        borderRadius: 5,
-        padding: 8,
-        backgroundColor: '#fff',
-        marginTop: 5,
+    container: {
+        flex: 1,
+        paddingHorizontal: 16,
+        paddingVertical: 20,
     },
     loadingContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
     },
-    errorText: {
-        color: 'red',
+    profileCard: {
+        backgroundColor: '#FFF',
+        borderRadius: 12,
+        padding: 16,
+        // iOS shadow
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.15,
+        shadowRadius: 4,
+        // Android elevation
+        elevation: 3,
+        marginBottom: 20,
+    },
+    profileHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 16,
+    },
+    profileImage: {
+        width: 80,
+        height: 80,
+        borderRadius: 40,
+        backgroundColor: '#ccc',
+    },
+    userName: {
+        fontSize: 18,
+        fontWeight: '600',
+        marginLeft: 15,
+        color: '#333',
+        flex: 1,
+    },
+    infoSection: {
+        marginTop: 4,
+    },
+    infoItem: {
+        marginBottom: 10,
+    },
+    infoTitle: {
+        fontSize: 14,
+        fontWeight: 'bold',
+        color: '#555',
+        marginBottom: 4,
+    },
+    infoText: {
+        fontSize: 14,
+        color: '#333',
+    },
+    input: {
+        borderWidth: 1,
+        borderColor: '#ddd',
+        borderRadius: 6,
+        padding: 8,
+        backgroundColor: '#fff',
+        marginTop: 2,
+    },
+    resetButton: {
         marginTop: 10,
-        textAlign: 'center',
+        backgroundColor: '#50703C',
+        paddingVertical: 14,
+        borderRadius: 8,
+        alignItems: 'center',
+    },
+    resetButtonText: {
+        fontSize: 16,
+        color: '#fff',
+        fontWeight: '600',
     },
     logoutButton: {
         marginTop: 15,
         backgroundColor: '#FF4444',
-        paddingVertical: 12,
+        paddingVertical: 14,
         borderRadius: 8,
         alignItems: 'center',
     },
     logoutButtonText: {
         fontSize: 16,
         color: '#fff',
-        fontWeight: 'bold',
+        fontWeight: '600',
     },
 });
 

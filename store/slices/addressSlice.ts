@@ -16,7 +16,6 @@ export interface Address {
     postalCode: string;
     apartmentNo: string;
     doorNo: string;
-
 }
 
 interface AddressState {
@@ -49,7 +48,7 @@ const addressSlice = createSlice({
             if (state.selectedAddressId === action.payload) {
                 state.selectedAddressId = state.addresses[0]?.id || null;
             }
-            
+
         },
         setSelectedAddress(state, action: PayloadAction<string>) {
             if (state.addresses.some((address) => address.id === action.payload)) {

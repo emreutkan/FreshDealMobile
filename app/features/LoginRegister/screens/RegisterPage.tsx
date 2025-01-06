@@ -19,8 +19,9 @@ import {useRouter} from "expo-router";
 import NameSurnameInputField from "../components/NameSurnameInputField";
 import PasswordInput from "@/app/features/LoginRegister/components/PasswordInput";
 import {useDispatch, useSelector} from "react-redux";
-import {AppDispatch, RootState} from "@/store/store";
-import {registerUser} from "@/store/thunks/userThunks";
+import {AppDispatch, RootState, store} from "@/store/store";
+import {getUserData, loginUser, registerUser} from "@/store/thunks/userThunks";
+import {setToken} from "@/store/slices/userSlice";
 
 const RegisterScreen: React.FC = () => {
     const router = useRouter();
@@ -32,11 +33,11 @@ const RegisterScreen: React.FC = () => {
         email,
         loading,
         error,
+        selectedCode,
     } = useSelector((state: RootState) => state.user);
 
 
     const SUCCESS_MESSAGE = "Registration completed!";
-    const SUCCESS_ROUTE = "./screens/preLogin/LoginPage";
 
     const validateInput = (): boolean => {
         if (!name_surname) {
@@ -58,18 +59,41 @@ const RegisterScreen: React.FC = () => {
         if (!validateInput()) return;
         console.log("input validated")
         try {
-            await dispatch(
+            const result = await dispatch(
                 registerUser({
                     name_surname,
                     email,
-                    phone_number: phoneNumber,
+                    phone_number: selectedCode + phoneNumber,
                     password,
                     role: 'customer'
                 })
             ).unwrap();
+            console.log("result = ", result)
+            if (result.message == "User registered successfully!") { // Adjust based on your API response structure
 
-            Alert.alert("Success", SUCCESS_MESSAGE);
-            router.push(SUCCESS_ROUTE);
+                const result = await dispatch(
+                    loginUser({
+                        email: email,
+                        phone_number: selectedCode + phoneNumber,
+                        password: password,
+                        login_type: "email",
+                        password_login: true,
+                    })
+                ).unwrap(); // Use unwrap() to handle fulfilled/rejected states
+                if (result.success) { // Adjust based on your API response structure
+                    console.log('store.getState().user before setToken = ', store.getState().user);
+
+                    dispatch(setToken(result.token));
+                    dispatch(getUserData({token: result.token}));
+                    console.log('store.getState().user = after setToken', store.getState().user);
+
+                    router.push('/features/homeScreen/screens/Home');
+                } else {
+                    Alert.alert("Login Failed", result.message || "Something went wrong.");
+                }
+            } else {
+                Alert.alert("Login Failed", result.message || "Something went wrong.");
+            }
         } catch (error: any) {
             Alert.alert("Registration Failed", error.message || "An error occurred");
         }

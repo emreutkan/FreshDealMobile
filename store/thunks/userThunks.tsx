@@ -26,8 +26,7 @@ export const loginUser = createAsyncThunk(
         {rejectWithValue}
     ) => {
         try {
-            const data = await loginUserAPI(payload);
-            return data;
+            return await loginUserAPI(payload);
         } catch (error: any) {
             return rejectWithValue(error.response?.data || 'Login failed');
         }
@@ -43,82 +42,105 @@ export const registerUser = createAsyncThunk(
             email?: string;
             phone_number?: string;
             password: string;
-            role: string;
+            role: "customer";
         },
         {rejectWithValue}
     ) => {
         try {
-            const data = await registerUserAPI(userData);
-            return data;
+            return await registerUserAPI(userData);
         } catch (error: any) {
             return rejectWithValue(error.response?.data || 'Registration failed');
         }
     }
 );
-
-// Update username
+// -------------------------------------------------------------------
+// 3) Update username
+// -------------------------------------------------------------------
 export const updateUsername = createAsyncThunk<
     { username: string },
     { newUsername: string },
-    { state: RootState; rejectValue: string }
+    { state: RootState; rejectValue: string; dispatch: any }  // <== Notice "dispatch" here
 >(
     'user/updateUsername',
-    async ({newUsername}, {getState, rejectWithValue}) => {
+    async ({newUsername}, {dispatch, getState, rejectWithValue}) => {
         try {
             const token = getState().user.token;
             if (!token) {
                 console.error('Authentication token is missing.');
                 return rejectWithValue('Authentication token is missing.');
             }
-            return await updateUsernameAPI(newUsername, token);
+            // 3.a) Update the username via API
+            const response = await updateUsernameAPI(newUsername, token);
+
+            // 3.b) Immediately fetch updated user info
+            dispatch(getUserData({token}));
+
+            // 3.c) Return the response from updateUsernameAPI
+            return response;
         } catch (error: any) {
             return rejectWithValue(error.response?.data?.message || 'Failed to update username');
         }
     }
 );
-
-// Update email
+// -------------------------------------------------------------------
+// 4) Update email
+// -------------------------------------------------------------------
 export const updateEmail = createAsyncThunk<
     { email: string },
     { oldEmail: string; newEmail: string },
-    { state: RootState; rejectValue: string }
+    { state: RootState; rejectValue: string; dispatch: any } // <== Notice "dispatch" here
 >(
     'user/updateEmail',
-    async ({oldEmail, newEmail}, {getState, rejectWithValue}) => {
+    async ({oldEmail, newEmail}, {dispatch, getState, rejectWithValue}) => {
         try {
             const token = getState().user.token;
             if (!token) {
                 console.error('Authentication token is missing.');
                 return rejectWithValue('Authentication token is missing.');
             }
-            return await updateEmailAPI(oldEmail, newEmail, token);
+            // 4.a) Update the email via API
+            const response = await updateEmailAPI(oldEmail, newEmail, token);
+
+            // 4.b) Immediately fetch updated user info
+            dispatch(getUserData({token}));
+
+            // 4.c) Return the response from updateEmailAPI
+            return response;
         } catch (error: any) {
             return rejectWithValue(error.response?.data?.message || 'Failed to update email');
         }
     }
 );
 
-// Update password
+// -------------------------------------------------------------------
+// 5) Update password
+// -------------------------------------------------------------------
 export const updatePassword = createAsyncThunk<
     { message: string },
     { oldPassword: string; newPassword: string },
-    { state: RootState; rejectValue: string }
+    { state: RootState; rejectValue: string; dispatch: any } // <== Notice "dispatch" here
 >(
     'user/updatePassword',
-    async ({oldPassword, newPassword}, {getState, rejectWithValue}) => {
+    async ({oldPassword, newPassword}, {dispatch, getState, rejectWithValue}) => {
         try {
             const token = getState().user.token;
             if (!token) {
                 console.error('Authentication token is missing.');
                 return rejectWithValue('Authentication token is missing.');
             }
-            return await updatePasswordAPI(oldPassword, newPassword, token);
+            // 5.a) Update the password via API
+            const response = await updatePasswordAPI(oldPassword, newPassword, token);
+
+            // 5.b) Immediately fetch updated user info
+            dispatch(getUserData({token}));
+
+            // 5.c) Return the response from updatePasswordAPI
+            return response;
         } catch (error: any) {
             return rejectWithValue(error.response?.data?.message || 'Failed to update password');
         }
     }
 );
-
 // Get user data
 export const getUserData = createAsyncThunk<
     UserDataResponse,
@@ -128,8 +150,7 @@ export const getUserData = createAsyncThunk<
     'user/getUserData',
     async ({token}, {rejectWithValue}) => {
         try {
-            const data = await getUserDataAPI(token);
-            return data;
+            return await getUserDataAPI(token);
         } catch (error: any) {
             return rejectWithValue(error.response?.data || 'Failed to fetch user data');
         }

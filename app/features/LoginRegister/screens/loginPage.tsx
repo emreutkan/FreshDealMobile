@@ -32,6 +32,7 @@ const LoginPage: React.FC = () => {
         email,
         passwordLogin,
         login_type,
+        selectedCode,
     } = useSelector((state: RootState) => state.user);
 
 
@@ -68,10 +69,11 @@ const LoginPage: React.FC = () => {
                     return;
                 }
                 try {
+                    console.log(selectedCode + phoneNumber)
                     const result = await dispatch(
                         loginUser({
                             email: email,
-                            phone_number: phoneNumber,
+                            phone_number: selectedCode + phoneNumber,
                             password: password,
                             login_type: login_type,
                             password_login: passwordLogin,

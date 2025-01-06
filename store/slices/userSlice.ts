@@ -35,7 +35,7 @@ interface UserState {
     token: string | null;
     loading: boolean;
     error: string | null;
-    role: string | null;
+    role: 'customer';
 }
 
 export interface UserDataResponse {
@@ -75,7 +75,7 @@ const initialState: UserState = {
     token: null,
     loading: false,
     error: null,
-    role: null,
+    role: 'customer',
 };
 
 const userSlice = createSlice({
@@ -194,7 +194,7 @@ const userSlice = createSlice({
                 state.name_surname = action.payload.user_data.name;
                 state.email = action.payload.user_data.email;
                 state.phoneNumber = action.payload.user_data.phone_number;
-                state.role = action.payload.user_data.role;
+                state.role = "customer";
             })
             .addCase(getUserData.rejected, (state, action) => {
                 state.loading = false;
