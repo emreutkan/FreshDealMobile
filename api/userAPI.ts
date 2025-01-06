@@ -26,7 +26,6 @@ const ADD_RESTAURANT_API_ENDPOINT = `${API_BASE_URL}/v1/add_restaurant`;
 const GET_SINGLE_RESTAURANT_API_ENDPOINT = `${API_BASE_URL}/v1/get_restaurant`;
 const GET_ALL_RESTAURANTS_API_ENDPOINT = `${API_BASE_URL}/v1/get_restaurants`;
 const DELETE_RESTAURANT_API_ENDPOINT = `${API_BASE_URL}/v1/delete_restaurant`;
-const ADD_LISTING_API_ENDPOINT = `${API_BASE_URL}/v1/listings/add_listing`;
 const GET_LISTINGS_API_ENDPOINT = `${API_BASE_URL}/v1/listings/get_listings`;
 const GET_UPLOADED_FILE_API_ENDPOINT = `${API_BASE_URL}/v1/uploads`;
 const GET_CART_API_ENDPOINT = `${API_BASE_URL}/v1/cart`;
