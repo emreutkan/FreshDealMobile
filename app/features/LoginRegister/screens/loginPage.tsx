@@ -4,7 +4,7 @@ import React from 'react';
 import {Alert, Keyboard, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View,} from 'react-native';
 import {useRouter} from 'expo-router';
 import {useDispatch, useSelector} from 'react-redux';
-import store, {AppDispatch, RootState} from '@/store/store'
+import {AppDispatch, RootState, store} from '@/store/store'
 import {scaleFont} from '@/app/utils/ResponsiveFont';
 import DefaultButton from '@/app/features/DefaultButton';
 import AppleOTP from '@/app/features/LoginRegister/components/AppleOTPLogin';
@@ -16,11 +16,14 @@ import {
     PhoneSignInButton,
 } from '@/app/features/LoginRegister/components/LoginRegisterScreenButtons';
 import PasswordInput from "@/app/features/LoginRegister/components/PasswordInput";
-import {getUserData, loginUser, setLoginType, setPasswordLogin, setToken} from '@/store/userSlice';
+import {setLoginType, setPasswordLogin, setToken} from '@/store/slices/userSlice';
+import {getUserData, loginUser} from "@/store/thunks/userThunks";
+
 
 const LoginPage: React.FC = () => {
     const router = useRouter();
     const dispatch = useDispatch<AppDispatch>();
+    const {loading, token} = useSelector((state: RootState) => state.user);
 
     // Import all user fields from the userSlice
     const {
@@ -29,6 +32,7 @@ const LoginPage: React.FC = () => {
         email,
         passwordLogin,
         login_type,
+        selectedCode,
     } = useSelector((state: RootState) => state.user);
 
 
@@ -65,10 +69,11 @@ const LoginPage: React.FC = () => {
                     return;
                 }
                 try {
+                    console.log(selectedCode + phoneNumber)
                     const result = await dispatch(
                         loginUser({
                             email: email,
-                            phone_number: phoneNumber,
+                            phone_number: selectedCode + phoneNumber,
                             password: password,
                             login_type: login_type,
                             password_login: passwordLogin,
@@ -84,7 +89,7 @@ const LoginPage: React.FC = () => {
                         dispatch(getUserData({token: result.token}));
                         console.log('store.getState().user = after setToken', store.getState().user);
 
-                        router.push('/features/homeScreen/screens/home');
+                        router.push('/features/homeScreen/screens/Home');
                     } else {
                         Alert.alert("Login Failed", result.message || "Something went wrong.");
                     }
@@ -170,12 +175,26 @@ const LoginPage: React.FC = () => {
                                     title="Sign up"
                                 />
                             </View>
-                            <View style={styles.buttonContainer}>
-                                <DefaultButton
-                                    onPress={handleLoginButton}
-                                    title="Login"
-                                />
-                            </View>
+                            {/*<View style={styles.buttonContainer}>*/}
+                            {/*    <DefaultButton*/}
+                            {/*        onPress={handleLoginButton}*/}
+                            {/*        title="Login"*/}
+                            {/*    />*/}
+                            {/*</View>*/}
+                            {loading ? (
+                                // Show a loader or some indication of loading
+                                <View style={styles.loaderContainer}>
+                                    <Text style={styles.loaderText}>Loading...</Text>
+                                </View>
+                            ) : token ? (
+                                // Show logged-in state (e.g., logout button, profile, etc.)
+                                <Text style={styles.loggedInText}>Welcome, you are logged in!</Text>
+                            ) : (
+                                // Show the login button
+                                <View style={styles.buttonContainer}>
+                                    <DefaultButton onPress={handleLoginButton} title="Login"/>
+                                </View>
+                            )}
                         </>
 
 
@@ -299,7 +318,18 @@ const styles = StyleSheet.create({
         textDecorationLine: 'underline',
         fontWeight: '500',
     },
-
+    loaderContainer: {
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    loaderText: {
+        fontSize: 16,
+        color: '#999',
+    },
+    loggedInText: {
+        fontSize: 18,
+        color: '#000',
+    },
 });
 
 export default LoginPage;

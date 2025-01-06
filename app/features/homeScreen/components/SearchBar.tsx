@@ -12,7 +12,9 @@ const SearchBar: React.FC<SearchBarProps> = ({isScrolled}) => {
 
 
     return (
-        <View style={styles.searchBarContainer}>
+        <View style={[
+            isScrolled ? {paddingHorizontal: scaleFont(10)} : styles.searchBarContainer,
+        ]}>
             {isScrolled ? (
                 <TouchableOpacity>
                     <Feather name="search" size={24} color="#999"/>
@@ -31,7 +33,8 @@ const SearchBar: React.FC<SearchBarProps> = ({isScrolled}) => {
 const styles = StyleSheet.create({
     searchBarContainer: {
 
-        padding: scaleFont(10),
+        paddingTop: scaleFont(10),
+        paddingHorizontal: scaleFont(10),
     },
     searchBar: {
         flexDirection: 'row',

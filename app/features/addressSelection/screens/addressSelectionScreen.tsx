@@ -16,9 +16,10 @@ import MapView, {Region} from 'react-native-maps';
 import * as Location from 'expo-location';
 import {MaterialIcons} from '@expo/vector-icons';
 import debounce from 'lodash.debounce';
-import {addAddressAsync, Address} from "@/store/userSlice";
+import {Address} from "@/store/slices/addressSlice";
+import {addAddressAsync} from "@/store/thunks/addressThunks";
 import {scaleFont} from "@/app/utils/ResponsiveFont";
-import store, {AppDispatch} from "@/store/store";
+import {AppDispatch, store} from "@/store/store";
 import {router} from "expo-router";
 import {useNavigationState} from "@react-navigation/core";
 import DefaultButton from "@/app/features/DefaultButton";
@@ -49,8 +50,8 @@ const AddressSelectionScreen: React.FC = () => {
     });
 
     const [region, setRegion] = useState<Region>({
-        latitude: 37.7749,
-        longitude: -122.4194,
+        latitude: 38.454985,
+        longitude: 27.100052,
         latitudeDelta: 0.01,
         longitudeDelta: 0.01,
     });

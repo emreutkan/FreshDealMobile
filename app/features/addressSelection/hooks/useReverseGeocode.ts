@@ -2,7 +2,7 @@
 import {useState} from 'react';
 import * as Location from 'expo-location';
 import {Alert} from 'react-native';
-import {Address} from '@/store/userSlice';
+import {Address} from "@/store/slices/addressSlice";
 
 export const useReverseGeocode = () => {
     const [isReverseGeocoding, setIsReverseGeocoding] = useState<boolean>(false);

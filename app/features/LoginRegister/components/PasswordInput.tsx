@@ -2,7 +2,7 @@ import React, {useState} from 'react';
 import {Platform, StyleSheet, Text, TextInput, TouchableOpacity, View} from 'react-native';
 import {scaleFont} from "@/app/utils/ResponsiveFont";
 import {useDispatch} from "react-redux";
-import {setPassword} from "@/store/userSlice"; // Redux action to set the password
+import {setPassword} from "@/store/slices/userSlice"; // Redux action to set the password
 
 const PasswordInput: React.FC<{ password: string }> = ({password}) => {
     const dispatch = useDispatch();

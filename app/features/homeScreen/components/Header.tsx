@@ -1,11 +1,10 @@
-// Header.tsx
 import React from 'react';
-import {SafeAreaView, StyleSheet, View} from 'react-native';
+import {StyleSheet, View} from 'react-native';
 import AddressBar from "@/app/features/homeScreen/components/AddressBar";
 import SearchBar from "@/app/features/homeScreen/components/SearchBar";
-import {scaleFont} from "@/app/utils/ResponsiveFont";
 import AccountBar from "@/app/features/homeScreen/components/AccountBar";
 import FavoritesBar from "@/app/features/homeScreen/components/FavoritesBar";
+import {scaleFont} from "@/app/utils/ResponsiveFont";
 
 interface HeaderProps {
     isScrolled: boolean;
@@ -13,9 +12,10 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({isScrolled}) => {
     return (
-        <SafeAreaView style={styles.header}>
+
+        <View style={styles.header}>
             {isScrolled ? (
-                // Scrolled Layout: All components inline
+                // Scrolled Layout: Inline components
                 <View style={[styles.container, styles.containerScrolled]}>
                     <AddressBar/>
                     <View style={styles.inlineRightSection}>
@@ -37,19 +37,29 @@ const Header: React.FC<HeaderProps> = ({isScrolled}) => {
                     <SearchBar isScrolled={isScrolled}/>
                 </View>
             )}
-        </SafeAreaView>
+        </View>
     );
-}
+};
 
 const styles = StyleSheet.create({
     header: {
-        marginTop: scaleFont(-10), // Moves the header upwards
-
         backgroundColor: "#fff",
+        borderBottomWidth: 1,
+        borderRightWidth: 1,
+        borderLeftWidth: 1,
+        borderColor: '#b2f7a5',
+        paddingBottom: scaleFont(10),
+        borderBottomLeftRadius: scaleFont(20),
+        borderBottomRightRadius: scaleFont(20),
+        // shadowColor: "#000",
+        shadowOffset: {width: 0, height: 8}, // Offset downward to apply shadow only below
+        shadowOpacity: 0.08, // Slightly stronger shadow
+        shadowRadius: 4,
+        elevation: 5, // For Android shadow
+        zIndex: 9999, // Ensures it is above other elements visually
     },
     container: {
-        // width: '100%',
-        paddingHorizontal: scaleFont(10),
+        paddingHorizontal: 10,
     },
     containerScrolled: {
         flexDirection: 'row',
@@ -64,9 +74,6 @@ const styles = StyleSheet.create({
     inlineRightSection: {
         flexDirection: 'row',
         alignItems: 'center',
-    },
-    searchBarFull: {
-        marginTop: scaleFont(10),
     },
 });
 
