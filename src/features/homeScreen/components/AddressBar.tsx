@@ -3,35 +3,60 @@
 import React, {useState} from 'react';
 import {FlatList, Modal, StyleSheet, Text, TouchableOpacity, View,} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
+import {Ionicons} from '@expo/vector-icons';
+import {useNavigation} from '@react-navigation/native';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+
 import {RootState} from '@/store/store';
 import {scaleFont} from '@/src/utils/ResponsiveFont';
-import {Ionicons} from '@expo/vector-icons';
-import {useRouter} from 'expo-router'; // Corrected to useRouter hook
 import DefaultButton from '@/src/features/DefaultButton';
-import {Address, removeAddress, setSelectedAddress} from '@/store/slices/addressSlice';
+import {Address, removeAddress, setSelectedAddress,} from '@/store/slices/addressSlice';
+import {RootStackParamList} from '@/src/types/navigation';
 
 const AddressBar: React.FC = () => {
     const dispatch = useDispatch();
-    const addresses = useSelector((state: RootState) => state.address.addresses) as Address[];
+    const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
-    const selectedAddressID = useSelector((state: RootState) => state.address.selectedAddressId);
-    const selectedAddress = addresses.find((address) => address.id === selectedAddressID) || addresses[0];
+    const addresses = useSelector(
+        (state: RootState) => state.address.addresses
+    ) as Address[];
+
+    const selectedAddressID = useSelector(
+        (state: RootState) => state.address.selectedAddressId
+    );
+    const selectedAddress =
+        addresses.find((address) => address.id === selectedAddressID) || addresses[0];
 
     const [modalVisible, setModalVisible] = useState<boolean>(false);
     const [textWidth, setTextWidth] = useState<number>(0);
-    const router = useRouter();
 
+    // ===== Handlers =====
     const handleAddressSelect = (address: Address) => {
         dispatch(setSelectedAddress(address.id));
         setModalVisible(false);
     };
 
-    const handleRemoveAddress = (addressID: string) => {
-        dispatch(removeAddress(addressID));
+    const handleRemoveAddress = (addressId: string) => {
+        dispatch(removeAddress(addressId));
     };
 
+    const handleConfigureAddress = (addressId: string) => {
+        setModalVisible(false);
+        // Navigate to the "UpdateAddress" screen (or whatever your edit screen is called)
+        navigation.navigate('UpdateAddress', {addressId});
+    };
+
+    const handleAddNewAddress = () => {
+        setModalVisible(false);
+        // Navigate to the "AddressSelectionScreen" (or whatever your add screen is called)
+        navigation.navigate('AddressSelectionScreen');
+    };
+
+    // Decide what text to show for the selected address
     const renderAddressContent = () => {
         if (!selectedAddress) return 'No address selected';
+
+        // Adjust logic as needed if you want more or less info displayed
         if (textWidth <= scaleFont(100)) {
             return selectedAddress.street;
         } else if (textWidth <= scaleFont(200)) {
@@ -41,15 +66,7 @@ const AddressBar: React.FC = () => {
         }
     };
 
-    const switchToAddAddress = () => {
-        router.push('/features/addressSelection/screens/addressSelectionScreen');
-    };
-
-    const handleAddNewAddress = () => {
-        setModalVisible(false);
-        switchToAddAddress();
-    };
-
+    // ===== Render Each Address in Modal =====
     const renderAddressItem = ({item}: { item: Address }) => {
         const isSelected = item.id === selectedAddressID;
 
@@ -60,6 +77,7 @@ const AddressBar: React.FC = () => {
                     isSelected && styles.selectedAddressItem,
                 ]}
             >
+                {/* Selecting this address */}
                 <TouchableOpacity
                     onPress={() => handleAddressSelect(item)}
                     style={styles.addressOption}
@@ -71,21 +89,37 @@ const AddressBar: React.FC = () => {
                     </Text>
                 </TouchableOpacity>
 
-                {/* Trash icon to remove an address */}
-                <TouchableOpacity
-                    onPress={() => handleRemoveAddress(item.id)}
-                    style={styles.trashIconContainer}
-                    accessibilityLabel={`Remove address at ${item.street}`}
-                    accessibilityHint="Removes this address from the list"
-                >
-                    <Ionicons name="trash" size={scaleFont(20)} color="#FF0000"/>
-                </TouchableOpacity>
+                <View style={styles.actionIcons}>
+                    {/* Edit/Configure Icon */}
+                    <TouchableOpacity
+                        onPress={() => handleConfigureAddress(item.id)}
+                        style={styles.configureIconContainer}
+                        accessibilityLabel={`Configure address at ${item.street}`}
+                    >
+                        <Ionicons
+                            name="create-outline"
+                            size={scaleFont(20)}
+                            color="#007AFF"
+                        />
+                    </TouchableOpacity>
+
+                    {/* Remove/Trash Icon */}
+                    <TouchableOpacity
+                        onPress={() => handleRemoveAddress(item.id)}
+                        style={styles.trashIconContainer}
+                        accessibilityLabel={`Remove address at ${item.street}`}
+                        accessibilityHint="Removes this address from the list"
+                    >
+                        <Ionicons name="trash" size={scaleFont(20)} color="#FF0000"/>
+                    </TouchableOpacity>
+                </View>
             </View>
         );
     };
 
     return (
         <View style={styles.container}>
+            {/* ===== Address Bar (shows selected address) ===== */}
             <View
                 style={[
                     styles.addressBar,
@@ -107,6 +141,7 @@ const AddressBar: React.FC = () => {
                     {renderAddressContent()}
                 </Text>
 
+                {/* Invisible overlay to open the modal */}
                 <TouchableOpacity
                     onPress={() => setModalVisible(true)}
                     style={styles.touchableOverlay}
@@ -116,6 +151,7 @@ const AddressBar: React.FC = () => {
                 />
             </View>
 
+            {/* ===== Modal to list, add, edit, remove addresses ===== */}
             {modalVisible && (
                 <Modal
                     transparent
@@ -138,9 +174,12 @@ const AddressBar: React.FC = () => {
                                     contentContainerStyle={styles.flatListContent}
                                 />
                             ) : (
-                                <Text style={styles.noAddressesText}>No addresses available.</Text>
+                                <Text style={styles.noAddressesText}>
+                                    No addresses available.
+                                </Text>
                             )}
 
+                            {/* Button to Add New Address */}
                             <TouchableOpacity
                                 onPress={handleAddNewAddress}
                                 style={styles.addAddressButton}
@@ -155,6 +194,7 @@ const AddressBar: React.FC = () => {
                                 <Text style={styles.addAddressText}>Add New Address</Text>
                             </TouchableOpacity>
 
+                            {/* Close Button */}
                             <DefaultButton
                                 onPress={() => setModalVisible(false)}
                                 style={styles.closeButton}
@@ -168,10 +208,12 @@ const AddressBar: React.FC = () => {
     );
 };
 
+export default AddressBar;
+
+// ===== Styles =====
 const styles = StyleSheet.create({
     container: {
         paddingHorizontal: scaleFont(10),
-
     },
     addressBar: {
         flexDirection: 'row',
@@ -228,8 +270,14 @@ const styles = StyleSheet.create({
     flatListContent: {
         paddingBottom: scaleFont(10),
     },
+    noAddressesText: {
+        fontSize: scaleFont(16),
+        color: '#666',
+        textAlign: 'center',
+        marginVertical: scaleFont(10),
+    },
 
-    // Wrap each address row in a container that can be outlined
+    // Each row showing an address
     addressItemContainer: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -244,7 +292,6 @@ const styles = StyleSheet.create({
         borderRadius: scaleFont(5),
         marginBottom: scaleFont(5),
     },
-
     addressOption: {
         flex: 1,
         marginRight: scaleFont(10),
@@ -254,12 +301,21 @@ const styles = StyleSheet.create({
         color: '#444',
     },
 
-    // Container for the trash icon
+    // Row of icons (Configure + Trash)
+    actionIcons: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    configureIconContainer: {
+        paddingHorizontal: scaleFont(5),
+        marginRight: scaleFont(10),
+    },
     trashIconContainer: {
         paddingHorizontal: scaleFont(5),
         paddingVertical: scaleFont(5),
     },
 
+    // Button to add a new address at the bottom
     addAddressButton: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -272,6 +328,8 @@ const styles = StyleSheet.create({
         color: '#007AFF',
         marginLeft: scaleFont(8),
     },
+
+    // "Close" button
     closeButton: {
         marginTop: scaleFont(20),
         alignItems: 'center',
@@ -279,12 +337,4 @@ const styles = StyleSheet.create({
         backgroundColor: '#f0f0f0',
         borderRadius: scaleFont(5),
     },
-    noAddressesText: {
-        fontSize: scaleFont(16),
-        color: '#666',
-        textAlign: 'center',
-        marginVertical: scaleFont(10),
-    },
 });
-
-export default AddressBar;

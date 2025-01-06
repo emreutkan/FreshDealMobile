@@ -1,9 +1,8 @@
 import React, {useCallback} from 'react';
-import {FlatList, StyleSheet, Text, View,} from 'react-native';
+import {StyleSheet, Text, View,} from 'react-native';
 import {useSelector} from 'react-redux';
 import {RootState} from '@/store/store';
 import {Restaurant} from '@/store/slices/restaurantSlice';
-import RestaurantsBottomSheet from "@/src/features/homeScreen/components/RestaurantsBottomSheet";
 import RestaurantsOnMap from "@/src/features/homeScreen/components/RestaurantsOnMap";
 
 const HomeMapView = () => {
@@ -64,18 +63,18 @@ const HomeMapView = () => {
                     setLongitudeDelta={0.01}
                     coverEntireScreen={true}
                 />
-                <RestaurantsBottomSheet>
-                    <>
-                        <Text style={styles.sectionTitle}>Restaurants in Area</Text>
-                        <FlatList
-                            data={restaurants}
-                            renderItem={renderRestaurantItem}
-                            keyExtractor={(item) => item.id}
-                            showsVerticalScrollIndicator={false}
-                            contentContainerStyle={styles.listContainer}
-                        />
-                    </>
-                </RestaurantsBottomSheet>
+                {/*<RestaurantsBottomSheet>*/}
+                {/*    <>*/}
+                {/*        <Text style={styles.sectionTitle}>Restaurants in Area</Text>*/}
+                {/*        <FlatList*/}
+                {/*            data={restaurants}*/}
+                {/*            renderItem={renderRestaurantItem}*/}
+                {/*            keyExtractor={(item) => item.id}*/}
+                {/*            showsVerticalScrollIndicator={false}*/}
+                {/*            contentContainerStyle={styles.listContainer}*/}
+                {/*        />*/}
+                {/*    </>*/}
+                {/*</RestaurantsBottomSheet>*/}
             </>
         );
     };

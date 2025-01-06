@@ -14,10 +14,10 @@ import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
-import AddressSelectorScreen from '@/src/features/addressSelection/screens/addressSelectionScreen';
+import AddressSelectorScreen from '@/src/features/homeScreen/screens/addressSelectionScreen';
 import HomeCardView from '@/src/features/homeScreen/screens/HomeCardView';
 import HomeMapView from '@/src/features/homeScreen/screens/HomeMapView';
-import AccountScreen from '@/src/features/accountDetails/components/accountScreen';
+import AccountScreen from '@/src/features/homeScreen/components/accountScreen';
 import Header from '@/src/features/homeScreen/components/Header';
 
 // Enable LayoutAnimation on Android

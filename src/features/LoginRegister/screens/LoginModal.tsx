@@ -196,7 +196,7 @@ const styles = StyleSheet.create({
         flex: 1,
         paddingHorizontal: scaleFont(35),
         justifyContent: 'flex-start',
-        backgroundColor: '#f5f5f5',
+        // backgroundColor: '#f5f5f5',
     },
     welcomeText: {
         fontSize: scaleFont(35),

@@ -103,7 +103,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({switchToLogin}) => {
             style={styles.container}
         >
             <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
-                <View style={styles.scrollContainer}> {/* Wrap all children inside a single parent */}
+                <View style={styles.scrollContainer}>
                     <View style={styles.inputArea}>
                         <NameSurnameInputField/>
                     </View>
@@ -129,7 +129,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({switchToLogin}) => {
                     </View>
 
                     {loading && <ActivityIndicator size="large" color="#0000ff"/>}
-                    {error && <Text style={styles.errorText}>{error}</Text>}
+                    {error && <Text style={styles.errorText}>{error.toString()}</Text>}
                 </View>
             </TouchableWithoutFeedback>
         </KeyboardAvoidingView>

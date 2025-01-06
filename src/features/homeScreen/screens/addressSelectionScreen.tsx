@@ -143,6 +143,7 @@ const AddressSelectionScreen: React.FC = () => {
         }));
     };
 
+
     const handleAddressConfirm = async () => {
         const {id, ...addressPayload} = selectedAddress;
 
@@ -163,9 +164,9 @@ const AddressSelectionScreen: React.FC = () => {
                 console.log('Address added successfully:', result);
                 navigation.goBack(); // Navigate back after successful addition
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to add address:', error);
-            Alert.alert('Error', 'Failed to add the address. Please try again.');
+            Alert.alert('Error', error || 'Failed to add the address. Please try again.');
         }
     };
 
