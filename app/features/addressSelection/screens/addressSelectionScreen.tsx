@@ -50,8 +50,8 @@ const AddressSelectionScreen: React.FC = () => {
     });
 
     const [region, setRegion] = useState<Region>({
-        latitude: 37.7749,
-        longitude: -122.4194,
+        latitude: 38.454985,
+        longitude: 27.100052,
         latitudeDelta: 0.01,
         longitudeDelta: 0.01,
     });

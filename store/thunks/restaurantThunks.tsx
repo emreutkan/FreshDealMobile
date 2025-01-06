@@ -19,8 +19,8 @@ export const getRestaurantsByProximity = createAsyncThunk<
             }
             const data = await getRestaurantsByProximityAPI(latitude, longitude, radius, token);
             return data as Restaurant[];
-        } catch (error: any) {
-            return rejectWithValue(error.response?.data || 'Failed to fetch restaurants');
+        } catch (error) {
+            return rejectWithValue('Failed to fetch restaurants' + {error});
         }
     }
 );

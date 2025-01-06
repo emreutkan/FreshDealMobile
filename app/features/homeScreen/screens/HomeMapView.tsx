@@ -1,4 +1,4 @@
-import React, {useMemo} from 'react';
+import React, {useCallback} from 'react';
 import {FlatList, StyleSheet, Text, View,} from 'react-native';
 import {useSelector} from 'react-redux';
 import {RootState} from '@/store/store';
@@ -10,17 +10,18 @@ const HomeMapView = () => {
 
     const restaurants = useSelector((state: RootState) => state.restaurant.restaurantsProximity || []);
 
-    // Render the restaurant item
-    const renderRestaurantItem = useMemo(
-        () => ({item}: { item: Restaurant }) => (
+    // Use useCallback instead of useMemo
+    const renderRestaurantItem = useCallback(
+        ({item}: { item: Restaurant }) => (
             <View style={styles.restaurantCard}>
-                {/*<Image*/}
-                {/*    // source={{uri: item.restaurantImageUrl || ''}}*/}
-                {/*    style={styles.restaurantImage}*/}
-                {/*    fadeDuration={300}*/}
-                {/*/>*/}
+                {/* Uncomment and use Image if needed */}
+                {/* <Image
+                    source={{ uri: item.restaurantImageUrl || '' }}
+                    style={styles.restaurantImage}
+                    fadeDuration={300}
+                /> */}
                 <View style={styles.restaurantInfo}>
-                    <Text style={styles.restaurantName}>{item.restaurantDescription}</Text>
+                    <Text style={styles.restaurantName}>{item.restaurantName}</Text> {/* Changed to restaurantName */}
                     <View style={styles.restaurantDetails}>
                         {item.rating !== undefined && (
                             <Text style={styles.detailText}>⭐ {item.rating}</Text>
@@ -31,7 +32,6 @@ const HomeMapView = () => {
         ),
         []
     );
-
     // Fallback or loading content
     const renderMapView = () => {
         if (!restaurants.length) {

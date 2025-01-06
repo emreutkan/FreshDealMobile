@@ -29,12 +29,14 @@ interface RestaurantState {
     restaurantsProximity: Restaurant[];
     status: 'idle' | 'loading' | 'succeeded' | 'failed';
     error: string | null;
+    loading: boolean;
 }
 
 const initialState: RestaurantState = {
     restaurantsProximity: [],
     status: 'idle',
     error: null,
+    loading: false,
 };
 
 const restaurantSlice = createSlice({
@@ -46,13 +48,19 @@ const restaurantSlice = createSlice({
             .addCase(getRestaurantsByProximity.pending, (state) => {
                 state.status = 'loading';
                 state.error = null;
+                state.loading = true;
+
             })
             .addCase(getRestaurantsByProximity.fulfilled, (state, action) => {
                 state.status = 'succeeded';
+                state.loading = false;
+
                 state.restaurantsProximity = action.payload;
             })
             .addCase(getRestaurantsByProximity.rejected, (state, action) => {
                 state.status = 'failed';
+                state.loading = false;
+
                 state.error = action.payload || 'Failed to fetch restaurants';
             });
     },
