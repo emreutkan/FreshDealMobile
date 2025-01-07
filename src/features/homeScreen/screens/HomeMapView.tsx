@@ -19,7 +19,7 @@ const HomeMapView = () => {
 
 
                 <View style={styles.restaurantInfo}>
-                    <Text style={styles.restaurantName}>{item.restaurantName}</Text> {/* Changed to restaurantName */}
+                    <Text style={styles.restaurantName}>{item.restaurantName}</Text>
                     <View style={styles.restaurantDetails}>
                         {item.rating !== undefined && (
                             <Text style={styles.detailText}>⭐ {item.rating}</Text>
@@ -35,12 +35,12 @@ const HomeMapView = () => {
             return (
                 <View style={styles.noRestaurantsContainer}>
                     <View style={StyleSheet.absoluteFillObject}>
-                        {/*<RestaurantsOnMap*/}
-                        {/*    restaurants={[]}*/}
-                        {/*    setLatitudeDelta={0.01}*/}
-                        {/*    setLongitudeDelta={0.01}*/}
-                        {/*    coverEntireScreen={true}*/}
-                        {/*/>*/}
+                        <RestaurantsOnMap
+                            restaurants={[]}
+                            setLatitudeDelta={0.01}
+                            setLongitudeDelta={0.01}
+                            coverEntireScreen={true}
+                        />
                     </View>
                     <View style={styles.blurOverlay}/>
                     <View style={styles.messageBox}>

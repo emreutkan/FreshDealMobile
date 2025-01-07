@@ -19,19 +19,25 @@ export const addAddressAsync = createAsyncThunk<
         const tempAddress = {...address, id: tempId, is_primary: shouldBePrimary};
 
         dispatch(addAddress(tempAddress));
+        const token = getState().user.token;
+        if (!token) {
+            console.error('Authentication token is missing.');
+            return rejectWithValue('Authentication token is missing.');
+        }
 
         try {
-            const token = getState().user.token;
-            if (!token) {
-                console.error('Authentication token is missing.');
-                return rejectWithValue('Authentication token is missing.');
-            }
+
             const response = await addAddressAPI({...address, is_primary: shouldBePrimary}, token);
+            await dispatch(getUserData({token}));
+
             return response as Address;
         } catch (error: any) {
             dispatch(removeAddress(tempId));
+            await dispatch(getUserData({token}));
+
             return rejectWithValue(error.response?.data || 'Failed to add address');
         }
+
     }
 );
 

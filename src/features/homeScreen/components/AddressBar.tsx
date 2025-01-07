@@ -165,7 +165,8 @@ const AddressBar: React.FC = () => {
                     <TouchableOpacity
                         style={styles.modalOverlay}
                         activeOpacity={1}
-                        onPressOut={() => setModalVisible(false)}
+                        onPressOut={() => setModalVisible(true)
+                        }
                     >
                         <View style={styles.modalContainer}>
                             <Text style={styles.modalTitle}>Select Address</Text>

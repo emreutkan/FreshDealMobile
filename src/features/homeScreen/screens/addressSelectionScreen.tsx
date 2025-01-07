@@ -220,7 +220,6 @@ const AddressSelectionScreen: React.FC = () => {
             postalCode: addressPayload.postalCode
         };
 
-        // Check for empty required fields
         const emptyFields = Object.entries(requiredFields)
             .filter(([_, value]) => !value || value.toString().trim() === '')
             .map(([key]) => key);
@@ -233,20 +232,15 @@ const AddressSelectionScreen: React.FC = () => {
             return;
         }
 
-        // Validate numeric fields
         if (addressPayload.apartmentNo && !(/^\d+$/.test(addressPayload.apartmentNo.toString()))) {
             Alert.alert('Invalid Input', 'Apartment number must contain only digits');
             return;
         }
 
-        // Format the address payload
         const formattedPayload = {
             ...addressPayload,
-            // Convert numeric fields
             apartmentNo: addressPayload.apartmentNo ? parseInt(addressPayload.apartmentNo.toString()) : null,
-            postalCode: addressPayload.postalCode ? parseInt(addressPayload.postalCode.toString()) : null,
-            // Ensure boolean value
-            // Ensure numeric coordinates
+
             latitude: Number(addressPayload.latitude),
             longitude: Number(addressPayload.longitude)
         };

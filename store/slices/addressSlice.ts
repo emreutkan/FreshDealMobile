@@ -87,24 +87,20 @@ const addressSlice = createSlice({
                 state.error = null;
             })
             .addCase(addAddressAsync.fulfilled, (state, action) => {
-                if (!action.payload) {
-                    console.error('Invalid payload received in addAddressAsync.fulfilled:', action.payload);
-                    state.error = 'Failed to add address due to invalid data.';
-                    state.loading = false;
-                    return;
-                }
-
-                const index = state.addresses.findIndex((addr) => addr.id.startsWith('temp-'));
-                if (index !== -1) {
-                    state.addresses[index] = {...state.addresses[index], ...action.payload, id: action.payload.id};
-                } else {
-                    state.addresses.push(action.payload);
-                }
-
-                // Only set as selected if it's marked as primary
-                if (action.payload.is_primary) {
-                    state.selectedAddressId = action.payload.id;
-                }
+                // if (!action.payload) {
+                //     console.error('Invalid payload received in addAddressAsync.fulfilled:', action.payload);
+                //     state.error = 'Failed to add address due to invalid data.';
+                //     state.loading = false;
+                //     return;
+                // }
+                //
+                // const index = state.addresses.findIndex((addr) => addr.id.startsWith('temp-'));
+                // if (index !== -1) {
+                //     state.addresses[index] = {...state.addresses[index], ...action.payload, id: action.payload.id};
+                // } else {
+                //     state.addresses.push(action.payload);
+                // }
+                // state.error = null;
                 state.loading = false;
             })
             .addCase(addAddressAsync.rejected, (state, action) => {
