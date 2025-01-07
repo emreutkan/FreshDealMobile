@@ -8,19 +8,6 @@ import {
     updateUsername
 } from "@/store/thunks/userThunks";
 
-interface UpdateUsernamePayload {
-    newUsername: string;
-}
-
-interface UpdateEmailPayload {
-    oldEmail: string;
-    newEmail: string;
-}
-
-interface UpdatePasswordPayload {
-    oldPassword: string;
-    newPassword: string;
-}
 
 interface UserState {
     email: string;
@@ -59,6 +46,7 @@ export interface UserDataResponse {
         postalCode: number;
         apartmentNo: number;
         doorNo: string;
+        is_primary: boolean;
     }>;
 }
 
@@ -131,7 +119,6 @@ const userSlice = createSlice({
             .addCase(loginUser.fulfilled, (state, action) => {
                 state.loading = false;
                 state.token = action.payload.token;
-                state.role = action.payload.role;
             })
             .addCase(loginUser.rejected, (state) => {
                 state.loading = false;

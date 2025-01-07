@@ -9,6 +9,7 @@ import {
 } from "@/api/userAPI";
 import {RootState} from "@/store/store";
 import {UserDataResponse} from "@/store/slices/userSlice";
+import {getRestaurantsByProximity} from "@/store/thunks/restaurantThunks";
 
 // Login user
 export const loginUser = createAsyncThunk(
@@ -23,10 +24,13 @@ export const loginUser = createAsyncThunk(
             login_type?: "email" | "phone_number";
             password_login?: boolean;
         },
-        {rejectWithValue}
+        {dispatch, rejectWithValue}
     ) => {
         try {
-            return await loginUserAPI(payload);
+            const response = await loginUserAPI(payload);
+            const token = response.token;
+            dispatch(getUserData({token}));
+            return response;
         } catch (error: any) {
             return rejectWithValue(error.response?.data || 'Login failed');
         }
@@ -69,13 +73,10 @@ export const updateUsername = createAsyncThunk<
                 console.error('Authentication token is missing.');
                 return rejectWithValue('Authentication token is missing.');
             }
-            // 3.a) Update the username via API
             const response = await updateUsernameAPI(newUsername, token);
 
-            // 3.b) Immediately fetch updated user info
             dispatch(getUserData({token}));
 
-            // 3.c) Return the response from updateUsernameAPI
             return response;
         } catch (error: any) {
             return rejectWithValue(error.response?.data?.message || 'Failed to update username');
@@ -98,13 +99,10 @@ export const updateEmail = createAsyncThunk<
                 console.error('Authentication token is missing.');
                 return rejectWithValue('Authentication token is missing.');
             }
-            // 4.a) Update the email via API
             const response = await updateEmailAPI(oldEmail, newEmail, token);
 
-            // 4.b) Immediately fetch updated user info
             dispatch(getUserData({token}));
 
-            // 4.c) Return the response from updateEmailAPI
             return response;
         } catch (error: any) {
             return rejectWithValue(error.response?.data?.message || 'Failed to update email');
@@ -128,13 +126,10 @@ export const updatePassword = createAsyncThunk<
                 console.error('Authentication token is missing.');
                 return rejectWithValue('Authentication token is missing.');
             }
-            // 5.a) Update the password via API
             const response = await updatePasswordAPI(oldPassword, newPassword, token);
 
-            // 5.b) Immediately fetch updated user info
             dispatch(getUserData({token}));
 
-            // 5.c) Return the response from updatePasswordAPI
             return response;
         } catch (error: any) {
             return rejectWithValue(error.response?.data?.message || 'Failed to update password');
@@ -148,9 +143,38 @@ export const getUserData = createAsyncThunk<
     { rejectValue: string }
 >(
     'user/getUserData',
-    async ({token}, {rejectWithValue}) => {
+    async ({token}, {dispatch, rejectWithValue}) => {
         try {
-            return await getUserDataAPI(token);
+            const response = await getUserDataAPI(token);
+            // at this point, when the getuserdata is fulfilled, we can dispatch another action
+            // when getuserdata is fulfilled in the address slice the primary address is set if user has an address
+            // so we get that primary address and dispatch the getRestaurantsByProximity action
+
+            if (response.user_address_list.length > 0) {
+                // we need to get the primary address from addresss slice
+                // then we can dispatch the getRestaurantsByProximity action
+                const primaryAddress = response.user_address_list.find((address) => address.is_primary);
+                if (primaryAddress) {
+                    const address = response.user_address_list.find((address) => address.id === primaryAddress.id);
+                    if (address) {
+                        const resultAction = await dispatch(getRestaurantsByProximity({
+                            latitude: address.latitude,
+                            longitude: address.longitude,
+                            radius: 100
+                        }));
+                        if (getRestaurantsByProximity.fulfilled.match(resultAction)) {
+                            console.log('%c[Success] Restaurants fetched successfully.', 'color: green; font-weight: bold;');
+                        } else {
+                            console.error('%c[Error] Failed to fetch restaurants.', 'color: red; font-weight: bold;');
+                            if (resultAction.payload) {
+                                console.error('%c[Error Details]', 'color: red; font-weight: bold;', resultAction.payload);
+                            }
+                        }
+
+                    }
+                }
+                return response;
+            }
         } catch (error: any) {
             return rejectWithValue(error.response?.data || 'Failed to fetch user data');
         }

@@ -32,11 +32,9 @@ const RegisterModal: React.FC<RegisterModalProps> = ({switchToLogin}) => {
         phoneNumber,
         email,
         loading,
-        error,
         selectedCode,
     } = useSelector((state: RootState) => state.user);
 
-    const SUCCESS_MESSAGE = "Registration completed!";
 
     const validateInput = (): boolean => {
         if (!name_surname) {
@@ -129,7 +127,6 @@ const RegisterModal: React.FC<RegisterModalProps> = ({switchToLogin}) => {
                     </View>
 
                     {loading && <ActivityIndicator size="large" color="#0000ff"/>}
-                    {error && <Text style={styles.errorText}>{error.toString()}</Text>}
                 </View>
             </TouchableWithoutFeedback>
         </KeyboardAvoidingView>

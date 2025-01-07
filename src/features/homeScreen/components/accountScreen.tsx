@@ -17,19 +17,14 @@ import {useNavigation} from '@react-navigation/native';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {updateEmail, updatePassword, updateUsername} from '@/store/thunks/userThunks';
 import {logout} from '@/store/slices/userSlice';
+import {RootStackParamList} from "@/src/types/navigation";
 
-// Define the RootStackParamList for navigation
-type RootStackParamList = {
-    LoginPage: undefined;
-    HomeScreen: undefined;
-};
-
-type AccountScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'HomeScreen'>;
 
 const AccountScreen: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
-    const navigation = useNavigation<AccountScreenNavigationProp>();
+    type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
+    const navigation = useNavigation<NavigationProp>();
     const {name_surname, email, phoneNumber, loading} = useSelector((state: RootState) => state.user);
 
     const [isEditing, setIsEditing] = useState(false);
@@ -47,7 +42,7 @@ const AccountScreen: React.FC = () => {
                 style: 'destructive',
                 onPress: () => {
                     dispatch(logout());
-                    navigation.replace('LoginPage'); // Use React Navigation
+                    navigation.replace('Landing'); // Use React Navigation
                 },
             },
         ]);

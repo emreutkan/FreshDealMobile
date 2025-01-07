@@ -7,36 +7,43 @@ import {Ionicons} from '@expo/vector-icons';
 import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 
-import {RootState} from '@/store/store';
+import {AppDispatch, RootState} from '@/store/store';
 import {scaleFont} from '@/src/utils/ResponsiveFont';
 import DefaultButton from '@/src/features/DefaultButton';
-import {Address, removeAddress, setSelectedAddress,} from '@/store/slices/addressSlice';
+import {Address, removeAddress} from '@/store/slices/addressSlice';
+import {setPrimaryAddress} from "@/store/thunks/addressThunks";
 import {RootStackParamList} from '@/src/types/navigation';
 
 const AddressBar: React.FC = () => {
-    const dispatch = useDispatch();
+    const dispatch = useDispatch<AppDispatch>();
     type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'UpdateAddress'>;
 
     const navigation = useNavigation<NavigationProp>();
 
-    const addresses = useSelector(
-        (state: RootState) => state.address.addresses
-    ) as Address[];
+    const addresses = useSelector((state: RootState) => {
+        return state.address.addresses;
+    });
+
 
     const selectedAddressID = useSelector(
         (state: RootState) => state.address.selectedAddressId
     );
-    const selectedAddress =
-        addresses.find((address) => address.id === selectedAddressID) || addresses[0];
+
 
     const [modalVisible, setModalVisible] = useState<boolean>(false);
     const [textWidth, setTextWidth] = useState<number>(0);
 
     // ===== Handlers =====
-    const handleAddressSelect = (address: Address) => {
-        dispatch(setSelectedAddress(address.id));
-        setModalVisible(false);
+    const handleAddressSelect = async (address: Address) => {
+        try {
+            await dispatch(setPrimaryAddress(address.id)).unwrap();
+            console.log('Primary address set:', address);
+            setModalVisible(false);
+        } catch (error) {
+            console.error('Failed to set primary address:', error);
+        }
     };
+
 
     const handleRemoveAddress = (addressId: string) => {
         dispatch(removeAddress(addressId));
@@ -44,21 +51,18 @@ const AddressBar: React.FC = () => {
 
     const handleConfigureAddress = (addressId: string) => {
         setModalVisible(false);
-        // Navigate to the "UpdateAddress" screen (or whatever your edit screen is called)
         navigation.navigate('UpdateAddress', {addressId});
     };
 
     const handleAddNewAddress = () => {
         setModalVisible(false);
-        // Navigate to the "AddressSelectionScreen" (or whatever your add screen is called)
         navigation.navigate('AddressSelectionScreen');
     };
 
-    // Decide what text to show for the selected address
     const renderAddressContent = () => {
-        if (!selectedAddress) return 'No address selected';
+        let selectedAddress = addresses.find((addr) => addr.id === selectedAddressID);
+        if (!selectedAddress) return 'Select an address';
 
-        // Adjust logic as needed if you want more or less info displayed
         if (textWidth <= scaleFont(100)) {
             return selectedAddress.street;
         } else if (textWidth <= scaleFont(200)) {
@@ -68,7 +72,6 @@ const AddressBar: React.FC = () => {
         }
     };
 
-    // ===== Render Each Address in Modal =====
     const renderAddressItem = ({item}: { item: Address }) => {
         const isSelected = item.id === selectedAddressID;
 
@@ -79,7 +82,6 @@ const AddressBar: React.FC = () => {
                     isSelected && styles.selectedAddressItem,
                 ]}
             >
-                {/* Selecting this address */}
                 <TouchableOpacity
                     onPress={() => handleAddressSelect(item)}
                     style={styles.addressOption}
@@ -88,11 +90,11 @@ const AddressBar: React.FC = () => {
                 >
                     <Text style={styles.addressOptionText}>
                         {`${item.street}, ${item.district}, ${item.province}`}
+                        {item.is_primary ? ' (Primary)' : ''}
                     </Text>
                 </TouchableOpacity>
 
                 <View style={styles.actionIcons}>
-                    {/* Edit/Configure Icon */}
                     <TouchableOpacity
                         onPress={() => handleConfigureAddress(item.id)}
                         style={styles.configureIconContainer}
@@ -105,7 +107,6 @@ const AddressBar: React.FC = () => {
                         />
                     </TouchableOpacity>
 
-                    {/* Remove/Trash Icon */}
                     <TouchableOpacity
                         onPress={() => handleRemoveAddress(item.id)}
                         style={styles.trashIconContainer}
@@ -121,7 +122,7 @@ const AddressBar: React.FC = () => {
 
     return (
         <View style={styles.container}>
-            {/* ===== Address Bar (shows selected address) ===== */}
+
             <View
                 style={[
                     styles.addressBar,
@@ -143,7 +144,7 @@ const AddressBar: React.FC = () => {
                     {renderAddressContent()}
                 </Text>
 
-                {/* Invisible overlay to open the modal */}
+
                 <TouchableOpacity
                     onPress={() => setModalVisible(true)}
                     style={styles.touchableOverlay}
@@ -153,7 +154,7 @@ const AddressBar: React.FC = () => {
                 />
             </View>
 
-            {/* ===== Modal to list, add, edit, remove addresses ===== */}
+
             {modalVisible && (
                 <Modal
                     transparent
@@ -164,7 +165,8 @@ const AddressBar: React.FC = () => {
                     <TouchableOpacity
                         style={styles.modalOverlay}
                         activeOpacity={1}
-                        onPressOut={() => setModalVisible(false)}
+                        onPressOut={() => setModalVisible(true)
+                        }
                     >
                         <View style={styles.modalContainer}>
                             <Text style={styles.modalTitle}>Select Address</Text>
@@ -181,7 +183,7 @@ const AddressBar: React.FC = () => {
                                 </Text>
                             )}
 
-                            {/* Button to Add New Address */}
+
                             <TouchableOpacity
                                 onPress={handleAddNewAddress}
                                 style={styles.addAddressButton}
@@ -196,7 +198,7 @@ const AddressBar: React.FC = () => {
                                 <Text style={styles.addAddressText}>Add New Address</Text>
                             </TouchableOpacity>
 
-                            {/* Close Button */}
+
                             <DefaultButton
                                 onPress={() => setModalVisible(false)}
                                 style={styles.closeButton}
@@ -302,8 +304,6 @@ const styles = StyleSheet.create({
         fontSize: scaleFont(16),
         color: '#444',
     },
-
-    // Row of icons (Configure + Trash)
     actionIcons: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -331,7 +331,6 @@ const styles = StyleSheet.create({
         marginLeft: scaleFont(8),
     },
 
-    // "Close" button
     closeButton: {
         marginTop: scaleFont(20),
         alignItems: 'center',

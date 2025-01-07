@@ -1,6 +1,6 @@
 import React from 'react';
 import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
-import {FontAwesome} from '@expo/vector-icons'; // Ensure @expo/vector-icons is installed
+import {FontAwesome} from '@expo/vector-icons';
 import {scaleFont} from '@/src/utils/ResponsiveFont';
 
 const GoogleSignInButton: React.FC = () => (

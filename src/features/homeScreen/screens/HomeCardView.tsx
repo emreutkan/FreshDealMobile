@@ -1,4 +1,4 @@
-import React, {useCallback} from 'react';
+import React from 'react';
 import {
     ActivityIndicator,
     NativeScrollEvent,
@@ -8,7 +8,6 @@ import {
     Text,
     View,
 } from 'react-native';
-import {Restaurant} from "@/store/slices/restaurantSlice";
 import {useSelector} from "react-redux";
 import {RootState} from "@/store/store";
 import RestaurantList from "@/src/features/homeScreen/components/RestaurantCard";
@@ -23,31 +22,13 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll}) => {
         (state: RootState) => state.restaurant
     );
 
-    const renderContent = useCallback(({restaurant}: { restaurant: Restaurant }) => (
-        <View>
-            <Text style={styles.cardText}>{restaurant.restaurantName}</Text>
-            <View style={styles.restaurantDetails}>
-                <Text style={styles.cardText}>{restaurant.restaurantDescription}</Text>
-                <Text style={styles.cardText}>{restaurant.category}</Text>
-                <Text style={styles.cardText}>⭐ {restaurant.rating}</Text>
-            </View>
-        </View>
-    ), []);
-
-    const renderRestaurantItem = useCallback(
-        ({item}: { item: Restaurant }) => (
-            <View style={styles.restaurantCard}>
-                {renderContent({restaurant: item})}
-            </View>
-        ),
-        [renderContent]
-    );
 
     return (
         <View style={styles.safeArea}>
             <View style={styles.topBar}>
                 <Text style={styles.title}>Restaurants in Area</Text>
             </View>
+
 
             <View style={styles.container}>
                 {loading ? (

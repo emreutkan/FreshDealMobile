@@ -1,7 +1,7 @@
 import React from 'react';
 import {Alert, Keyboard, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View,} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
-import {AppDispatch, RootState, store} from '@/store/store';
+import {AppDispatch, RootState} from '@/store/store';
 import {scaleFont} from '@/src/utils/ResponsiveFont';
 import DefaultButton from '@/src/features/DefaultButton';
 import AppleOTP from '@/src/features/LoginRegister/components/AppleOTPLogin';
@@ -13,8 +13,8 @@ import {
     PhoneSignInButton,
 } from '@/src/features/LoginRegister/components/LoginRegisterScreenButtons';
 import PasswordInput from '@/src/features/LoginRegister/components/PasswordInput';
-import {setLoginType, setPasswordLogin, setToken} from '@/store/slices/userSlice';
-import {getUserData, loginUser} from '@/store/thunks/userThunks';
+import {setLoginType, setPasswordLogin} from '@/store/slices/userSlice';
+import {loginUser} from '@/store/thunks/userThunks';
 
 interface LoginModalProps {
     switchToRegister: () => void; // Callback to switch to RegisterModal
@@ -36,9 +36,12 @@ const LoginModal: React.FC<LoginModalProps> = ({switchToRegister}) => {
 
     React.useEffect(() => {
         if (passwordLogin) {
-            handleLoginButton();
+            (async () => {
+                await handleLoginButton();
+            })();
         }
     }, [passwordLogin]);
+
 
     /**
      * Handles the login button click.
@@ -72,25 +75,7 @@ const LoginModal: React.FC<LoginModalProps> = ({switchToRegister}) => {
                     })
                 ).unwrap();
                 console.log('Login request successful', result);
-
-                if (result.success) {
-                    console.log(
-                        'store.getState().user before setToken = ',
-                        store.getState().user
-                    );
-
-                    dispatch(setToken(result.token));
-                    dispatch(getUserData({token: result.token}));
-                    console.log(
-                        'store.getState().user = after setToken',
-                        store.getState().user
-                    );
-                } else {
-                    Alert.alert(
-                        'Login Failed',
-                        result.message || 'Something went wrong.'
-                    );
-                }
+                
             } catch (error) {
                 console.error('Login failed', error);
                 Alert.alert('Error', 'Failed to login. Please try again.');
@@ -114,10 +99,8 @@ const LoginModal: React.FC<LoginModalProps> = ({switchToRegister}) => {
                 <Text style={styles.welcomeText}>Last Call,</Text>
                 <Text style={styles.welcomeText2}>Tasty Deals Await!</Text>
 
-                {/* Input Fields */}
                 {login_type === 'phone_number' ? <PhoneInput/> : <EmailLoginField/>}
 
-                {/* Password Field */}
                 {(phoneNumber || email) && <PasswordInput password={password}/>}
 
                 <View style={styles.buttonRow}>

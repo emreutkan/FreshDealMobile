@@ -1,13 +1,12 @@
 // create a mapview component
 
-import React, {useEffect, useRef} from 'react';
+import React, {useRef} from 'react';
 import {StyleSheet, Text, TouchableOpacity,} from 'react-native';
 import MapView, {Marker} from 'react-native-maps';
-import {AppDispatch, RootState} from '@/store/store';
+import {RootState} from '@/store/store';
 import {Address} from "@/store/slices/addressSlice";
-import {getRestaurantsByProximity} from "@/store/thunks/restaurantThunks";
 import {Restaurant} from "@/store/slices/restaurantSlice";
-import {useDispatch, useSelector} from "react-redux";
+import {useSelector} from "react-redux";
 
 interface MapProps {
     restaurants: Restaurant[];
@@ -24,7 +23,6 @@ const RestaurantsOnMap = ({
                               coverEntireScreen
                           }: MapProps) => {
 
-    const dispatch: AppDispatch = useDispatch();
     const mapRef = useRef<MapView>(null);
     const addressState = useSelector((state: RootState) => state.address);
     const selectedAddress = addressState.addresses.find((address) => address.id === addressState.selectedAddressId) as Address;
@@ -39,19 +37,6 @@ const RestaurantsOnMap = ({
         }
         mapRef.current?.animateToRegion(region, 500);
     };
-    useEffect(() => {
-        if (selectedAddress) {
-
-            dispatch(
-                getRestaurantsByProximity({
-                    latitude: Number(selectedAddress.latitude),
-                    longitude: Number(selectedAddress.longitude),
-                    radius: 100000,
-                })
-            );
-
-        }
-    }, [dispatch, selectedAddress]);
 
 
     return (
