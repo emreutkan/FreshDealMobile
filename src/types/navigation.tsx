@@ -3,6 +3,6 @@ export type RootStackParamList = {
     HomeScreen: undefined;
     AddressSelectionScreen: undefined;
     UpdateAddress: { addressId: string }; // Ensure this is correct
-    RestaurantListScreen: undefined;
+    RestaurantDetails: { restaurantId: string };
 
 };

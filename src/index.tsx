@@ -10,6 +10,7 @@ import AddressSelectionScreen from "@/src/features/homeScreen/screens/addressSel
 import {RootStackParamList} from '@/src/types/navigation';
 import UpdateAddress from "@/src/features/homeScreen/screens/UpdateAddress";
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
+import RestaurantDetails from "@/src/features/RestaurantScreen/RestaurantDetails";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -29,6 +30,13 @@ const App: React.FC = () => {
                             component={AddressSelectionScreen}
                         />
                         <Stack.Screen name="UpdateAddress" component={UpdateAddress}/>
+                        <Stack.Screen
+                            name="RestaurantDetails"
+                            component={RestaurantDetails}
+                            options={{
+                                title: 'Restaurant Details',
+                            }}
+                        />
                     </Stack.Navigator>
                 </NavigationContainer>
             </Provider>
