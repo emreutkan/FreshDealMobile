@@ -26,7 +26,6 @@ const ADD_RESTAURANT_API_ENDPOINT = `${API_BASE_URL}/v1/add_restaurant`;
 const GET_SINGLE_RESTAURANT_API_ENDPOINT = `${API_BASE_URL}/v1/get_restaurant`;
 const GET_ALL_RESTAURANTS_API_ENDPOINT = `${API_BASE_URL}/v1/get_restaurants`;
 const DELETE_RESTAURANT_API_ENDPOINT = `${API_BASE_URL}/v1/delete_restaurant`;
-const ADD_LISTING_API_ENDPOINT = `${API_BASE_URL}/v1/listings/add_listing`;
 const GET_LISTINGS_API_ENDPOINT = `${API_BASE_URL}/v1/listings/get_listings`;
 const GET_UPLOADED_FILE_API_ENDPOINT = `${API_BASE_URL}/v1/uploads`;
 const GET_CART_API_ENDPOINT = `${API_BASE_URL}/v1/cart`;
@@ -34,6 +33,8 @@ const ADD_TO_CART_API_ENDPOINT = `${API_BASE_URL}/v1/cart/add`;
 const REMOVE_FROM_CART_API_ENDPOINT = `${API_BASE_URL}/v1/cart/remove`;
 const UPDATE_CART_API_ENDPOINT = `${API_BASE_URL}/v1/cart/update`;
 const SEARCH_API_ENDPOINT = `${API_BASE_URL}/v1/search`;
+const FAVORITES_API_ENDPOINT = `${API_BASE_URL}/v1/favorites`;
+const UPDATE_ADDRESS_API_ENDPOINT = `${API_BASE_URL}/v1/update_customer_address`;
 
 // Helper function for logging
 const logRequest = (functionName: string, endpoint: string, payload: any) => {
@@ -109,8 +110,9 @@ export const registerUserAPI = async (userData: {
     }
 };
 
+
 // Add Address API Call
-export const addAddressAPI = async (address: Omit<Address, 'id'>, token: string): Promise<Address> => {
+export const addAddressAPI = async (address: Omit<Address, 'id'>, token: string): Promise<any> => {
     const functionName = 'addAddressAPI';
     const endpoint = ADD_ADDRESS_API_ENDPOINT;
     const payload = address;
@@ -125,7 +127,7 @@ export const addAddressAPI = async (address: Omit<Address, 'id'>, token: string)
             },
         });
         logResponse(functionName, endpoint, response.data);
-        return response.data; // Ensure it matches `Address` structure
+        return response.data; // Now returns { success, message, address }
     } catch (error: any) {
         logError(functionName, endpoint, error);
         throw error;
@@ -589,16 +591,34 @@ export const searchAPI = async (searchParams: {
     restaurant_id?: number;
 }): Promise<any> => { // Define a more specific type based on your needs
     const functionName = 'searchAPI';
-    const endpoint = SEARCH_API_ENDPOINT;
 
-    logRequest(functionName, endpoint, searchParams);
+    logRequest(functionName, SEARCH_API_ENDPOINT, searchParams);
 
     try {
-        const response = await axios.get(endpoint, {params: searchParams});
+        const response = await axios.get(SEARCH_API_ENDPOINT, {params: searchParams});
+        logResponse(functionName, SEARCH_API_ENDPOINT, response.data);
+        return response.data;
+    } catch (error: any) {
+        logError(functionName, SEARCH_API_ENDPOINT, error);
+        throw error;
+    }
+};
+
+export const updateAddressAPI = async (address: Address, token: string) => {
+    const functionName = 'updateAddressAPI';
+    const endpoint = UPDATE_ADDRESS_API_ENDPOINT;
+    const payload = address;
+
+    logRequest(functionName, endpoint, payload);
+
+    try {
+        const response = await axios.put(endpoint, payload, {
+            headers: {Authorization: `Bearer ${token}`}
+        });
         logResponse(functionName, endpoint, response.data);
         return response.data;
     } catch (error: any) {
         logError(functionName, endpoint, error);
         throw error;
     }
-};
+}

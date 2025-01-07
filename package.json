@@ -1,6 +1,6 @@
 {
-  "name": "reactnativeexpoapp",
-  "main": "expo-router/entry",
+  "name": "Freshdeal",
+  "main": "index.js",
   "version": "1.0.0",
   "scripts": {
     "start": "expo start --dev-client",
@@ -20,6 +20,7 @@
     "@react-native-picker/picker": "2.9.0",
     "@react-navigation/bottom-tabs": "^7.2.0",
     "@react-navigation/native": "^7.0.14",
+    "@react-navigation/native-stack": "^7.2.0",
     "@reduxjs/toolkit": "^2.3.0",
     "axios": "^1.7.9",
     "expo": "^52.0.15",
@@ -30,7 +31,7 @@
     "expo-linear-gradient": "~14.0.1",
     "expo-linking": "~7.0.3",
     "expo-location": "~18.0.3",
-    "expo-router": "~4.0.11",
+    "expo-router": "^4.0.15",
     "expo-splash-screen": "~0.29.13",
     "expo-status-bar": "~2.0.0",
     "expo-system-ui": "~4.0.5",
@@ -47,6 +48,7 @@
     "react-native-reanimated": "~3.16.1",
     "react-native-safe-area-context": "^4.14.1",
     "react-native-screens": "~4.1.0",
+    "react-native-url-polyfill": "^2.0.0",
     "react-native-vector-icons": "^10.2.0",
     "react-native-web": "^0.19.13",
     "react-redux": "^9.1.2",
