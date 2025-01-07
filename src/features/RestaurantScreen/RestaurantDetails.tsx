@@ -1,20 +1,25 @@
 // src/screens/RestaurantDetails.tsx
 import React from 'react';
-import {Image, ScrollView, StyleSheet, Text, View} from 'react-native';
+import {Image, SafeAreaView, ScrollView, StyleSheet, Text, View} from 'react-native';
 import {RouteProp, useRoute} from '@react-navigation/native';
 import {useSelector} from 'react-redux';
 import {RootState} from '@/store/store';
 import {Ionicons} from '@expo/vector-icons';
 import RestaurantHeader from "@/src/features/RestaurantScreen/components/RestaurantHeader";
+import {RootStackParamList} from "@/src/types/navigation";
 
-type RouteParams = {
-    RestaurantDetails: {
-        restaurantId: string;
-    };
-};
 
 const RestaurantDetails: React.FC = () => {
-    const route = useRoute<RouteProp<RouteParams, 'RestaurantDetails'>>();
+    const route = useRoute<RouteProp<RootStackParamList, 'RestaurantDetails'>>();
+
+    if (!route.params || !route.params.restaurantId) {
+        return (
+            <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+                <Text style={{color: 'red'}}>Error: Missing restaurantId.</Text>
+            </View>
+        );
+    }
+
     const {restaurantId} = route.params;
 
     const restaurant = useSelector((state: RootState) =>
@@ -25,9 +30,20 @@ const RestaurantDetails: React.FC = () => {
         return `${start} - ${end}`;
     };
 
+    if (!restaurant) {
+        return (
+            <View style={styles.container}>
+                <Text style={{color: 'red', textAlign: 'center', marginTop: 20}}>
+                    Restaurant not found.
+                </Text>
+            </View>
+        );
+    }
+
     return (
-        <View style={styles.container}>
-            <RestaurantHeader isScrolled={true}/>
+
+        <SafeAreaView style={styles.container}>
+            <RestaurantHeader isScrolled={true} restaurantName={restaurant?.restaurantName.toString()}/>
 
             <ScrollView>
                 {restaurant?.image_url ? (
@@ -65,16 +81,14 @@ const RestaurantDetails: React.FC = () => {
                         </Text>
                     </View>
 
-                    <View style={styles.descriptionContainer}>
-                        <Text style={styles.sectionTitle}>About</Text>
-                        <Text style={styles.description}>
-                            {restaurant?.restaurantDescription}
-                        </Text>
-                    </View>
 
                     <View style={styles.detailsSection}>
                         <Text style={styles.sectionTitle}>Details</Text>
 
+                        <View style={styles.detailRow}>
+                            <Ionicons name="reader-outline" size={20} color="#666"/>
+                            <Text style={styles.detailText}>About: {restaurant?.restaurantDescription}</Text>
+                        </View>
                         <View style={styles.detailRow}>
                             <Ionicons name="restaurant-outline" size={20} color="#666"/>
                             <Text style={styles.detailText}>Category: {restaurant?.category}</Text>
@@ -106,7 +120,7 @@ const RestaurantDetails: React.FC = () => {
                     </View>
                 </View>
             </ScrollView>
-        </View>
+        </SafeAreaView>
     );
 };
 

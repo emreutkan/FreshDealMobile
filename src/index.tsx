@@ -1,4 +1,3 @@
-import 'react-native-get-random-values'; // Import this at the top
 import React from 'react';
 import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
@@ -33,9 +32,7 @@ const App: React.FC = () => {
                         <Stack.Screen
                             name="RestaurantDetails"
                             component={RestaurantDetails}
-                            options={{
-                                title: 'Restaurant Details',
-                            }}
+
                         />
                     </Stack.Navigator>
                 </NavigationContainer>

@@ -1,58 +1,47 @@
 import React, {useEffect, useRef} from 'react';
-import {Animated, StyleSheet, TextInput, TouchableOpacity, View} from 'react-native';
+import {Animated, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import {scaleFont} from "@/src/utils/ResponsiveFont";
 import {Feather, Ionicons} from "@expo/vector-icons";
-import {useDispatch} from "react-redux";
-import {AppDispatch} from "@/store/store";
-import type {NativeStackNavigationProp} from "@react-navigation/native-stack";
+import {NativeStackNavigationProp} from "@react-navigation/native-stack";
 import {RootStackParamList} from "@/src/types/navigation";
 import {useNavigation} from "@react-navigation/native";
 
-interface HeaderProps {
+interface RestaurantHeaderProps {
     isScrolled: boolean;
+    restaurantName: string | '';
 }
 
-const dispatch = useDispatch<AppDispatch>();
-type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
-const navigation = useNavigation<NavigationProp>();
-const CollapsedSearchBar: React.FC = React.memo(() => (
-    <View style={styles.searchBarContainer}>
-        <TouchableOpacity>
-            <Feather name="search" size={24} color="#000"/>
-        </TouchableOpacity>
-    </View>
-));
+const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({isScrolled, restaurantName}) => {
+    const CollapsedSearchBar: React.FC = React.memo(() => (
+        <View style={styles.searchBarContainer}>
+            <TouchableOpacity>
+                <Feather name="search" size={24} color="#000"/>
+            </TouchableOpacity>
+        </View>
+    ));
 
-const ExpandedSearchBar: React.FC = () => (
-    <View style={styles.expandedSearchBarContainer}>
-        <TextInput
-            style={styles.expandedSearchBar}
-            placeholder="Search for listings..."
-            placeholderTextColor="#999"
-        />
-    </View>
-);
-const CartBar: React.FC = () => {
 
-    const handleRouteToCartScreen = () => {
+    const CartBar: React.FC = () => {
 
+        const handleRouteToCartScreen = () => {
+
+        };
+
+        return (
+            <TouchableOpacity
+                onPress={handleRouteToCartScreen}
+                style={styles.favoritesBarContainer}
+            >
+                <Ionicons name="cart-outline" size={scaleFont(24)} color="#000"/>
+            </TouchableOpacity>
+        );
     };
 
-    return (
-        <TouchableOpacity
-            onPress={handleRouteToCartScreen}
-            style={styles.favoritesBarContainer}
-        >
-            <Ionicons name="cart-outline" size={scaleFont(24)} color="#000"/>
-        </TouchableOpacity>
-    );
-};
-
-
-const RestaurantHeader: React.FC<HeaderProps> = ({isScrolled}) => {
     const animation = useRef(new Animated.Value(isScrolled ? 1 : 0)).current;
+    type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
+    const navigation = useNavigation<NavigationProp>();
     useEffect(() => {
         Animated.timing(animation, {
             toValue: isScrolled ? 1 : 0,
@@ -80,6 +69,9 @@ const RestaurantHeader: React.FC<HeaderProps> = ({isScrolled}) => {
                     <TouchableOpacity onPress={() => navigation.goBack()} style={{padding: scaleFont(8)}}>
                         <Feather name="arrow-left" size={24} color="#333"/>
                     </TouchableOpacity>
+                    <Text style={styles.restaurantName}>
+                        {restaurantName}
+                    </Text>
 
                     <View style={styles.iconContainer}>
                         <CartBar/>
@@ -92,11 +84,6 @@ const RestaurantHeader: React.FC<HeaderProps> = ({isScrolled}) => {
                 </View>
 
 
-                {!isScrolled && (
-                    <Animated.View style={[styles.expandedSearchWrapper, {opacity: searchBarOpacity}]}>
-                        <ExpandedSearchBar/>
-                    </Animated.View>
-                )}
             </View>
         </Animated.View>
     );
@@ -125,9 +112,15 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        // height: 70, // Fixed height for the top row
+        position: 'relative',
     },
-
+    restaurantName: {
+        fontSize: scaleFont(20),
+        fontWeight: 'bold',
+        color: '#333',
+        flex: 1,
+        textAlign: 'center',
+    },
     iconContainer: {
         flexDirection: 'row',
         alignItems: 'center',
