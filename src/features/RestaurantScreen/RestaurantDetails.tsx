@@ -1,10 +1,11 @@
 // src/screens/RestaurantDetails.tsx
 import React from 'react';
-import {Image, SafeAreaView, ScrollView, StyleSheet, Text, View} from 'react-native';
+import {Image, ScrollView, StyleSheet, Text, View} from 'react-native';
 import {RouteProp, useRoute} from '@react-navigation/native';
 import {useSelector} from 'react-redux';
 import {RootState} from '@/store/store';
 import {Ionicons} from '@expo/vector-icons';
+import RestaurantHeader from "@/src/features/RestaurantScreen/components/RestaurantHeader";
 
 type RouteParams = {
     RestaurantDetails: {
@@ -25,7 +26,9 @@ const RestaurantDetails: React.FC = () => {
     };
 
     return (
-        <SafeAreaView style={styles.container}>
+        <View style={styles.container}>
+            <RestaurantHeader isScrolled={true}/>
+
             <ScrollView>
                 {restaurant?.image_url ? (
                     <Image
@@ -103,7 +106,7 @@ const RestaurantDetails: React.FC = () => {
                     </View>
                 </View>
             </ScrollView>
-        </SafeAreaView>
+        </View>
     );
 };
 

@@ -1,13 +1,21 @@
 import React, {useEffect, useRef} from 'react';
 import {Animated, StyleSheet, TextInput, TouchableOpacity, View} from 'react-native';
-import AddressBar from "@/src/features/homeScreen/components/AddressBar";
 import {scaleFont} from "@/src/utils/ResponsiveFont";
 import {Feather, Ionicons} from "@expo/vector-icons";
+import {useDispatch} from "react-redux";
+import {AppDispatch} from "@/store/store";
+import type {NativeStackNavigationProp} from "@react-navigation/native-stack";
+import {RootStackParamList} from "@/src/types/navigation";
+import {useNavigation} from "@react-navigation/native";
 
 interface HeaderProps {
     isScrolled: boolean;
 }
 
+const dispatch = useDispatch<AppDispatch>();
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+
+const navigation = useNavigation<NavigationProp>();
 const CollapsedSearchBar: React.FC = React.memo(() => (
     <View style={styles.searchBarContainer}>
         <TouchableOpacity>
@@ -27,7 +35,7 @@ const ExpandedSearchBar: React.FC = () => (
 );
 const CartBar: React.FC = () => {
 
-    const handleRouteToFavoritesScreen = () => {
+    const handleRouteToCartScreen = () => {
 
     };
 
@@ -40,7 +48,9 @@ const CartBar: React.FC = () => {
         </TouchableOpacity>
     );
 };
-const Header: React.FC<HeaderProps> = ({isScrolled}) => {
+
+
+const RestaurantHeader: React.FC<HeaderProps> = ({isScrolled}) => {
     const animation = useRef(new Animated.Value(isScrolled ? 1 : 0)).current;
 
     useEffect(() => {
@@ -67,14 +77,12 @@ const Header: React.FC<HeaderProps> = ({isScrolled}) => {
             <View style={styles.container}>
 
                 <View style={styles.topRow}>
-
-                    <View style={styles.addressBarContainer}>
-                        <AddressBar/>
-                    </View>
-
+                    <TouchableOpacity onPress={() => navigation.goBack()} style={{padding: scaleFont(8)}}>
+                        <Feather name="arrow-left" size={24} color="#333"/>
+                    </TouchableOpacity>
 
                     <View style={styles.iconContainer}>
-                        <FavoritesBar/>
+                        <CartBar/>
                         {isScrolled && (
                             <Animated.View style={[styles.collapsedSearchWrapper, {opacity: searchBarOpacity}]}>
                                 <CollapsedSearchBar/>
@@ -119,9 +127,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         // height: 70, // Fixed height for the top row
     },
-    addressBarContainer: {
-        maxWidth: '65%', // AddressBar limited to 50% of the parent width
-    },
+
     iconContainer: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -158,4 +164,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default Header;
+export default RestaurantHeader;
