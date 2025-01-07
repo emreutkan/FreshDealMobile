@@ -65,14 +65,14 @@ const Header: React.FC<HeaderProps> = ({isScrolled}) => {
     return (
         <Animated.View style={[styles.header, {height: headerHeight}]}>
             <View style={styles.container}>
-                {/* === Top Row === */}
+
                 <View style={styles.topRow}>
-                    {/* AddressBar on the left */}
+
                     <View style={styles.addressBarContainer}>
                         <AddressBar/>
                     </View>
 
-                    {/* Icons (FavoritesBar + Search) on the right */}
+
                     <View style={styles.iconContainer}>
                         <FavoritesBar/>
                         {isScrolled && (
@@ -83,7 +83,7 @@ const Header: React.FC<HeaderProps> = ({isScrolled}) => {
                     </View>
                 </View>
 
-                {/* === Expanded Search Bar (Second Row) === */}
+
                 {!isScrolled && (
                     <Animated.View style={[styles.expandedSearchWrapper, {opacity: searchBarOpacity}]}>
                         <ExpandedSearchBar/>
@@ -105,7 +105,7 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
         elevation: 5,
         zIndex: 9999,
-        overflow: 'hidden', // Ensures smooth transition for height changes
+        overflow: 'hidden',
         borderWidth: 1,
         borderTopWidth: 0,
     },

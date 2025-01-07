@@ -2,7 +2,7 @@
 
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 import {getUserData} from "@/store/thunks/userThunks";
-import {addAddressAsync} from "@/store/thunks/addressThunks";
+import {addAddressAsync, setPrimaryAddress} from "@/store/thunks/addressThunks";
 
 export interface Address {
     id: string;
@@ -17,6 +17,28 @@ export interface Address {
     postalCode: string;
     apartmentNo: string;
     doorNo: string;
+    is_primary: boolean;
+}
+
+interface AddAddressResponse {
+    address: {
+        apartmentNo: number;
+        country: string;
+        district: string;
+        doorNo: string;
+        id: string;
+        is_primary: boolean;
+        latitude: number;
+        longitude: number;
+        neighborhood: string;
+        postalCode: number;
+        province: string;
+        street: string;
+        title: string;
+        user_id: number;
+    };
+    message: string;
+    success: boolean;
 }
 
 interface AddressState {
@@ -37,18 +59,19 @@ const addressSlice = createSlice({
     name: 'address',
     initialState,
     reducers: {
-        addAddress(state, action: PayloadAction<Address>) { // Adjusted PayloadAction
+        addAddress(state, action: PayloadAction<Address>) {
             state.addresses.push(action.payload);
-            if (state.addresses.length === 1) {
+            if (action.payload.is_primary) {
                 state.selectedAddressId = action.payload.id;
             }
         },
         removeAddress(state, action: PayloadAction<string>) {
             state.addresses = state.addresses.filter((address) => address.id !== action.payload);
             if (state.selectedAddressId === action.payload) {
-                state.selectedAddressId = state.addresses[0]?.id || null;
+                // Find a primary address to select instead
+                const primaryAddress = state.addresses.find(addr => addr.is_primary);
+                state.selectedAddressId = primaryAddress?.id || null;
             }
-
         },
         setSelectedAddress(state, action: PayloadAction<string>) {
             if (state.addresses.some((address) => address.id === action.payload)) {
@@ -64,7 +87,7 @@ const addressSlice = createSlice({
                 state.error = null;
             })
             .addCase(addAddressAsync.fulfilled, (state, action) => {
-                if (!action.payload || typeof action.payload.id !== 'string') {
+                if (!action.payload) {
                     console.error('Invalid payload received in addAddressAsync.fulfilled:', action.payload);
                     state.error = 'Failed to add address due to invalid data.';
                     state.loading = false;
@@ -73,16 +96,15 @@ const addressSlice = createSlice({
 
                 const index = state.addresses.findIndex((addr) => addr.id.startsWith('temp-'));
                 if (index !== -1) {
-                    // Replace the temporary address with the actual address from the backend
                     state.addresses[index] = {...state.addresses[index], ...action.payload, id: action.payload.id};
                 } else {
-                    // If temp address not found, add the new address
                     state.addresses.push(action.payload);
                 }
 
-                // Optionally, set the newly added address as selected
-                state.selectedAddressId = action.payload.id;
-
+                // Only set as selected if it's marked as primary
+                if (action.payload.is_primary) {
+                    state.selectedAddressId = action.payload.id;
+                }
                 state.loading = false;
             })
             .addCase(addAddressAsync.rejected, (state, action) => {
@@ -90,6 +112,7 @@ const addressSlice = createSlice({
                 state.error = action.payload || 'Failed to add address';
             })
             .addCase(getUserData.fulfilled, (state, action) => {
+                console.error("state addresses before" + state.addresses);
                 state.addresses = action.payload.user_address_list.map((address: any) => ({
                     id: address.id.toString(),
                     title: address.title,
@@ -101,13 +124,37 @@ const addressSlice = createSlice({
                     province: address.province,
                     country: address.country,
                     postalCode: address.postalCode.toString(),
-                    apartmentNo: address.apartmentNo.toString(),
-                    doorNo: address.doorNo.toString(),
+                    apartmentNo: address.apartmentNo ? address.apartmentNo.toString() : null,
+                    doorNo: address.doorNo ? address.doorNo.toString() : null,
+                    is_primary: Boolean(address.is_primary),
                 }));
-                // Set the first address as selected if none is selected
-                if (state.addresses.length > 0 && !state.selectedAddressId) {
-                    state.selectedAddressId = state.addresses[0].id;
+                console.log("state addresses after" + state.addresses);
+
+
+                console.error('Selected address ID before:', state.selectedAddressId);
+
+                const primaryAddress = state.addresses.find(addr => addr.is_primary);
+                if (primaryAddress) {
+                    state.selectedAddressId = primaryAddress.id;
+                    console.log('Selected address ID after:', state.selectedAddressId);
+
                 }
+
+            })
+            .addCase(setPrimaryAddress.pending, (state) => {
+                console.log('Redux State - primary address pending');
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(setPrimaryAddress.fulfilled, (state, action: PayloadAction<Address>) => {
+                console.log('Redux State - Updated Primary Address:', action.payload);
+                state.loading = false;
+                state.error = null;
+
+            })
+            .addCase(setPrimaryAddress.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload || 'Failed to set primary address';
             });
     },
 });

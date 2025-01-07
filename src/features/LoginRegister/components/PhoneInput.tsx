@@ -90,7 +90,6 @@ const PhoneInput: React.FC = () => {
                 </TouchableOpacity>
             )}
 
-            {/* Country Code Picker Modal */}
             {isPickerVisible && (
                 <Modal visible={isPickerVisible} transparent animationType="slide">
                     <View style={styles.modalOverlay}>

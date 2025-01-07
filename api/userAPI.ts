@@ -205,14 +205,14 @@ export const getUserDataAPI = async (token: string) => {
     const functionName = 'getUserDataAPI';
     const endpoint = GET_USER_DATA_API_ENDPOINT;
 
-    console.log(`[REQUEST] [${functionName}] Endpoint: ${endpoint}`);
-    console.log(`[REQUEST] [${functionName}] No payload for GET request.`);
+    // console.log(`[REQUEST] [${functionName}] Endpoint: ${endpoint}`);
+    // console.log(`[REQUEST] [${functionName}] No payload for GET request.`);
 
     try {
         const response = await axios.get(endpoint, {
             headers: {Authorization: `Bearer ${token}`}
         });
-        logResponse(functionName, endpoint, response.data);
+        // logResponse(functionName, endpoint, response.data);
         return response.data;
     } catch (error: any) {
         logError(functionName, endpoint, error);
@@ -604,16 +604,21 @@ export const searchAPI = async (searchParams: {
     }
 };
 
-export const updateAddressAPI = async (address: Address, token: string) => {
+// Function to update an address
+export const updateAddressAPI = async (
+    addressId: string,
+    updates: Partial<Address>,
+    token: string
+): Promise<Address> => {
     const functionName = 'updateAddressAPI';
-    const endpoint = UPDATE_ADDRESS_API_ENDPOINT;
-    const payload = address;
+    const endpoint = `${UPDATE_ADDRESS_API_ENDPOINT}/${addressId}`;
+    const payload = updates;
 
     logRequest(functionName, endpoint, payload);
 
     try {
         const response = await axios.put(endpoint, payload, {
-            headers: {Authorization: `Bearer ${token}`}
+            headers: {Authorization: `Bearer ${token}`},
         });
         logResponse(functionName, endpoint, response.data);
         return response.data;
@@ -621,4 +626,4 @@ export const updateAddressAPI = async (address: Address, token: string) => {
         logError(functionName, endpoint, error);
         throw error;
     }
-}
+};

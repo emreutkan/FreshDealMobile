@@ -1,24 +1,23 @@
-import React, {useCallback} from 'react';
-import {StyleSheet, Text, View,} from 'react-native';
+import React, {useCallback, useMemo, useRef} from 'react';
+import {FlatList, StyleSheet, Text, View,} from 'react-native';
 import {useSelector} from 'react-redux';
 import {RootState} from '@/store/store';
 import {Restaurant} from '@/store/slices/restaurantSlice';
+import BottomSheet, {BottomSheetScrollView} from "@gorhom/bottom-sheet";
 import RestaurantsOnMap from "@/src/features/homeScreen/components/RestaurantsOnMap";
 
 const HomeMapView = () => {
 
     const restaurants = useSelector((state: RootState) => state.restaurant.restaurantsProximity || []);
+    const bottomSheetRef = useRef<BottomSheet>(null);
+    const snapPoints = useMemo(() => ['25%', '50%', '90%'], []);
 
-    // Use useCallback instead of useMemo
+
     const renderRestaurantItem = useCallback(
         ({item}: { item: Restaurant }) => (
             <View style={styles.restaurantCard}>
-                {/* Uncomment and use Image if needed */}
-                {/* <Image
-                    source={{ uri: item.restaurantImageUrl || '' }}
-                    style={styles.restaurantImage}
-                    fadeDuration={300}
-                /> */}
+
+
                 <View style={styles.restaurantInfo}>
                     <Text style={styles.restaurantName}>{item.restaurantName}</Text> {/* Changed to restaurantName */}
                     <View style={styles.restaurantDetails}>
@@ -31,18 +30,17 @@ const HomeMapView = () => {
         ),
         []
     );
-    // Fallback or loading content
     const renderMapView = () => {
         if (!restaurants.length) {
             return (
                 <View style={styles.noRestaurantsContainer}>
                     <View style={StyleSheet.absoluteFillObject}>
-                        <RestaurantsOnMap
-                            restaurants={[]}
-                            setLatitudeDelta={0.01}
-                            setLongitudeDelta={0.01}
-                            coverEntireScreen={true}
-                        />
+                        {/*<RestaurantsOnMap*/}
+                        {/*    restaurants={[]}*/}
+                        {/*    setLatitudeDelta={0.01}*/}
+                        {/*    setLongitudeDelta={0.01}*/}
+                        {/*    coverEntireScreen={true}*/}
+                        {/*/>*/}
                     </View>
                     <View style={styles.blurOverlay}/>
                     <View style={styles.messageBox}>
@@ -63,18 +61,29 @@ const HomeMapView = () => {
                     setLongitudeDelta={0.01}
                     coverEntireScreen={true}
                 />
-                {/*<RestaurantsBottomSheet>*/}
-                {/*    <>*/}
-                {/*        <Text style={styles.sectionTitle}>Restaurants in Area</Text>*/}
-                {/*        <FlatList*/}
-                {/*            data={restaurants}*/}
-                {/*            renderItem={renderRestaurantItem}*/}
-                {/*            keyExtractor={(item) => item.id}*/}
-                {/*            showsVerticalScrollIndicator={false}*/}
-                {/*            contentContainerStyle={styles.listContainer}*/}
-                {/*        />*/}
-                {/*    </>*/}
-                {/*</RestaurantsBottomSheet>*/}
+                <BottomSheet
+                    ref={bottomSheetRef}
+                    index={1}
+                    snapPoints={snapPoints}
+                    enablePanDownToClose={false}
+                    handleIndicatorStyle={styles.bottomSheetHandle}
+                >
+
+                    <BottomSheetScrollView
+                        contentContainerStyle={styles.bottomSheetContent}>
+                        <FlatList
+                            data={restaurants}
+                            renderItem={renderRestaurantItem}
+                            keyExtractor={(item) => item.id}
+                            ListHeaderComponent={() => (
+                                <View>
+                                    <Text style={styles.sectionTitle}>Restaurants in Area</Text>
+                                </View>
+                            )}
+                            showsVerticalScrollIndicator={false}
+                        />
+                    </BottomSheetScrollView>
+                </BottomSheet>
             </>
         );
     };
@@ -175,7 +184,20 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#666',
     },
+    bottomSheetContent: {
+        padding: 16,
 
+    },
+    bottomSheetHandle: {
+
+        backgroundColor: '#ccc',
+        width: 40,
+        height: 5,
+        borderRadius: 2.5,
+        alignSelf: 'center',
+        marginVertical: 8,
+
+    },
 });
 
 export default HomeMapView;

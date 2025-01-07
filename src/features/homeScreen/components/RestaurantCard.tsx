@@ -13,7 +13,7 @@ const RestaurantList: React.FC<RestaurantListProps> = ({restaurants}) => {
     }, []);
     const renderRestaurantItem = ({item}: { item: Restaurant }) => (
         <View style={styles.restaurantCard}>
-            {/* Image with heart icon */}
+
             <View style={styles.imageContainer}>
                 <Image source={{uri: item.image_url}} style={styles.image}/>
                 <TouchableOpacity
@@ -26,7 +26,6 @@ const RestaurantList: React.FC<RestaurantListProps> = ({restaurants}) => {
                 </TouchableOpacity>
             </View>
 
-            {/* Restaurant Details */}
             <View style={styles.detailsContainer}>
                 <View style={styles.titleRow}>
                     <Text style={styles.title}>{item.restaurantName}</Text>

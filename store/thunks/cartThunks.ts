@@ -9,8 +9,7 @@ export const fetchCart = createAsyncThunk<CartItem[], string>(
     'cart/fetchCart',
     async (token, {rejectWithValue}) => {
         try {
-            const data = await getCartAPI(token);
-            return data;
+            return await getCartAPI(token);
         } catch (error: any) {
             return rejectWithValue(error.response?.data?.message || error.message);
         }
@@ -22,9 +21,8 @@ export const addItemToCart = createAsyncThunk<CartItem, { listingId: number; cou
     'cart/addItemToCart',
     async ({listingId, count, token}, {rejectWithValue}) => {
         try {
-            const data = await addToCartAPI(listingId, count, token);
             // Assuming the API returns the added/updated cart item
-            return data;
+            return await addToCartAPI(listingId, count, token);
         } catch (error: any) {
             return rejectWithValue(error.response?.data?.message || error.message);
         }
@@ -49,9 +47,8 @@ export const updateCartItem = createAsyncThunk<CartItem, { listingId: number; co
     'cart/updateCartItem',
     async ({listingId, count, token}, {rejectWithValue}) => {
         try {
-            const data = await updateCartAPI(listingId, count, token);
             // Assuming the API returns the updated cart item
-            return data;
+            return await updateCartAPI(listingId, count, token);
         } catch (error: any) {
             return rejectWithValue(error.response?.data?.message || error.message);
         }
