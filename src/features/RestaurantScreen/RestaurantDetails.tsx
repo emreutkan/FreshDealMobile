@@ -1,11 +1,12 @@
 import React, {useState} from 'react';
-import {Image, SafeAreaView, ScrollView, StyleSheet, Text, View} from 'react-native';
+import {Image, ScrollView, StyleSheet, Text, View} from 'react-native';
 import {RouteProp, useRoute} from '@react-navigation/native';
 import {useSelector} from 'react-redux';
 import {RootState} from '@/store/store';
 import {Ionicons} from '@expo/vector-icons';
 import RestaurantHeader from "@/src/features/RestaurantScreen/components/RestaurantHeader";
 import {RootStackParamList} from "@/src/types/navigation";
+import LocateToRestaurant from "@/src/features/RestaurantScreen/components/locateToRestaurant";
 
 const RestaurantDetails: React.FC = () => {
     const route = useRoute<RouteProp<RootStackParamList, 'RestaurantDetails'>>();
@@ -40,7 +41,7 @@ const RestaurantDetails: React.FC = () => {
     }
 
     return (
-        <SafeAreaView style={styles.container}>
+        <View style={styles.container}>
             {/* Pass isMapActive and setIsMapActive to the header */}
             <RestaurantHeader
                 isScrolled={true}
@@ -127,16 +128,13 @@ const RestaurantDetails: React.FC = () => {
                     </View>
                 )}
 
-                {isMapActive && (
-                    <View style={styles.mapContainer}>
-                        {/* Render your Map component here */}
-                        <Text style={{textAlign: 'center', marginTop: 30, fontSize: 16}}>
-                            Map goes here (Latitude: {restaurant.latitude}, Longitude: {restaurant.longitude})
-                        </Text>
-                    </View>
-                )}
+
             </ScrollView>
-        </SafeAreaView>
+            {isMapActive && (
+                <LocateToRestaurant restaurantId={restaurantId}/>
+
+            )}
+        </View>
     );
 };
 

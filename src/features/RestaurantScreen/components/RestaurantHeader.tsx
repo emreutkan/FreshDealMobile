@@ -5,6 +5,7 @@ import {Feather, Ionicons} from "@expo/vector-icons";
 import {NativeStackNavigationProp} from "@react-navigation/native-stack";
 import {RootStackParamList} from "@/src/types/navigation";
 import {useNavigation} from "@react-navigation/native";
+import {useSafeAreaInsets} from "react-native-safe-area-context";
 
 interface RestaurantHeaderProps {
     isScrolled: boolean;
@@ -59,8 +60,11 @@ const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({
                                                            }) => {
 
 
+    const inset = useSafeAreaInsets()
     return (
-        <View style={styles.header}>
+        <View style={[
+            styles.header, {paddingTop: inset.top}
+        ]}>
             <View style={styles.topRow}>
                 <GoBackButton/>
                 <Text style={styles.restaurantName}>
