@@ -10,7 +10,6 @@ import {
 } from 'react-native';
 import {useSelector} from 'react-redux';
 import {RootState} from '@/store/store';
-import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
@@ -35,12 +34,12 @@ const Home: React.FC = () => {
     const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(false);
     const [isHeaderVisible, setIsHeaderVisible] = useState(true);
     const [homeCardHeaderState, setHomeCardHeaderState] = useState(false);
+    const [activeTab, setActiveTab] = useState('HomeCardView');
 
-    const insets = useSafeAreaInsets();
 
     const handleTabChange = (routeName: string) => {
         setIsHeaderVisible(routeName !== 'Account');
-
+        setActiveTab(routeName); // Update active tab state
         if (routeName === 'HomeCardView') {
             setIsHeaderCollapsed(homeCardHeaderState); // Restore HomeCardView header state
         } else if (routeName === 'HomeMapView') {
@@ -74,10 +73,13 @@ const Home: React.FC = () => {
 
     // Render the main home screen with tabs
     return (
-        <View style={[styles.container, {paddingTop: insets.top}]}>
-            {isHeaderVisible && <Header isScrolled={isHeaderCollapsed}/>}
+        <View style={[styles.container]}>
+            {isHeaderVisible && <Header isScrolled={isHeaderCollapsed} activeTab={activeTab}/>}
 
-            <View style={styles.contentContainer}>
+            <View style={[
+                styles.contentContainer,
+                activeTab === 'HomeMapView' ? styles.mapContentContainer : styles.contentContainer
+            ]}>
                 <Tab.Navigator
                     screenListeners={{
                         state: (e) => {
@@ -118,6 +120,12 @@ const styles = StyleSheet.create({
     },
     contentContainer: {
         flex: 1,
+        zIndex: 0,
+    },
+    mapContentContainer: {
+        flex: 1,
+        zIndex: 0,
+        marginTop: -150,
     },
 });
 

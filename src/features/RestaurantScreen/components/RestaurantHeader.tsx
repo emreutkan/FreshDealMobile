@@ -1,5 +1,5 @@
-import React, {useEffect, useRef} from 'react';
-import {Animated, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import React from 'react';
+import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import {scaleFont} from "@/src/utils/ResponsiveFont";
 import {Feather, Ionicons} from "@expo/vector-icons";
 import {NativeStackNavigationProp} from "@react-navigation/native-stack";
@@ -8,89 +8,96 @@ import {useNavigation} from "@react-navigation/native";
 
 interface RestaurantHeaderProps {
     isScrolled: boolean;
-    restaurantName: string | '';
+    restaurantName: string;
+    isMapActive: boolean;                // <-- New prop
+    onToggleMap: (active: boolean) => void; // <-- New prop
 }
 
 
-const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({isScrolled, restaurantName}) => {
-    const CollapsedSearchBar: React.FC = React.memo(() => (
-        <View style={styles.searchBarContainer}>
-            <TouchableOpacity>
-                <Feather name="search" size={24} color="#000"/>
-            </TouchableOpacity>
-        </View>
-    ));
+const SearchBar: React.FC = () => {
 
-
-    const CartBar: React.FC = () => {
-
-        const handleRouteToCartScreen = () => {
-
-        };
-
-        return (
-            <TouchableOpacity
-                onPress={handleRouteToCartScreen}
-                style={styles.favoritesBarContainer}
-            >
-                <Ionicons name="cart-outline" size={scaleFont(24)} color="#000"/>
-            </TouchableOpacity>
-        );
-    };
-
-    const animation = useRef(new Animated.Value(isScrolled ? 1 : 0)).current;
     type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
-
     const navigation = useNavigation<NavigationProp>();
-    useEffect(() => {
-        Animated.timing(animation, {
-            toValue: isScrolled ? 1 : 0,
-            duration: 320,
-            useNativeDriver: false,
-        }).start();
-    }, [isScrolled]);
+    return (
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{padding: scaleFont(8)}}>
 
-    // Interpolations for dynamic styles
-    const headerHeight = animation.interpolate({
-        inputRange: [0, 1],
-        outputRange: [scaleFont(100), scaleFont(60)], // Expanded to Collapsed height
-    });
+            <Feather name="search" size={24} color="#000"/>
+        </TouchableOpacity>
+    )
+}
 
-    const searchBarOpacity = animation.interpolate({
-        inputRange: [0, 1],
-        outputRange: [1, 1], // ExpandedSearchBar to CollapsedSearchBar
-    });
+
+const CartBar: React.FC = () => {
+
+    type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+    const navigation = useNavigation<NavigationProp>();
 
     return (
-        <Animated.View style={[styles.header, {height: headerHeight}]}>
-            <View style={styles.container}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{padding: scaleFont(8)}}>
 
-                <View style={styles.topRow}>
-                    <TouchableOpacity onPress={() => navigation.goBack()} style={{padding: scaleFont(8)}}>
-                        <Feather name="arrow-left" size={24} color="#333"/>
-                    </TouchableOpacity>
-                    <Text style={styles.restaurantName}>
-                        {restaurantName}
-                    </Text>
+            <Ionicons name="cart-outline" size={scaleFont(24)} color="#000"/>
+        </TouchableOpacity>
+    );
+};
 
-                    <View style={styles.iconContainer}>
-                        <CartBar/>
-                        {isScrolled && (
-                            <Animated.View style={[styles.collapsedSearchWrapper, {opacity: searchBarOpacity}]}>
-                                <CollapsedSearchBar/>
-                            </Animated.View>
-                        )}
-                    </View>
+const GoBackButton: React.FC = () => {
+
+    type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+    const navigation = useNavigation<NavigationProp>();
+
+    return (
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{padding: scaleFont(8)}}>
+            <Feather name="arrow-left" size={24} color="#333"/>
+        </TouchableOpacity>
+    )
+}
+const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({
+                                                               isScrolled,
+                                                               restaurantName,
+                                                               isMapActive,
+                                                               onToggleMap
+                                                           }) => {
+
+
+    return (
+        <View style={styles.header}>
+            <View style={styles.topRow}>
+                <GoBackButton/>
+                <Text style={styles.restaurantName}>
+                    {restaurantName}
+                </Text>
+
+                <View style={styles.iconContainer}>
+                    <CartBar/>
+                    <SearchBar/>
                 </View>
-
-
             </View>
-        </Animated.View>
+            <View style={styles.tabsContainer}>
+                <TouchableOpacity
+                    style={[styles.tabButton, !isMapActive && styles.activeTabButton]}
+                    onPress={() => onToggleMap(false)}
+                >
+                    <Text style={[styles.tabButtonText, !isMapActive && styles.activeTabButtonText]}>
+                        Details
+                    </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    style={[styles.tabButton, isMapActive && styles.activeTabButton]}
+                    onPress={() => onToggleMap(true)}
+                >
+                    <Text style={[styles.tabButtonText, isMapActive && styles.activeTabButtonText]}>
+                        Location
+                    </Text>
+                </TouchableOpacity>
+            </View>
+        </View>
     );
 };
 
 const styles = StyleSheet.create({
     header: {
+        // flex: 1,
         backgroundColor: "#fff",
         borderColor: '#b2f7a5',
         borderBottomLeftRadius: scaleFont(20),
@@ -104,11 +111,9 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderTopWidth: 0,
     },
-    container: {
-        flex: 1,
-        paddingHorizontal: scaleFont(10),
-    },
+
     topRow: {
+
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -118,7 +123,6 @@ const styles = StyleSheet.create({
         fontSize: scaleFont(20),
         fontWeight: 'bold',
         color: '#333',
-        flex: 1,
         textAlign: 'center',
     },
     iconContainer: {
@@ -126,34 +130,31 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'flex-end',
     },
-    collapsedSearchWrapper: {
-        marginLeft: scaleFont(10),
+
+    tabsContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        marginTop: scaleFont(5),
     },
-    expandedSearchWrapper: {
-        // marginTop: scaleFont(10),
+    tabButton: {
+        paddingHorizontal: scaleFont(20),
+        paddingVertical: scaleFont(8),
+        // borderRadius: scaleFont(20),
+        backgroundColor: '#f0f0f0',
+        justifyContent: 'center',
+        alignItems: 'center',
+        flex: 1,
     },
-    expandedSearchBarContainer: {
-        paddingTop: scaleFont(10),
-        paddingHorizontal: scaleFont(10),
+    tabButtonText: {
+        fontSize: scaleFont(14),
+        color: '#333',
     },
-    expandedSearchBar: {
-        paddingVertical: scaleFont(10),
-        paddingHorizontal: scaleFont(15),
-        borderRadius: scaleFont(20),
-        backgroundColor: '#f9f9f9',
-        borderColor: '#e0e0e0',
-        borderWidth: 1,
-        shadowColor: '#000',
-        shadowOffset: {width: 0, height: 1},
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
-        elevation: 1,
+    activeTabButton: {
+        backgroundColor: '#4CAF50',
     },
-    searchBarContainer: {
-        paddingRight: scaleFont(10),
-    },
-    favoritesBarContainer: {
-        paddingRight: scaleFont(10),
+    activeTabButtonText: {
+        color: '#fff',
+        fontWeight: '600',
     },
 });
 
