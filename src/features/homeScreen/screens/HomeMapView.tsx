@@ -8,7 +8,7 @@ import RestaurantsOnMap from '@/src/features/homeScreen/components/RestaurantsOn
 
 const HomeMapView = () => {
     const bottomSheetRef = useRef<BottomSheet>(null);
-    const snapPoints = useMemo(() => ['25%', '50%', '90%'], []);
+    const snapPoints = useMemo(() => ['15%', '50%', '70%'], []);
     const {restaurantsProximity} = useSelector(
         (state: RootState) => state.restaurant
     );
@@ -54,15 +54,25 @@ const HomeMapView = () => {
 
         return (
             <>
-                <RestaurantsOnMap
-                    restaurants={restaurantsProximity}
-                    setLatitudeDelta={0.01}
-                    setLongitudeDelta={0.01}
-                    coverEntireScreen={true}
-                />
+                <View style={{
+                    flex: 1, position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+                    zIndex: 0
+
+                }}>
+                    <RestaurantsOnMap
+                        restaurants={restaurantsProximity}
+                        setLatitudeDelta={0.01}
+                        setLongitudeDelta={0.01}
+                        coverEntireScreen={true}
+                    />
+                </View>
                 <BottomSheet
+
                     ref={bottomSheetRef}
                     index={1}
+                    style={{
+                        zIndex: 3
+                    }} // Ensure it stays above the map
                     snapPoints={snapPoints}
                     enablePanDownToClose={false}
                     handleIndicatorStyle={styles.bottomSheetHandle}
@@ -80,6 +90,7 @@ const HomeMapView = () => {
                             )}
                             showsVerticalScrollIndicator={false}
                         />
+
                     </BottomSheetScrollView>
                 </BottomSheet>
             </>
@@ -92,6 +103,7 @@ const HomeMapView = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+
     },
     sectionTitle: {
         fontSize: 18,

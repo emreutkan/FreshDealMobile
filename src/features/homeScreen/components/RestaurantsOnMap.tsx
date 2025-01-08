@@ -7,6 +7,8 @@ import {RootState} from '@/store/store';
 import {Address} from "@/store/slices/addressSlice";
 import {Restaurant} from "@/store/slices/restaurantSlice";
 import {useSelector} from "react-redux";
+import {Ionicons} from "@expo/vector-icons";
+import {scaleFont} from "@/src/utils/ResponsiveFont";
 
 interface MapProps {
     restaurants: Restaurant[];
@@ -43,11 +45,15 @@ const RestaurantsOnMap = ({
 
         <>
             <MapView
-                style={[
-                    coverEntireScreen ? StyleSheet.absoluteFillObject : styles.map,
+                style={{
+                    ...StyleSheet.absoluteFillObject,
+                    position: 'absolute',
+                    top: 0, // Start from very top of screen
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
 
-                ]}
-                // style={{...styles.map, ...styles.map}}
+                }}
                 ref={mapRef}
                 initialRegion={{
                     latitude: latitude,
@@ -68,10 +74,13 @@ const RestaurantsOnMap = ({
                 ))}
             </MapView>
             <TouchableOpacity
-                style={styles.relocateButton}
+                style={[styles.relocateButton, {zIndex: 2}]} // Ensure button stays above map
                 onPress={relocateToUserLocation}
             >
-                <Text style={styles.relocateButtonText}>📍</Text>
+                <Text style={styles.relocateButtonText}>
+                    <Ionicons name="navigate" size={scaleFont(30)} color="#B2F7A5FF"/>
+
+                </Text>
             </TouchableOpacity>
         </>
     );
@@ -80,14 +89,12 @@ const RestaurantsOnMap = ({
 export default RestaurantsOnMap;
 
 const styles = {
-    map: {
-        ...StyleSheet.absoluteFillObject,
-    },
+
     relocateButton: {
         position: 'absolute' as 'absolute', // Corrected type
-        top: 20,
+        top: 600,
         right: 20,
-        backgroundColor: '#fff',
+        // backgroundColor: 'rgba(0,0,0,0.82)',
         width: 50,
         height: 50,
         borderRadius: 25,
@@ -98,6 +105,7 @@ const styles = {
         shadowOpacity: 0.1,
         shadowRadius: 4,
         elevation: 3,
+        zIndex: 1,
     },
     relocateButtonText: {
         fontSize: 24,

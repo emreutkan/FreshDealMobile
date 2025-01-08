@@ -15,20 +15,26 @@ import {Feather} from '@expo/vector-icons';
 
 interface HomeCardViewProps {
     onScroll: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
+    onRestaurantPress?: (restaurantId: string) => void; // Add this new prop
 }
 
-const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll}) => {
+const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll, onRestaurantPress}) => {
     const {restaurantsProximity, loading, error} = useSelector(
         (state: RootState) => state.restaurant
     );
 
+    // Handler for restaurant selection
+    const handleRestaurantPress = (restaurantId: string) => {
+        if (onRestaurantPress) {
+            onRestaurantPress(restaurantId);
+        }
+    };
 
     return (
         <View style={styles.safeArea}>
             <View style={styles.topBar}>
                 <Text style={styles.title}>Restaurants in Area</Text>
             </View>
-
 
             <View style={styles.container}>
                 {loading ? (
@@ -59,13 +65,19 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll}) => {
                         overScrollMode="never"
                         bounces={false}
                     >
-                        <RestaurantList restaurants={restaurantsProximity}/>
+                        <RestaurantList
+                            restaurants={restaurantsProximity}
+                            onRestaurantPress={(id) => {
+                                // Handle restaurant selection
+                                console.log('Selected restaurant:', id);
+                            }}/>
                     </ScrollView>
                 )}
             </View>
         </View>
     );
 };
+
 
 const styles = StyleSheet.create({
     safeArea: {

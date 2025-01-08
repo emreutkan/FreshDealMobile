@@ -1,3 +1,4 @@
+import 'react-native-get-random-values'; // Must be at the top
 import {registerRootComponent} from "expo";
 
 import App from "./src/index";
