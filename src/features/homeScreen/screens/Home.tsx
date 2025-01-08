@@ -74,7 +74,9 @@ const Home: React.FC = () => {
     // Render the main home screen with tabs
     return (
         <View style={[styles.container]}>
-            {isHeaderVisible && <Header isScrolled={isHeaderCollapsed} activeTab={activeTab}/>}
+            {isHeaderVisible && <Header isScrolled={isHeaderCollapsed} activeTab={activeTab}
+                                        setIsScrolled={setIsHeaderCollapsed} setActiveTab={setActiveTab}/>
+            }
 
             <View style={[
                 styles.contentContainer,
