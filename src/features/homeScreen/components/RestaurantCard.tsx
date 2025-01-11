@@ -44,13 +44,21 @@ const RestaurantList: React.FC<RestaurantListProps> = ({restaurants, onRestauran
                     isPressed && styles.cardPressed
                 ]}>
                     <View style={styles.imageContainer}>
-                        <Image
-                            source={{uri: item.image_url}}
-                            style={[
-                                styles.image,
-                                isPressed && styles.imagePressed
-                            ]}
-                        />
+                        {item.image_url ? (
+                            <View style={styles.imageContainer}>
+                                <Image
+                                    source={{
+                                        uri: item.image_url.replace('127.0.0.1', '192.168.1.3'),
+                                    }}
+                                    style={[
+                                        styles.image,
+                                        isPressed && styles.imagePressed,
+                                    ]}
+                                />
+                            </View>
+                        ) : (
+                            <Text>No image available</Text>
+                        )}
                         <TouchableOpacity
                             style={styles.heartButton}
                             onPress={(e) => {
@@ -66,7 +74,7 @@ const RestaurantList: React.FC<RestaurantListProps> = ({restaurants, onRestauran
 
                     <View style={styles.detailsContainer}>
                         <View style={styles.titleRow}>
-                            <Text style={styles.title}>{item.restaurantName}</Text>
+                            <Text style={styles.title}>{item.restaurantName || 'Unnamed Restaurant'}</Text>
                             <View style={styles.ratingContainer}>
                                 <Text style={styles.rating}>
                                     {(item.rating ?? 0).toFixed(1)}
@@ -79,11 +87,35 @@ const RestaurantList: React.FC<RestaurantListProps> = ({restaurants, onRestauran
                         <Text style={styles.distance}>
                             Within {(item.distance_km ?? 0).toFixed(1)} km
                         </Text>
+                        {item.restaurantDescription && (
+                            <Text style={styles.description}>
+                                {item.restaurantDescription}
+                            </Text>
+                        )}
+                        <View style={styles.deliveryPickupContainer}>
+                            {item.delivery && item.maxDeliveryDistance != null && item.deliveryFee != null && (
+                                <Text style={styles.deliveryText}>
+                                    Delivery available within {item.maxDeliveryDistance} km
+                                    {` ($${item.deliveryFee.toFixed(2)} fee)`}
+                                </Text>
+                            )}
+                            {item.pickup && (
+                                <Text style={styles.pickupText}>
+                                    Pickup available
+                                </Text>
+                            )}
+                        </View>
+                        {item.minOrderAmount != null && (
+                            <Text style={styles.minOrderText}>
+                                Minimum order: ${item.minOrderAmount.toFixed(2)}
+                            </Text>
+                        )}
                     </View>
                 </View>
             </TouchableOpacity>
         );
     };
+
 
     return (
         <FlatList
@@ -188,6 +220,27 @@ const styles = StyleSheet.create({
     distance: {
         fontSize: 12,
         color: "#777",
+        marginTop: 4,
+    },
+    description: {
+        fontSize: 12,
+        color: "#666",
+        marginTop: 4,
+    },
+    deliveryPickupContainer: {
+        marginTop: 8,
+    },
+    deliveryText: {
+        fontSize: 12,
+        color: "#228B22", // Green color for delivery
+    },
+    pickupText: {
+        fontSize: 12,
+        color: "#1E90FF", // Blue color for pickup
+    },
+    minOrderText: {
+        fontSize: 12,
+        color: "#FF4500", // Orange for minimum order
         marginTop: 4,
     },
 });

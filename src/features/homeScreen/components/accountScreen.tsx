@@ -9,6 +9,7 @@ import {updateEmail, updatePassword, updateUsername} from '@/store/thunks/userTh
 import {logout} from '@/store/slices/userSlice';
 import {RootStackParamList} from "@/src/types/navigation";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
+import GoBackIcon from "@/src/features/homeScreen/components/goBackIcon";
 
 
 const AccountScreen: React.FC = () => {
@@ -128,9 +129,7 @@ const AccountScreen: React.FC = () => {
 
         <View style={[styles.safeArea, {paddingTop: inset.top}]}>
             <View style={styles.topBar}>
-                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconButton}>
-                    <Feather name="arrow-left" size={24} color="#333"/>
-                </TouchableOpacity>
+                <GoBackIcon/>
                 <Text style={styles.title}>Account</Text>
                 <TouchableOpacity onPress={handleEditInfo} style={styles.iconButton}>
                     <Feather name={isEditing ? 'check' : 'settings'} size={24} color="#333"/>

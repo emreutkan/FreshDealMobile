@@ -1,70 +1,81 @@
 // Header.tsx
 
-import React, {useEffect, useRef, useState} from 'react';
+import React from 'react';
 import {Animated, StyleSheet, TouchableOpacity, View} from 'react-native';
 import AddressBar from "@/src/features/homeScreen/components/AddressBar";
 import {scaleFont} from "@/src/utils/ResponsiveFont";
-import {Feather, Ionicons} from "@expo/vector-icons";
+import {Ionicons} from "@expo/vector-icons";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
-import ExpandedSearchBar from "@/src/features/homeScreen/components/expandedSearchBar";
-import {navigate} from "@/src/types/navigation";
+
+// import ExpandedSearchBar from "@/src/features/homeScreen/components/expandedSearchBar";
 
 interface HeaderProps {
-    isScrolled: boolean;
+    // isScrolled: boolean;
     activeTab: string;
-    setIsScrolled: (value: boolean) => void; // Callback to update isScrolled
+    // setIsScrolled: (value: boolean) => void; // Callback to update isScrolled
 
 }
 
-const Header: React.FC<HeaderProps> = ({isScrolled, activeTab, setIsScrolled}) => {
-    const [shouldFocusSearch, setShouldFocusSearch] = useState(false);
-    const animation = useRef(new Animated.Value(isScrolled ? 1 : 0)).current;
+const Header: React.FC<HeaderProps> = ({
+                                           // isScrolled,
+                                           activeTab,
+                                           // setIsScrolled
+                                       }) => {
+    // const [shouldFocusSearch, setShouldFocusSearch] = useState(false);
+    // const animation = useRef(new Animated.Value(isScrolled ? 1 : 0)).current;
 
-    const handleSearchBarClick = () => {
-        console.log(activeTab)
+    // const CollapsedSearchBar: React.FC<{ onPress: () => void }> = React.memo(({onPress}) => (
+    //     <View style={styles.searchBarContainer}>
+    //         <TouchableOpacity onPress={onPress}>
+    //             <Feather name="search" size={24} color="#000"/>
+    //         </TouchableOpacity>
+    //     </View>
+    // ));
+    // const handleSearchBarClick = () => {
+    //     console.log(activeTab)
+    //
+    //     console.log('activeTab', activeTab)
+    //     console.log('Search bar clicked');
+    //     if (isScrolled) {
+    //         console.log('Resetting isScrolled to false');
+    //         setIsScrolled(false); // Correctly update isScrolled via callback
+    //         setShouldFocusSearch(true); // Indicate that focus is needed
+    //     } else {
+    //         setShouldFocusSearch(true); // Handle clicks when not scrolled, if necessary
+    //     }
+    //     if (activeTab === 'HomeMapView') {
+    //         navigate('HomeScreen', {screen: 'HomeCardView'})
+    //     }
+    // };
 
-        console.log('activeTab', activeTab)
-        console.log('Search bar clicked');
-        if (isScrolled) {
-            console.log('Resetting isScrolled to false');
-            setIsScrolled(false); // Correctly update isScrolled via callback
-            setShouldFocusSearch(true); // Indicate that focus is needed
-        } else {
-            setShouldFocusSearch(true); // Handle clicks when not scrolled, if necessary
-        }
-        if (activeTab === 'HomeMapView') {
-            navigate('HomeScreen', {screen: 'HomeCardView'})
-        }
-    };
-
-
-    useEffect(() => {
-        Animated.timing(animation, {
-            toValue: isScrolled ? 1 : 0,
-            duration: 320,
-            useNativeDriver: false,
-        }).start(() => {
-            console.log('Animation completed');
-        });
-    }, [isScrolled]);
-
-    // Interpolations for dynamic styles
-    const headerHeight = animation.interpolate({
-        inputRange: [0, 1],
-        outputRange: [scaleFont(160), scaleFont(110)], // Expanded to Collapsed height
-    });
-
-    const searchBarOpacity = animation.interpolate({
-        inputRange: [0, 1],
-        outputRange: [1, 1], // Opacity remains the same; adjust if needed
-    });
+    //
+    // useEffect(() => {
+    //     Animated.timing(animation, {
+    //         toValue: isScrolled ? 1 : 0,
+    //         duration: 320,
+    //         useNativeDriver: false,
+    //     }).start(() => {
+    //         console.log('Animation completed');
+    //     });
+    // }, [isScrolled]);
+    //
+    // // Interpolations for dynamic styles
+    // const headerHeight = animation.interpolate({
+    //     inputRange: [0, 1],
+    //     outputRange: [scaleFont(160), scaleFont(110)], // Expanded to Collapsed height
+    // });
+    //
+    // const searchBarOpacity = animation.interpolate({
+    //     inputRange: [0, 1],
+    //     outputRange: [1, 1], // Opacity remains the same; adjust if needed
+    // });
 
     const insets = useSafeAreaInsets();
 
     return (
         <Animated.View style={[
             styles.header,
-            {height: headerHeight},
+            // {height: headerHeight},
             {paddingTop: insets.top},
             activeTab === 'HomeMapView' ? styles.transparentHeader : null
         ]}>
@@ -76,37 +87,30 @@ const Header: React.FC<HeaderProps> = ({isScrolled, activeTab, setIsScrolled}) =
 
                     <View style={styles.iconContainer}>
                         <FavoritesBar/>
-                        {isScrolled && (
-                            <Animated.View style={[styles.collapsedSearchWrapper, {opacity: searchBarOpacity}]}>
-                                <CollapsedSearchBar onPress={handleSearchBarClick}/>
-                            </Animated.View>
-                        )}
+                        {/*{isScrolled && (*/}
+                        {/*    <Animated.View style={[styles.collapsedSearchWrapper, {opacity: searchBarOpacity}]}>*/}
+                        {/*        <CollapsedSearchBar onPress={handleSearchBarClick}/>*/}
+                        {/*    </Animated.View>*/}
+                        {/*)}*/}
                     </View>
                 </View>
 
-                {!isScrolled && (
-                    <Animated.View style={[styles.expandedSearchWrapper, {opacity: searchBarOpacity}]}>
-                        <ExpandedSearchBar
-                            shouldFocus={shouldFocusSearch}
-                            onFocus={() => {
-                                console.log('TextInput focused');
-                                setShouldFocusSearch(false); // Reset focus flag after focusing
-                            }}
-                        />
-                    </Animated.View>
-                )}
+                {/*{!isScrolled && (*/}
+                {/*    <Animated.View style={[styles.expandedSearchWrapper, {opacity: searchBarOpacity}]}>*/}
+                {/*        <ExpandedSearchBar*/}
+                {/*            shouldFocus={shouldFocusSearch}*/}
+                {/*            onFocus={() => {*/}
+                {/*                console.log('TextInput focused');*/}
+                {/*                setShouldFocusSearch(false); // Reset focus flag after focusing*/}
+                {/*            }}*/}
+                {/*        />*/}
+                {/*    </Animated.View>*/}
+                {/*)}*/}
             </View>
         </Animated.View>
     );
 };
-
-const CollapsedSearchBar: React.FC<{ onPress: () => void }> = React.memo(({onPress}) => (
-    <View style={styles.searchBarContainer}>
-        <TouchableOpacity onPress={onPress}>
-            <Feather name="search" size={24} color="#000"/>
-        </TouchableOpacity>
-    </View>
-));
+//
 
 const FavoritesBar: React.FC = () => {
     const handleRouteToFavoritesScreen = () => {
@@ -137,6 +141,7 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
         borderWidth: 1,
         borderTopWidth: 0,
+        height: scaleFont(110),
     },
     container: {
         flex: 1,

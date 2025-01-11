@@ -174,7 +174,7 @@ export const getUserData = createAsyncThunk<
                         const resultAction = await dispatch(getRestaurantsByProximity({
                             latitude: address.latitude,
                             longitude: address.longitude,
-                            radius: 100
+                            radius: 1000000
                         }));
                         if (getRestaurantsByProximity.fulfilled.match(resultAction)) {
                             console.log('%c[Success] Restaurants fetched successfully.', 'color: green; font-weight: bold;');

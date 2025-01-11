@@ -18,8 +18,12 @@ export interface Restaurant {
     ratingCount: number;
     distance_km: number;
     image_url: string;
-    // avaliable range
-    // comments
+    pickup: boolean;
+    delivery: boolean;
+    maxDeliveryDistance: number; // in radius
+    deliveryFee: number;
+    minOrderAmount: number;
+
 }
 
 export interface RestaurantCreateResponse {
@@ -59,7 +63,7 @@ const restaurantSlice = createSlice({
             .addCase(getRestaurantsByProximity.fulfilled, (state, action) => {
                 state.status = 'succeeded';
                 state.loading = false;
-
+                console.log(action.payload);
                 state.restaurantsProximity = action.payload;
             })
             .addCase(getRestaurantsByProximity.rejected, (state, action) => {

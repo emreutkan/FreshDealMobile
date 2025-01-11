@@ -19,6 +19,7 @@ import HomeCardView from '@/src/features/homeScreen/screens/HomeCardView';
 import HomeMapView from '@/src/features/homeScreen/screens/HomeMapView';
 import AccountScreen from '@/src/features/homeScreen/components/accountScreen';
 import Header from '@/src/features/homeScreen/components/Header';
+import RestaurantSearch from "@/src/features/homeScreen/screens/RestaurantSearch";
 
 // Enable LayoutAnimation on Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -38,7 +39,7 @@ const HomeScreen: React.FC = () => {
     const [activeTab, setActiveTab] = useState('HomeCardView');
 
     const handleTabChange = (routeName: string) => {
-        setIsHeaderVisible(routeName !== 'Account');
+        setIsHeaderVisible(routeName !== 'Account' && routeName !== 'Search'); // Hide header for Account and Search
         setActiveTab(routeName); // Update active tab state
         if (routeName === 'HomeCardView') {
             // setIsHeaderCollapsed(homeCardHeaderState); // Restore HomeCardView header state
@@ -78,9 +79,9 @@ const HomeScreen: React.FC = () => {
 
             {isHeaderVisible && (
                 <Header
-                    isScrolled={isHeaderCollapsed}
+                    // isScrolled={isHeaderCollapsed}
                     activeTab={activeTab}
-                    setIsScrolled={setIsHeaderCollapsed}
+                    // setIsScrolled={setIsHeaderCollapsed}
                 />
             )}
 
@@ -105,6 +106,7 @@ const HomeScreen: React.FC = () => {
                                 HomeCardView: focused ? 'home' : 'home-outline',
                                 HomeMapView: focused ? 'map' : 'map-outline',
                                 Account: focused ? 'person' : 'person-outline',
+                                Search: focused ? 'search' : 'search-outline',
                             };
                             return <Ionicons name={iconMap[route.name as keyof typeof iconMap]} size={20}
                                              color={color}/>;
@@ -117,6 +119,8 @@ const HomeScreen: React.FC = () => {
                         {() => <HomeCardView onScroll={handleScroll}/>}
                     </Tab.Screen>
                     <Tab.Screen name="HomeMapView" component={HomeMapView} options={{tabBarLabel: 'Map'}}/>
+                    <Tab.Screen name={"Search"} component={RestaurantSearch} options={{tabBarLabel: 'Search'}}/>
+
                     <Tab.Screen name="Account" component={AccountScreen} options={{tabBarLabel: 'Account'}}/>
                 </Tab.Navigator>
             </View>
