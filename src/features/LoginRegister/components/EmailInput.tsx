@@ -1,7 +1,5 @@
-// components/LoginScreenComponents/EmailLoginField.tsx
-
-import React, {useState} from 'react';
-import {StyleSheet, Text, TextInput, TouchableOpacity, View} from 'react-native';
+import React, {useEffect, useRef, useState} from 'react';
+import {Animated, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View} from 'react-native';
 import {scaleFont} from "@/src/utils/ResponsiveFont";
 import {useDispatch, useSelector} from 'react-redux';
 import {setEmail} from '@/store/slices/userSlice'; // Adjust the path as needed
@@ -10,41 +8,68 @@ import {RootState} from '@/store/store'; // Adjust the path as needed
 const EmailLoginField: React.FC = () => {
     const dispatch = useDispatch();
     const email = useSelector((state: RootState) => state.user.email);
-    const [isTyping, setIsTyping] = useState<boolean>(!!email);
+    const [isFocused, setIsFocused] = useState(false);
+    const animatedLabel = useRef(new Animated.Value(email ? 1 : 0)).current;
+    const inputRef = useRef<TextInput>(null);
 
     const handleEmailChange = (text: string) => {
         dispatch(setEmail(text));
-
-        if (text.length === 0) {
-            setIsTyping(false);
-        } else {
-            setIsTyping(true);
-        }
-
-        // PasswordInput visibility is handled in RegisterScreen
     };
 
-    const handleClearText = () => {
-        dispatch(setEmail(''));
-        setIsTyping(false);
+    const handleFocus = () => setIsFocused(true);
+    const handleBlur = () => setIsFocused(false);
+
+    useEffect(() => {
+        Animated.timing(animatedLabel, {
+            toValue: isFocused || !!email ? 1 : 0,
+            duration: 200,
+            useNativeDriver: false,
+        }).start();
+    }, [isFocused, email]);
+
+    const labelStyle = {
+        top: animatedLabel.interpolate({
+            inputRange: [0, 1],
+            outputRange: [scaleFont(15), scaleFont(0)],
+        }),
+        fontSize: animatedLabel.interpolate({
+            inputRange: [0, 1],
+            outputRange: [scaleFont(16), scaleFont(12)],
+        }),
+        color: animatedLabel.interpolate({
+            inputRange: [0, 1],
+            outputRange: ['#999', 'gray'],
+        }),
+    };
+
+    const handleLabelPress = () => {
+        inputRef.current?.focus();
     };
 
     return (
-        <View>
-            <View style={[styles.inputContainer, isTyping && {borderColor: 'gray'}]}>
+        <View style={styles.container}>
+            <View style={[styles.inputContainer, isFocused && {borderColor: 'gray'}]}>
+                <TouchableWithoutFeedback onPress={handleLabelPress}>
+                    <Animated.Text style={[styles.label, labelStyle]}>
+                        Enter your email
+                    </Animated.Text>
+                </TouchableWithoutFeedback>
                 <TextInput
+                    ref={inputRef}
                     style={styles.inputText}
-                    placeholder="Enter your email"
-                    placeholderTextColor="#999"
                     keyboardType="email-address"
                     autoCapitalize="none"
                     autoCorrect={false}
                     value={email}
                     onChangeText={handleEmailChange}
-                    onFocus={() => console.log("Email Input Focused")}
+                    onFocus={handleFocus}
+                    onBlur={handleBlur}
                 />
-                {isTyping && (
-                    <TouchableOpacity onPress={handleClearText} style={styles.clearButton}>
+                {email && (
+                    <TouchableOpacity
+                        onPress={() => dispatch(setEmail(''))}
+                        style={styles.clearButton}
+                    >
                         <Text style={styles.clearButtonText}>X</Text>
                     </TouchableOpacity>
                 )}
@@ -54,6 +79,9 @@ const EmailLoginField: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
+    container: {
+        width: '100%',
+    },
     inputContainer: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -66,12 +94,16 @@ const styles = StyleSheet.create({
         height: scaleFont(50),
     },
     inputText: {
-
-        marginLeft: scaleFont(10),
         flex: 1,
-        fontSize: scaleFont(17),
+        fontSize: scaleFont(16),
         color: '#1a1818',
         fontFamily: 'Poppins-Regular',
+        paddingTop: scaleFont(10),
+    },
+    label: {
+        position: 'absolute',
+        left: scaleFont(15),
+        zIndex: 1,
     },
     clearButton: {
         paddingHorizontal: scaleFont(10),

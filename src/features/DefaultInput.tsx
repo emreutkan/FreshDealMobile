@@ -73,7 +73,7 @@ const styles = StyleSheet.create({
     inputText: {
         marginLeft: scaleFont(10),
         flex: 1,
-        fontSize: scaleFont(17),
+        fontSize: scaleFont(14),
         color: '#1a1818',
         fontFamily: 'Poppins-Regular',
     },

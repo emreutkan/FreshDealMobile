@@ -1,5 +1,16 @@
 import React, {useState} from 'react';
-import {ActivityIndicator, Alert, Image, StyleSheet, Text, TextInput, TouchableOpacity, View,} from 'react-native';
+import {
+    ActivityIndicator,
+    Alert,
+    Image,
+    Platform,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
+} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
 import {AppDispatch, RootState} from '@/store/store';
 import {Feather} from '@expo/vector-icons';
@@ -122,7 +133,9 @@ const AccountScreen: React.FC = () => {
     }
 
     return (
-        <View style={styles.safeArea}>
+        // add safe area instets to top view as padding top
+
+        <View style={[styles.safeArea, {paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0}]}>
             <View style={styles.topBar}>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconButton}>
                     <Feather name="arrow-left" size={24} color="#333"/>

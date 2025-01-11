@@ -6,8 +6,10 @@ import {
     KeyboardAvoidingView,
     Platform,
     StyleSheet,
+    Text,
+    TouchableOpacity,
     TouchableWithoutFeedback,
-    View,
+    View
 } from "react-native";
 import {scaleFont} from "@/src/utils/ResponsiveFont";
 import {useDispatch, useSelector} from "react-redux";
@@ -19,7 +21,8 @@ import PhoneInput from "@/src/features/LoginRegister/components/PhoneInput";
 import EmailLoginField from "@/src/features/LoginRegister/components/EmailInput";
 import PasswordInput from "@/src/features/LoginRegister/components/PasswordInput";
 import VerificationCodeInputField from "@/src/features/LoginRegister/components/VerificationCodeInputField"; // Assume this component exists
-import {setToken} from "@/store/slices/userSlice"; // For navigation
+import {setToken} from "@/store/slices/userSlice";
+import {Ionicons} from "@expo/vector-icons"; // For navigation
 
 interface RegisterModalProps {
     switchToLogin: () => void; // Callback to switch to LoginModal
@@ -43,11 +46,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({switchToLogin}) => {
     const [verificationCode, setVerificationCode] = useState<string>(""); // To store user input for verification code
 
     // Display error alerts when 'error' state changes
-    React.useEffect(() => {
-        if (error) {
-            Alert.alert('Error', error);
-        }
-    }, [error]);
+
 
     const validateInput = (): boolean => {
         if (!name_surname) {
@@ -155,6 +154,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({switchToLogin}) => {
         >
             <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
                 <View style={styles.scrollContainer}>
+
                     {!isCodeSent ? (
                         // Registration Input Fields
                         <>
@@ -172,8 +172,12 @@ const RegisterModal: React.FC<RegisterModalProps> = ({switchToLogin}) => {
                             </View>
 
                             <View style={styles.buttonArea}>
-                                <View style={styles.backButton}>
-                                    <DefaultButton onPress={switchToLogin} title="<"/>
+                 
+                                <View style={styles.skipContainer}>
+                                    <TouchableOpacity onPress={switchToLogin} style={styles.skipButton}>
+                                        <Ionicons name="arrow-back-outline" size={20} color="#000"/>
+                                        <Text style={styles.skipText}>Login</Text>
+                                    </TouchableOpacity>
                                 </View>
                                 <View style={styles.SignupButton}>
                                     <DefaultButton onPress={handleRegister} title="Sign up"/>
@@ -192,13 +196,13 @@ const RegisterModal: React.FC<RegisterModalProps> = ({switchToLogin}) => {
                                 />
                             </View>
 
-                            <View style={styles.buttonArea}>
-                                <View style={styles.verifyButton}>
-                                    <DefaultButton onPress={handleVerifyCode} title="Verify"/>
-                                </View>
-                                <View style={styles.skipButton}>
-                                    <DefaultButton onPress={skipLoginUser} title="Skip"/>
-                                </View>
+                            <DefaultButton onPress={handleVerifyCode} title="Verify"/>
+
+                            <View style={styles.skipContainer}>
+                                <TouchableOpacity onPress={skipLoginUser} style={styles.skipButton}>
+                                    <Ionicons name="arrow-forward-outline" size={20} color="#000"/>
+                                    <Text style={styles.skipText}>Skip</Text>
+                                </TouchableOpacity>
                             </View>
                         </>
                     )}
@@ -224,30 +228,41 @@ const styles = StyleSheet.create({
     inputArea: {
         marginBottom: scaleFont(15),
     },
-    buttonArea: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        marginTop: scaleFont(20),
-    },
+
     backButton: {
-        flex: 1,
+        flex: 1 / 4,
     },
     SignupButton: {
-        flex: 4,
+        flex: 3 / 4,
         marginLeft: scaleFont(10),
     },
-    verifyButton: {
-        flex: 4,
-        marginRight: scaleFont(10),
+    skipContainer: {
+        flexDirection: "row",
+        justifyContent: "flex-end",
+        alignItems: "center",
+        marginTop: scaleFont(15),
     },
     skipButton: {
-        flex: 1,
+        flexDirection: "row",
+        alignItems: "center",
+        padding: scaleFont(5),
     },
+    skipText: {
+        fontSize: scaleFont(16),
+        color: "#000",
+        marginLeft: scaleFont(5),
+    },
+
     errorText: {
         color: "red",
         textAlign: "center",
         marginTop: scaleFont(10),
     },
+    buttonArea: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        marginTop: scaleFont(10),
+    }
 });
 
 export default RegisterModal;

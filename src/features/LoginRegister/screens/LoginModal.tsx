@@ -51,12 +51,12 @@ const LoginModal: React.FC<LoginModalProps> = ({switchToRegister}) => {
         }
     }, [passwordLogin]);
 
-    // Display error alerts when 'error' state changes
-    React.useEffect(() => {
-        if (error) {
-            Alert.alert('Error', error);
-        }
-    }, [error]);
+    // // Display error alerts when 'error' state changes
+    // React.useEffect(() => {
+    //     if (error) {
+    //         Alert.alert('Error', error);
+    //     }
+    // }, [error]);
 
     /**
      * Handles the login button click.
