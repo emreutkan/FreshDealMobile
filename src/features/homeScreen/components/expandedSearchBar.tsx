@@ -22,7 +22,7 @@ const ExpandedSearchBar = forwardRef<TextInput, ExpandedSearchBarProps>(({should
                     if (onFocus) {
                         onFocus(); // Notify Header that focusing is done
                     }
-                }, 0); // 100ms delay to ensure rendering is complete
+                }, 100); // 100ms delay to ensure rendering is complete
             });
 
             // Cleanup in case the component unmounts before focus

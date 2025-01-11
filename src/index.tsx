@@ -6,7 +6,7 @@ import {store} from '@/store/store';
 import HomeScreen from './features/homeScreen/screens/Home';
 import Landing from './features/LoginRegister/screens/Landing';
 import AddressSelectionScreen from "@/src/features/homeScreen/screens/addressSelectionScreen"; // Renamed from _layout
-import {RootStackParamList} from '@/src/types/navigation';
+import {navigationRef, RootStackParamList} from '@/src/types/navigation';
 import UpdateAddress from "@/src/features/homeScreen/screens/UpdateAddress";
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import RestaurantDetails from "@/src/features/RestaurantScreen/RestaurantDetails";
@@ -17,7 +17,7 @@ const App: React.FC = () => {
     return (
         <GestureHandlerRootView style={{flex: 1}}>
             <Provider store={store}>
-                <NavigationContainer>
+                <NavigationContainer ref={navigationRef}>
                     <Stack.Navigator
                         initialRouteName="Landing"
                         screenOptions={{headerShown: false}}

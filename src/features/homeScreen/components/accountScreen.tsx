@@ -1,15 +1,5 @@
 import React, {useState} from 'react';
-import {
-    ActivityIndicator,
-    Alert,
-    Image,
-    SafeAreaView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
-} from 'react-native';
+import {ActivityIndicator, Alert, Image, StyleSheet, Text, TextInput, TouchableOpacity, View,} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
 import {AppDispatch, RootState} from '@/store/store';
 import {Feather} from '@expo/vector-icons';
@@ -132,7 +122,7 @@ const AccountScreen: React.FC = () => {
     }
 
     return (
-        <SafeAreaView style={styles.safeArea}>
+        <View style={styles.safeArea}>
             <View style={styles.topBar}>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconButton}>
                     <Feather name="arrow-left" size={24} color="#333"/>
@@ -189,7 +179,7 @@ const AccountScreen: React.FC = () => {
                     <Text style={styles.logoutButtonText}>Logout</Text>
                 </TouchableOpacity>
             </View>
-        </SafeAreaView>
+        </View>
     );
 };
 

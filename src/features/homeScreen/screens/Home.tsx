@@ -27,7 +27,7 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
 const SCROLL_THRESHOLD = 50;
 const Tab = createBottomTabNavigator();
 
-const Home: React.FC = () => {
+const HomeScreen: React.FC = () => {
     const addresses = useSelector((state: RootState) => state.address.addresses);
 
     // States for header and scroll behavior
@@ -36,12 +36,11 @@ const Home: React.FC = () => {
     const [homeCardHeaderState, setHomeCardHeaderState] = useState(false);
     const [activeTab, setActiveTab] = useState('HomeCardView');
 
-
     const handleTabChange = (routeName: string) => {
         setIsHeaderVisible(routeName !== 'Account');
         setActiveTab(routeName); // Update active tab state
         if (routeName === 'HomeCardView') {
-            setIsHeaderCollapsed(homeCardHeaderState); // Restore HomeCardView header state
+            // setIsHeaderCollapsed(homeCardHeaderState); // Restore HomeCardView header state
         } else if (routeName === 'HomeMapView') {
             setIsHeaderCollapsed(true); // Always collapse header for HomeMapView
         }
@@ -74,14 +73,20 @@ const Home: React.FC = () => {
     // Render the main home screen with tabs
     return (
         <View style={[styles.container]}>
-            {isHeaderVisible && <Header isScrolled={isHeaderCollapsed} activeTab={activeTab}
-                                        setIsScrolled={setIsHeaderCollapsed} setActiveTab={setActiveTab}/>
-            }
+            {isHeaderVisible && (
+                <Header
+                    isScrolled={isHeaderCollapsed}
+                    activeTab={activeTab}
+                    setIsScrolled={setIsHeaderCollapsed}
+                />
+            )}
 
-            <View style={[
-                styles.contentContainer,
-                activeTab === 'HomeMapView' ? styles.mapContentContainer : styles.contentContainer
-            ]}>
+            <View
+                style={[
+                    styles.contentContainer,
+                    activeTab === 'HomeMapView' ? styles.mapContentContainer : styles.contentContainer,
+                ]}
+            >
                 <Tab.Navigator
                     screenListeners={{
                         state: (e) => {
@@ -131,4 +136,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default Home;
+export default HomeScreen;

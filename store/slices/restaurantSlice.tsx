@@ -17,6 +17,8 @@ export interface Restaurant {
     ratingCount: number;
     distance_km: number;
     image_url: string;
+    // avaliable range
+    // comments
 }
 
 export interface RestaurantCreateResponse {

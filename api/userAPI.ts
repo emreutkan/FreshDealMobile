@@ -204,10 +204,6 @@ export const updatePasswordAPI = async (oldPassword: string, newPassword: string
 export const getUserDataAPI = async (token: string) => {
     const functionName = 'getUserDataAPI';
     const endpoint = GET_USER_DATA_API_ENDPOINT;
-
-    // console.log(`[REQUEST] [${functionName}] Endpoint: ${endpoint}`);
-    // console.log(`[REQUEST] [${functionName}] No payload for GET request.`);
-
     try {
         const response = await axios.get(endpoint, {
             headers: {Authorization: `Bearer ${token}`}

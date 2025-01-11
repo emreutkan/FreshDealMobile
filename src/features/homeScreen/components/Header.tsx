@@ -7,24 +7,22 @@ import {scaleFont} from "@/src/utils/ResponsiveFont";
 import {Feather, Ionicons} from "@expo/vector-icons";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
 import ExpandedSearchBar from "@/src/features/homeScreen/components/expandedSearchBar";
+import {navigate} from "@/src/types/navigation";
 
 interface HeaderProps {
     isScrolled: boolean;
     activeTab: string;
     setIsScrolled: (value: boolean) => void; // Callback to update isScrolled
 
-    setActiveTab: (tab: string) => void; // Callback to update activeTab
 }
 
-const Header: React.FC<HeaderProps> = ({isScrolled, activeTab, setIsScrolled, setActiveTab}) => {
+const Header: React.FC<HeaderProps> = ({isScrolled, activeTab, setIsScrolled}) => {
     const [shouldFocusSearch, setShouldFocusSearch] = useState(false);
     const animation = useRef(new Animated.Value(isScrolled ? 1 : 0)).current;
 
     const handleSearchBarClick = () => {
         console.log(activeTab)
-        if (activeTab === 'HomeMapView') {
-            setActiveTab('HomeCardView'); // Switch to HomeCardView tab
-        }
+
         console.log('activeTab', activeTab)
         console.log('Search bar clicked');
         if (isScrolled) {
@@ -33,6 +31,9 @@ const Header: React.FC<HeaderProps> = ({isScrolled, activeTab, setIsScrolled, se
             setShouldFocusSearch(true); // Indicate that focus is needed
         } else {
             setShouldFocusSearch(true); // Handle clicks when not scrolled, if necessary
+        }
+        if (activeTab === 'HomeMapView') {
+            navigate('HomeScreen', {screen: 'HomeCardView'})
         }
     };
 
