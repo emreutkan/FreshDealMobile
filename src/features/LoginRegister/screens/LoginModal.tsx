@@ -209,21 +209,23 @@ const styles = StyleSheet.create({
         // backgroundColor: '#f5f5f5',
     },
     welcomeText: {
-        fontSize: scaleFont(35),
+        fontSize: scaleFont(32),
         textAlign: 'center',
         color: '#000000',
         marginTop: scaleFont(20),
     },
     welcomeText2: {
-        fontSize: scaleFont(35),
+        fontSize: scaleFont(32),
         textAlign: 'center',
         marginBottom: scaleFont(20),
         color: '#50703C',
     },
     buttonRow: {
         flexDirection: 'row',
-        marginTop: scaleFont(10),
+        // marginTop: scaleFont(10),
         justifyContent: 'space-between',
+        paddingTop: scaleFont(14),
+
     },
     buttonContainer: {
         flex: 0.5,
@@ -241,7 +243,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         width: '100%',
-        marginTop: scaleFont(20),
+        marginTop: scaleFont(12),
     },
     line: {
         flex: 1,
@@ -260,7 +262,7 @@ const styles = StyleSheet.create({
         textDecorationLine: 'underline',
     },
     passwordlessLoginContainer: {
-        marginTop: scaleFont(10),
+        marginTop: scaleFont(14),
         alignItems: 'center',
     },
     passwordlessLoginText: {

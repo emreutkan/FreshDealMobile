@@ -15,13 +15,17 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 
 const App: React.FC = () => {
     return (
-        <GestureHandlerRootView style={{flex: 1}}>
+        <GestureHandlerRootView style={{flex: 1, padding: 0, margin: 0}}>
             <Provider store={store}>
                 <NavigationContainer ref={navigationRef}>
                     <Stack.Navigator
                         initialRouteName="Landing"
-                        screenOptions={{headerShown: false}}
+                        screenOptions={{
+                            headerShown: false,
+                            statusBarTranslucent: true, // Allows content to overlap the status bar (remove safe area in android)
+                        }}
                     >
+
                         <Stack.Screen name="Landing" component={Landing}/>
                         <Stack.Screen name="HomeScreen" component={HomeScreen}/>
                         <Stack.Screen

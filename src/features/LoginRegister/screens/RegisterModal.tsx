@@ -4,7 +4,6 @@ import {
     Alert,
     Keyboard,
     KeyboardAvoidingView,
-    Platform,
     StyleSheet,
     Text,
     TouchableOpacity,
@@ -149,14 +148,15 @@ const RegisterModal: React.FC<RegisterModalProps> = ({switchToLogin}) => {
 
     return (
         <KeyboardAvoidingView
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
-            style={styles.container}
+            style={{
+                flex: 1,
+                backgroundColor: "#f5f5f5",
+            }}
         >
             <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
                 <View style={styles.scrollContainer}>
 
                     {!isCodeSent ? (
-                        // Registration Input Fields
                         <>
                             <View style={styles.inputArea}>
                                 <NameSurnameInputField/>
@@ -171,32 +171,38 @@ const RegisterModal: React.FC<RegisterModalProps> = ({switchToLogin}) => {
                                 <PasswordInput password={password}/>
                             </View>
 
-                            <View style={styles.buttonArea}>
-                 
-                                <View style={styles.skipContainer}>
-                                    <TouchableOpacity onPress={switchToLogin} style={styles.skipButton}>
-                                        <Ionicons name="arrow-back-outline" size={20} color="#000"/>
-                                        <Text style={styles.skipText}>Login</Text>
-                                    </TouchableOpacity>
-                                </View>
-                                <View style={styles.SignupButton}>
-                                    <DefaultButton onPress={handleRegister} title="Sign up"/>
-                                </View>
+
+                            <View style={{marginBottom: scaleFont(12)}}>
+                                <DefaultButton onPress={handleRegister} title="Sign up"/>
+
                             </View>
+
+                            <TouchableOpacity onPress={switchToLogin} style={styles.skipButton}>
+                                <Ionicons name="arrow-back-outline" size={20} color="#000"/>
+                                <Text style={styles.skipText}>Login instead </Text>
+                            </TouchableOpacity>
                         </>
                     ) : (
                         // Verification Code Input Field and Skip Button
                         <>
+                            <Text style={{
+                                fontSize: scaleFont(22),
+                                textAlign: 'center',
+                                color: '#000000',
+                                marginTop: scaleFont(20),
+                            }}>Enter 6-digit code</Text>
                             <View style={styles.inputArea}>
                                 <VerificationCodeInputField
                                     value={verificationCode}
                                     onChangeText={setVerificationCode}
-                                    placeholder="Enter 6-digit code"
                                     keyboardType="numeric"
                                 />
                             </View>
 
-                            <DefaultButton onPress={handleVerifyCode} title="Verify"/>
+                            <View style={{marginTop: scaleFont(8)}}>
+                                <DefaultButton onPress={handleVerifyCode} title="Verify"/>
+
+                            </View>
 
                             <View style={styles.skipContainer}>
                                 <TouchableOpacity onPress={skipLoginUser} style={styles.skipButton}>
@@ -215,10 +221,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({switchToLogin}) => {
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: "#f5f5f5",
-    },
+
     scrollContainer: {
         flexGrow: 1,
         justifyContent: "flex-start",
@@ -229,13 +232,7 @@ const styles = StyleSheet.create({
         marginBottom: scaleFont(15),
     },
 
-    backButton: {
-        flex: 1 / 4,
-    },
-    SignupButton: {
-        flex: 3 / 4,
-        marginLeft: scaleFont(10),
-    },
+
     skipContainer: {
         flexDirection: "row",
         justifyContent: "flex-end",
@@ -258,11 +255,7 @@ const styles = StyleSheet.create({
         textAlign: "center",
         marginTop: scaleFont(10),
     },
-    buttonArea: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        marginTop: scaleFont(10),
-    }
+
 });
 
 export default RegisterModal;

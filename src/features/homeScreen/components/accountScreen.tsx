@@ -1,16 +1,5 @@
 import React, {useState} from 'react';
-import {
-    ActivityIndicator,
-    Alert,
-    Image,
-    Platform,
-    StatusBar,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
-} from 'react-native';
+import {ActivityIndicator, Alert, Image, StyleSheet, Text, TextInput, TouchableOpacity, View,} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
 import {AppDispatch, RootState} from '@/store/store';
 import {Feather} from '@expo/vector-icons';
@@ -19,6 +8,7 @@ import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {updateEmail, updatePassword, updateUsername} from '@/store/thunks/userThunks';
 import {logout} from '@/store/slices/userSlice';
 import {RootStackParamList} from "@/src/types/navigation";
+import {useSafeAreaInsets} from "react-native-safe-area-context";
 
 
 const AccountScreen: React.FC = () => {
@@ -132,10 +122,11 @@ const AccountScreen: React.FC = () => {
         );
     }
 
+    const inset = useSafeAreaInsets()
     return (
         // add safe area instets to top view as padding top
 
-        <View style={[styles.safeArea, {paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0}]}>
+        <View style={[styles.safeArea, {paddingTop: inset.top}]}>
             <View style={styles.topBar}>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconButton}>
                     <Feather name="arrow-left" size={24} color="#333"/>
@@ -199,7 +190,8 @@ const AccountScreen: React.FC = () => {
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
-        backgroundColor: '#F9FAFB',
+        backgroundColor: "#fff",
+
     },
     topBar: {
         flexDirection: 'row',
@@ -210,7 +202,7 @@ const styles = StyleSheet.create({
         shadowColor: '#000',
         shadowOffset: {width: 0, height: 2},
         shadowOpacity: 0.15,
-        shadowRadius: 2,
+        shadowRadius: 1,
         elevation: 2,
     },
     iconButton: {padding: 8},

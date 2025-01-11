@@ -43,7 +43,7 @@ const styles = StyleSheet.create({
         shadowRadius: scaleFont(4),
         elevation: 5, // Android shadow
         alignSelf: 'center',
-        marginVertical: scaleFont(8), // Added margin for spacing
+        // marginVertical: scaleFont(8), // Added margin for spacing
     },
     buttonText: {
         color: '#000',

@@ -42,7 +42,6 @@ const VerificationCodeInputField: React.FC<VerificationCodeInputFieldProps> = ({
                             maxLength={1}
                             keyboardType="numeric"
                         />
-                        <View style={styles.underline}/>
                     </View>
                     {/* Add separator between groups */}
                     {index === 2 && <Text style={styles.separator}>-</Text>}
@@ -68,7 +67,7 @@ const styles = StyleSheet.create({
         fontSize: scaleFont(20),
         color: "#333", // Darker text color
         textAlign: "center",
-        marginBottom: scaleFont(6), // Space above underline
+        // marginBottom: scaleFont(6), // Space above underline
         width: scaleFont(40), // Increased width for better visibility
         height: scaleFont(50), // Added height for better usability
         borderWidth: 1,
@@ -76,11 +75,7 @@ const styles = StyleSheet.create({
         borderRadius: scaleFont(5),
         backgroundColor: "#f5f5f5", // Light background for contrast
     },
-    underline: {
-        height: scaleFont(2),
-        width: scaleFont(30),
-        backgroundColor: "#333", // Dark underline
-    },
+
     separator: {
         fontSize: scaleFont(20),
         color: "#333", // Dark separator

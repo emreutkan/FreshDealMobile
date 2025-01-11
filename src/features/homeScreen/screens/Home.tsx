@@ -4,6 +4,7 @@ import {
     NativeScrollEvent,
     NativeSyntheticEvent,
     Platform,
+    StatusBar,
     StyleSheet,
     UIManager,
     View,
@@ -73,6 +74,8 @@ const HomeScreen: React.FC = () => {
     // Render the main home screen with tabs
     return (
         <View style={[styles.container]}>
+            <StatusBar translucent backgroundColor="transparent" barStyle="dark-content"/>
+
             {isHeaderVisible && (
                 <Header
                     isScrolled={isHeaderCollapsed}
@@ -96,6 +99,7 @@ const HomeScreen: React.FC = () => {
                     }}
                     screenOptions={({route}) => ({
                         headerShown: false,
+
                         tabBarIcon: ({focused, color}) => {
                             const iconMap = {
                                 HomeCardView: focused ? 'home' : 'home-outline',
@@ -105,7 +109,7 @@ const HomeScreen: React.FC = () => {
                             return <Ionicons name={iconMap[route.name as keyof typeof iconMap]} size={20}
                                              color={color}/>;
                         },
-                        tabBarActiveTintColor: '#007AFF',
+                        tabBarActiveTintColor: 'rgba(76,175,80,0.75)',
                         tabBarInactiveTintColor: '#8e8e8e',
                     })}
                 >
@@ -124,15 +128,19 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#ffffff',
+
     },
     contentContainer: {
+
         flex: 1,
         zIndex: 0,
+
     },
     mapContentContainer: {
         flex: 1,
         zIndex: 0,
         marginTop: -150,
+
     },
 });
 
