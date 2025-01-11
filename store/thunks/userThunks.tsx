@@ -1,5 +1,6 @@
 import {createAsyncThunk} from '@reduxjs/toolkit';
 import {
+    API_BASE_URL,
     getUserDataAPI,
     loginUserAPI,
     registerUserAPI,
@@ -10,6 +11,19 @@ import {
 import {RootState} from "@/store/store";
 import {UserDataResponse} from "@/store/slices/userSlice";
 import {getRestaurantsByProximity} from "@/store/thunks/restaurantThunks";
+import axios from "axios";
+
+
+interface VerifyCodePayload {
+    verification_code: string;
+    email: string;
+}
+
+interface VerifyCodeResponse {
+    success: boolean;
+    message: string;
+}
+
 
 // Login user
 export const loginUser = createAsyncThunk(
@@ -177,6 +191,28 @@ export const getUserData = createAsyncThunk<
             }
         } catch (error: any) {
             return rejectWithValue(error.response?.data || 'Failed to fetch user data');
+        }
+    }
+);
+
+
+const endpoint = `${API_BASE_URL}/v1/verify_email`;
+export const verifyCode = createAsyncThunk<
+    VerifyCodeResponse,
+    VerifyCodePayload,
+    { rejectValue: string }
+>(
+    "user/verifyCode",
+    async (payload, {rejectWithValue}) => {
+        try {
+            const response = await axios.post(endpoint, payload);
+            if (response.data.success) {
+                return response.data;
+            } else {
+                return rejectWithValue(response.data.message);
+            }
+        } catch (error: any) {
+            return rejectWithValue(error.message || "Verification failed");
         }
     }
 );

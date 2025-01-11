@@ -21,7 +21,7 @@ const PasswordInput: React.FC<{ password: string }> = ({password}) => {
     };
 
     return (
-        <View style={styles.inputContainer}>
+        <View style={[styles.inputContainer, isTyping && {borderColor: 'gray'}]}>
             <TextInput
                 style={styles.passwordInput}
                 placeholder="Enter your password"
@@ -42,7 +42,7 @@ const PasswordInput: React.FC<{ password: string }> = ({password}) => {
 
 const styles = StyleSheet.create({
     inputContainer: {
-        marginTop: scaleFont(10),
+        // marginTop: scaleFont(10),
         flexDirection: 'row',
         alignItems: 'center',
         borderColor: '#ddd',

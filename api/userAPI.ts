@@ -8,8 +8,8 @@ import {Listing} from "@/store/slices/listingSlice";
 import {CartItem} from "@/store/slices/cartSlice";
 
 // Define the base URL
-const API_BASE_URL = 'https://freshdealapi-fkfaajfaffh4c0ex.uksouth-01.azurewebsites.net';
-// const API_BASE_URL = 'http://192.168.1.3:8080';
+// export const API_BASE_URL = 'https://freshdealapi-fkfaajfaffh4c0ex.uksouth-01.azurewebsites.net';
+export const API_BASE_URL = 'http://192.168.1.3:8181';
 
 // Define API endpoints
 const CHANGE_USERNAME = `${API_BASE_URL}/v1/update_username`;

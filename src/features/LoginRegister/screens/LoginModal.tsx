@@ -1,5 +1,14 @@
 import React from 'react';
-import {Alert, Keyboard, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View,} from 'react-native';
+import {
+    ActivityIndicator,
+    Alert,
+    Keyboard,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    TouchableWithoutFeedback,
+    View,
+} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
 import {AppDispatch, RootState} from '@/store/store';
 import {scaleFont} from '@/src/utils/ResponsiveFont';
@@ -22,7 +31,7 @@ interface LoginModalProps {
 
 const LoginModal: React.FC<LoginModalProps> = ({switchToRegister}) => {
     const dispatch = useDispatch<AppDispatch>();
-    const {loading, token} = useSelector((state: RootState) => state.user);
+    const {loading, token, error} = useSelector((state: RootState) => state.user);
 
     // Import all user fields from the userSlice
     const {
@@ -42,11 +51,17 @@ const LoginModal: React.FC<LoginModalProps> = ({switchToRegister}) => {
         }
     }, [passwordLogin]);
 
+    // Display error alerts when 'error' state changes
+    React.useEffect(() => {
+        if (error) {
+            Alert.alert('Error', error);
+        }
+    }, [error]);
 
     /**
      * Handles the login button click.
      * Performs validation checks and dispatches the login request.
-     * Resets `passwordLogin` state to `false` after the login attempt.
+     * Resets passwordLogin state to false after the login attempt.
      */
     const handleLoginButton = async () => {
         console.log('login button pressed');
@@ -75,10 +90,11 @@ const LoginModal: React.FC<LoginModalProps> = ({switchToRegister}) => {
                     })
                 ).unwrap();
                 console.log('Login request successful', result);
-                
-            } catch (error) {
+
+            } catch (error: any) {
                 console.error('Login failed', error);
-                Alert.alert('Error', 'Failed to login. Please try again.');
+                // Display the specific error message from the server
+                Alert.alert('Error', error.message || 'Failed to login. Please try again.');
             }
         }
 
@@ -101,7 +117,14 @@ const LoginModal: React.FC<LoginModalProps> = ({switchToRegister}) => {
 
                 {login_type === 'phone_number' ? <PhoneInput/> : <EmailLoginField/>}
 
-                {(phoneNumber || email) && <PasswordInput password={password}/>}
+                {(phoneNumber || email) &&
+                    <View style={{marginTop: scaleFont(10)}}>
+                        <PasswordInput password={password}/>
+
+
+                    </View>
+
+                }
 
                 <View style={styles.buttonRow}>
                     {!phoneNumber && !email && (
@@ -114,7 +137,7 @@ const LoginModal: React.FC<LoginModalProps> = ({switchToRegister}) => {
                             </View>
                             {loading ? (
                                 <View style={styles.loaderContainer}>
-                                    <Text style={styles.loaderText}>Loading...</Text>
+                                    <ActivityIndicator size="small" color="#50703C"/>
                                 </View>
                             ) : token ? (
                                 <Text style={styles.loggedInText}>
@@ -142,9 +165,12 @@ const LoginModal: React.FC<LoginModalProps> = ({switchToRegister}) => {
                                     dispatch(setPasswordLogin(false));
                                 }}
                             >
-                                <Text style={styles.passwordlessLoginText}>
-                                    Passwordless Login
-                                </Text>
+                                {login_type === 'email' &&
+                                    <Text style={styles.passwordlessLoginText}>
+                                        Passwordless Login
+                                    </Text>
+                                }
+
                             </TouchableOpacity>
                         </View>
                     )}
@@ -174,6 +200,7 @@ const LoginModal: React.FC<LoginModalProps> = ({switchToRegister}) => {
         </TouchableWithoutFeedback>
     );
 };
+
 const styles = StyleSheet.create({
     bottomContainer: {
         flex: 1,
@@ -208,7 +235,6 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         width: '100%',
-
     },
     registerContainer: {
         flexDirection: 'row',
@@ -237,7 +263,6 @@ const styles = StyleSheet.create({
         marginTop: scaleFont(10),
         alignItems: 'center',
     },
-
     passwordlessLoginText: {
         fontSize: scaleFont(18),
         color: '#50703C',

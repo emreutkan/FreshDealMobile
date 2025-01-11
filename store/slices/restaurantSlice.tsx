@@ -1,5 +1,6 @@
 import {createSlice} from '@reduxjs/toolkit';
 import {getRestaurantsByProximity} from "@/store/thunks/restaurantThunks";
+import {logout} from "@/store/slices/userSlice";
 
 export interface Restaurant {
     id: string;
@@ -47,6 +48,8 @@ const restaurantSlice = createSlice({
     reducers: {},
     extraReducers: (builder) => {
         builder
+            .addCase(logout, () => initialState) // Reset state on global action
+
             .addCase(getRestaurantsByProximity.pending, (state) => {
                 state.status = 'loading';
                 state.error = null;

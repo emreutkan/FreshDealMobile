@@ -5,7 +5,8 @@ import {
     registerUser,
     updateEmail,
     updatePassword,
-    updateUsername
+    updateUsername,
+    verifyCode
 } from "@/store/thunks/userThunks";
 
 
@@ -23,6 +24,7 @@ interface UserState {
     loading: boolean;
     error: string | null;
     role: 'customer';
+    email_verified: boolean
 }
 
 export interface UserDataResponse {
@@ -32,6 +34,7 @@ export interface UserDataResponse {
         email: string;
         phone_number: string;
         role: string;
+        email_verified: boolean;
     };
     user_address_list: Array<{
         id: number;
@@ -64,6 +67,7 @@ const initialState: UserState = {
     loading: false,
     error: null,
     role: 'customer',
+    email_verified: false
 };
 
 const userSlice = createSlice({
@@ -120,10 +124,10 @@ const userSlice = createSlice({
                 state.loading = false;
                 state.token = action.payload.token;
             })
-            .addCase(loginUser.rejected, (state) => {
+            .addCase(loginUser.rejected, (state, action) => {
                 state.loading = false;
-                // state.error = action.payload || 'Login failed';
-                state.error = 'Login failed';
+                state.error = action.payload?.message || action.error?.message || 'Login failed';
+
             })
             .addCase(registerUser.pending, (state) => {
                 state.loading = true;
@@ -182,10 +186,23 @@ const userSlice = createSlice({
                 state.email = action.payload.user_data.email;
                 state.phoneNumber = action.payload.user_data.phone_number;
                 state.role = "customer";
+                state.email_verified = action.payload.user_data.email_verified
             })
             .addCase(getUserData.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload || 'Failed to fetch user data';
+            })
+            .addCase(verifyCode.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(verifyCode.fulfilled, (state, action) => {
+                state.loading = false;
+                // Handle any state updates on successful verification
+            })
+            .addCase(verifyCode.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload || "Verification failed";
             });
     }
 });

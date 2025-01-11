@@ -3,6 +3,7 @@
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 import {getUserData} from "@/store/thunks/userThunks";
 import {addAddressAsync, setPrimaryAddress} from "@/store/thunks/addressThunks";
+import {logout} from "@/store/slices/userSlice";
 
 export interface Address {
     id: string;
@@ -82,6 +83,8 @@ const addressSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
+            .addCase(logout, () => initialState) // Reset state on global action
+
             .addCase(addAddressAsync.pending, (state) => {
                 state.loading = true;
                 state.error = null;
@@ -152,7 +155,9 @@ const addressSlice = createSlice({
                 state.loading = false;
                 state.error = action.payload || 'Failed to set primary address';
             });
+
     },
+
 });
 
 

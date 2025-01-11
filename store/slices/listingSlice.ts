@@ -2,6 +2,7 @@
 
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 import {fetchListings} from "@/store/thunks/listingThunks";
+import {logout} from "@/store/slices/userSlice";
 
 export interface Listing {
     id: number;
@@ -50,6 +51,10 @@ const listingSlice = createSlice({
         },
     },
     extraReducers: (builder) => {
+        builder
+            .addCase(logout, () => initialState) // Reset state on global action
+            .addCase(fetchListings.pending, (state) => { /* other cases */
+            });
         builder.addCase(fetchListings.pending, (state) => {
             state.loading = true;
             state.error = null;
