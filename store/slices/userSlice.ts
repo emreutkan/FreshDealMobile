@@ -25,6 +25,7 @@ interface UserState {
     error: string | null;
     role: 'customer';
     email_verified: boolean
+
 }
 
 export interface UserDataResponse {

@@ -10,7 +10,6 @@ import {
 } from "@/api/userAPI";
 import {RootState} from "@/store/store";
 import {UserDataResponse} from "@/store/slices/userSlice";
-import {getRestaurantsByProximity} from "@/store/thunks/restaurantThunks";
 import axios from "axios";
 
 
@@ -165,28 +164,30 @@ export const getUserData = createAsyncThunk<
             // so we get that primary address and dispatch the getRestaurantsByProximity action
 
             if (response.user_address_list.length > 0) {
-                // we need to get the primary address from addresss slice
-                // then we can dispatch the getRestaurantsByProximity action
-                const primaryAddress = response.user_address_list.find((address) => address.is_primary);
-                if (primaryAddress) {
-                    const address = response.user_address_list.find((address) => address.id === primaryAddress.id);
-                    if (address) {
-                        const resultAction = await dispatch(getRestaurantsByProximity({
-                            latitude: address.latitude,
-                            longitude: address.longitude,
-                            radius: 1000000
-                        }));
-                        if (getRestaurantsByProximity.fulfilled.match(resultAction)) {
-                            console.log('%c[Success] Restaurants fetched successfully.', 'color: green; font-weight: bold;');
-                        } else {
-                            console.error('%c[Error] Failed to fetch restaurants.', 'color: red; font-weight: bold;');
-                            if (resultAction.payload) {
-                                console.error('%c[Error Details]', 'color: red; font-weight: bold;', resultAction.payload);
-                            }
-                        }
-
-                    }
-                }
+                // // we need to get the primary address from addresss slice
+                // // then we can dispatch the getRestaurantsByProximity action
+                // const primaryAddress = response.user_address_list.find((address) => address.is_primary);
+                // if (primaryAddress) {
+                //     const address = response.user_address_list.find((address) => address.id === primaryAddress.id);
+                //     if (address) {
+                //         const resultAction = await dispatch(getRestaurantsByProximity({
+                //             latitude: address.latitude,
+                //             longitude: address.longitude,
+                //             radius: 1000000
+                //         }));
+                //         if (getRestaurantsByProximity.fulfilled.match(resultAction)) {
+                //             console.log('%c[Success] Restaurants fetched successfully.', 'color: green; font-weight: bold;');
+                //             const result = await dispatch(getFavorites());
+                //
+                //         } else {
+                //             console.error('%c[Error] Failed to fetch restaurants.', 'color: red; font-weight: bold;');
+                //             if (resultAction.payload) {
+                //                 console.error('%c[Error Details]', 'color: red; font-weight: bold;', resultAction.payload);
+                //             }
+                //         }
+                //
+                //     }
+                // }
                 return response;
             }
         } catch (error: any) {
@@ -206,37 +207,6 @@ export const verifyCode = createAsyncThunk<
     async (payload, {rejectWithValue}) => {
         try {
             const response = await axios.post(VERIFY_EMAIL_ENDPOINT, payload);
-            if (response.data.success) {
-                return response.data;
-            } else {
-                return rejectWithValue(response.data.message);
-            }
-        } catch (error: any) {
-            return rejectWithValue(error.message || "Verification failed");
-        }
-    }
-);
-
-const VERIFY_FAVORITES_ENDPOINT = `${API_BASE_URL}/v1/favorites`;
-
-interface RestaurantFavorite {
-    restaurant_id: number; // or string if that's how it's defined
-    restaurant_name: string;
-}
-
-interface FavoriteRestaurantsResponse {
-    success: boolean;
-    favorites: RestaurantFavorite[];
-}
-
-
-export const verifyFavorites = createAsyncThunk<
-    FavoriteRestaurantsResponse,
-    { rejectValue: string }>(
-    "user/verifyFavorites",
-    async (payload, {rejectWithValue}) => {
-        try {
-            const response = await axios.get(VERIFY_FAVORITES_ENDPOINT);
             if (response.data.success) {
                 return response.data;
             } else {

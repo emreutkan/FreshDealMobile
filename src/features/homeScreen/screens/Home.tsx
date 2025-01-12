@@ -1,4 +1,4 @@
-import React, {useCallback, useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import {
     LayoutAnimation,
     NativeScrollEvent,
@@ -9,17 +9,17 @@ import {
     UIManager,
     View,
 } from 'react-native';
-import {useSelector} from 'react-redux';
-import {RootState} from '@/store/store';
+import {useDispatch, useSelector} from 'react-redux';
+import {AppDispatch, RootState} from '@/store/store';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-
 import AddressSelectorScreen from '@/src/features/homeScreen/screens/addressSelectionScreen';
 import HomeCardView from '@/src/features/homeScreen/screens/HomeCardView';
 import HomeMapView from '@/src/features/homeScreen/screens/HomeMapView';
 import AccountScreen from '@/src/features/homeScreen/components/accountScreen';
 import Header from '@/src/features/homeScreen/components/Header';
 import RestaurantSearch from "@/src/features/homeScreen/screens/RestaurantSearch";
+import {getFavorites, getRestaurantsByProximity} from "@/store/thunks/restaurantThunks";
 
 // Enable LayoutAnimation on Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -31,12 +31,42 @@ const Tab = createBottomTabNavigator();
 
 const HomeScreen: React.FC = () => {
     const addresses = useSelector((state: RootState) => state.address.addresses);
+    const primaryAddressId = useSelector((state: RootState) => state.address.selectedAddressId);
+    const primaryAddressData = addresses.find((address) => address.id === primaryAddressId);
+    const dispatch = useDispatch<AppDispatch>();
 
     // States for header and scroll behavior
     const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(false);
     const [isHeaderVisible, setIsHeaderVisible] = useState(true);
     const [homeCardHeaderState, setHomeCardHeaderState] = useState(false);
     const [activeTab, setActiveTab] = useState('HomeCardView');
+
+
+    useEffect(() => {
+        if (!primaryAddressData) {
+            return;
+        }
+
+        console.log('Primary Address Data:', primaryAddressData);
+
+        dispatch(getRestaurantsByProximity({
+            latitude: primaryAddressData.latitude,
+            longitude: primaryAddressData.longitude,
+            radius: 10000,
+        }));
+
+        dispatch(getFavorites());
+    }, [primaryAddressData]);
+
+    const restaurantsProximity = useSelector((state: RootState) => state.restaurant.restaurantsProximity);
+    const favoriteRestaurantsIDs = useSelector((state: RootState) => state.restaurant.favoriteRestaurantsIDs);
+
+    useEffect(() => {
+        console.log('restaurantsProximity:', restaurantsProximity);
+        console.log('favoriteRestaurantsIDs:', favoriteRestaurantsIDs);
+        
+    }, [restaurantsProximity, favoriteRestaurantsIDs]);
+
 
     const handleTabChange = (routeName: string) => {
         setIsHeaderVisible(routeName !== 'Account' && routeName !== 'Search'); // Hide header for Account and Search

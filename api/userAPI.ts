@@ -517,7 +517,7 @@ export const updateCartAPI = async (listingId: number, count: number, token: str
 // ------------------------------------
 
 // Add to Favorites API Call
-export const addToFavoritesAPI = async (restaurantId: number, token: string) => {
+export const addToFavoritesAPI = async (restaurantId: string, token: string) => {
     const functionName = 'addToFavoritesAPI';
     const endpoint = `${API_BASE_URL}/v1/favorites`;
     const payload = {restaurant_id: restaurantId};

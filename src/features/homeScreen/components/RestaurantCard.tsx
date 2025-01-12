@@ -4,6 +4,10 @@ import {Restaurant} from "@/store/slices/restaurantSlice";
 import {NativeStackNavigationProp} from "@react-navigation/native-stack";
 import {RootStackParamList} from "@/src/types/navigation";
 import {useNavigation} from "@react-navigation/native";
+import {useDispatch, useSelector} from "react-redux";
+import {AppDispatch, RootState, store} from "@/store/store";
+import {Ionicons} from "@expo/vector-icons";
+import {addToFavoritesAPI} from "@/api/userAPI";
 
 interface RestaurantListProps {
     restaurants: Restaurant[];
@@ -13,6 +17,11 @@ interface RestaurantListProps {
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'RestaurantDetails'>;
 
 const RestaurantList: React.FC<RestaurantListProps> = ({restaurants, onRestaurantPress}) => {
+    const dispatch = useDispatch<AppDispatch>();
+
+
+    const favoriteRestaurants = useSelector((state: RootState) => state.restaurant.favoriteRestaurantsIDs);
+
     const navigation = useNavigation<NavigationProp>();
     const [pressedId, setPressedId] = React.useState<string | null>(null);
 
@@ -20,12 +29,19 @@ const RestaurantList: React.FC<RestaurantListProps> = ({restaurants, onRestauran
         navigation.navigate('RestaurantDetails', {restaurantId});
     }, [navigation]);
 
-    const handleFavoritePress = useCallback((id: string) => {
-        console.log(`Add restaurant with ID ${id} to favorites`);
+    const handleFavoritePress = useCallback(async (id: string) => {
+        const token = store.getState().user.token;
+        if (!token) {
+            console.error('Authentication token is missing.');
+            return;
+        }
+        dispatch(await addToFavoritesAPI(id, token));
+
     }, []);
 
     const renderRestaurantItem = ({item}: { item: Restaurant }) => {
         const isPressed = pressedId === item.id;
+
 
         return (
             <TouchableOpacity
@@ -56,6 +72,7 @@ const RestaurantList: React.FC<RestaurantListProps> = ({restaurants, onRestauran
                         ) : (
                             <Text>No image available</Text>
                         )}
+
                         <TouchableOpacity
                             style={styles.heartButton}
                             onPress={(e) => {
@@ -64,9 +81,14 @@ const RestaurantList: React.FC<RestaurantListProps> = ({restaurants, onRestauran
                             }}
                         >
                             <View style={styles.heartIcon}>
-                                <Text style={styles.heartText}>♡</Text>
+                                {favoriteRestaurants.includes(item.id) ? (
+                                    <Ionicons name="heart" size={20} color="#FFD700"/>
+                                ) : (
+                                    <Ionicons name="heart-outline" size={20} color="#FFD700"/>
+                                )}
                             </View>
                         </TouchableOpacity>
+
                     </View>
 
                     <View style={styles.detailsContainer}>

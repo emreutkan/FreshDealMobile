@@ -1,5 +1,5 @@
 import {createSlice} from '@reduxjs/toolkit';
-import {getRestaurantsByProximity} from "@/store/thunks/restaurantThunks";
+import {getFavorites, getRestaurantsByProximity} from "@/store/thunks/restaurantThunks";
 import {logout} from "@/store/slices/userSlice";
 
 export interface Restaurant {
@@ -34,16 +34,23 @@ export interface RestaurantCreateResponse {
 
 interface RestaurantState {
     restaurantsProximity: Restaurant[];
-    status: 'idle' | 'loading' | 'succeeded' | 'failed';
+    restaurantsProximityStatus: 'idle' | 'loading' | 'succeeded' | 'failed';
+    restaurantsProximityLoading: boolean;
+    favoriteRestaurantsIDs: string[];
+    favoritesStatus: 'idle' | 'loading' | 'succeeded' | 'failed';
+    favoritesLoading: boolean;
     error: string | null;
-    loading: boolean;
 }
+
 
 const initialState: RestaurantState = {
     restaurantsProximity: [],
-    status: 'idle',
+    restaurantsProximityStatus: 'idle',
+    restaurantsProximityLoading: false,
+    favoriteRestaurantsIDs: [],
+    favoritesStatus: 'idle',
+    favoritesLoading: false,
     error: null,
-    loading: false,
 };
 
 const restaurantSlice = createSlice({
@@ -54,23 +61,39 @@ const restaurantSlice = createSlice({
         builder
             .addCase(logout, () => initialState) // Reset state on global action
 
+            // Restaurants by Proximity
             .addCase(getRestaurantsByProximity.pending, (state) => {
-                state.status = 'loading';
+                state.restaurantsProximityStatus = 'loading';
+                state.restaurantsProximityLoading = true;
                 state.error = null;
-                state.loading = true;
-
             })
             .addCase(getRestaurantsByProximity.fulfilled, (state, action) => {
-                state.status = 'succeeded';
-                state.loading = false;
-                console.log(action.payload);
+                state.restaurantsProximityStatus = 'succeeded';
+                state.restaurantsProximityLoading = false;
                 state.restaurantsProximity = action.payload;
             })
             .addCase(getRestaurantsByProximity.rejected, (state, action) => {
-                state.status = 'failed';
-                state.loading = false;
-
+                state.restaurantsProximityStatus = 'failed';
+                state.restaurantsProximityLoading = false;
                 state.error = action.payload || 'Failed to fetch restaurants';
+            })
+
+            // Favorites
+            .addCase(getFavorites.pending, (state) => {
+                state.favoritesStatus = 'loading';
+                state.favoritesLoading = true;
+                state.error = null;
+            })
+            .addCase(getFavorites.fulfilled, (state, action) => {
+                state.favoritesStatus = 'succeeded';
+                state.favoritesLoading = false;
+                state.favoriteRestaurantsIDs = action.payload; // Directly use the array of IDs
+            })
+
+            .addCase(getFavorites.rejected, (state, action) => {
+                state.favoritesStatus = 'failed';
+                state.favoritesLoading = false;
+                state.error = action.payload || 'Failed to fetch favorites';
             });
     },
 });

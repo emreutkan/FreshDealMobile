@@ -9,11 +9,12 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
-import {useDispatch, useSelector} from "react-redux";
-import {AppDispatch, RootState} from "@/store/store";
+
 import RestaurantList from "@/src/features/homeScreen/components/RestaurantCard";
 import {Feather} from '@expo/vector-icons';
 import {scaleFont} from "@/src/utils/ResponsiveFont";
+import {RootState} from "@/store/store";
+import {useSelector} from "react-redux";
 
 interface HomeCardViewProps {
     onScroll: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
@@ -24,21 +25,19 @@ const MIN_LOADING_DURATION = 1000; // main loading duration (redux)
 const FILTER_LOADING_DURATION = 200; // duration for filter toggling/loading
 
 const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll, onRestaurantPress}) => {
-    const dispatch = useDispatch<AppDispatch>();
-    const {restaurantsProximity, loading, error} = useSelector(
+    const {restaurantsProximity, restaurantsProximityLoading, restaurantsProximityStatus} = useSelector(
         (state: RootState) => state.restaurant
     );
 
     // For the main loading animation from redux's `loading`
-    const [showMainLoading, setShowMainLoading] = useState(loading);
+    const [showMainLoading, setShowMainLoading] = useState(restaurantsProximityLoading);
 
     // For filtering transition loading animation
     const [filterLoading, setFilterLoading] = useState(false);
 
-    // Ensure a minimum loading duration for the main data loading state:
     useEffect(() => {
         let timer: NodeJS.Timeout;
-        if (loading) {
+        if (restaurantsProximityLoading) {
             setShowMainLoading(true);
         } else {
             timer = setTimeout(() => {
@@ -49,7 +48,7 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll, onRestaurantPress}
         return () => {
             if (timer) clearTimeout(timer);
         };
-    }, [loading]);
+    }, [restaurantsProximityLoading]);
 
     // Combined overall loading state: either main loading or filter transition loading.
     const isLoading = showMainLoading || filterLoading;
@@ -110,19 +109,19 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll, onRestaurantPress}
     // For the "Under 30 min" filter, we assume that 3km or less is reachable in 30 minutes.
     const filteredRestaurants = useMemo(() => {
         if (!restaurantsProximity) return [];
+        console.log('restaurantsProximity in HomeCardView:', restaurantsProximity);
 
-        const filtered = restaurantsProximity.filter((restaurant) => {
-            // Delivery and pickup filters:
+        return restaurantsProximity.filter((restaurant) => {
             if (filters.delivery && !filters.pickup && !restaurant.delivery) return false;
             if (filters.pickup && !filters.delivery && !restaurant.pickup) return false;
-            // Under 30 minutes filter (based on distance_km)
             if (filters.under30 && restaurant.distance_km > 3) return false;
-            // Price filter if selected:
-            if (selectedPrice && restaurant.price !== selectedPrice) return false;
+            // Add debug logs for each step
+            console.log('Filtering restaurant:', restaurant.restaurantName);
             return true;
         });
-        return filtered;
-    }, [restaurantsProximity, filters, selectedPrice]);
+
+    }, [restaurantsProximity, filters]);
+
 
     return (
         <View style={styles.safeArea}>
@@ -251,7 +250,8 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll, onRestaurantPress}
                         <ActivityIndicator size="large" color="#50703C"/>
                         <Text style={styles.loadingText}>Loading restaurants...</Text>
                     </View>
-                ) : error || filteredRestaurants.length === 0 ? (
+                ) : restaurantsProximityStatus !== 'succeeded' || filteredRestaurants.length === 0 ? (
+                    // 2) If NOT succeeded, or length=0 => No restaurants found
                     <View style={styles.noDataContainer}>
                         <Feather name="frown" size={48} color="#555"/>
                         <Text style={styles.noDataTitle}>No Restaurants Found</Text>
