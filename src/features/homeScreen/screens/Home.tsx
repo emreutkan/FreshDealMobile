@@ -40,8 +40,8 @@ const HomeScreen: React.FC = () => {
     const [isHeaderVisible, setIsHeaderVisible] = useState(true);
     const [homeCardHeaderState, setHomeCardHeaderState] = useState(false);
     const [activeTab, setActiveTab] = useState('HomeCardView');
-
-
+    const restaurantsProximity = useSelector((state: RootState) => state.restaurant.restaurantsProximity);
+    const favoriteRestaurantsIDs = useSelector((state: RootState) => state.restaurant.favoriteRestaurantsIDs);
     useEffect(() => {
         if (!primaryAddressData) {
             return;
@@ -56,15 +56,13 @@ const HomeScreen: React.FC = () => {
         }));
 
         dispatch(getFavorites());
-    }, [primaryAddressData]);
+    }, [dispatch, primaryAddressData]);
 
-    const restaurantsProximity = useSelector((state: RootState) => state.restaurant.restaurantsProximity);
-    const favoriteRestaurantsIDs = useSelector((state: RootState) => state.restaurant.favoriteRestaurantsIDs);
 
     useEffect(() => {
         console.log('restaurantsProximity:', restaurantsProximity);
         console.log('favoriteRestaurantsIDs:', favoriteRestaurantsIDs);
-        
+
     }, [restaurantsProximity, favoriteRestaurantsIDs]);
 
 

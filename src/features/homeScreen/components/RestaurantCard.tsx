@@ -1,5 +1,5 @@
 import React, {useCallback} from "react";
-import {FlatList, Image, Platform, StyleSheet, Text, TouchableOpacity, View} from "react-native";
+import {FlatList, Image, Platform, StyleSheet, Text, TouchableOpacity, View,} from "react-native";
 import {Restaurant} from "@/store/slices/restaurantSlice";
 import {NativeStackNavigationProp} from "@react-navigation/native-stack";
 import {RootStackParamList} from "@/src/types/navigation";
@@ -7,7 +7,8 @@ import {useNavigation} from "@react-navigation/native";
 import {useDispatch, useSelector} from "react-redux";
 import {AppDispatch, RootState, store} from "@/store/store";
 import {Ionicons} from "@expo/vector-icons";
-import {addToFavoritesAPI} from "@/api/userAPI";
+// Import the thunk actions
+import {addToFavorites, removeFromFavorites} from "@/store/thunks/restaurantThunks";
 
 interface RestaurantListProps {
     restaurants: Restaurant[];
@@ -18,30 +19,40 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'RestaurantD
 
 const RestaurantList: React.FC<RestaurantListProps> = ({restaurants, onRestaurantPress}) => {
     const dispatch = useDispatch<AppDispatch>();
-
-
-    const favoriteRestaurants = useSelector((state: RootState) => state.restaurant.favoriteRestaurantsIDs);
-
     const navigation = useNavigation<NavigationProp>();
+
+    // Access current favorite restaurant IDs from the store
+    const favoriteRestaurantsIDs = useSelector((state: RootState) => state.restaurant.favoriteRestaurantsIDs);
+
     const [pressedId, setPressedId] = React.useState<string | null>(null);
 
-    const handleRestaurantPress = useCallback((restaurantId: string) => {
-        navigation.navigate('RestaurantDetails', {restaurantId});
-    }, [navigation]);
+    const handleRestaurantPress = useCallback(
+        (restaurantId: string) => {
+            navigation.navigate('RestaurantDetails', {restaurantId});
+        },
+        [navigation]
+    );
 
-    const handleFavoritePress = useCallback(async (id: string) => {
-        const token = store.getState().user.token;
-        if (!token) {
-            console.error('Authentication token is missing.');
-            return;
-        }
-        dispatch(await addToFavoritesAPI(id, token));
-
-    }, []);
+    const handleFavoritePress = useCallback(
+        (id: string) => {
+            const token = (store.getState() as RootState).user.token; // or use a selector if you prefer
+            if (!token) {
+                console.error('Authentication token is missing.');
+                return;
+            }
+            // If it’s already a favorite, dispatch the remove thunk; otherwise, dispatch the add thunk.
+            if (favoriteRestaurantsIDs.includes(id)) {
+                dispatch(removeFromFavorites({restaurantId: id}));
+            } else {
+                dispatch(addToFavorites({restaurantId: id}));
+            }
+        },
+        [dispatch, favoriteRestaurantsIDs]
+    );
 
     const renderRestaurantItem = ({item}: { item: Restaurant }) => {
         const isPressed = pressedId === item.id;
-
+        const isFavorite = favoriteRestaurantsIDs.includes(item.id);
 
         return (
             <TouchableOpacity
@@ -54,10 +65,7 @@ const RestaurantList: React.FC<RestaurantListProps> = ({restaurants, onRestauran
                     isPressed && styles.touchablePressed,
                 ]}
             >
-                <View style={[
-                    styles.restaurantCard,
-                    isPressed && styles.cardPressed
-                ]}>
+                <View style={[styles.restaurantCard, isPressed && styles.cardPressed]}>
                     <View style={styles.imageContainer}>
                         {item.image_url ? (
                             <Image
@@ -76,24 +84,26 @@ const RestaurantList: React.FC<RestaurantListProps> = ({restaurants, onRestauran
                         <TouchableOpacity
                             style={styles.heartButton}
                             onPress={(e) => {
+                                // Prevent the onPress of the parent card from being triggered
                                 e.stopPropagation();
                                 handleFavoritePress(item.id);
                             }}
                         >
                             <View style={styles.heartIcon}>
-                                {favoriteRestaurants.includes(item.id) ? (
-                                    <Ionicons name="heart" size={20} color="#FFD700"/>
-                                ) : (
-                                    <Ionicons name="heart-outline" size={20} color="#FFD700"/>
-                                )}
+                                <Ionicons
+                                    name={isFavorite ? "heart" : "heart-outline"}
+                                    size={24}
+                                    color="#FFD700"
+                                />
                             </View>
                         </TouchableOpacity>
-
                     </View>
 
                     <View style={styles.detailsContainer}>
                         <View style={styles.titleRow}>
-                            <Text style={styles.title}>{item.restaurantName || 'Unnamed Restaurant'}</Text>
+                            <Text style={styles.title}>
+                                {item.restaurantName || 'Unnamed Restaurant'}
+                            </Text>
                             <View style={styles.ratingContainer}>
                                 <Text style={styles.rating}>
                                     {(item.rating ?? 0).toFixed(1)}
@@ -103,14 +113,17 @@ const RestaurantList: React.FC<RestaurantListProps> = ({restaurants, onRestauran
                                 </Text>
                             </View>
                         </View>
+
                         <Text style={styles.distance}>
                             Within {(item.distance_km ?? 0).toFixed(1)} km
                         </Text>
+
                         {item.restaurantDescription && (
                             <Text style={styles.description}>
                                 {item.restaurantDescription}
                             </Text>
                         )}
+
                         <View style={styles.deliveryPickupContainer}>
                             {item.delivery && item.maxDeliveryDistance != null && item.deliveryFee != null && (
                                 <Text style={styles.deliveryText}>
@@ -124,6 +137,7 @@ const RestaurantList: React.FC<RestaurantListProps> = ({restaurants, onRestauran
                                 </Text>
                             )}
                         </View>
+
                         {item.minOrderAmount != null && (
                             <Text style={styles.minOrderText}>
                                 Minimum order: ${item.minOrderAmount.toFixed(2)}
@@ -153,7 +167,7 @@ const styles = StyleSheet.create({
     touchableContainer: {
         marginBottom: 16,
         transform: [{scale: 1}],
-        transition: 'transform 0.2s',
+        transition: "transform 0.2s",
     },
     touchablePressed: {
         transform: [{scale: 0.98}],
@@ -167,7 +181,7 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 4,
         elevation: 3,
-        transition: 'all 0.2s',
+        transition: "all 0.2s",
     },
     cardPressed: {
         backgroundColor: "#f0f0f0",
@@ -180,11 +194,11 @@ const styles = StyleSheet.create({
     image: {
         width: "100%",
         height: 160,
-        transition: 'filter 0.2s',
+        transition: "filter 0.2s",
     },
     imagePressed: {
         opacity: 0.9,
-        ...(Platform.OS === 'ios' ? {filter: 'brightness(95%)'} : {}),
+        ...(Platform.OS === "ios" ? {filter: "brightness(95%)"} : {}),
     },
     heartButton: {
         position: "absolute",
@@ -203,10 +217,6 @@ const styles = StyleSheet.create({
         height: 28,
         borderRadius: 14,
         backgroundColor: "#fff",
-    },
-    heartText: {
-        fontSize: 16,
-        color: "#FF0000",
     },
     detailsContainer: {
         padding: 12,

@@ -1,6 +1,12 @@
+// src/store/slices/restaurantSlice.ts
 import {createSlice} from '@reduxjs/toolkit';
-import {getFavorites, getRestaurantsByProximity} from "@/store/thunks/restaurantThunks";
-import {logout} from "@/store/slices/userSlice";
+import {
+    addToFavorites,
+    getFavorites,
+    getRestaurantsByProximity,
+    removeFromFavorites,
+} from '@/store/thunks/restaurantThunks';
+import {logout} from '@/store/slices/userSlice';
 
 export interface Restaurant {
     id: string;
@@ -20,10 +26,9 @@ export interface Restaurant {
     image_url: string;
     pickup: boolean;
     delivery: boolean;
-    maxDeliveryDistance: number; // in radius
+    maxDeliveryDistance: number;
     deliveryFee: number;
     minOrderAmount: number;
-
 }
 
 export interface RestaurantCreateResponse {
@@ -42,7 +47,6 @@ interface RestaurantState {
     error: string | null;
 }
 
-
 const initialState: RestaurantState = {
     restaurantsProximity: [],
     restaurantsProximityStatus: 'idle',
@@ -59,7 +63,8 @@ const restaurantSlice = createSlice({
     reducers: {},
     extraReducers: (builder) => {
         builder
-            .addCase(logout, () => initialState) // Reset state on global action
+            // Global logout resets the state
+            .addCase(logout, () => initialState)
 
             // Restaurants by Proximity
             .addCase(getRestaurantsByProximity.pending, (state) => {
@@ -78,7 +83,7 @@ const restaurantSlice = createSlice({
                 state.error = action.payload || 'Failed to fetch restaurants';
             })
 
-            // Favorites
+            // Get Favorites
             .addCase(getFavorites.pending, (state) => {
                 state.favoritesStatus = 'loading';
                 state.favoritesLoading = true;
@@ -87,13 +92,36 @@ const restaurantSlice = createSlice({
             .addCase(getFavorites.fulfilled, (state, action) => {
                 state.favoritesStatus = 'succeeded';
                 state.favoritesLoading = false;
-                state.favoriteRestaurantsIDs = action.payload; // Directly use the array of IDs
+                state.favoriteRestaurantsIDs = action.payload;
+                console.log('Favorites:', action.payload);
             })
-
             .addCase(getFavorites.rejected, (state, action) => {
                 state.favoritesStatus = 'failed';
                 state.favoritesLoading = false;
                 state.error = action.payload || 'Failed to fetch favorites';
+            })
+
+            // Add to Favorites
+            .addCase(addToFavorites.pending, (state) => {
+                // Optional: set a loading state if needed.
+            })
+            .addCase(addToFavorites.fulfilled, (state, action) => {
+                // The favorites list will be refreshed by getFavorites,
+                // so no need to update favoriteRestaurantsIDs here explicitly.
+            })
+            .addCase(addToFavorites.rejected, (state, action) => {
+                state.error = action.payload || 'Failed to add to favorites';
+            })
+
+            // Remove from Favorites
+            .addCase(removeFromFavorites.pending, (state) => {
+                // Optional: set a loading state if needed.
+            })
+            .addCase(removeFromFavorites.fulfilled, (state, action) => {
+                // The favorites list will be refreshed by getFavorites.
+            })
+            .addCase(removeFromFavorites.rejected, (state, action) => {
+                state.error = action.payload || 'Failed to remove from favorites';
             });
     },
 });
