@@ -12,7 +12,6 @@ interface RestaurantListProps {
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'RestaurantDetails'>;
 
-
 const RestaurantList: React.FC<RestaurantListProps> = ({restaurants, onRestaurantPress}) => {
     const navigation = useNavigation<NavigationProp>();
     const [pressedId, setPressedId] = React.useState<string | null>(null);
@@ -36,7 +35,7 @@ const RestaurantList: React.FC<RestaurantListProps> = ({restaurants, onRestauran
                 activeOpacity={1}
                 style={[
                     styles.touchableContainer,
-                    isPressed && styles.touchablePressed
+                    isPressed && styles.touchablePressed,
                 ]}
             >
                 <View style={[
@@ -45,17 +44,15 @@ const RestaurantList: React.FC<RestaurantListProps> = ({restaurants, onRestauran
                 ]}>
                     <View style={styles.imageContainer}>
                         {item.image_url ? (
-                            <View style={styles.imageContainer}>
-                                <Image
-                                    source={{
-                                        uri: item.image_url.replace('127.0.0.1', '192.168.1.3'),
-                                    }}
-                                    style={[
-                                        styles.image,
-                                        isPressed && styles.imagePressed,
-                                    ]}
-                                />
-                            </View>
+                            <Image
+                                source={{
+                                    uri: item.image_url.replace('127.0.0.1', '192.168.1.3'),
+                                }}
+                                style={[
+                                    styles.image,
+                                    isPressed && styles.imagePressed,
+                                ]}
+                            />
                         ) : (
                             <Text>No image available</Text>
                         )}
@@ -95,8 +92,8 @@ const RestaurantList: React.FC<RestaurantListProps> = ({restaurants, onRestauran
                         <View style={styles.deliveryPickupContainer}>
                             {item.delivery && item.maxDeliveryDistance != null && item.deliveryFee != null && (
                                 <Text style={styles.deliveryText}>
-                                    Delivery available within {item.maxDeliveryDistance} km
-                                    {` ($${item.deliveryFee.toFixed(2)} fee)`}
+                                    Delivery available within {item.maxDeliveryDistance} km ($
+                                    {item.deliveryFee.toFixed(2)} fee)
                                 </Text>
                             )}
                             {item.pickup && (
@@ -115,7 +112,6 @@ const RestaurantList: React.FC<RestaurantListProps> = ({restaurants, onRestauran
             </TouchableOpacity>
         );
     };
-
 
     return (
         <FlatList
@@ -138,7 +134,7 @@ const styles = StyleSheet.create({
         transition: 'transform 0.2s',
     },
     touchablePressed: {
-        transform: [{scale: 0.98}], // Slight retraction when pressed
+        transform: [{scale: 0.98}],
     },
     restaurantCard: {
         backgroundColor: "#f9f9f9",
@@ -152,7 +148,7 @@ const styles = StyleSheet.create({
         transition: 'all 0.2s',
     },
     cardPressed: {
-        backgroundColor: "#f0f0f0", // Slightly darker background when pressed
+        backgroundColor: "#f0f0f0",
         shadowOpacity: 0.05,
         elevation: 1,
     },
@@ -165,10 +161,8 @@ const styles = StyleSheet.create({
         transition: 'filter 0.2s',
     },
     imagePressed: {
-        opacity: 0.9, // Slight dimming effect when pressed
-        ...(Platform.OS === 'ios' ? {
-            filter: 'brightness(95%)',
-        } : {}),
+        opacity: 0.9,
+        ...(Platform.OS === 'ios' ? {filter: 'brightness(95%)'} : {}),
     },
     heartButton: {
         position: "absolute",
@@ -232,15 +226,15 @@ const styles = StyleSheet.create({
     },
     deliveryText: {
         fontSize: 12,
-        color: "#228B22", // Green color for delivery
+        color: "#228B22",
     },
     pickupText: {
         fontSize: 12,
-        color: "#1E90FF", // Blue color for pickup
+        color: "#1E90FF",
     },
     minOrderText: {
         fontSize: 12,
-        color: "#FF4500", // Orange for minimum order
+        color: "#FF4500",
         marginTop: 4,
     },
 });

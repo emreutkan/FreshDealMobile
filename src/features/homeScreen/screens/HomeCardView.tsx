@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useMemo, useState} from 'react';
 import {
     ActivityIndicator,
     NativeScrollEvent,
@@ -20,11 +20,39 @@ interface HomeCardViewProps {
     onRestaurantPress?: (restaurantId: string) => void;
 }
 
+const MIN_LOADING_DURATION = 1000; // main loading duration (redux)
+const FILTER_LOADING_DURATION = 200; // duration for filter toggling/loading
+
 const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll, onRestaurantPress}) => {
     const dispatch = useDispatch<AppDispatch>();
     const {restaurantsProximity, loading, error} = useSelector(
         (state: RootState) => state.restaurant
     );
+
+    // For the main loading animation from redux's `loading`
+    const [showMainLoading, setShowMainLoading] = useState(loading);
+
+    // For filtering transition loading animation
+    const [filterLoading, setFilterLoading] = useState(false);
+
+    // Ensure a minimum loading duration for the main data loading state:
+    useEffect(() => {
+        let timer: NodeJS.Timeout;
+        if (loading) {
+            setShowMainLoading(true);
+        } else {
+            timer = setTimeout(() => {
+                setShowMainLoading(false);
+            }, MIN_LOADING_DURATION);
+        }
+
+        return () => {
+            if (timer) clearTimeout(timer);
+        };
+    }, [loading]);
+
+    // Combined overall loading state: either main loading or filter transition loading.
+    const isLoading = showMainLoading || filterLoading;
 
     // State for filters
     const [filters, setFilters] = useState({
@@ -33,38 +61,68 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll, onRestaurantPress}
         under30: false,
     });
 
-    const [isPriceExpanded, setIsPriceExpanded] = useState(false); // Tracks if price dropdown is expanded
+    const [isPriceExpanded, setIsPriceExpanded] = useState(false);
     const [selectedPrice, setSelectedPrice] = useState<'$' | '$$' | '$$$' | null>(null);
 
+    // Helper to trigger the filter loading (200ms delay) every time a filter is toggled.
+    const triggerFilterLoading = () => {
+        setFilterLoading(true);
+        setTimeout(() => {
+            setFilterLoading(false);
+        }, FILTER_LOADING_DURATION);
+    };
+
     const handleToggleFilter = (filterId: 'pickup' | 'delivery' | 'under30') => {
+        triggerFilterLoading();
         setFilters((prevFilters) => {
-            const isCurrentlySelected = prevFilters[filterId];
-            const otherFilter = filterId === 'pickup' ? 'delivery' : 'pickup';
-
-            // Ensure at least one of pickup or delivery is always selected
-            if ((filterId === 'pickup' || filterId === 'delivery') && isCurrentlySelected && !prevFilters[otherFilter]) {
-                return {
-                    ...prevFilters,
-                    [filterId]: false,
-                    [otherFilter]: true,
-                };
+            // When toggling either pickup or delivery, ensure at least one remains true.
+            if (filterId === 'pickup' || filterId === 'delivery') {
+                const isCurrentlySelected = prevFilters[filterId];
+                const otherFilter = filterId === 'pickup' ? 'delivery' : 'pickup';
+                if (isCurrentlySelected && !prevFilters[otherFilter]) {
+                    return {
+                        ...prevFilters,
+                        [filterId]: false,
+                        [otherFilter]: true,
+                    };
+                }
             }
-
             return {
                 ...prevFilters,
-                [filterId]: !isCurrentlySelected,
+                [filterId]: !prevFilters[filterId],
             };
         });
     };
 
     const togglePriceDropdown = () => {
+        // Trigger the filter loading animation when opening/closing the price dropdown.
+        triggerFilterLoading();
         setIsPriceExpanded((prev) => !prev);
     };
 
     const handlePriceSelect = (price: '$' | '$$' | '$$$') => {
+        triggerFilterLoading();
         setSelectedPrice(price);
         setIsPriceExpanded(false); // Collapse the dropdown after selection
     };
+
+    // Filter restaurant data based on filters.
+    // For the "Under 30 min" filter, we assume that 3km or less is reachable in 30 minutes.
+    const filteredRestaurants = useMemo(() => {
+        if (!restaurantsProximity) return [];
+
+        const filtered = restaurantsProximity.filter((restaurant) => {
+            // Delivery and pickup filters:
+            if (filters.delivery && !filters.pickup && !restaurant.delivery) return false;
+            if (filters.pickup && !filters.delivery && !restaurant.pickup) return false;
+            // Under 30 minutes filter (based on distance_km)
+            if (filters.under30 && restaurant.distance_km > 3) return false;
+            // Price filter if selected:
+            if (selectedPrice && restaurant.price !== selectedPrice) return false;
+            return true;
+        });
+        return filtered;
+    }, [restaurantsProximity, filters, selectedPrice]);
 
     return (
         <View style={styles.safeArea}>
@@ -188,12 +246,12 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll, onRestaurantPress}
 
             {/* Main Content */}
             <View style={styles.container}>
-                {loading ? (
+                {isLoading ? (
                     <View style={styles.loadingContainer}>
                         <ActivityIndicator size="large" color="#50703C"/>
                         <Text style={styles.loadingText}>Loading restaurants...</Text>
                     </View>
-                ) : error || restaurantsProximity.length === 0 ? (
+                ) : error || filteredRestaurants.length === 0 ? (
                     <View style={styles.noDataContainer}>
                         <Feather name="frown" size={48} color="#555"/>
                         <Text style={styles.noDataTitle}>No Restaurants Found</Text>
@@ -214,9 +272,10 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll, onRestaurantPress}
                         bounces={false}
                     >
                         <RestaurantList
-                            restaurants={restaurantsProximity}
+                            restaurants={filteredRestaurants}
                             onRestaurantPress={(id) => {
                                 console.log('Selected restaurant:', id);
+                                if (onRestaurantPress) onRestaurantPress(id);
                             }}
                         />
                     </ScrollView>
@@ -247,14 +306,12 @@ const styles = StyleSheet.create({
     filterBar: {
         backgroundColor: '#FFFFFF',
         paddingVertical: scaleFont(12),
-
         maxHeight: scaleFont(45),
     },
     filterContentContainer: {
         paddingHorizontal: 8,
         flexDirection: 'row',
         alignItems: 'center',
-
     },
     iconButton: {
         width: 36,

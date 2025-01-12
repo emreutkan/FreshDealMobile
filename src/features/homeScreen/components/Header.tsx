@@ -1,126 +1,58 @@
-// Header.tsx
-
 import React from 'react';
 import {Animated, StyleSheet, TouchableOpacity, View} from 'react-native';
 import AddressBar from "@/src/features/homeScreen/components/AddressBar";
 import {scaleFont} from "@/src/utils/ResponsiveFont";
 import {Ionicons} from "@expo/vector-icons";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
-
-// import ExpandedSearchBar from "@/src/features/homeScreen/components/expandedSearchBar";
+import {useNavigation} from '@react-navigation/native';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import {RootStackParamList} from '@/src/types/navigation';
 
 interface HeaderProps {
-    // isScrolled: boolean;
     activeTab: string;
-    // setIsScrolled: (value: boolean) => void; // Callback to update isScrolled
-
 }
 
-const Header: React.FC<HeaderProps> = ({
-                                           // isScrolled,
-                                           activeTab,
-                                           // setIsScrolled
-                                       }) => {
-    // const [shouldFocusSearch, setShouldFocusSearch] = useState(false);
-    // const animation = useRef(new Animated.Value(isScrolled ? 1 : 0)).current;
-
-    // const CollapsedSearchBar: React.FC<{ onPress: () => void }> = React.memo(({onPress}) => (
-    //     <View style={styles.searchBarContainer}>
-    //         <TouchableOpacity onPress={onPress}>
-    //             <Feather name="search" size={24} color="#000"/>
-    //         </TouchableOpacity>
-    //     </View>
-    // ));
-    // const handleSearchBarClick = () => {
-    //     console.log(activeTab)
-    //
-    //     console.log('activeTab', activeTab)
-    //     console.log('Search bar clicked');
-    //     if (isScrolled) {
-    //         console.log('Resetting isScrolled to false');
-    //         setIsScrolled(false); // Correctly update isScrolled via callback
-    //         setShouldFocusSearch(true); // Indicate that focus is needed
-    //     } else {
-    //         setShouldFocusSearch(true); // Handle clicks when not scrolled, if necessary
-    //     }
-    //     if (activeTab === 'HomeMapView') {
-    //         navigate('HomeScreen', {screen: 'HomeCardView'})
-    //     }
-    // };
-
-    //
-    // useEffect(() => {
-    //     Animated.timing(animation, {
-    //         toValue: isScrolled ? 1 : 0,
-    //         duration: 320,
-    //         useNativeDriver: false,
-    //     }).start(() => {
-    //         console.log('Animation completed');
-    //     });
-    // }, [isScrolled]);
-    //
-    // // Interpolations for dynamic styles
-    // const headerHeight = animation.interpolate({
-    //     inputRange: [0, 1],
-    //     outputRange: [scaleFont(160), scaleFont(110)], // Expanded to Collapsed height
-    // });
-    //
-    // const searchBarOpacity = animation.interpolate({
-    //     inputRange: [0, 1],
-    //     outputRange: [1, 1], // Opacity remains the same; adjust if needed
-    // });
-
+const Header: React.FC<HeaderProps> = ({activeTab}) => {
     const insets = useSafeAreaInsets();
 
     return (
-        <Animated.View style={[
-            styles.header,
-            // {height: headerHeight},
-            {paddingTop: insets.top},
-            activeTab === 'HomeMapView' ? styles.transparentHeader : null
-        ]}>
+        <Animated.View
+            style={[
+                styles.header,
+                {paddingTop: insets.top},
+                activeTab === 'HomeMapView' ? styles.transparentHeader : null,
+            ]}
+        >
             <View style={styles.container}>
                 <View style={styles.topRow}>
                     <View style={styles.addressBarContainer}>
                         <AddressBar/>
                     </View>
-
                     <View style={styles.iconContainer}>
                         <FavoritesBar/>
-                        {/*{isScrolled && (*/}
-                        {/*    <Animated.View style={[styles.collapsedSearchWrapper, {opacity: searchBarOpacity}]}>*/}
-                        {/*        <CollapsedSearchBar onPress={handleSearchBarClick}/>*/}
-                        {/*    </Animated.View>*/}
-                        {/*)}*/}
                     </View>
                 </View>
-
-                {/*{!isScrolled && (*/}
-                {/*    <Animated.View style={[styles.expandedSearchWrapper, {opacity: searchBarOpacity}]}>*/}
-                {/*        <ExpandedSearchBar*/}
-                {/*            shouldFocus={shouldFocusSearch}*/}
-                {/*            onFocus={() => {*/}
-                {/*                console.log('TextInput focused');*/}
-                {/*                setShouldFocusSearch(false); // Reset focus flag after focusing*/}
-                {/*            }}*/}
-                {/*        />*/}
-                {/*    </Animated.View>*/}
-                {/*)}*/}
             </View>
         </Animated.View>
     );
 };
-//
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'FavoritesScreen'>;
 
 const FavoritesBar: React.FC = () => {
+    const navigation = useNavigation<NavigationProp>();
+
     const handleRouteToFavoritesScreen = () => {
-        // Implement navigation to Favorites screen
+        // Navigate to FavoritesScreen
+        navigation.navigate('FavoritesScreen');
     };
 
     return (
         <TouchableOpacity
             onPress={handleRouteToFavoritesScreen}
             style={styles.favoritesBarContainer}
+            accessibilityLabel="View Favorites"
+            accessibilityHint="Navigates to your favorited restaurants"
         >
             <Ionicons name="heart-outline" size={scaleFont(24)} color="#000"/>
         </TouchableOpacity>
@@ -153,38 +85,12 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
     },
     addressBarContainer: {
-        maxWidth: '65%', // Adjusted to 65% as per your initial code
+        maxWidth: '65%',
     },
     iconContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'flex-end',
-    },
-    collapsedSearchWrapper: {
-        marginLeft: scaleFont(10),
-    },
-    expandedSearchWrapper: {
-        // Add styles if needed
-    },
-    expandedSearchBarContainer: {
-        paddingTop: scaleFont(10),
-        paddingHorizontal: scaleFont(10),
-    },
-    expandedSearchBar: {
-        paddingVertical: scaleFont(10),
-        paddingHorizontal: scaleFont(15),
-        borderRadius: scaleFont(20),
-        backgroundColor: '#f9f9f9',
-        borderColor: '#e0e0e0',
-        borderWidth: 1,
-        shadowColor: '#000',
-        shadowOffset: {width: 0, height: 1},
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
-        elevation: 1,
-    },
-    searchBarContainer: {
-        paddingRight: scaleFont(10),
     },
     favoritesBarContainer: {
         paddingRight: scaleFont(10),

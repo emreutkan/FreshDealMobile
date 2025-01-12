@@ -7,6 +7,7 @@ export type RootStackParamList = {
     AddressSelectionScreen: undefined;
     UpdateAddress: { addressId: string }; // Ensure this is correct
     RestaurantDetails: { restaurantId: string };
+    FavoritesScreen: undefined;
 
 };
 

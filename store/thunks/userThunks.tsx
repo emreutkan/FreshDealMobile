@@ -196,7 +196,7 @@ export const getUserData = createAsyncThunk<
 );
 
 
-const endpoint = `${API_BASE_URL}/v1/verify_email`;
+const VERIFY_EMAIL_ENDPOINT = `${API_BASE_URL}/v1/verify_email`;
 export const verifyCode = createAsyncThunk<
     VerifyCodeResponse,
     VerifyCodePayload,
@@ -205,7 +205,38 @@ export const verifyCode = createAsyncThunk<
     "user/verifyCode",
     async (payload, {rejectWithValue}) => {
         try {
-            const response = await axios.post(endpoint, payload);
+            const response = await axios.post(VERIFY_EMAIL_ENDPOINT, payload);
+            if (response.data.success) {
+                return response.data;
+            } else {
+                return rejectWithValue(response.data.message);
+            }
+        } catch (error: any) {
+            return rejectWithValue(error.message || "Verification failed");
+        }
+    }
+);
+
+const VERIFY_FAVORITES_ENDPOINT = `${API_BASE_URL}/v1/favorites`;
+
+interface RestaurantFavorite {
+    restaurant_id: number; // or string if that's how it's defined
+    restaurant_name: string;
+}
+
+interface FavoriteRestaurantsResponse {
+    success: boolean;
+    favorites: RestaurantFavorite[];
+}
+
+
+export const verifyFavorites = createAsyncThunk<
+    FavoriteRestaurantsResponse,
+    { rejectValue: string }>(
+    "user/verifyFavorites",
+    async (payload, {rejectWithValue}) => {
+        try {
+            const response = await axios.get(VERIFY_FAVORITES_ENDPOINT);
             if (response.data.success) {
                 return response.data;
             } else {

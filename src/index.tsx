@@ -10,6 +10,7 @@ import {navigationRef, RootStackParamList} from '@/src/types/navigation';
 import UpdateAddress from "@/src/features/homeScreen/screens/UpdateAddress";
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import RestaurantDetails from "@/src/features/RestaurantScreen/RestaurantDetails";
+import FavoritesScreen from "@/src/features/homeScreen/screens/FavoritesScreen";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -38,6 +39,9 @@ const App: React.FC = () => {
                             component={RestaurantDetails}
 
                         />
+                        <Stack.Screen name="FavoritesScreen" component={FavoritesScreen}
+                                      options={{title: 'Favorites'}}/>
+
                     </Stack.Navigator>
                 </NavigationContainer>
             </Provider>
