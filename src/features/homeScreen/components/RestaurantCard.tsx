@@ -8,7 +8,7 @@ import {useDispatch, useSelector} from "react-redux";
 import {AppDispatch, RootState, store} from "@/store/store";
 import {Ionicons} from "@expo/vector-icons";
 // Import the thunk actions
-import {addToFavorites, removeFromFavorites} from "@/store/thunks/restaurantThunks";
+import {removeFavoriteThunk} from "@/store/thunks/userThunks";
 
 interface RestaurantListProps {
     restaurants: Restaurant[];
@@ -42,9 +42,10 @@ const RestaurantList: React.FC<RestaurantListProps> = ({restaurants, onRestauran
             }
             // If it’s already a favorite, dispatch the remove thunk; otherwise, dispatch the add thunk.
             if (favoriteRestaurantsIDs.includes(id)) {
-                dispatch(removeFromFavorites({restaurantId: id}));
+                // cast to int before dispatch
+                dispatch(removeFavoriteThunk({restaurantId: Number(id)}));
             } else {
-                dispatch(addToFavorites({restaurantId: id}));
+                dispatch(removeFavoriteThunk({restaurantId: Number(id)}));
             }
         },
         [dispatch, favoriteRestaurantsIDs]
@@ -167,7 +168,6 @@ const styles = StyleSheet.create({
     touchableContainer: {
         marginBottom: 16,
         transform: [{scale: 1}],
-        transition: "transform 0.2s",
     },
     touchablePressed: {
         transform: [{scale: 0.98}],
@@ -181,7 +181,6 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 4,
         elevation: 3,
-        transition: "all 0.2s",
     },
     cardPressed: {
         backgroundColor: "#f0f0f0",
@@ -194,7 +193,6 @@ const styles = StyleSheet.create({
     image: {
         width: "100%",
         height: 160,
-        transition: "filter 0.2s",
     },
     imagePressed: {
         opacity: 0.9,

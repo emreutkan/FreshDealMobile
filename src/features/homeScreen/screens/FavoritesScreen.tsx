@@ -1,20 +1,27 @@
 // screens/FavoritesScreen.tsx
-import React from 'react';
+import React, {useMemo} from 'react';
 import {StyleSheet, Text, View} from 'react-native';
 import {useSelector} from 'react-redux';
 import {RootState} from '@/store/store';
 import RestaurantList from '@/src/features/homeScreen/components/RestaurantCard';
 
 const FavoritesScreen: React.FC = () => {
-    // Assume favorites are stored in state.restaurant.favorites
-    const favorites = useSelector((state: RootState) => state.restaurant.favorites);
+    // Get list of favorite restaurant IDs from the Redux store
+    const favoriteRestaurantsIDs = useSelector((state: RootState) => state.restaurant.favoriteRestaurantsIDs);
+    // Get the complete list of restaurants (for example, loaded via proximity API)
+    const restaurants = useSelector((state: RootState) => state.restaurant.restaurantsProximity);
+
+    // Create a filtered list of restaurants that are marked as favorites.
+    const favoriteRestaurants = useMemo(() => {
+        return restaurants.filter((restaurant) => favoriteRestaurantsIDs.includes(restaurant.id));
+    }, [restaurants, favoriteRestaurantsIDs]);
 
     return (
         <View style={styles.container}>
             <Text style={styles.title}>My Favorite Restaurants</Text>
-            {favorites && favorites.length > 0 ? (
+            {favoriteRestaurants && favoriteRestaurants.length > 0 ? (
                 <RestaurantList
-                    restaurants={favorites}
+                    restaurants={favoriteRestaurants}
                     onRestaurantPress={(restaurantId) =>
                         console.log('Selected favorite restaurant:', restaurantId)
                     }

@@ -19,8 +19,8 @@ import HomeMapView from '@/src/features/homeScreen/screens/HomeMapView';
 import AccountScreen from '@/src/features/homeScreen/components/accountScreen';
 import Header from '@/src/features/homeScreen/components/Header';
 import RestaurantSearch from "@/src/features/homeScreen/screens/RestaurantSearch";
-import {getFavorites, getRestaurantsByProximity} from "@/store/thunks/restaurantThunks";
-
+import {getRestaurantsByProximity} from "@/store/thunks/restaurantThunks";
+import {getFavoritesThunk} from "@/store/thunks/userThunks";
 // Enable LayoutAnimation on Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
     UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -55,7 +55,7 @@ const HomeScreen: React.FC = () => {
             radius: 10000,
         }));
 
-        dispatch(getFavorites());
+        dispatch(getFavoritesThunk());
     }, [dispatch, primaryAddressData]);
 
 

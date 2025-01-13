@@ -1,32 +1,66 @@
+// screens/HomeMapView.tsx
 import React, {useCallback, useMemo, useRef} from 'react';
-import {FlatList, StyleSheet, Text, View} from 'react-native';
+import {FlatList, Image, StyleSheet, Text, TouchableOpacity, View,} from 'react-native';
 import {useSelector} from 'react-redux';
 import {RootState} from '@/store/store';
 import {Restaurant} from '@/store/slices/restaurantSlice';
 import BottomSheet, {BottomSheetScrollView} from '@gorhom/bottom-sheet';
 import RestaurantsOnMap from '@/src/features/homeScreen/components/RestaurantsOnMap';
+import {Ionicons} from '@expo/vector-icons';
+import {useNavigation} from '@react-navigation/native';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import {RootStackParamList} from '@/src/types/navigation';
 
-const HomeMapView = () => {
+type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'RestaurantDetails'>;
+
+const HomeMapView: React.FC = () => {
+    const navigation = useNavigation<NavigationProp>();
     const bottomSheetRef = useRef<BottomSheet>(null);
     const snapPoints = useMemo(() => ['15%', '50%', '70%'], []);
-    const {restaurantsProximity} = useSelector(
-        (state: RootState) => state.restaurant
-    );
+    const {restaurantsProximity} = useSelector((state: RootState) => state.restaurant);
 
+    // Render each restaurant item as a clickable card.
     const renderRestaurantItem = useCallback(
         ({item}: { item: Restaurant }) => (
-            <View style={styles.restaurantCard}>
-                <View style={styles.restaurantInfo}>
-                    <Text style={styles.restaurantName}>{item.restaurantName}</Text>
-                    <View style={styles.restaurantDetails}>
-                        {item.rating !== undefined && (
-                            <Text style={styles.detailText}>⭐ {item.rating}</Text>
-                        )}
+            <TouchableOpacity
+                onPress={() => navigation.navigate('RestaurantDetails', {restaurantId: item.id})}
+                activeOpacity={0.8}
+                style={styles.restaurantCard}
+            >
+                {/** Left: Image */}
+                <Image
+                    source={{
+                        uri: item.image_url
+                            ? item.image_url.replace('127.0.0.1', '192.168.1.3')
+                            : 'https://via.placeholder.com/100',
+                    }}
+                    style={styles.restaurantImage}
+                />
+                {/** Right: Details */}
+                <View style={styles.restaurantDetailsContainer}>
+                    <Text style={styles.restaurantName}>
+                        {item.restaurantName || 'Unnamed Restaurant'}
+                    </Text>
+                    <View style={styles.detailsRow}>
+                        <View style={styles.ratingContainer}>
+                            {item.rating !== undefined && (
+                                <Text style={styles.ratingText}>⭐ {item.rating.toFixed(1)}</Text>
+                            )}
+                            <Text style={styles.voteCountText}>({item.ratingCount ?? 0})</Text>
+                        </View>
+                        <View style={styles.iconContainer}>
+                            {item.pickup && (
+                                <Ionicons name="walk-outline" size={20} color="#333" style={styles.icon}/>
+                            )}
+                            {item.delivery && (
+                                <Ionicons name="bicycle-outline" size={20} color="#333" style={styles.icon}/>
+                            )}
+                        </View>
                     </View>
                 </View>
-            </View>
+            </TouchableOpacity>
         ),
-        []
+        [navigation]
     );
 
     const renderMapView = () => {
@@ -54,11 +88,7 @@ const HomeMapView = () => {
 
         return (
             <>
-                <View style={{
-                    flex: 1, position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-                    zIndex: 0
-
-                }}>
+                <View style={styles.mapContainer}>
                     <RestaurantsOnMap
                         restaurants={restaurantsProximity}
                         setLatitudeDelta={0.01}
@@ -67,16 +97,13 @@ const HomeMapView = () => {
                     />
                 </View>
                 <BottomSheet
-
                     ref={bottomSheetRef}
                     index={1}
-                    style={{
-                        zIndex: 3
-                    }} // Ensure it stays above the map
+                    style={styles.bottomSheet}
                     snapPoints={snapPoints}
                     enablePanDownToClose={false}
                     handleIndicatorStyle={styles.bottomSheetHandle}
-                    key={restaurantsProximity.length} // Force re-render
+                    key={restaurantsProximity.length} // Force re-render when length changes
                 >
                     <BottomSheetScrollView contentContainerStyle={styles.bottomSheetContent}>
                         <FlatList
@@ -90,7 +117,6 @@ const HomeMapView = () => {
                             )}
                             showsVerticalScrollIndicator={false}
                         />
-
                     </BottomSheetScrollView>
                 </BottomSheet>
             </>
@@ -100,24 +126,44 @@ const HomeMapView = () => {
     return <View style={styles.container}>{renderMapView()}</View>;
 };
 
+export default HomeMapView;
+
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-
     },
     sectionTitle: {
         fontSize: 18,
         fontWeight: 'bold',
         marginBottom: 10,
     },
+    mapContainer: {
+        flex: 1,
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 0,
+    },
+    bottomSheet: {
+        zIndex: 3,
+    },
     restaurantCard: {
         flexDirection: 'row',
         backgroundColor: '#fff',
         marginBottom: 12,
         borderRadius: 12,
-        padding: 12,
+        overflow: 'hidden',
+        elevation: 2,
+        padding: 8,
     },
-    restaurantInfo: {
+    restaurantImage: {
+        width: 100,
+        height: 100,
+        borderRadius: 8,
+    },
+    restaurantDetailsContainer: {
         flex: 1,
         marginLeft: 12,
         justifyContent: 'center',
@@ -125,16 +171,33 @@ const styles = StyleSheet.create({
     restaurantName: {
         fontSize: 16,
         fontWeight: 'bold',
-        marginBottom: 4,
+        marginBottom: 6,
+        color: '#333',
     },
-    restaurantDetails: {
+    detailsRow: {
         flexDirection: 'row',
+        alignItems: 'center',
         justifyContent: 'space-between',
-        marginTop: 4,
     },
-    detailText: {
+    ratingContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    ratingText: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#FFD700',
+        marginRight: 4,
+    },
+    voteCountText: {
         fontSize: 12,
         color: '#666',
+    },
+    iconContainer: {
+        flexDirection: 'row',
+    },
+    icon: {
+        marginLeft: 8,
     },
     noRestaurantsContainer: {
         flex: 1,
@@ -143,8 +206,7 @@ const styles = StyleSheet.create({
     },
     blurOverlay: {
         ...StyleSheet.absoluteFillObject,
-        backgroundColor: 'rgba(255, 255, 255, 0.7)', // Semi-transparent white overlay
-        backdropFilter: 'blur(10px)', // Blurring effect
+        backgroundColor: 'rgba(255, 255, 255, 0.7)',
     },
     messageBox: {
         width: '90%',
@@ -161,7 +223,7 @@ const styles = StyleSheet.create({
     noRestaurantsTitle: {
         fontSize: 24,
         fontWeight: 'bold',
-        color: '#FF6347', // Tomato red for a friendly alert
+        color: '#FF6347',
         marginBottom: 8,
     },
     noRestaurantsMessage: {
@@ -182,5 +244,3 @@ const styles = StyleSheet.create({
         marginVertical: 8,
     },
 });
-
-export default HomeMapView;

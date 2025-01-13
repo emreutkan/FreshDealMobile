@@ -23,7 +23,7 @@ import {
 } from '@/src/features/LoginRegister/components/LoginRegisterScreenButtons';
 import PasswordInput from '@/src/features/LoginRegister/components/PasswordInput';
 import {setLoginType, setPasswordLogin} from '@/store/slices/userSlice';
-import {loginUser} from '@/store/thunks/userThunks';
+import {loginUserThunk} from '@/store/thunks/userThunks';
 
 interface LoginModalProps {
     switchToRegister: () => void; // Callback to switch to RegisterModal
@@ -81,7 +81,7 @@ const LoginModal: React.FC<LoginModalProps> = ({switchToRegister}) => {
             try {
                 console.log(selectedCode + phoneNumber);
                 const result = await dispatch(
-                    loginUser({
+                    loginUserThunk({
                         email: email,
                         phone_number: selectedCode + phoneNumber,
                         password: password,

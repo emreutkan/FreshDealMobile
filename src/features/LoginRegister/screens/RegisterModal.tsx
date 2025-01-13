@@ -13,7 +13,7 @@ import {
 import {scaleFont} from "@/src/utils/ResponsiveFont";
 import {useDispatch, useSelector} from "react-redux";
 import {AppDispatch, RootState, store} from "@/store/store";
-import {getUserData, loginUser, registerUser, verifyCode} from "@/store/thunks/userThunks";
+import {getUserDataThunk, loginUserThunk, registerUserThunk,} from "@/store/thunks/userThunks";
 import DefaultButton from "@/src/features/DefaultButton";
 import NameSurnameInputField from "@/src/features/LoginRegister/components/NameSurnameInputField";
 import PhoneInput from "@/src/features/LoginRegister/components/PhoneInput";
@@ -21,7 +21,8 @@ import EmailLoginField from "@/src/features/LoginRegister/components/EmailInput"
 import PasswordInput from "@/src/features/LoginRegister/components/PasswordInput";
 import VerificationCodeInputField from "@/src/features/LoginRegister/components/VerificationCodeInputField"; // Assume this component exists
 import {setToken} from "@/store/slices/userSlice";
-import {Ionicons} from "@expo/vector-icons"; // For navigation
+import {Ionicons} from "@expo/vector-icons";
+import {verifyCode} from "@/store/api/authAPI"; // For navigation
 
 interface RegisterModalProps {
     switchToLogin: () => void; // Callback to switch to LoginModal
@@ -69,7 +70,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({switchToLogin}) => {
         console.log("Input validated");
         try {
             const result = await dispatch(
-                registerUser({
+                registerUserThunk({
                     name_surname,
                     email,
                     phone_number: selectedCode + phoneNumber,
@@ -124,7 +125,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({switchToLogin}) => {
     const skipLoginUser = async (): Promise<void> => {
         try {
             const loginResult = await dispatch(
-                loginUser({
+                loginUserThunk({
                     email: email,
                     phone_number: selectedCode + phoneNumber,
                     password: password,
@@ -137,7 +138,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({switchToLogin}) => {
                 console.log("store.getState().user before setToken = ", store.getState().user);
 
                 dispatch(setToken(loginResult.token));
-                dispatch(getUserData({token: loginResult.token}));
+                dispatch(getUserDataThunk({token: loginResult.token}));
                 console.log("store.getState().user = after setToken", store.getState().user);
             }
         } catch (error: any) {
@@ -195,7 +196,6 @@ const RegisterModal: React.FC<RegisterModalProps> = ({switchToLogin}) => {
                                 <VerificationCodeInputField
                                     value={verificationCode}
                                     onChangeText={setVerificationCode}
-                                    keyboardType="numeric"
                                 />
                             </View>
 

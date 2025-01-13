@@ -1,7 +1,7 @@
 // src/store/slices/listingSlice.ts
 
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
-import {fetchListings} from "@/store/thunks/listingThunks";
+import {getListingsThunk} from "@/store/thunks/listingThunks";
 import {logout} from "@/store/slices/userSlice";
 
 export interface Listing {
@@ -13,6 +13,7 @@ export interface Listing {
     price: number;
     count: number;
 }
+
 
 interface ListingState {
     listings: Listing[];
@@ -53,21 +54,21 @@ const listingSlice = createSlice({
     extraReducers: (builder) => {
         builder
             .addCase(logout, () => initialState) // Reset state on global action
-            .addCase(fetchListings.pending, (state) => { /* other cases */
+            .addCase(getListingsThunk.pending, (state) => { /* other cases */
             });
-        builder.addCase(fetchListings.pending, (state) => {
+        builder.addCase(getListingsThunk.pending, (state) => {
             state.loading = true;
             state.error = null;
         });
         builder.addCase(
-            fetchListings.fulfilled,
+            getListingsThunk.fulfilled,
             (state, action: PayloadAction<{ listings: Listing[]; pagination: Pagination }>) => {
                 state.loading = false;
                 state.listings = action.payload.listings;
                 state.pagination = action.payload.pagination;
             }
         );
-        builder.addCase(fetchListings.rejected, (state, action) => {
+        builder.addCase(getListingsThunk.rejected, (state, action) => {
             state.loading = false;
             state.error = action.payload as string;
         });

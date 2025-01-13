@@ -5,7 +5,7 @@ import {AppDispatch, RootState} from '@/store/store';
 import {Feather} from '@expo/vector-icons';
 import {useNavigation} from '@react-navigation/native';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {updateEmail, updatePassword, updateUsername} from '@/store/thunks/userThunks';
+import {updateEmailThunk, updatePasswordThunk, updateUsername} from '@/store/thunks/userThunks';
 import {logout} from '@/store/slices/userSlice';
 import {RootStackParamList} from "@/src/types/navigation";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
@@ -57,8 +57,11 @@ const AccountScreen: React.FC = () => {
                         async (newPassword?: string) => {
                             if (newPassword) {
                                 try {
-                                    const resultAction = await dispatch(updatePassword({oldPassword, newPassword}));
-                                    if (updatePassword.fulfilled.match(resultAction)) {
+                                    const resultAction = await dispatch(updatePasswordThunk({
+                                        oldPassword,
+                                        newPassword
+                                    }));
+                                    if (updatePasswordThunk.fulfilled.match(resultAction)) {
                                         Alert.alert('Success', 'Password updated successfully');
                                     } else {
                                         Alert.alert('Error', resultAction.payload as string);
@@ -88,7 +91,7 @@ const AccountScreen: React.FC = () => {
                             updates.push(dispatch(updateUsername({newUsername: editedValues.name_surname})));
                         }
                         if (editedValues.email !== email) {
-                            updates.push(dispatch(updateEmail({oldEmail: email, newEmail: editedValues.email})));
+                            updates.push(dispatch(updateEmailThunk({oldEmail: email, newEmail: editedValues.email})));
                         }
 
                         if (updates.length > 0) {

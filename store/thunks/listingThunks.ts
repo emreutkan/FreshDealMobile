@@ -1,26 +1,16 @@
 import {createAsyncThunk} from "@reduxjs/toolkit";
-import {getListingsAPI} from "@/api/userAPI";
-import {Pagination} from "@/store/slices/listingSlice";
-
-export interface Listing {
-    id: number;
-    restaurant_id: number;
-    title: string;
-    description: string;
-    image_url: string;
-    price: number;
-    count: number;
-}
+import {Listing, Pagination} from "@/store/slices/listingSlice";
+import {getListingsAPI} from "@/store/api/listingsAPI";
 
 
 // Thunks
 
 // Fetch Listings with optional filters and pagination
-export const fetchListings = createAsyncThunk<
+export const getListingsThunk = createAsyncThunk<
     { listings: Listing[]; pagination: Pagination },
-    { restaurantId?: number; page?: number; perPage?: number }
+    { restaurantId: number; page?: number; perPage?: number }
 >(
-    'listings/fetchListings',
+    'listings/getListingsThunk',
     async (params, {rejectWithValue}) => {
         try {
             const data = await getListingsAPI(params);

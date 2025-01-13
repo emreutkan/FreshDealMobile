@@ -1,31 +1,21 @@
 import {createAsyncThunk} from '@reduxjs/toolkit';
-import {
-    API_BASE_URL,
-    getUserDataAPI,
-    loginUserAPI,
-    registerUserAPI,
-    updateEmailAPI,
-    updatePasswordAPI,
-    updateUsernameAPI,
-} from "@/api/userAPI";
+
 import {RootState} from "@/store/store";
 import {UserDataResponse} from "@/store/slices/userSlice";
-import axios from "axios";
-
-
-interface VerifyCodePayload {
-    verification_code: string;
-    email: string;
-}
-
-interface VerifyCodeResponse {
-    success: boolean;
-    message: string;
-}
+import {loginUserAPI, registerUserAPI} from "@/store/api/authAPI";
+import {
+    addToFavoritesAPI,
+    getFavoritesAPI,
+    getUserDataAPI,
+    removeFromFavoritesAPI,
+    updateEmailAPI,
+    updatePasswordAPI,
+    updateUsernameAPI
+} from "@/store/api/userAPI"; // adjust the path as necessary
 
 
 // Login user
-export const loginUser = createAsyncThunk(
+export const loginUserThunk = createAsyncThunk(
     'user/loginUser',
     async (
         payload: {
@@ -42,7 +32,7 @@ export const loginUser = createAsyncThunk(
         try {
             const response = await loginUserAPI(payload);
             const token = response.token;
-            dispatch(getUserData({token}));
+            dispatch(getUserDataThunk({token}));
             return response;
         } catch (error: any) {
             return rejectWithValue(error.response?.data || 'Login failed');
@@ -51,7 +41,7 @@ export const loginUser = createAsyncThunk(
 );
 
 // Register user
-export const registerUser = createAsyncThunk(
+export const registerUserThunk = createAsyncThunk(
     'user/registerUser',
     async (
         userData: {
@@ -70,9 +60,7 @@ export const registerUser = createAsyncThunk(
         }
     }
 );
-// -------------------------------------------------------------------
-// 3) Update username
-// -------------------------------------------------------------------
+
 export const updateUsername = createAsyncThunk<
     { username: string },
     { newUsername: string },
@@ -88,7 +76,7 @@ export const updateUsername = createAsyncThunk<
             }
             const response = await updateUsernameAPI(newUsername, token);
 
-            dispatch(getUserData({token}));
+            dispatch(getUserDataThunk({token}));
 
             return response;
         } catch (error: any) {
@@ -99,7 +87,7 @@ export const updateUsername = createAsyncThunk<
 // -------------------------------------------------------------------
 // 4) Update email
 // -------------------------------------------------------------------
-export const updateEmail = createAsyncThunk<
+export const updateEmailThunk = createAsyncThunk<
     { email: string },
     { oldEmail: string; newEmail: string },
     { state: RootState; rejectValue: string; dispatch: any } // <== Notice "dispatch" here
@@ -114,7 +102,7 @@ export const updateEmail = createAsyncThunk<
             }
             const response = await updateEmailAPI(oldEmail, newEmail, token);
 
-            dispatch(getUserData({token}));
+            dispatch(getUserDataThunk({token}));
 
             return response;
         } catch (error: any) {
@@ -126,7 +114,7 @@ export const updateEmail = createAsyncThunk<
 // -------------------------------------------------------------------
 // 5) Update password
 // -------------------------------------------------------------------
-export const updatePassword = createAsyncThunk<
+export const updatePasswordThunk = createAsyncThunk<
     { message: string },
     { oldPassword: string; newPassword: string },
     { state: RootState; rejectValue: string; dispatch: any } // <== Notice "dispatch" here
@@ -141,7 +129,7 @@ export const updatePassword = createAsyncThunk<
             }
             const response = await updatePasswordAPI(oldPassword, newPassword, token);
 
-            dispatch(getUserData({token}));
+            dispatch(getUserDataThunk({token}));
 
             return response;
         } catch (error: any) {
@@ -150,46 +138,15 @@ export const updatePassword = createAsyncThunk<
     }
 );
 // Get user data
-export const getUserData = createAsyncThunk<
+export const getUserDataThunk = createAsyncThunk<
     UserDataResponse,
     { token: string },
     { rejectValue: string }
 >(
     'user/getUserData',
-    async ({token}, {dispatch, rejectWithValue}) => {
+    async ({token}, {rejectWithValue}) => {
         try {
-            const response = await getUserDataAPI(token);
-            // at this point, when the getuserdata is fulfilled, we can dispatch another action
-            // when getuserdata is fulfilled in the address slice the primary address is set if user has an address
-            // so we get that primary address and dispatch the getRestaurantsByProximity action
-
-            if (response.user_address_list.length > 0) {
-                // // we need to get the primary address from addresss slice
-                // // then we can dispatch the getRestaurantsByProximity action
-                // const primaryAddress = response.user_address_list.find((address) => address.is_primary);
-                // if (primaryAddress) {
-                //     const address = response.user_address_list.find((address) => address.id === primaryAddress.id);
-                //     if (address) {
-                //         const resultAction = await dispatch(getRestaurantsByProximity({
-                //             latitude: address.latitude,
-                //             longitude: address.longitude,
-                //             radius: 1000000
-                //         }));
-                //         if (getRestaurantsByProximity.fulfilled.match(resultAction)) {
-                //             console.log('%c[Success] Restaurants fetched successfully.', 'color: green; font-weight: bold;');
-                //             const result = await dispatch(getFavorites());
-                //
-                //         } else {
-                //             console.error('%c[Error] Failed to fetch restaurants.', 'color: red; font-weight: bold;');
-                //             if (resultAction.payload) {
-                //                 console.error('%c[Error Details]', 'color: red; font-weight: bold;', resultAction.payload);
-                //             }
-                //         }
-                //
-                //     }
-                // }
-                return response;
-            }
+            return await getUserDataAPI(token);
         } catch (error: any) {
             return rejectWithValue(error.response?.data || 'Failed to fetch user data');
         }
@@ -197,23 +154,70 @@ export const getUserData = createAsyncThunk<
 );
 
 
-const VERIFY_EMAIL_ENDPOINT = `${API_BASE_URL}/v1/verify_email`;
-export const verifyCode = createAsyncThunk<
-    VerifyCodeResponse,
-    VerifyCodePayload,
-    { rejectValue: string }
+export const addFavoriteThunk = createAsyncThunk<
+    { message: string },
+    { restaurantId: string },
+    { state: RootState; rejectValue: string }
 >(
-    "user/verifyCode",
-    async (payload, {rejectWithValue}) => {
+    'favorites/addFavorite',
+    async ({restaurantId}, {getState, rejectWithValue}) => {
+        const token = getState().user.token;
+        if (!token) {
+            return rejectWithValue('Authentication token is missing.');
+        }
+
         try {
-            const response = await axios.post(VERIFY_EMAIL_ENDPOINT, payload);
-            if (response.data.success) {
-                return response.data;
-            } else {
-                return rejectWithValue(response.data.message);
-            }
+            return await addToFavoritesAPI(restaurantId, token);
         } catch (error: any) {
-            return rejectWithValue(error.message || "Verification failed");
+            return rejectWithValue(
+                error.response?.data?.message || 'Failed to add favorite'
+            );
+        }
+    }
+);
+
+
+export const removeFavoriteThunk = createAsyncThunk<
+    { message: string },
+    { restaurantId: number },
+    { state: RootState; rejectValue: string }
+>(
+    'favorites/removeFavorite',
+    async ({restaurantId}, {getState, rejectWithValue}) => {
+        const token = getState().user.token;
+        if (!token) {
+            return rejectWithValue('Authentication token is missing.');
+        }
+
+        try {
+            return await removeFromFavoritesAPI(restaurantId, token);
+        } catch (error: any) {
+            return rejectWithValue(
+                error.response?.data?.message || 'Failed to remove favorite'
+            );
+        }
+    }
+);
+
+
+export const getFavoritesThunk = createAsyncThunk<
+    string[],
+    void,
+    { state: RootState; rejectValue: string }
+>(
+    'favorites/getFavorites',
+    async (_, {getState, rejectWithValue}) => {
+        const token = getState().user.token;
+        if (!token) {
+            return rejectWithValue('Authentication token is missing.');
+        }
+
+        try {
+            return await getFavoritesAPI(token);
+        } catch (error: any) {
+            return rejectWithValue(
+                error.response?.data?.message || 'Failed to fetch favorites'
+            );
         }
     }
 );
