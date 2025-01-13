@@ -1,96 +1,61 @@
-import React, {useEffect, useRef} from 'react';
-import {Animated, StyleSheet, TextInput, TouchableOpacity, View} from 'react-native';
+import React from 'react';
+import {Animated, StyleSheet, TouchableOpacity, View} from 'react-native';
 import AddressBar from "@/src/features/homeScreen/components/AddressBar";
 import {scaleFont} from "@/src/utils/ResponsiveFont";
-import {Feather, Ionicons} from "@expo/vector-icons";
+import {Ionicons} from "@expo/vector-icons";
+import {useSafeAreaInsets} from "react-native-safe-area-context";
+import {useNavigation} from '@react-navigation/native';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import {RootStackParamList} from '@/src/types/navigation';
 
 interface HeaderProps {
-    isScrolled: boolean;
+    activeTab: string;
 }
 
-const CollapsedSearchBar: React.FC = React.memo(() => (
-    <View style={styles.searchBarContainer}>
-        <TouchableOpacity>
-            <Feather name="search" size={24} color="#000"/>
-        </TouchableOpacity>
-    </View>
-));
+const Header: React.FC<HeaderProps> = ({activeTab}) => {
+    const insets = useSafeAreaInsets();
 
-const ExpandedSearchBar: React.FC = () => (
-    <View style={styles.expandedSearchBarContainer}>
-        <TextInput
-            style={styles.expandedSearchBar}
-            placeholder="Search for restaurants..."
-            placeholderTextColor="#999"
-        />
-    </View>
-);
+    return (
+        <Animated.View
+            style={[
+                styles.header,
+                {paddingTop: insets.top},
+                activeTab === 'HomeMapView' ? styles.transparentHeader : null,
+            ]}
+        >
+            <View style={styles.container}>
+                <View style={styles.topRow}>
+                    <View style={styles.addressBarContainer}>
+                        <AddressBar/>
+                    </View>
+                    <View style={styles.iconContainer}>
+                        <FavoritesBar/>
+                    </View>
+                </View>
+            </View>
+        </Animated.View>
+    );
+};
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'FavoritesScreen'>;
+
 const FavoritesBar: React.FC = () => {
+    const navigation = useNavigation<NavigationProp>();
 
     const handleRouteToFavoritesScreen = () => {
-
+        // Navigate to FavoritesScreen
+        navigation.navigate('FavoritesScreen');
     };
 
     return (
         <TouchableOpacity
             onPress={handleRouteToFavoritesScreen}
             style={styles.favoritesBarContainer}
+            accessibilityLabel="View Favorites"
+            accessibilityHint="Navigates to your favorited restaurants"
         >
             <Ionicons name="heart-outline" size={scaleFont(24)} color="#000"/>
         </TouchableOpacity>
-    );
-};
-const Header: React.FC<HeaderProps> = ({isScrolled}) => {
-    const animation = useRef(new Animated.Value(isScrolled ? 1 : 0)).current;
-
-    useEffect(() => {
-        Animated.timing(animation, {
-            toValue: isScrolled ? 1 : 0,
-            duration: 320,
-            useNativeDriver: false,
-        }).start();
-    }, [isScrolled]);
-
-    // Interpolations for dynamic styles
-    const headerHeight = animation.interpolate({
-        inputRange: [0, 1],
-        outputRange: [scaleFont(100), scaleFont(60)], // Expanded to Collapsed height
-    });
-
-    const searchBarOpacity = animation.interpolate({
-        inputRange: [0, 1],
-        outputRange: [1, 1], // ExpandedSearchBar to CollapsedSearchBar
-    });
-
-    return (
-        <Animated.View style={[styles.header, {height: headerHeight}]}>
-            <View style={styles.container}>
-
-                <View style={styles.topRow}>
-
-                    <View style={styles.addressBarContainer}>
-                        <AddressBar/>
-                    </View>
-
-
-                    <View style={styles.iconContainer}>
-                        <FavoritesBar/>
-                        {isScrolled && (
-                            <Animated.View style={[styles.collapsedSearchWrapper, {opacity: searchBarOpacity}]}>
-                                <CollapsedSearchBar/>
-                            </Animated.View>
-                        )}
-                    </View>
-                </View>
-
-
-                {!isScrolled && (
-                    <Animated.View style={[styles.expandedSearchWrapper, {opacity: searchBarOpacity}]}>
-                        <ExpandedSearchBar/>
-                    </Animated.View>
-                )}
-            </View>
-        </Animated.View>
     );
 };
 
@@ -108,6 +73,7 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
         borderWidth: 1,
         borderTopWidth: 0,
+        height: scaleFont(110),
     },
     container: {
         flex: 1,
@@ -117,44 +83,20 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        // height: 70, // Fixed height for the top row
     },
     addressBarContainer: {
-        maxWidth: '65%', // AddressBar limited to 50% of the parent width
+        maxWidth: '65%',
     },
     iconContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'flex-end',
     },
-    collapsedSearchWrapper: {
-        marginLeft: scaleFont(10),
-    },
-    expandedSearchWrapper: {
-        // marginTop: scaleFont(10),
-    },
-    expandedSearchBarContainer: {
-        paddingTop: scaleFont(10),
-        paddingHorizontal: scaleFont(10),
-    },
-    expandedSearchBar: {
-        paddingVertical: scaleFont(10),
-        paddingHorizontal: scaleFont(15),
-        borderRadius: scaleFont(20),
-        backgroundColor: '#f9f9f9',
-        borderColor: '#e0e0e0',
-        borderWidth: 1,
-        shadowColor: '#000',
-        shadowOffset: {width: 0, height: 1},
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
-        elevation: 1,
-    },
-    searchBarContainer: {
-        paddingRight: scaleFont(10),
-    },
     favoritesBarContainer: {
         paddingRight: scaleFont(10),
+    },
+    transparentHeader: {
+        backgroundColor: "rgba(255, 255, 255, 0.85)",
     },
 });
 

@@ -1,13 +1,13 @@
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 import {
-    getUserData,
-    loginUser,
-    registerUser,
-    updateEmail,
-    updatePassword,
-    updateUsername
+    getUserDataThunk,
+    loginUserThunk,
+    registerUserThunk,
+    updateEmailThunk,
+    updatePasswordThunk,
+    updateUsername,
 } from "@/store/thunks/userThunks";
-
+import {verifyCode} from "@/store/api/authAPI";
 
 interface UserState {
     email: string;
@@ -23,6 +23,8 @@ interface UserState {
     loading: boolean;
     error: string | null;
     role: 'customer';
+    email_verified: boolean
+
 }
 
 export interface UserDataResponse {
@@ -32,6 +34,7 @@ export interface UserDataResponse {
         email: string;
         phone_number: string;
         role: string;
+        email_verified: boolean;
     };
     user_address_list: Array<{
         id: number;
@@ -64,6 +67,7 @@ const initialState: UserState = {
     loading: false,
     error: null,
     role: 'customer',
+    email_verified: false
 };
 
 const userSlice = createSlice({
@@ -112,27 +116,27 @@ const userSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
-            .addCase(loginUser.pending, (state) => {
+            .addCase(loginUserThunk.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(loginUser.fulfilled, (state, action) => {
+            .addCase(loginUserThunk.fulfilled, (state, action) => {
                 state.loading = false;
                 state.token = action.payload.token;
             })
-            .addCase(loginUser.rejected, (state) => {
+            .addCase(loginUserThunk.rejected, (state, action) => {
                 state.loading = false;
-                // state.error = action.payload || 'Login failed';
-                state.error = 'Login failed';
+                state.error = action.error?.message || 'Login failed';
+
             })
-            .addCase(registerUser.pending, (state) => {
+            .addCase(registerUserThunk.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(registerUser.fulfilled, (state) => {
+            .addCase(registerUserThunk.fulfilled, (state) => {
                 state.loading = false;
             })
-            .addCase(registerUser.rejected, (state) => {
+            .addCase(registerUserThunk.rejected, (state) => {
                 state.loading = false;
                 // state.error = action.payload || 'Registration failed';
                 state.error = 'Registration failed';
@@ -149,43 +153,55 @@ const userSlice = createSlice({
                 state.loading = false;
                 state.error = action.payload || 'Failed to update username';
             })
-            .addCase(updateEmail.pending, (state) => {
+            .addCase(updateEmailThunk.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(updateEmail.fulfilled, (state, action) => {
+            .addCase(updateEmailThunk.fulfilled, (state, action) => {
                 state.loading = false;
                 state.email = action.payload.email;
             })
-            .addCase(updateEmail.rejected, (state, action) => {
+            .addCase(updateEmailThunk.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload || 'Failed to update email';
             })
-            .addCase(updatePassword.pending, (state) => {
+            .addCase(updatePasswordThunk.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(updatePassword.fulfilled, (state) => {
+            .addCase(updatePasswordThunk.fulfilled, (state) => {
                 state.loading = false;
             })
-            .addCase(updatePassword.rejected, (state, action) => {
+            .addCase(updatePasswordThunk.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload || 'Failed to update password';
             })
-            .addCase(getUserData.pending, (state) => {
+            .addCase(getUserDataThunk.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(getUserData.fulfilled, (state, action) => {
+            .addCase(getUserDataThunk.fulfilled, (state, action) => {
                 state.loading = false;
                 state.name_surname = action.payload.user_data.name;
                 state.email = action.payload.user_data.email;
                 state.phoneNumber = action.payload.user_data.phone_number;
                 state.role = "customer";
+                state.email_verified = action.payload.user_data.email_verified
             })
-            .addCase(getUserData.rejected, (state, action) => {
+            .addCase(getUserDataThunk.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload || 'Failed to fetch user data';
+            })
+            .addCase(verifyCode.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(verifyCode.fulfilled, (state, action) => {
+                state.loading = false;
+            })
+            .addCase(verifyCode.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload || "Verification failed";
             });
     }
 });

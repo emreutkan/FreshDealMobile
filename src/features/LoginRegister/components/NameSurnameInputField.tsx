@@ -1,5 +1,5 @@
-import React, {useEffect, useState} from 'react';
-import {StyleSheet, Text, TextInput, TouchableOpacity, View} from 'react-native';
+import React, {useEffect, useRef, useState} from 'react';
+import {Animated, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View} from 'react-native';
 import {scaleFont} from "@/src/utils/ResponsiveFont";
 import {useDispatch, useSelector} from 'react-redux';
 import {setName} from '@/store/slices/userSlice'; // Adjust the path as needed
@@ -11,11 +11,25 @@ const NameSurnameInputField: React.FC = () => {
 
     const [inputValue, setInputValue] = useState<string>(fullName); // Local input state
     const [isTyping, setIsTyping] = useState<boolean>(inputValue.length > 0);
+    const [isFocused, setIsFocused] = useState(false);
+    const animatedLabel = useRef(new Animated.Value(fullName ? 1 : 0)).current;
+    const inputRef = useRef<TextInput>(null);
+
+    const handleFocus = () => setIsFocused(true);
+    const handleBlur = () => setIsFocused(false);
+
 
     useEffect(() => {
         // Sync with Redux store if it changes
         setInputValue(fullName);
     }, [fullName]);
+    useEffect(() => {
+        Animated.timing(animatedLabel, {
+            toValue: isFocused || !!fullName ? 1 : 0,
+            duration: 200,
+            useNativeDriver: false,
+        }).start();
+    }, [isFocused, fullName]);
 
     const handleTextChange = (text: string) => {
         // Remove any non-letter characters except for spaces
@@ -36,19 +50,42 @@ const NameSurnameInputField: React.FC = () => {
         setIsTyping(false);
         dispatch(setName(''));
     };
+    const labelStyle = {
+        top: animatedLabel.interpolate({
+            inputRange: [0, 1],
+            outputRange: [scaleFont(15), scaleFont(0)],
+        }),
+        fontSize: animatedLabel.interpolate({
+            inputRange: [0, 1],
+            outputRange: [scaleFont(16), scaleFont(12)],
+        }),
+        color: animatedLabel.interpolate({
+            inputRange: [0, 1],
+            outputRange: ['#999', 'gray'],
+        }),
+    };
 
+    const handleLabelPress = () => {
+        inputRef.current?.focus();
+    };
     return (
         <View>
             <View style={[styles.inputContainer, isTyping && {borderColor: 'gray'}]}>
+                <TouchableWithoutFeedback onPress={handleLabelPress}>
+                    <Animated.Text style={[styles.label, labelStyle]}>
+                        Enter your name
+                    </Animated.Text>
+                </TouchableWithoutFeedback>
                 <TextInput
-                    style={styles.input}
-                    placeholder="Enter your name"
+                    ref={inputRef}
+                    style={styles.inputText}
                     placeholderTextColor="#999"
 
                     value={inputValue}
                     onChangeText={handleTextChange}
-                    onFocus={() => console.log("Name Input Focused")}
                     autoCapitalize="words"
+                    onFocus={handleFocus}
+                    onBlur={handleBlur}
                 />
                 {isTyping && (
                     <TouchableOpacity onPress={handleClearText} style={styles.clearButton}>
@@ -72,12 +109,17 @@ const styles = StyleSheet.create({
         width: '100%',
         height: scaleFont(50),
     },
-    input: {
-        marginLeft: scaleFont(10),
+    inputText: {
         flex: 1,
-        fontSize: scaleFont(17),
+        fontSize: scaleFont(16),
         color: '#1a1818',
         fontFamily: 'Poppins-Regular',
+        paddingTop: scaleFont(10),
+    },
+    label: {
+        position: 'absolute',
+        left: scaleFont(15),
+        zIndex: 1,
     },
     clearButton: {
         paddingHorizontal: scaleFont(10),

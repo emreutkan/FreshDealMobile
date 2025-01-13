@@ -25,19 +25,37 @@ import DefaultButton from '@/src/features/DefaultButton';
 import InputField from '@/src/features/DefaultInput';
 
 class TempAddress {
-    id: string | undefined;
-    title: string | undefined;
-    latitude: number | undefined;
-    longitude: number | undefined;
-    street: string | undefined;
-    neighborhood: string | undefined;
-    district: string | undefined;
-    province: string | undefined;
-    country: string | undefined;
-    postalCode: string | undefined;
-    apartmentNo: string | undefined;
-    doorNo: string | undefined;
+    id: string;
+    title: string;
+    latitude: number;
+    longitude: number;
+    street: string;
+    neighborhood: string;
+    district: string;
+    province: string;
+    country: string;
+    postalCode: string;
+    apartmentNo: string;
+    doorNo: string;
+    is_primary: boolean;
+
+    constructor() {
+        this.id = '';
+        this.title = '';
+        this.latitude = 0;
+        this.longitude = 0;
+        this.street = '';
+        this.neighborhood = '';
+        this.district = '';
+        this.province = '';
+        this.country = '';
+        this.postalCode = '';
+        this.apartmentNo = '0';
+        this.doorNo = '0';
+        this.is_primary = true;
+    }
 }
+
 
 const AddressSelectionScreen: React.FC = () => {
     const navigation = useNavigation();
@@ -48,20 +66,8 @@ const AddressSelectionScreen: React.FC = () => {
     const [locationLoading, setLocationLoading] = useState<boolean>(false);
     const [activateAddressDetails, setActivateAddressDetails] = useState<boolean>(false);
 
-    const [selectedAddress, setSelectedAddress] = useState<TempAddress>({
-        id: '',
-        title: '',
-        latitude: 0,
-        longitude: 0,
-        street: '',
-        neighborhood: '',
-        district: '',
-        province: '',
-        country: '',
-        postalCode: '',
-        apartmentNo: '',
-        doorNo: '',
-    });
+    const [selectedAddress, setSelectedAddress] = useState<TempAddress>(new TempAddress());
+
 
     const [region, setRegion] = useState<Region>({
         latitude: 38.454985,
@@ -77,20 +83,7 @@ const AddressSelectionScreen: React.FC = () => {
         doorNo: ''
     });
 
-// Add validation functions
-    const validateApartmentNo = (value: string) => {
-        if (value && !/^\d+$/.test(value)) {
-            return 'Apartment number must contain only digits';
-        }
-        return '';
-    };
 
-    const validateTitle = (value: string) => {
-        if (!value.trim()) {
-            return 'Title is required';
-        }
-        return '';
-    };
     const [isReverseGeocoding, setIsReverseGeocoding] = useState<boolean>(false);
     const {height, width} = Dimensions.get('window');
     const [mapAnimation] = useState(new Animated.Value(0));
@@ -172,9 +165,7 @@ const AddressSelectionScreen: React.FC = () => {
     }, []);
 
 
-// Update the handleAddressChange function to include better validation
     const handleAddressChange = (field: keyof Address, value: string) => {
-        // Don't allow empty strings for required fields
         if (['title', 'street', 'district', 'province', 'country'].includes(field) && !value.trim()) {
             setErrors(prev => ({
                 ...prev,
@@ -194,13 +185,11 @@ const AddressSelectionScreen: React.FC = () => {
             }
         }
 
-        // Clear error if validation passes
         setErrors(prev => ({
             ...prev,
             [field]: ''
         }));
 
-        // Update the address
         setSelectedAddress(prev => ({
             ...prev,
             [field]: value
@@ -239,24 +228,25 @@ const AddressSelectionScreen: React.FC = () => {
 
         const formattedPayload = {
             ...addressPayload,
-            apartmentNo: addressPayload.apartmentNo ? parseInt(addressPayload.apartmentNo.toString()) : null,
+            apartmentNo: addressPayload.apartmentNo.toString(),
 
             latitude: Number(addressPayload.latitude),
-            longitude: Number(addressPayload.longitude)
+            longitude: Number(addressPayload.longitude),
+            is_primary: true
         };
 
         try {
             if (!token) {
-                throw new Error('Authentication token is not available');
+                console.log('Authentication token is not available');
             }
 
             const result = await dispatch(addAddressAsync(formattedPayload)).unwrap();
 
-            if (result && result.success) {
+            if (result) {
                 console.log('Address added successfully:', result);
                 navigation.goBack();
             } else {
-                throw new Error(result?.message || 'Failed to add address');
+                console.log(result + 'Failed to add address');
             }
         } catch (error: any) {
             console.error('Failed to add address:', error);
@@ -533,30 +523,24 @@ const AddressSelectionScreen: React.FC = () => {
                                 value={selectedAddress.title}
                                 borderColor={errors.title ? '#ff0000' : '#b0f484'}
                                 onChange={(text) => handleAddressChange('title', text)}
-                                error={errors.title}
                             />
-                            {errors.title ? <Text style={styles.errorText}>{errors.title}</Text> : null}
                         </View>
 
                         <View style={styles.additionalFields}>
                             <InputField
                                 placeholder="Apt No"
-                                value={selectedAddress.apartmentNo?.toString()}
+                                value={selectedAddress.apartmentNo.toString()}
                                 borderColor={errors.apartmentNo ? '#ff0000' : '#b0f484'}
                                 onChange={(text) => handleAddressChange('apartmentNo', text)}
-                                error={errors.apartmentNo}
                                 keyboardType="numeric"
                             />
-                            {errors.apartmentNo ? <Text style={styles.errorText}>{errors.apartmentNo}</Text> : null}
 
                             <InputField
                                 placeholder="Door No"
                                 value={selectedAddress.doorNo}
                                 borderColor={errors.doorNo ? '#ff0000' : '#b0f484'}
                                 onChange={(text) => handleAddressChange('doorNo', text)}
-                                error={errors.doorNo}
                             />
-                            {errors.doorNo ? <Text style={styles.errorText}>{errors.doorNo}</Text> : null}
                         </View>
 
                         <DefaultButton onPress={handleAddressConfirm} title={'Confirm Address'}/>

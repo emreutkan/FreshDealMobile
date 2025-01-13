@@ -1,10 +1,10 @@
 import {createAsyncThunk} from '@reduxjs/toolkit';
-import {addAddressAPI, updateAddressAPI} from "@/api/userAPI";
+
 import {RootState} from "@/store/store";
 import {addAddress, Address, removeAddress} from "@/store/slices/addressSlice";
-import {getUserData} from "@/store/thunks/userThunks";
+import {getUserDataThunk} from "@/store/thunks/userThunks";
+import {addAddressAPI, updateAddressAPI} from "@/store/api/addressAPI";
 
-// Add address - Updated to handle primary address logic
 export const addAddressAsync = createAsyncThunk<
     Address,
     Omit<Address, 'id'>,
@@ -28,12 +28,12 @@ export const addAddressAsync = createAsyncThunk<
         try {
 
             const response = await addAddressAPI({...address, is_primary: shouldBePrimary}, token);
-            await dispatch(getUserData({token}));
+            await dispatch(getUserDataThunk({token}));
 
             return response as Address;
         } catch (error: any) {
             dispatch(removeAddress(tempId));
-            await dispatch(getUserData({token}));
+            await dispatch(getUserDataThunk({token}));
 
             return rejectWithValue(error.response?.data || 'Failed to add address');
         }
@@ -75,7 +75,6 @@ export const setPrimaryAddress = createAsyncThunk<
                 return rejectWithValue('Authentication token is missing.');
             }
 
-            // Get the address from the current Redux store
             const addressToUpdate = state.address.addresses.find(
                 (addr) => addr.id === addressId
             );
@@ -83,11 +82,9 @@ export const setPrimaryAddress = createAsyncThunk<
                 throw new Error('Address not found');
             }
 
-            // Call your API to set this address as primary
             const updatedAddress = await updateAddressAPI(addressId, {is_primary: true}, token);
 
-            // Now re-fetch the latest user data (or addresses) so the Redux store is in sync
-            await dispatch(getUserData({token}));
+            await dispatch(getUserDataThunk({token}));
 
             console.log('Successfully updated primary address:', updatedAddress);
             return updatedAddress;

@@ -2,6 +2,7 @@
 
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 import {addItemToCart, fetchCart, removeItemFromCart, updateCartItem} from "@/store/thunks/cartThunks";
+import {logout} from "@/store/slices/userSlice";
 
 
 export interface CartItem {
@@ -38,6 +39,9 @@ const cartSlice = createSlice({
         },
     },
     extraReducers: (builder) => {
+        builder
+            .addCase(logout, () => initialState) // Reset state on global action
+
         // Fetch Cart
         builder.addCase(fetchCart.pending, (state) => {
             state.loading = true;

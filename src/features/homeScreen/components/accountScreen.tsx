@@ -1,23 +1,15 @@
 import React, {useState} from 'react';
-import {
-    ActivityIndicator,
-    Alert,
-    Image,
-    SafeAreaView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
-} from 'react-native';
+import {ActivityIndicator, Alert, Image, StyleSheet, Text, TextInput, TouchableOpacity, View,} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
 import {AppDispatch, RootState} from '@/store/store';
 import {Feather} from '@expo/vector-icons';
 import {useNavigation} from '@react-navigation/native';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {updateEmail, updatePassword, updateUsername} from '@/store/thunks/userThunks';
+import {updateEmailThunk, updatePasswordThunk, updateUsername} from '@/store/thunks/userThunks';
 import {logout} from '@/store/slices/userSlice';
 import {RootStackParamList} from "@/src/types/navigation";
+import {useSafeAreaInsets} from "react-native-safe-area-context";
+import GoBackIcon from "@/src/features/homeScreen/components/goBackIcon";
 
 
 const AccountScreen: React.FC = () => {
@@ -65,8 +57,11 @@ const AccountScreen: React.FC = () => {
                         async (newPassword?: string) => {
                             if (newPassword) {
                                 try {
-                                    const resultAction = await dispatch(updatePassword({oldPassword, newPassword}));
-                                    if (updatePassword.fulfilled.match(resultAction)) {
+                                    const resultAction = await dispatch(updatePasswordThunk({
+                                        oldPassword,
+                                        newPassword
+                                    }));
+                                    if (updatePasswordThunk.fulfilled.match(resultAction)) {
                                         Alert.alert('Success', 'Password updated successfully');
                                     } else {
                                         Alert.alert('Error', resultAction.payload as string);
@@ -96,7 +91,7 @@ const AccountScreen: React.FC = () => {
                             updates.push(dispatch(updateUsername({newUsername: editedValues.name_surname})));
                         }
                         if (editedValues.email !== email) {
-                            updates.push(dispatch(updateEmail({oldEmail: email, newEmail: editedValues.email})));
+                            updates.push(dispatch(updateEmailThunk({oldEmail: email, newEmail: editedValues.email})));
                         }
 
                         if (updates.length > 0) {
@@ -131,12 +126,13 @@ const AccountScreen: React.FC = () => {
         );
     }
 
+    const inset = useSafeAreaInsets()
     return (
-        <SafeAreaView style={styles.safeArea}>
+        // add safe area instets to top view as padding top
+
+        <View style={[styles.safeArea, {paddingTop: inset.top}]}>
             <View style={styles.topBar}>
-                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconButton}>
-                    <Feather name="arrow-left" size={24} color="#333"/>
-                </TouchableOpacity>
+                <GoBackIcon/>
                 <Text style={styles.title}>Account</Text>
                 <TouchableOpacity onPress={handleEditInfo} style={styles.iconButton}>
                     <Feather name={isEditing ? 'check' : 'settings'} size={24} color="#333"/>
@@ -189,14 +185,15 @@ const AccountScreen: React.FC = () => {
                     <Text style={styles.logoutButtonText}>Logout</Text>
                 </TouchableOpacity>
             </View>
-        </SafeAreaView>
+        </View>
     );
 };
 
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
-        backgroundColor: '#F9FAFB',
+        backgroundColor: "#fff",
+
     },
     topBar: {
         flexDirection: 'row',
@@ -207,7 +204,7 @@ const styles = StyleSheet.create({
         shadowColor: '#000',
         shadowOffset: {width: 0, height: 2},
         shadowOpacity: 0.15,
-        shadowRadius: 2,
+        shadowRadius: 1,
         elevation: 2,
     },
     iconButton: {padding: 8},

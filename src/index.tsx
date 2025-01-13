@@ -1,4 +1,3 @@
-import 'react-native-get-random-values'; // Import this at the top
 import React from 'react';
 import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
@@ -7,21 +6,27 @@ import {store} from '@/store/store';
 import HomeScreen from './features/homeScreen/screens/Home';
 import Landing from './features/LoginRegister/screens/Landing';
 import AddressSelectionScreen from "@/src/features/homeScreen/screens/addressSelectionScreen"; // Renamed from _layout
-import {RootStackParamList} from '@/src/types/navigation';
+import {navigationRef, RootStackParamList} from '@/src/types/navigation';
 import UpdateAddress from "@/src/features/homeScreen/screens/UpdateAddress";
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
+import RestaurantDetails from "@/src/features/RestaurantScreen/RestaurantDetails";
+import FavoritesScreen from "@/src/features/homeScreen/screens/FavoritesScreen";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 const App: React.FC = () => {
     return (
-        <GestureHandlerRootView style={{flex: 1}}>
+        <GestureHandlerRootView style={{flex: 1, padding: 0, margin: 0}}>
             <Provider store={store}>
-                <NavigationContainer>
+                <NavigationContainer ref={navigationRef}>
                     <Stack.Navigator
                         initialRouteName="Landing"
-                        screenOptions={{headerShown: false}}
+                        screenOptions={{
+                            headerShown: false,
+                            statusBarTranslucent: true, // Allows content to overlap the status bar (remove safe area in android)
+                        }}
                     >
+
                         <Stack.Screen name="Landing" component={Landing}/>
                         <Stack.Screen name="HomeScreen" component={HomeScreen}/>
                         <Stack.Screen
@@ -29,6 +34,14 @@ const App: React.FC = () => {
                             component={AddressSelectionScreen}
                         />
                         <Stack.Screen name="UpdateAddress" component={UpdateAddress}/>
+                        <Stack.Screen
+                            name="RestaurantDetails"
+                            component={RestaurantDetails}
+
+                        />
+                        <Stack.Screen name="FavoritesScreen" component={FavoritesScreen}
+                                      options={{title: 'Favorites'}}/>
+
                     </Stack.Navigator>
                 </NavigationContainer>
             </Provider>

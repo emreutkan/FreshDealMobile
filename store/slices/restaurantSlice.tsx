@@ -1,5 +1,9 @@
+// src/store/slices/restaurantSlice.ts
 import {createSlice} from '@reduxjs/toolkit';
-import {getRestaurantsByProximity} from "@/store/thunks/restaurantThunks";
+import {getRestaurantsByProximity,} from '@/store/thunks/restaurantThunks';
+
+import {addFavoriteThunk, getFavoritesThunk, removeFavoriteThunk,} from "@/store/thunks/userThunks";
+import {logout} from '@/store/slices/userSlice';
 
 export interface Restaurant {
     id: string;
@@ -17,6 +21,11 @@ export interface Restaurant {
     ratingCount: number;
     distance_km: number;
     image_url: string;
+    pickup: boolean;
+    delivery: boolean;
+    maxDeliveryDistance: number;
+    deliveryFee: number;
+    minOrderAmount: number;
 }
 
 export interface RestaurantCreateResponse {
@@ -27,16 +36,22 @@ export interface RestaurantCreateResponse {
 
 interface RestaurantState {
     restaurantsProximity: Restaurant[];
-    status: 'idle' | 'loading' | 'succeeded' | 'failed';
+    restaurantsProximityStatus: 'idle' | 'loading' | 'succeeded' | 'failed';
+    restaurantsProximityLoading: boolean;
+    favoriteRestaurantsIDs: string[];
+    favoritesStatus: 'idle' | 'loading' | 'succeeded' | 'failed';
+    favoritesLoading: boolean;
     error: string | null;
-    loading: boolean;
 }
 
 const initialState: RestaurantState = {
     restaurantsProximity: [],
-    status: 'idle',
+    restaurantsProximityStatus: 'idle',
+    restaurantsProximityLoading: false,
+    favoriteRestaurantsIDs: [],
+    favoritesStatus: 'idle',
+    favoritesLoading: false,
     error: null,
-    loading: false,
 };
 
 const restaurantSlice = createSlice({
@@ -45,23 +60,51 @@ const restaurantSlice = createSlice({
     reducers: {},
     extraReducers: (builder) => {
         builder
+            .addCase(logout, () => initialState)
             .addCase(getRestaurantsByProximity.pending, (state) => {
-                state.status = 'loading';
+                state.restaurantsProximityStatus = 'loading';
+                state.restaurantsProximityLoading = true;
                 state.error = null;
-                state.loading = true;
-
             })
             .addCase(getRestaurantsByProximity.fulfilled, (state, action) => {
-                state.status = 'succeeded';
-                state.loading = false;
-
+                state.restaurantsProximityStatus = 'succeeded';
+                state.restaurantsProximityLoading = false;
                 state.restaurantsProximity = action.payload;
             })
             .addCase(getRestaurantsByProximity.rejected, (state, action) => {
-                state.status = 'failed';
-                state.loading = false;
-
+                state.restaurantsProximityStatus = 'failed';
+                state.restaurantsProximityLoading = false;
                 state.error = action.payload || 'Failed to fetch restaurants';
+            })
+            .addCase(getFavoritesThunk.pending, (state) => {
+                state.favoritesStatus = 'loading';
+                state.favoritesLoading = true;
+                state.error = null;
+            })
+            .addCase(getFavoritesThunk.fulfilled, (state, action) => {
+                state.favoritesStatus = 'succeeded';
+                state.favoritesLoading = false;
+                state.favoriteRestaurantsIDs = action.payload;
+                console.log('Favorites:', action.payload);
+            })
+            .addCase(getFavoritesThunk.rejected, (state, action) => {
+                state.favoritesStatus = 'failed';
+                state.favoritesLoading = false;
+                state.error = action.payload || 'Failed to fetch favorites';
+            })
+            .addCase(addFavoriteThunk.pending, (state) => {
+            })
+            .addCase(addFavoriteThunk.fulfilled, (state, action) => {
+            })
+            .addCase(addFavoriteThunk.rejected, (state, action) => {
+                state.error = action.payload || 'Failed to add to favorites';
+            })
+            .addCase(removeFavoriteThunk.pending, (state) => {
+            })
+            .addCase(removeFavoriteThunk.fulfilled, (state, action) => {
+            })
+            .addCase(removeFavoriteThunk.rejected, (state, action) => {
+                state.error = action.payload || 'Failed to remove from favorites';
             });
     },
 });

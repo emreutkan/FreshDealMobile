@@ -1,7 +1,8 @@
+// src/store/thunks/restaurantThunks.ts
 import {createAsyncThunk} from '@reduxjs/toolkit';
-import {getRestaurantsByProximityAPI} from "@/api/userAPI";
-import {Restaurant} from "@/store/slices/restaurantSlice";
-import {RootState} from "@/store/store";
+import {getRestaurantsInProximity} from "@/store/api/restaurantAPI";
+import {Restaurant} from '@/store/slices/restaurantSlice';
+import {RootState} from '@/store/store';
 
 // Get restaurants by proximity
 export const getRestaurantsByProximity = createAsyncThunk<
@@ -17,10 +18,11 @@ export const getRestaurantsByProximity = createAsyncThunk<
                 console.error('Authentication token is missing.');
                 return rejectWithValue('Authentication token is missing.');
             }
-            const data = await getRestaurantsByProximityAPI(latitude, longitude, radius, token);
+            const data = await getRestaurantsInProximity(latitude, longitude, radius, token);
             return data as Restaurant[];
-        } catch (error) {
-            return rejectWithValue('Failed to fetch restaurants' + {error});
+        } catch (error: any) {
+            return rejectWithValue('Failed to fetch restaurants: ' + error.message);
         }
     }
 );
+
