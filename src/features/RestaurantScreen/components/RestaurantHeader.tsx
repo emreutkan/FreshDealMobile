@@ -12,54 +12,64 @@ interface RestaurantHeaderProps {
     restaurantName: string;
     isMapActive: boolean;                // <-- New prop
     onToggleMap: (active: boolean) => void; // <-- New prop
+    restaurantId: string;
+    isPickup: boolean;
+    setIsPickup: (pickup: boolean) => void;
 }
 
 
-const SearchBar: React.FC = () => {
-
-    type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
-    const navigation = useNavigation<NavigationProp>();
-    return (
-        <TouchableOpacity onPress={() => navigation.goBack()} style={{padding: scaleFont(8)}}>
-
-            <Feather name="search" size={24} color="#000"/>
-        </TouchableOpacity>
-    )
-}
-
-
-const CartBar: React.FC = () => {
-
-    type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
-    const navigation = useNavigation<NavigationProp>();
-
-    return (
-        <TouchableOpacity onPress={() => navigation.goBack()} style={{padding: scaleFont(8)}}>
-
-            <Ionicons name="cart-outline" size={scaleFont(24)} color="#000"/>
-        </TouchableOpacity>
-    );
-};
-
-const GoBackButton: React.FC = () => {
-
-    type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
-    const navigation = useNavigation<NavigationProp>();
-
-    return (
-        <TouchableOpacity onPress={() => navigation.goBack()} style={{padding: scaleFont(8)}}>
-            <Feather name="arrow-left" size={24} color="#333"/>
-        </TouchableOpacity>
-    )
-}
 const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({
                                                                isScrolled,
                                                                restaurantName,
                                                                isMapActive,
-                                                               onToggleMap
+                                                               onToggleMap,
+                                                               restaurantId,
+                                                               isPickup,
+                                                               setIsPickup,
                                                            }) => {
 
 
+    const SearchBar: React.FC = () => {
+
+        type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+        const navigation = useNavigation<NavigationProp>();
+        return (
+            <TouchableOpacity onPress={() => navigation.goBack()} style={{padding: scaleFont(8)}}>
+
+                <Feather name="search" size={24} color="#000"/>
+            </TouchableOpacity>
+        )
+    }
+
+
+    const CartBar: React.FC = () => {
+
+        type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+        const navigation = useNavigation<NavigationProp>();
+
+
+        return (
+            <TouchableOpacity
+
+                onPress={() => navigation.navigate('Cart', {restaurantId, isPickup, setIsPickup})}
+                style={{padding: scaleFont(8)}}>
+
+                <Ionicons name="cart-outline" size={scaleFont(24)} color="#000"/>
+            </TouchableOpacity>
+        );
+    };
+
+    const GoBackButton: React.FC = () => {
+
+        type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+        const navigation = useNavigation<NavigationProp>();
+
+        return (
+            <TouchableOpacity onPress={() => navigation.goBack()} style={{padding: scaleFont(8)}}>
+                <Feather name="arrow-left" size={24} color="#333"/>
+            </TouchableOpacity>
+        )
+    }
     const inset = useSafeAreaInsets()
     return (
         <View style={[
@@ -81,18 +91,17 @@ const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({
                     style={[styles.tabButton, !isMapActive && styles.activeTabButton]}
                     onPress={() => onToggleMap(false)}
                 >
-                    <Text style={[styles.tabButtonText, !isMapActive && styles.activeTabButtonText]}>
-                        Details
-                    </Text>
+                    <Ionicons name={"reader-outline"} size={scaleFont(20)} color={"#333"}
+                              style={{color: !isMapActive ? "#FFF" : "#333",}}/>
+
                 </TouchableOpacity>
 
                 <TouchableOpacity
                     style={[styles.tabButton, isMapActive && styles.activeTabButton]}
                     onPress={() => onToggleMap(true)}
                 >
-                    <Text style={[styles.tabButtonText, isMapActive && styles.activeTabButtonText]}>
-                        Location
-                    </Text>
+                    <Ionicons name={"earth-outline"} size={scaleFont(20)} color={"#333"}
+                              style={{color: isMapActive ? "#FFF" : "#333",}}/>
                 </TouchableOpacity>
             </View>
         </View>
@@ -112,7 +121,7 @@ const styles = StyleSheet.create({
         elevation: 5,
         zIndex: 9999,
         overflow: 'hidden',
-        borderWidth: 1,
+        borderWidth: 2,
         borderTopWidth: 0,
     },
 
@@ -138,12 +147,10 @@ const styles = StyleSheet.create({
     tabsContainer: {
         flexDirection: 'row',
         justifyContent: 'space-around',
-        marginTop: scaleFont(5),
+
     },
     tabButton: {
-        paddingHorizontal: scaleFont(20),
         paddingVertical: scaleFont(8),
-        // borderRadius: scaleFont(20),
         backgroundColor: '#f0f0f0',
         justifyContent: 'center',
         alignItems: 'center',
@@ -154,7 +161,7 @@ const styles = StyleSheet.create({
         color: '#333',
     },
     activeTabButton: {
-        backgroundColor: '#4CAF50',
+        backgroundColor: '#b2f7a5',
     },
     activeTabButtonText: {
         color: '#fff',

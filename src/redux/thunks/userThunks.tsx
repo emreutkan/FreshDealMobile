@@ -160,14 +160,17 @@ export const addFavoriteThunk = createAsyncThunk<
     { state: RootState; rejectValue: string }
 >(
     'favorites/addFavorite',
-    async ({restaurantId}, {getState, rejectWithValue}) => {
+    async ({restaurantId}, {dispatch, getState, rejectWithValue}) => {
         const token = getState().user.token;
         if (!token) {
             return rejectWithValue('Authentication token is missing.');
         }
 
         try {
-            return await addToFavoritesAPI(restaurantId, token);
+            const response = await addToFavoritesAPI(restaurantId, token);
+            await dispatch(getFavoritesThunk());
+
+            return response;
         } catch (error: any) {
             return rejectWithValue(
                 error.response?.data?.message || 'Failed to add favorite'
@@ -183,14 +186,16 @@ export const removeFavoriteThunk = createAsyncThunk<
     { state: RootState; rejectValue: string }
 >(
     'favorites/removeFavorite',
-    async ({restaurantId}, {getState, rejectWithValue}) => {
+    async ({restaurantId}, {dispatch, getState, rejectWithValue}) => {
         const token = getState().user.token;
         if (!token) {
             return rejectWithValue('Authentication token is missing.');
         }
 
         try {
-            return await removeFromFavoritesAPI(restaurantId, token);
+            const response = await removeFromFavoritesAPI(restaurantId, token);
+            await dispatch(getFavoritesThunk());
+            return response;
         } catch (error: any) {
             return rejectWithValue(
                 error.response?.data?.message || 'Failed to remove favorite'

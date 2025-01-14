@@ -8,13 +8,13 @@ export type RootStackParamList = {
     UpdateAddress: { addressId: string }; // Ensure this is correct
     RestaurantDetails: { restaurantId: string };
     FavoritesScreen: undefined;
+    Cart: {
+        restaurantId: string
+        isPickup: boolean;
+        setIsPickup: (isPickup: boolean) => void;
+    };
 
 };
 
 export const navigationRef = createNavigationContainerRef<BottomTabNavigationProp<RootStackParamList>>();
 
-export function navigate(name: keyof RootStackParamList, params?: any) {
-    if (navigationRef.isReady()) {
-        navigationRef.navigate(name, params);
-    }
-}

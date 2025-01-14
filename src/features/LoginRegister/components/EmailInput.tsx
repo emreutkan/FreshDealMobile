@@ -104,6 +104,8 @@ const styles = StyleSheet.create({
         position: 'absolute',
         left: scaleFont(15),
         zIndex: 1,
+        fontFamily: 'Poppins-Regular',
+
     },
     clearButton: {
         paddingHorizontal: scaleFont(10),

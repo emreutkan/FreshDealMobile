@@ -64,7 +64,7 @@ export const updateCartAPI = async (listingId: number, count: number, token: str
 // Remove Item from Cart API Call
 export const removeFromCart = async (listingId: number, token: string) => {
     const functionName = 'removeFromCartAPI';
-    const endpoint = CART_ENDPOINT;
+    const endpoint = `${CART_ENDPOINT}/${listingId}`;
     const payload = {listing_id: listingId};
 
     logRequest(functionName, endpoint, payload);

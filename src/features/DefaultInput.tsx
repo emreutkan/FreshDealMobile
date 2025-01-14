@@ -76,6 +76,7 @@ const styles = StyleSheet.create({
         fontSize: scaleFont(14),
         color: '#1a1818',
         fontFamily: 'Poppins-Regular',
+
     },
     clearButton: {
         paddingHorizontal: scaleFont(10),

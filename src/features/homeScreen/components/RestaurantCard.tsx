@@ -8,7 +8,7 @@ import {useDispatch, useSelector} from "react-redux";
 import {AppDispatch, RootState, store} from "@/src/redux/store";
 import {Ionicons} from "@expo/vector-icons";
 // Import the thunk actions
-import {removeFavoriteThunk} from "@/src/redux/thunks/userThunks";
+import {addFavoriteThunk, removeFavoriteThunk} from "@/src/redux/thunks/userThunks";
 
 interface RestaurantListProps {
     restaurants: Restaurant[];
@@ -45,8 +45,10 @@ const RestaurantList: React.FC<RestaurantListProps> = ({restaurants, onRestauran
                 // cast to int before dispatch
                 dispatch(removeFavoriteThunk({restaurantId: Number(id)}));
             } else {
-                dispatch(removeFavoriteThunk({restaurantId: Number(id)}));
+                console.log('Adding favorite:', id);
+                dispatch(addFavoriteThunk({restaurantId: id}));
             }
+
         },
         [dispatch, favoriteRestaurantsIDs]
     );

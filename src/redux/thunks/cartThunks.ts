@@ -31,14 +31,17 @@ export const addItemToCart = createAsyncThunk<
 
 >(
     'cart/addItemToCart',
-    async ({listingId}, {getState, rejectWithValue}) => {
+    async ({listingId}, {dispatch, getState, rejectWithValue}) => {
         const token = getState().user.token;
 
         if (!token) {
             return rejectWithValue('Authentication token is missing.');
         }
         try {
-            return await addToCartAPI(listingId, 1, token);
+            const response = await addToCartAPI(listingId, 1, token);
+
+            await dispatch(fetchCart());
+            return response;
         } catch (error: any) {
             return rejectWithValue(error.response?.data?.message || error.message);
         }
@@ -51,14 +54,15 @@ export const removeItemFromCart = createAsyncThunk<
     { state: RootState; rejectValue: string }
 >(
     'cart/removeItemFromCart',
-    async ({listingId}, {getState, rejectWithValue}) => {
+    async ({listingId}, {dispatch, getState, rejectWithValue}) => {
         const token = getState().user.token;
         if (!token) {
             return rejectWithValue('Authentication token is missing.');
         }
         try {
-            await removeFromCart(listingId, token);
-            return listingId.toString();
+            const response = await removeFromCart(listingId, token);
+            await dispatch(fetchCart());
+            return response;
         } catch (error: any) {
             return rejectWithValue(error.response?.data?.message || error.message);
         }
@@ -66,12 +70,21 @@ export const removeItemFromCart = createAsyncThunk<
 );
 
 // Update Cart Item Quantity
-export const updateCartItem = createAsyncThunk<CartItem, { listingId: number; count: number; }>(
+export const updateCartItem = createAsyncThunk<
+    CartItem,
+    { listingId: number; count: number; },
+    { state: RootState; rejectValue: string }
+>(
     'cart/updateCartItem',
-    async ({listingId, count}, {rejectWithValue}) => {
+    async ({listingId, count}, {dispatch, getState, rejectWithValue}) => {
+        const token = getState().user.token;
+        if (!token) {
+            return rejectWithValue('Authentication token is missing.');
+        }
         try {
-            // Assuming the API returns the updated cart item
-            return await updateCartAPI(listingId, count, token);
+            const response = await updateCartAPI(listingId, count, token);
+            await dispatch(fetchCart());
+            return response;
         } catch (error: any) {
             return rejectWithValue(error.response?.data?.message || error.message);
         }

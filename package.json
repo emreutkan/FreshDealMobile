@@ -24,6 +24,7 @@
     "@reduxjs/toolkit": "^2.3.0",
     "axios": "^1.7.9",
     "expo": "^52.0.15",
+    "expo-app-loading": "^2.1.1",
     "expo-apple-authentication": "~7.1.2",
     "expo-constants": "~17.0.3",
     "expo-dev-client": "~5.0.6",
