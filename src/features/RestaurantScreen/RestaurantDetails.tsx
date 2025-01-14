@@ -3,12 +3,11 @@ import {StyleSheet, Text, View,} from 'react-native';
 import {RouteProp, useRoute} from '@react-navigation/native';
 import {useDispatch, useSelector} from 'react-redux';
 import {AppDispatch, RootState} from '@/src/redux/store';
-import RestaurantHeader from "@/src/features/RestaurantScreen/components/RestaurantHeader";
 import {RootStackParamList} from "@/src/utils/navigation";
-import LocateToRestaurant from "@/src/features/RestaurantScreen/components/locateToRestaurant";
 import {getListingsThunk} from "@/src/redux/thunks/listingThunks";
 import RestaurantInfoSection from "@/src/features/RestaurantScreen/components/RestaurantInfoSection";
 import ListingsCard from "@/src/features/RestaurantScreen/components/listingsCard";
+import CartBar from "@/src/features/RestaurantScreen/components/cartBar";
 
 
 const RestaurantDetails: React.FC = () => {
@@ -43,6 +42,7 @@ const RestaurantDetails: React.FC = () => {
         // cartItems
     ]);
 
+
     useEffect(() => {
         console.log("Cart updated: ", cart);
     }, [cart]);
@@ -65,15 +65,16 @@ const RestaurantDetails: React.FC = () => {
         const deliveryAvailable = restaurant.delivery;
         return (
             <>
-                <RestaurantHeader
-                    isScrolled={true}
-                    restaurantName={restaurant.restaurantName.toString()}
-                    isMapActive={isMapActive}
-                    onToggleMap={setIsMapActive}
-                    restaurantId={restaurantId}
-                    isPickup={isPickup}
-                    setIsPickup={setIsPickup}
-                />
+                {/*<RestaurantHeader*/}
+                {/*    isScrolled={true}*/}
+                {/*    restaurantName={restaurant.restaurantName.toString()}*/}
+                {/*    isMapActive={isMapActive}*/}
+                {/*    onToggleMap={setIsMapActive}*/}
+                {/*    restaurantId={restaurantId}*/}
+                {/*    isPickup={isPickup}*/}
+                {/*    setIsPickup={setIsPickup}*/}
+                {/*/>*/}
+
                 <View style={styles.container}>
                     <RestaurantInfoSection restaurant={restaurant}
                                            isPickup={isPickup}
@@ -91,11 +92,18 @@ const RestaurantDetails: React.FC = () => {
 
                     }
 
-                    {isMapActive && (
-                        <LocateToRestaurant restaurantId={restaurantId}/>
-                    )}
+                    {/*{isMapActive && (*/}
+                    {/*    <LocateToRestaurant restaurantId={restaurantId}/>*/}
+                    {/*)}*/}
                 </View>
-
+                {cartItems && cartItems.length > 0 && (
+                    <CartBar
+                        restaurantId={restaurantId}
+                        isPickup={isPickup}
+                        setIsPickup={setIsPickup}
+                        cartItems={cartItems}
+                    />
+                )}
             </>
         );
     }

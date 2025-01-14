@@ -6,6 +6,7 @@ import {NativeStackNavigationProp} from "@react-navigation/native-stack";
 import {RootStackParamList} from "@/src/utils/navigation";
 import {useNavigation} from "@react-navigation/native";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
+import CartIcon from "@/src/features/RestaurantScreen/components/CartIcon";
 
 interface RestaurantHeaderProps {
     isScrolled: boolean;
@@ -18,6 +19,32 @@ interface RestaurantHeaderProps {
 }
 
 
+export const GoBackButton: React.FC = () => {
+
+    type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+    const navigation = useNavigation<NavigationProp>();
+    const inset = useSafeAreaInsets()
+    return (
+        <TouchableOpacity
+            style={{
+                padding: 8,
+                zIndex: 9999,
+                position: 'absolute',
+                backgroundColor: '#fff',
+                borderRadius: 50,
+                left: inset.left,
+                margin: 12,
+                top: inset.top,
+
+            }}
+            onPress={() => navigation.goBack()}>
+            <Ionicons
+
+                name="arrow-back" size={24} color="#000"/>
+            {/*<Ionicons name="arrow-left" size={24} color="#333"/>*/}
+        </TouchableOpacity>
+    )
+}
 const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({
                                                                isScrolled,
                                                                restaurantName,
@@ -42,34 +69,6 @@ const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({
     }
 
 
-    const CartBar: React.FC = () => {
-
-        type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
-        const navigation = useNavigation<NavigationProp>();
-
-
-        return (
-            <TouchableOpacity
-
-                onPress={() => navigation.navigate('Cart', {restaurantId, isPickup, setIsPickup})}
-                style={{padding: scaleFont(8)}}>
-
-                <Ionicons name="cart-outline" size={scaleFont(24)} color="#000"/>
-            </TouchableOpacity>
-        );
-    };
-
-    const GoBackButton: React.FC = () => {
-
-        type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
-        const navigation = useNavigation<NavigationProp>();
-
-        return (
-            <TouchableOpacity onPress={() => navigation.goBack()} style={{padding: scaleFont(8)}}>
-                <Feather name="arrow-left" size={24} color="#333"/>
-            </TouchableOpacity>
-        )
-    }
     const inset = useSafeAreaInsets()
     return (
         <View style={[
@@ -82,7 +81,11 @@ const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({
                 </Text>
 
                 <View style={styles.iconContainer}>
-                    <CartBar/>
+                    <CartIcon
+                        restaurantId={restaurantId}
+                        isPickup={isPickup}
+                        setIsPickup={setIsPickup}
+                    />
                     <SearchBar/>
                 </View>
             </View>
