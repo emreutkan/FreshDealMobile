@@ -1,8 +1,8 @@
 // src/store/slices/cartSlice.ts
 
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
-import {addItemToCart, fetchCart, removeItemFromCart, updateCartItem} from "@/store/thunks/cartThunks";
-import {logout} from "@/store/slices/userSlice";
+import {addItemToCart, fetchCart, removeItemFromCart, updateCartItem} from "@/src/redux/thunks/cartThunks";
+import {logout} from "@/src/redux/slices/userSlice";
 
 
 export interface CartItem {

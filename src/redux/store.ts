@@ -1,8 +1,9 @@
 import {configureStore} from '@reduxjs/toolkit';
-import userReducer from './slices/userSlice';
-import addressReducer from './slices/addressSlice';
-import cartReducer from './slices/cartSlice';
-import restaurantReducer from './slices/restaurantSlice';
+import userReducer from '@/src/redux/slices/userSlice';
+import addressReducer from '@/src/redux/slices/addressSlice';
+import cartReducer from '@/src/redux/slices/cartSlice';
+import restaurantReducer from '@/src/redux/slices/restaurantSlice';
+import listingReducer from '@/src/redux/slices/listingSlice';
 
 // Create the listener middleware
 
@@ -12,6 +13,7 @@ export const store = configureStore({
         address: addressReducer,
         cart: cartReducer,
         restaurant: restaurantReducer,
+        listing: listingReducer,
     },
 });
 

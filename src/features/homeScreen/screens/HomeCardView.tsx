@@ -13,7 +13,7 @@ import {
 import RestaurantList from "@/src/features/homeScreen/components/RestaurantCard";
 import {Feather} from '@expo/vector-icons';
 import {scaleFont} from "@/src/utils/ResponsiveFont";
-import {RootState} from "@/store/store";
+import {RootState} from "@/src/redux/store";
 import {useSelector} from "react-redux";
 
 interface HomeCardViewProps {

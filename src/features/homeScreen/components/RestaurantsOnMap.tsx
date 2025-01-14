@@ -2,9 +2,9 @@
 import React, {useRef, useState} from 'react';
 import {Image, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import MapView, {Callout, Marker} from 'react-native-maps';
-import {RootState} from '@/store/store';
-import {Address} from '@/store/slices/addressSlice';
-import {Restaurant} from '@/store/slices/restaurantSlice';
+import {RootState} from '@/src/redux/store';
+import {Address} from '@/src/redux/slices/addressSlice';
+import {Restaurant} from '@/src/redux/slices/restaurantSlice';
 import {useSelector} from 'react-redux';
 import {Ionicons} from '@expo/vector-icons';
 import {scaleFont} from '@/src/utils/ResponsiveFont';

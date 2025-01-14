@@ -1,7 +1,7 @@
 // Add Address API Call
-import {Address} from "@/store/slices/addressSlice";
+import {Address} from "@/src/redux/slices/addressSlice";
 import axios from "axios";
-import {API_BASE_URL} from "@/store/api/API";
+import {API_BASE_URL} from "@/src/redux/api/API";
 import {logError, logRequest, logResponse} from "@/src/utils/logger";
 
 const ADDRESS_ENDPOINT = `${API_BASE_URL}/addresses`;

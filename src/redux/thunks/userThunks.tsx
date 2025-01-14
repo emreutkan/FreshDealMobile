@@ -1,8 +1,8 @@
 import {createAsyncThunk} from '@reduxjs/toolkit';
 
-import {RootState} from "@/store/store";
-import {UserDataResponse} from "@/store/slices/userSlice";
-import {loginUserAPI, registerUserAPI} from "@/store/api/authAPI";
+import {RootState} from "@/src/redux/store";
+import {UserDataResponse} from "@/src/redux/slices/userSlice";
+import {loginUserAPI, registerUserAPI} from "@/src/redux/api/authAPI";
 import {
     addToFavoritesAPI,
     getFavoritesAPI,
@@ -11,7 +11,7 @@ import {
     updateEmailAPI,
     updatePasswordAPI,
     updateUsernameAPI
-} from "@/store/api/userAPI"; // adjust the path as necessary
+} from "@/src/redux/api/userAPI"; // adjust the path as necessary
 
 
 // Login user

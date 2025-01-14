@@ -6,8 +6,8 @@ import {
     updateEmailThunk,
     updatePasswordThunk,
     updateUsername,
-} from "@/store/thunks/userThunks";
-import {verifyCode} from "@/store/api/authAPI";
+} from "@/src/redux/thunks/userThunks";
+import {verifyCode} from "@/src/redux/api/authAPI";
 
 interface UserState {
     email: string;

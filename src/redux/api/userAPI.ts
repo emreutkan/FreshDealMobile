@@ -1,7 +1,7 @@
 // api/userAPI.ts
 import axios from 'axios';
 import {logError, logRequest, logResponse} from "@/src/utils/logger";
-import {API_BASE_URL} from "@/store/api/API";
+import {API_BASE_URL} from "@/src/redux/api/API";
 
 const USER_ENDPOINT = `${API_BASE_URL}/user`;
 const UPDATE_USERNAME_ENDPOINT = `${USER_ENDPOINT}/username`;

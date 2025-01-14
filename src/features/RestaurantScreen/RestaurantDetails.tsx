@@ -1,16 +1,41 @@
-import React, {useState} from 'react';
-import {Image, ScrollView, StyleSheet, Text, View} from 'react-native';
+import React, {useEffect, useMemo, useRef, useState} from 'react';
+import {FlatList, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View,} from 'react-native';
 import {RouteProp, useRoute} from '@react-navigation/native';
-import {useSelector} from 'react-redux';
-import {RootState} from '@/store/store';
+import {useDispatch, useSelector} from 'react-redux';
+import {AppDispatch, RootState} from '@/src/redux/store';
 import {Ionicons} from '@expo/vector-icons';
 import RestaurantHeader from "@/src/features/RestaurantScreen/components/RestaurantHeader";
-import {RootStackParamList} from "@/src/types/navigation";
+import {RootStackParamList} from "@/src/utils/navigation";
 import LocateToRestaurant from "@/src/features/RestaurantScreen/components/locateToRestaurant";
+import BottomSheet, {BottomSheetScrollView} from "@gorhom/bottom-sheet";
+import {getListingsThunk} from "@/src/redux/thunks/listingThunks";
+import {Restaurant} from "@/src/redux/slices/restaurantSlice";
+
+// ---- If you have your addItemToCart thunk, import it:
+// import { addItemToCart } from '@/src/redux/thunks/cartThunks';
+
+export interface Listing {
+    id: number;
+    restaurant_id: number;
+    title: string;
+    description: string;
+    image_url: string;
+    count: number;
+    original_price: number | null;
+    pickup_price: number | null;
+    delivery_price: number | null;
+    consume_within: number | null;
+}
 
 const RestaurantDetails: React.FC = () => {
     const route = useRoute<RouteProp<RootStackParamList, 'RestaurantDetails'>>();
-    const [isMapActive, setIsMapActive] = useState(false); // <-- State for toggling map or details
+    const [isMapActive, setIsMapActive] = useState(false); // Toggle map or details
+    const bottomSheetRef = useRef<BottomSheet>(null);
+    // These are your bottom sheet heights (snap points)
+    const snapPoints = useMemo(() => ['30%', '30%', '80%'], []);
+
+    // ---- 1) STATE for toggling Pickup/Delivery
+    const [isPickup, setIsPickup] = useState(true);
 
     if (!route.params || !route.params.restaurantId) {
         return (
@@ -20,8 +45,97 @@ const RestaurantDetails: React.FC = () => {
         );
     }
 
-    const {restaurantId} = route.params;
+    // If you have the user token in Redux, grab it here:
+    // const token = useSelector((state: RootState) => state.user.token);
 
+    // Your updated renderListingItem:
+    const renderListingItem = ({item}: { item: Listing }) => {
+        // Decide which price to show:
+        const displayPrice = isPickup
+            ? item.pickup_price ?? 0
+            : item.delivery_price ?? 0;
+
+        // Calculate discount if original price is present
+        const discountPercentage = useMemo(() => {
+            if (!item.original_price || item.original_price <= 0) return 0;
+            const diff = item.original_price - displayPrice;
+            const pct = (diff / item.original_price) * 100;
+            return Math.round(pct);
+        }, [item.original_price, displayPrice]);
+
+        // Handler for adding to cart
+        const dispatch = useDispatch<AppDispatch>();
+        const handleAddToCart = () => {
+            // dispatch(addItemToCart({ listingId: item.id, count: 1, token }));
+            console.log('Adding to cart: listingId=', item.id);
+        };
+
+        return (
+            <View style={styles.listingItem}>
+                {/* Listing Image */}
+                {item.image_url ? (
+                    <Image
+                        source={{uri: item.image_url}}
+                        style={styles.listingImage}
+                        resizeMode="cover"
+                    />
+                ) : (
+                    <View style={[styles.listingImage, styles.noImage]}/>
+                )}
+
+                {/* Text Info */}
+                <View style={styles.listingDetails}>
+                    <Text style={styles.listingTitle}>{item.title}</Text>
+                    <Text style={styles.listingDescription}>{item.description}</Text>
+
+                    {/* Price Row */}
+                    <View style={styles.priceRow}>
+                        {/* Original Price (strikethrough) */}
+                        {item.original_price !== null && item.original_price > 0 && (
+                            <Text style={styles.originalPrice}>
+                                {item.original_price} TL
+                            </Text>
+                        )}
+
+                        {/* Display Price */}
+                        <Text style={styles.displayPrice}>
+                            {displayPrice} TL
+                        </Text>
+
+                        {/* Discount */}
+                        {discountPercentage > 0 && (
+                            <View style={styles.discountContainer}>
+                                <Text style={styles.discountText}>
+                                    {discountPercentage}% OFF
+                                </Text>
+                            </View>
+                        )}
+                    </View>
+                </View>
+
+                {/* Add Button */}
+                <TouchableOpacity style={styles.addButton} onPress={handleAddToCart}>
+                    <Text style={styles.addButtonText}>+</Text>
+                </TouchableOpacity>
+            </View>
+        );
+    };
+
+    // ---- GET RESTAURANT ID & LOAD LISTINGS
+    const {restaurantId} = route.params;
+    const dispatch = useDispatch<AppDispatch>();
+    const listings = useSelector((state: RootState) => state.listing.listings);
+
+    useEffect(() => {
+        const payload = {
+            restaurantId: Number(restaurantId),
+            page: 1,
+            limit: 10,
+        };
+        dispatch(getListingsThunk(payload));
+    }, [restaurantId]);
+
+    // ---- GET RESTAURANT DATA
     const restaurant = useSelector((state: RootState) =>
         state.restaurant.restaurantsProximity.find(r => r.id === restaurantId)
     );
@@ -42,7 +156,6 @@ const RestaurantDetails: React.FC = () => {
 
     return (
         <View style={styles.container}>
-            {/* Pass isMapActive and setIsMapActive to the header */}
             <RestaurantHeader
                 isScrolled={true}
                 restaurantName={restaurant.restaurantName.toString()}
@@ -51,7 +164,6 @@ const RestaurantDetails: React.FC = () => {
             />
 
             <ScrollView>
-                {/* Header image or fallback */}
                 {restaurant?.image_url ? (
                     <Image
                         source={{uri: restaurant.image_url}}
@@ -66,13 +178,14 @@ const RestaurantDetails: React.FC = () => {
                     </View>
                 )}
 
-                {/* Conditionally render the Details or the Location (Map) */}
+                {/* Show info only if user NOT toggled map */}
                 {!isMapActive && (
                     <View style={styles.content}>
                         <Text style={styles.restaurantName}>
                             {restaurant.restaurantName}
                         </Text>
 
+                        {/* Rating / Distance */}
                         <View style={styles.infoRow}>
                             <View style={styles.ratingContainer}>
                                 <Ionicons name="star" size={20} color="#FFD700"/>
@@ -94,7 +207,9 @@ const RestaurantDetails: React.FC = () => {
 
                             <View style={styles.detailRow}>
                                 <Ionicons name="reader-outline" size={20} color="#666"/>
-                                <Text style={styles.detailText}>About: {restaurant.restaurantDescription}</Text>
+                                <Text style={styles.detailText}>
+                                    About: {restaurant.restaurantDescription}
+                                </Text>
                             </View>
                             <View style={styles.detailRow}>
                                 <Ionicons name="restaurant-outline" size={20} color="#666"/>
@@ -127,16 +242,77 @@ const RestaurantDetails: React.FC = () => {
                         </View>
                     </View>
                 )}
-
-
             </ScrollView>
+
+            {/* Bottom Sheet */}
+            <BottomSheet
+                ref={bottomSheetRef}
+                index={1}
+                style={styles.bottomSheet}
+                snapPoints={snapPoints}
+                enablePanDownToClose={false}
+                handleIndicatorStyle={styles.bottomSheetHandle}
+            >
+                <BottomSheetScrollView contentContainerStyle={styles.bottomSheetContent}>
+                    {/* ---- 2) Pickup / Delivery Toggle Buttons (INSIDE BOTTOM SHEET) ---- */}
+                    <View style={styles.toggleContainer}>
+                        <TouchableOpacity
+                            style={[
+                                styles.toggleButton,
+                                isPickup && styles.activeButton
+                            ]}
+                            onPress={() => setIsPickup(true)}
+                        >
+                            <Text
+                                style={[
+                                    styles.toggleButtonText,
+                                    isPickup && styles.activeButtonText
+                                ]}
+                            >
+                                Pickup
+                            </Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={[
+                                styles.toggleButton,
+                                !isPickup && styles.activeButton
+                            ]}
+                            onPress={() => setIsPickup(false)}
+                        >
+                            <Text
+                                style={[
+                                    styles.toggleButtonText,
+                                    !isPickup && styles.activeButtonText
+                                ]}
+                            >
+                                Delivery
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+
+                    {/* ---- List of items ---- */}
+                    {listings.length > 0 ? (
+                        <FlatList
+                            data={listings}
+                            renderItem={renderListingItem}
+                            keyExtractor={(item) => item.id.toString()}
+                        />
+                    ) : (
+                        <Text>No listings found.</Text>
+                    )}
+                </BottomSheetScrollView>
+            </BottomSheet>
+
+            {/* If user toggles map, show map */}
             {isMapActive && (
                 <LocateToRestaurant restaurantId={restaurantId}/>
-
             )}
         </View>
     );
 };
+
+export default RestaurantDetails;
 
 const styles = StyleSheet.create({
     container: {
@@ -222,6 +398,123 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
     },
-});
+    bottomSheet: {
+        zIndex: 3,
+    },
+    bottomSheetContent: {
+        padding: 16,
+    },
+    bottomSheetHandle: {
+        backgroundColor: '#ccc',
+        width: 40,
+        height: 5,
+        borderRadius: 2.5,
+        alignSelf: 'center',
+        marginVertical: 8,
+    },
 
-export default RestaurantDetails;
+    // ---- Toggle Buttons ----
+    toggleContainer: {
+        flexDirection: 'row',
+        marginBottom: 16,
+    },
+    toggleButton: {
+        flex: 1,
+        paddingVertical: 12,
+        backgroundColor: '#f0f0f0',
+        borderWidth: 1,
+        borderColor: '#ccc',
+        alignItems: 'center',
+    },
+    toggleButtonText: {
+        fontSize: 16,
+        color: '#333',
+    },
+    activeButton: {
+        backgroundColor: '#4CAF50',
+        borderColor: '#4CAF50',
+    },
+    activeButtonText: {
+        color: '#FFF',
+    },
+
+    // ---- Listing item styles ----
+    listingItem: {
+        flexDirection: 'row',
+        marginVertical: 8,
+        padding: 12,
+        borderRadius: 8,
+        backgroundColor: '#FFF',
+        alignItems: 'center',
+        // shadow for iOS, elevation for Android
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.15,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+    listingImage: {
+        width: 70,
+        height: 70,
+        borderRadius: 8,
+        marginRight: 12,
+    },
+    noImage: {
+        backgroundColor: '#ccc',
+    },
+    listingDetails: {
+        flex: 1,
+    },
+    listingTitle: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#333',
+        marginBottom: 4,
+    },
+    listingDescription: {
+        fontSize: 14,
+        color: '#666',
+        marginBottom: 8,
+    },
+    priceRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    originalPrice: {
+        fontSize: 14,
+        color: '#999',
+        marginRight: 8,
+        textDecorationLine: 'line-through',
+    },
+    displayPrice: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#333',
+        marginRight: 8,
+    },
+    discountContainer: {
+        paddingHorizontal: 6,
+        paddingVertical: 2,
+        backgroundColor: '#EBF9ED',
+        borderRadius: 4,
+    },
+    discountText: {
+        fontSize: 12,
+        fontWeight: '600',
+        color: '#34A853',
+    },
+    addButton: {
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        backgroundColor: '#4CAF50',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginLeft: 8,
+    },
+    addButtonText: {
+        fontSize: 18,
+        color: '#FFF',
+        fontWeight: '600',
+    },
+});

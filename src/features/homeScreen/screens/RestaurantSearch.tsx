@@ -1,10 +1,10 @@
 import React, {useEffect} from 'react';
 import {Keyboard, KeyboardAvoidingView, StyleSheet, TextInput, TouchableWithoutFeedback, View,} from 'react-native';
 import {useDispatch, useSelector} from "react-redux";
-import {AppDispatch, RootState} from "@/store/store";
+import {AppDispatch, RootState} from "@/src/redux/store";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
 import type {NativeStackNavigationProp} from "@react-navigation/native-stack";
-import {RootStackParamList} from "@/src/types/navigation";
+import {RootStackParamList} from "@/src/utils/navigation";
 import {useNavigation} from "@react-navigation/native";
 import {scaleFont} from "@/src/utils/ResponsiveFont";
 

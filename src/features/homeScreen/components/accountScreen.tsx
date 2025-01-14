@@ -1,13 +1,13 @@
 import React, {useState} from 'react';
 import {ActivityIndicator, Alert, Image, StyleSheet, Text, TextInput, TouchableOpacity, View,} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
-import {AppDispatch, RootState} from '@/store/store';
+import {AppDispatch, RootState} from '@/src/redux/store';
 import {Feather} from '@expo/vector-icons';
 import {useNavigation} from '@react-navigation/native';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {updateEmailThunk, updatePasswordThunk, updateUsername} from '@/store/thunks/userThunks';
-import {logout} from '@/store/slices/userSlice';
-import {RootStackParamList} from "@/src/types/navigation";
+import {updateEmailThunk, updatePasswordThunk, updateUsername} from '@/src/redux/thunks/userThunks';
+import {logout} from '@/src/redux/slices/userSlice';
+import {RootStackParamList} from "@/src/utils/navigation";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
 import GoBackIcon from "@/src/features/homeScreen/components/goBackIcon";
 

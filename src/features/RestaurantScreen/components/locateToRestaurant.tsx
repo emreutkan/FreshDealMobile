@@ -3,9 +3,9 @@ import {Image, Linking, Platform, StyleSheet, Text, TouchableOpacity, View} from
 import MapView, {Marker} from 'react-native-maps';
 import MapViewDirections from 'react-native-maps-directions';
 import {useSelector} from 'react-redux';
-import {RootState} from '@/store/store';
-import {Address} from '@/store/slices/addressSlice';
-import {Restaurant} from '@/store/slices/restaurantSlice';
+import {RootState} from '@/src/redux/store';
+import {Address} from '@/src/redux/slices/addressSlice';
+import {Restaurant} from '@/src/redux/slices/restaurantSlice';
 import Constants from 'expo-constants';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import {scaleFont} from '@/src/utils/ResponsiveFont';

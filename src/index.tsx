@@ -2,11 +2,11 @@ import React from 'react';
 import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {Provider} from 'react-redux';
-import {store} from '@/store/store';
+import {store} from '@/src/redux/store';
 import HomeScreen from './features/homeScreen/screens/Home';
 import Landing from './features/LoginRegister/screens/Landing';
 import AddressSelectionScreen from "@/src/features/homeScreen/screens/addressSelectionScreen"; // Renamed from _layout
-import {navigationRef, RootStackParamList} from '@/src/types/navigation';
+import {navigationRef, RootStackParamList} from '@/src/utils/navigation';
 import UpdateAddress from "@/src/features/homeScreen/screens/UpdateAddress";
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import RestaurantDetails from "@/src/features/RestaurantScreen/RestaurantDetails";

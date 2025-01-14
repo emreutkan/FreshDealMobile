@@ -1,8 +1,8 @@
-import {CartItem} from "@/store/slices/cartSlice";
+import {CartItem} from "@/src/redux/slices/cartSlice";
 import axios from "axios";
 
 import {logError, logRequest, logResponse} from "@/src/utils/logger";
-import {API_BASE_URL} from "@/store/api/API";
+import {API_BASE_URL} from "@/src/redux/api/API";
 
 const CART_ENDPOINT = `${API_BASE_URL}/cart`;
 

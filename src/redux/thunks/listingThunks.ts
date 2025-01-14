@@ -1,6 +1,6 @@
 import {createAsyncThunk} from "@reduxjs/toolkit";
-import {Listing, Pagination} from "@/store/slices/listingSlice";
-import {getListingsAPI} from "@/store/api/listingsAPI";
+import {Listing, Pagination} from "@/src/redux/slices/listingSlice";
+import {getListingsAPI} from "@/src/redux/api/listingsAPI";
 
 
 // Thunks

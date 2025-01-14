@@ -1,9 +1,9 @@
 // addressSlice.ts
 
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
-import {getUserDataThunk} from "@/store/thunks/userThunks";
-import {addAddressAsync, setPrimaryAddress} from "@/store/thunks/addressThunks";
-import {logout} from "@/store/slices/userSlice";
+import {getUserDataThunk} from "@/src/redux/thunks/userThunks";
+import {addAddressAsync, setPrimaryAddress} from "@/src/redux/thunks/addressThunks";
+import {logout} from "@/src/redux/slices/userSlice";
 
 export interface Address {
     id: string;

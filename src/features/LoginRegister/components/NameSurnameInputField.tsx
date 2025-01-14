@@ -2,8 +2,8 @@ import React, {useEffect, useRef, useState} from 'react';
 import {Animated, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View} from 'react-native';
 import {scaleFont} from "@/src/utils/ResponsiveFont";
 import {useDispatch, useSelector} from 'react-redux';
-import {setName} from '@/store/slices/userSlice'; // Adjust the path as needed
-import {RootState} from '@/store/store'; // Adjust the path as needed
+import {setName} from '@/src/redux/slices/userSlice'; // Adjust the path as needed
+import {RootState} from '@/src/redux/store'; // Adjust the path as needed
 
 const NameSurnameInputField: React.FC = () => {
     const dispatch = useDispatch();

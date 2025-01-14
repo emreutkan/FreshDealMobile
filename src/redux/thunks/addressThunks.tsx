@@ -1,9 +1,9 @@
 import {createAsyncThunk} from '@reduxjs/toolkit';
 
-import {RootState} from "@/store/store";
-import {addAddress, Address, removeAddress} from "@/store/slices/addressSlice";
-import {getUserDataThunk} from "@/store/thunks/userThunks";
-import {addAddressAPI, updateAddressAPI} from "@/store/api/addressAPI";
+import {RootState} from "@/src/redux/store";
+import {addAddress, Address, removeAddress} from "@/src/redux/slices/addressSlice";
+import {getUserDataThunk} from "@/src/redux/thunks/userThunks";
+import {addAddressAPI, updateAddressAPI} from "@/src/redux/api/addressAPI";
 
 export const addAddressAsync = createAsyncThunk<
     Address,

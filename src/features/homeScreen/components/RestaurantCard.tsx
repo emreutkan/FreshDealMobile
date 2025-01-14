@@ -1,14 +1,14 @@
 import React, {useCallback} from "react";
 import {FlatList, Image, Platform, StyleSheet, Text, TouchableOpacity, View,} from "react-native";
-import {Restaurant} from "@/store/slices/restaurantSlice";
+import {Restaurant} from "@/src/redux/slices/restaurantSlice";
 import {NativeStackNavigationProp} from "@react-navigation/native-stack";
-import {RootStackParamList} from "@/src/types/navigation";
+import {RootStackParamList} from "@/src/utils/navigation";
 import {useNavigation} from "@react-navigation/native";
 import {useDispatch, useSelector} from "react-redux";
-import {AppDispatch, RootState, store} from "@/store/store";
+import {AppDispatch, RootState, store} from "@/src/redux/store";
 import {Ionicons} from "@expo/vector-icons";
 // Import the thunk actions
-import {removeFavoriteThunk} from "@/store/thunks/userThunks";
+import {removeFavoriteThunk} from "@/src/redux/thunks/userThunks";
 
 interface RestaurantListProps {
     restaurants: Restaurant[];

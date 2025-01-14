@@ -5,9 +5,9 @@ import LoginModal from "@/src/features/LoginRegister/screens/LoginModal";
 import RegisterModal from "@/src/features/LoginRegister/screens/RegisterModal";
 import {useNavigation} from "@react-navigation/native";
 import {useSelector} from "react-redux";
-import {RootState} from "@/store/store";
+import {RootState} from "@/src/redux/store";
 import {NativeStackNavigationProp} from "@react-navigation/native-stack";
-import {RootStackParamList} from "@/src/types/navigation";
+import {RootStackParamList} from "@/src/utils/navigation";
 
 const Landing: React.FC = () => {
     const {height: screenHeight} = Dimensions.get('window');
@@ -79,7 +79,7 @@ const Landing: React.FC = () => {
 
             {showImage && (
                 <Animated.Image
-                    source={require('@/assets/images/logo.png')}
+                    source={require('@/src/assets/images/logo.png')}
                     style={[styles.logo, {
                         transform: [{translateY: imagePosition}, {scale: imageScale}],
                         opacity: imageOpacity

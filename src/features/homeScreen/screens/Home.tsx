@@ -10,7 +10,7 @@ import {
     View,
 } from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
-import {AppDispatch, RootState} from '@/store/store';
+import {AppDispatch, RootState} from '@/src/redux/store';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import AddressSelectorScreen from '@/src/features/homeScreen/screens/addressSelectionScreen';
@@ -19,8 +19,8 @@ import HomeMapView from '@/src/features/homeScreen/screens/HomeMapView';
 import AccountScreen from '@/src/features/homeScreen/components/accountScreen';
 import Header from '@/src/features/homeScreen/components/Header';
 import RestaurantSearch from "@/src/features/homeScreen/screens/RestaurantSearch";
-import {getRestaurantsByProximity} from "@/store/thunks/restaurantThunks";
-import {getFavoritesThunk} from "@/store/thunks/userThunks";
+import {getRestaurantsByProximity} from "@/src/redux/thunks/restaurantThunks";
+import {getFavoritesThunk} from "@/src/redux/thunks/userThunks";
 // Enable LayoutAnimation on Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
     UIManager.setLayoutAnimationEnabledExperimental(true);

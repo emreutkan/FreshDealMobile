@@ -1,8 +1,8 @@
 // src/store/slices/listingSlice.ts
 
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
-import {getListingsThunk} from "@/store/thunks/listingThunks";
-import {logout} from "@/store/slices/userSlice";
+import {getListingsThunk} from "@/src/redux/thunks/listingThunks";
+import {logout} from "@/src/redux/slices/userSlice";
 
 export interface Listing {
     id: number;
@@ -10,8 +10,12 @@ export interface Listing {
     title: string;
     description: string;
     image_url: string;
-    price: number;
     count: number;
+    original_price: number | null;
+    pickup_price: number | null;
+    delivery_price: number | null;
+    consume_within: number | null;
+
 }
 
 
@@ -54,8 +58,7 @@ const listingSlice = createSlice({
     extraReducers: (builder) => {
         builder
             .addCase(logout, () => initialState) // Reset state on global action
-            .addCase(getListingsThunk.pending, (state) => { /* other cases */
-            });
+
         builder.addCase(getListingsThunk.pending, (state) => {
             state.loading = true;
             state.error = null;

@@ -1,9 +1,9 @@
 // src/store/slices/restaurantSlice.ts
 import {createSlice} from '@reduxjs/toolkit';
-import {getRestaurantsByProximity,} from '@/store/thunks/restaurantThunks';
+import {getRestaurantsByProximity,} from '@/src/redux/thunks/restaurantThunks';
 
-import {addFavoriteThunk, getFavoritesThunk, removeFavoriteThunk,} from "@/store/thunks/userThunks";
-import {logout} from '@/store/slices/userSlice';
+import {addFavoriteThunk, getFavoritesThunk, removeFavoriteThunk,} from "@/src/redux/thunks/userThunks";
+import {logout} from '@/src/redux/slices/userSlice';
 
 export interface Restaurant {
     id: string;

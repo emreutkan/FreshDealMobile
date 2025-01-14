@@ -1,6 +1,6 @@
 import {logError, logRequest, logResponse} from "@/src/utils/logger";
 import axios from "axios";
-import {API_BASE_URL} from "@/store/api/API";
+import {API_BASE_URL} from "@/src/redux/api/API";
 
 const SEARCH_API_ENDPOINT = `${API_BASE_URL}/search`;
 

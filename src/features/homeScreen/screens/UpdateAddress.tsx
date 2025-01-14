@@ -3,9 +3,9 @@ import {Alert, StyleSheet, Text, TextInput, TouchableOpacity, View} from 'react-
 import {useDispatch, useSelector} from 'react-redux';
 import {useNavigation, useRoute} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {RootStackParamList} from '@/src/types/navigation';
-import {AppDispatch, RootState} from '@/store/store';
-import {updateAddress} from "@/store/thunks/addressThunks";
+import {RootStackParamList} from '@/src/utils/navigation';
+import {AppDispatch, RootState} from '@/src/redux/store';
+import {updateAddress} from "@/src/redux/thunks/addressThunks";
 import {scaleFont} from '@/src/utils/ResponsiveFont';
 
 const UpdateAddress: React.FC = () => {
