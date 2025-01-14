@@ -13,18 +13,6 @@ interface RestaurantInfoSectionParams {
     deliveryAvailable: boolean;
 }
 
-const {height: screenHeight} = Dimensions.get("window");
-
-// helper functions for walking / driving times
-function getWalkingTime(distance_km: number) {
-    // ~5 km/h => distance_km * 12 = minutes
-    return Math.round(distance_km * 12);
-}
-
-function getDrivingTime(distance_km: number) {
-    // ~30 km/h => distance_km * 2 = minutes
-    return Math.round(distance_km * 2);
-}
 
 const RestaurantInfoSection: React.FC<RestaurantInfoSectionParams> = ({
                                                                           restaurant,
@@ -34,6 +22,18 @@ const RestaurantInfoSection: React.FC<RestaurantInfoSectionParams> = ({
                                                                           deliveryAvailable,
                                                                       }) => {
     const [showInfoModal, setShowInfoModal] = useState(false);
+    const {height: screenHeight} = Dimensions.get("window");
+
+// helper functions for walking / driving times
+    function getWalkingTime(distance_km: number) {
+        // ~5 km/h => distance_km * 12 = minutes
+        return Math.round(distance_km * 12);
+    }
+
+    function getDrivingTime(distance_km: number) {
+        // ~30 km/h => distance_km * 2 = minutes
+        return Math.round(distance_km * 2);
+    }
 
     // optional detail toggle from original code
     const [viewDetails, setViewDetails] = React.useState(false);
