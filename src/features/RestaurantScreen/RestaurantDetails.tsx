@@ -1,5 +1,5 @@
 import React, {useEffect, useMemo, useRef, useState} from 'react';
-import {FlatList, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View,} from 'react-native';
+import {FlatList, Image, ScrollView, StyleSheet, Text, View} from 'react-native';
 import {RouteProp, useRoute} from '@react-navigation/native';
 import {useDispatch, useSelector} from 'react-redux';
 import {AppDispatch, RootState} from '@/src/redux/store';
@@ -11,32 +11,12 @@ import BottomSheet, {BottomSheetScrollView} from "@gorhom/bottom-sheet";
 import {getListingsThunk} from "@/src/redux/thunks/listingThunks";
 import {Restaurant} from "@/src/redux/slices/restaurantSlice";
 
-// ---- If you have your addItemToCart thunk, import it:
-// import { addItemToCart } from '@/src/redux/thunks/cartThunks';
-
-export interface Listing {
-    id: number;
-    restaurant_id: number;
-    title: string;
-    description: string;
-    image_url: string;
-    count: number;
-    original_price: number | null;
-    pickup_price: number | null;
-    delivery_price: number | null;
-    consume_within: number | null;
-}
-
 const RestaurantDetails: React.FC = () => {
     const route = useRoute<RouteProp<RootStackParamList, 'RestaurantDetails'>>();
-    const [isMapActive, setIsMapActive] = useState(false); // Toggle map or details
+    const [isMapActive, setIsMapActive] = useState(false); // <-- State for toggling map or details
+    // const navigation = useNavigation<NavigationProp>();
     const bottomSheetRef = useRef<BottomSheet>(null);
-    // These are your bottom sheet heights (snap points)
     const snapPoints = useMemo(() => ['30%', '30%', '80%'], []);
-
-    // ---- 1) STATE for toggling Pickup/Delivery
-    const [isPickup, setIsPickup] = useState(true);
-
     if (!route.params || !route.params.restaurantId) {
         return (
             <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
@@ -45,97 +25,37 @@ const RestaurantDetails: React.FC = () => {
         );
     }
 
-    // If you have the user token in Redux, grab it here:
-    // const token = useSelector((state: RootState) => state.user.token);
 
-    // Your updated renderListingItem:
     const renderListingItem = ({item}: { item: Listing }) => {
-        // Decide which price to show:
-        const displayPrice = isPickup
-            ? item.pickup_price ?? 0
-            : item.delivery_price ?? 0;
-
-        // Calculate discount if original price is present
-        const discountPercentage = useMemo(() => {
-            if (!item.original_price || item.original_price <= 0) return 0;
-            const diff = item.original_price - displayPrice;
-            const pct = (diff / item.original_price) * 100;
-            return Math.round(pct);
-        }, [item.original_price, displayPrice]);
-
-        // Handler for adding to cart
-        const dispatch = useDispatch<AppDispatch>();
-        const handleAddToCart = () => {
-            // dispatch(addItemToCart({ listingId: item.id, count: 1, token }));
-            console.log('Adding to cart: listingId=', item.id);
-        };
-
         return (
             <View style={styles.listingItem}>
-                {/* Listing Image */}
-                {item.image_url ? (
-                    <Image
-                        source={{uri: item.image_url}}
-                        style={styles.listingImage}
-                        resizeMode="cover"
-                    />
-                ) : (
-                    <View style={[styles.listingImage, styles.noImage]}/>
-                )}
-
-                {/* Text Info */}
+                <Image
+                    source={{uri: item.image_url}}
+                    style={styles.listingImage}
+                    resizeMode="cover"
+                />
                 <View style={styles.listingDetails}>
                     <Text style={styles.listingTitle}>{item.title}</Text>
                     <Text style={styles.listingDescription}>{item.description}</Text>
-
-                    {/* Price Row */}
-                    <View style={styles.priceRow}>
-                        {/* Original Price (strikethrough) */}
-                        {item.original_price !== null && item.original_price > 0 && (
-                            <Text style={styles.originalPrice}>
-                                {item.original_price} TL
-                            </Text>
-                        )}
-
-                        {/* Display Price */}
-                        <Text style={styles.displayPrice}>
-                            {displayPrice} TL
-                        </Text>
-
-                        {/* Discount */}
-                        {discountPercentage > 0 && (
-                            <View style={styles.discountContainer}>
-                                <Text style={styles.discountText}>
-                                    {discountPercentage}% OFF
-                                </Text>
-                            </View>
-                        )}
-                    </View>
+                    <Text style={styles.listingPrice}>${item.pick_up_price}</Text>
                 </View>
-
-                {/* Add Button */}
-                <TouchableOpacity style={styles.addButton} onPress={handleAddToCart}>
-                    <Text style={styles.addButtonText}>+</Text>
-                </TouchableOpacity>
             </View>
         );
-    };
+    }
 
-    // ---- GET RESTAURANT ID & LOAD LISTINGS
+
     const {restaurantId} = route.params;
     const dispatch = useDispatch<AppDispatch>();
     const listings = useSelector((state: RootState) => state.listing.listings);
-
     useEffect(() => {
         const payload = {
             restaurantId: Number(restaurantId),
             page: 1,
             limit: 10,
-        };
+        }
         dispatch(getListingsThunk(payload));
     }, [restaurantId]);
 
-    // ---- GET RESTAURANT DATA
     const restaurant = useSelector((state: RootState) =>
         state.restaurant.restaurantsProximity.find(r => r.id === restaurantId)
     );
@@ -178,14 +98,13 @@ const RestaurantDetails: React.FC = () => {
                     </View>
                 )}
 
-                {/* Show info only if user NOT toggled map */}
+
                 {!isMapActive && (
                     <View style={styles.content}>
                         <Text style={styles.restaurantName}>
                             {restaurant.restaurantName}
                         </Text>
 
-                        {/* Rating / Distance */}
                         <View style={styles.infoRow}>
                             <View style={styles.ratingContainer}>
                                 <Ionicons name="star" size={20} color="#FFD700"/>
@@ -207,9 +126,7 @@ const RestaurantDetails: React.FC = () => {
 
                             <View style={styles.detailRow}>
                                 <Ionicons name="reader-outline" size={20} color="#666"/>
-                                <Text style={styles.detailText}>
-                                    About: {restaurant.restaurantDescription}
-                                </Text>
+                                <Text style={styles.detailText}>About: {restaurant.restaurantDescription}</Text>
                             </View>
                             <View style={styles.detailRow}>
                                 <Ionicons name="restaurant-outline" size={20} color="#666"/>
@@ -240,11 +157,13 @@ const RestaurantDetails: React.FC = () => {
                                 </Text>
                             </View>
                         </View>
-                    </View>
-                )}
-            </ScrollView>
 
-            {/* Bottom Sheet */}
+                    </View>
+
+                )}
+
+
+            </ScrollView>
             <BottomSheet
                 ref={bottomSheetRef}
                 index={1}
@@ -252,46 +171,9 @@ const RestaurantDetails: React.FC = () => {
                 snapPoints={snapPoints}
                 enablePanDownToClose={false}
                 handleIndicatorStyle={styles.bottomSheetHandle}
+                // key={restaurantsProximity.length} // Force re-render when length changes
             >
                 <BottomSheetScrollView contentContainerStyle={styles.bottomSheetContent}>
-                    {/* ---- 2) Pickup / Delivery Toggle Buttons (INSIDE BOTTOM SHEET) ---- */}
-                    <View style={styles.toggleContainer}>
-                        <TouchableOpacity
-                            style={[
-                                styles.toggleButton,
-                                isPickup && styles.activeButton
-                            ]}
-                            onPress={() => setIsPickup(true)}
-                        >
-                            <Text
-                                style={[
-                                    styles.toggleButtonText,
-                                    isPickup && styles.activeButtonText
-                                ]}
-                            >
-                                Pickup
-                            </Text>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity
-                            style={[
-                                styles.toggleButton,
-                                !isPickup && styles.activeButton
-                            ]}
-                            onPress={() => setIsPickup(false)}
-                        >
-                            <Text
-                                style={[
-                                    styles.toggleButtonText,
-                                    !isPickup && styles.activeButtonText
-                                ]}
-                            >
-                                Delivery
-                            </Text>
-                        </TouchableOpacity>
-                    </View>
-
-                    {/* ---- List of items ---- */}
                     {listings.length > 0 ? (
                         <FlatList
                             data={listings}
@@ -303,16 +185,13 @@ const RestaurantDetails: React.FC = () => {
                     )}
                 </BottomSheetScrollView>
             </BottomSheet>
-
-            {/* If user toggles map, show map */}
             {isMapActive && (
                 <LocateToRestaurant restaurantId={restaurantId}/>
+
             )}
         </View>
     );
 };
-
-export default RestaurantDetails;
 
 const styles = StyleSheet.create({
     container: {
@@ -322,6 +201,7 @@ const styles = StyleSheet.create({
     headerImage: {
         width: '100%',
         height: 200,
+
     },
     headerNoImage: {
         width: '100%',
@@ -334,9 +214,11 @@ const styles = StyleSheet.create({
         fontSize: 24,
         fontWeight: 'bold',
         color: '#333',
+
     },
     content: {
         padding: 16,
+
     },
     restaurantName: {
         fontSize: 24,
@@ -412,109 +294,6 @@ const styles = StyleSheet.create({
         alignSelf: 'center',
         marginVertical: 8,
     },
-
-    // ---- Toggle Buttons ----
-    toggleContainer: {
-        flexDirection: 'row',
-        marginBottom: 16,
-    },
-    toggleButton: {
-        flex: 1,
-        paddingVertical: 12,
-        backgroundColor: '#f0f0f0',
-        borderWidth: 1,
-        borderColor: '#ccc',
-        alignItems: 'center',
-    },
-    toggleButtonText: {
-        fontSize: 16,
-        color: '#333',
-    },
-    activeButton: {
-        backgroundColor: '#4CAF50',
-        borderColor: '#4CAF50',
-    },
-    activeButtonText: {
-        color: '#FFF',
-    },
-
-    // ---- Listing item styles ----
-    listingItem: {
-        flexDirection: 'row',
-        marginVertical: 8,
-        padding: 12,
-        borderRadius: 8,
-        backgroundColor: '#FFF',
-        alignItems: 'center',
-        // shadow for iOS, elevation for Android
-        shadowColor: '#000',
-        shadowOffset: {width: 0, height: 2},
-        shadowOpacity: 0.15,
-        shadowRadius: 4,
-        elevation: 3,
-    },
-    listingImage: {
-        width: 70,
-        height: 70,
-        borderRadius: 8,
-        marginRight: 12,
-    },
-    noImage: {
-        backgroundColor: '#ccc',
-    },
-    listingDetails: {
-        flex: 1,
-    },
-    listingTitle: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#333',
-        marginBottom: 4,
-    },
-    listingDescription: {
-        fontSize: 14,
-        color: '#666',
-        marginBottom: 8,
-    },
-    priceRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    originalPrice: {
-        fontSize: 14,
-        color: '#999',
-        marginRight: 8,
-        textDecorationLine: 'line-through',
-    },
-    displayPrice: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: '#333',
-        marginRight: 8,
-    },
-    discountContainer: {
-        paddingHorizontal: 6,
-        paddingVertical: 2,
-        backgroundColor: '#EBF9ED',
-        borderRadius: 4,
-    },
-    discountText: {
-        fontSize: 12,
-        fontWeight: '600',
-        color: '#34A853',
-    },
-    addButton: {
-        width: 32,
-        height: 32,
-        borderRadius: 16,
-        backgroundColor: '#4CAF50',
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginLeft: 8,
-    },
-    addButtonText: {
-        fontSize: 18,
-        color: '#FFF',
-        fontWeight: '600',
-    },
 });
+
+export default RestaurantDetails;
