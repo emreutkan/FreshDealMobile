@@ -2,14 +2,14 @@
 import React, {useCallback, useMemo, useRef} from 'react';
 import {FlatList, Image, StyleSheet, Text, TouchableOpacity, View,} from 'react-native';
 import {useSelector} from 'react-redux';
-import {RootState} from '@/store/store';
-import {Restaurant} from '@/store/slices/restaurantSlice';
+import {RootState} from '@/src/redux/store';
+import {Restaurant} from '@/src/redux/slices/restaurantSlice';
 import BottomSheet, {BottomSheetScrollView} from '@gorhom/bottom-sheet';
 import RestaurantsOnMap from '@/src/features/homeScreen/components/RestaurantsOnMap';
 import {Ionicons} from '@expo/vector-icons';
 import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {RootStackParamList} from '@/src/types/navigation';
+import {RootStackParamList} from '@/src/utils/navigation';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'RestaurantDetails'>;
 
@@ -43,7 +43,7 @@ const HomeMapView: React.FC = () => {
                     </Text>
                     <View style={styles.detailsRow}>
                         <View style={styles.ratingContainer}>
-                            {item.rating !== undefined && (
+                            {item.rating && (
                                 <Text style={styles.ratingText}>⭐ {item.rating.toFixed(1)}</Text>
                             )}
                             <Text style={styles.voteCountText}>({item.ratingCount ?? 0})</Text>

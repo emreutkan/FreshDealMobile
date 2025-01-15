@@ -10,7 +10,7 @@ import {
     View,
 } from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
-import {AppDispatch, RootState} from '@/store/store';
+import {AppDispatch, RootState} from '@/src/redux/store';
 import {scaleFont} from '@/src/utils/ResponsiveFont';
 import DefaultButton from '@/src/features/DefaultButton';
 import AppleOTP from '@/src/features/LoginRegister/components/AppleOTPLogin';
@@ -22,8 +22,8 @@ import {
     PhoneSignInButton,
 } from '@/src/features/LoginRegister/components/LoginRegisterScreenButtons';
 import PasswordInput from '@/src/features/LoginRegister/components/PasswordInput';
-import {setLoginType, setPasswordLogin} from '@/store/slices/userSlice';
-import {loginUserThunk} from '@/store/thunks/userThunks';
+import {setLoginType, setPasswordLogin} from '@/src/redux/slices/userSlice';
+import {loginUserThunk} from '@/src/redux/thunks/userThunks';
 
 interface LoginModalProps {
     switchToRegister: () => void; // Callback to switch to RegisterModal

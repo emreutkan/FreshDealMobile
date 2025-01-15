@@ -42,6 +42,7 @@ const styles = StyleSheet.create({
         width: '100%', // Adjust width as needed
         alignSelf: 'center', // Center the button itself
         marginTop: scaleFont(10), // Consistent spacing between buttons
+
     },
     icon: {
         marginRight: scaleFont(8), // Space between icon and text
@@ -49,7 +50,8 @@ const styles = StyleSheet.create({
     buttonText: {
         fontFamily: 'Poppins-Regular',
         fontSize: scaleFont(20), // Adjust font size for uniformity
-        color: 'black',
+        // color: 'black',
+
     },
 });
 

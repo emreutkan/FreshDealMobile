@@ -2,8 +2,8 @@ import React, {useEffect, useRef, useState} from 'react';
 import {Animated, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View} from 'react-native';
 import {scaleFont} from "@/src/utils/ResponsiveFont";
 import {useDispatch, useSelector} from 'react-redux';
-import {setEmail} from '@/store/slices/userSlice'; // Adjust the path as needed
-import {RootState} from '@/store/store'; // Adjust the path as needed
+import {setEmail} from '@/src/redux/slices/userSlice'; // Adjust the path as needed
+import {RootState} from '@/src/redux/store'; // Adjust the path as needed
 
 const EmailLoginField: React.FC = () => {
     const dispatch = useDispatch();
@@ -104,6 +104,8 @@ const styles = StyleSheet.create({
         position: 'absolute',
         left: scaleFont(15),
         zIndex: 1,
+        fontFamily: 'Poppins-Regular',
+
     },
     clearButton: {
         paddingHorizontal: scaleFont(10),

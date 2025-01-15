@@ -43,11 +43,13 @@ const styles = StyleSheet.create({
         shadowRadius: scaleFont(4),
         elevation: 5, // Android shadow
         alignSelf: 'center',
-        // marginVertical: scaleFont(8), // Added margin for spacing
+        fontFamily: 'Poppins-Regular',
     },
     buttonText: {
         color: '#000',
         fontSize: scaleFont(18),
+        fontFamily: 'Poppins-Regular',
+
     },
 });
 

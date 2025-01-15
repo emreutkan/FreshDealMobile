@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import {scaleFont} from "@/src/utils/ResponsiveFont";
 import {useDispatch} from "react-redux";
-import {setPassword} from "@/store/slices/userSlice";
+import {setPassword} from "@/src/redux/slices/userSlice";
 
 const PasswordInput: React.FC<{ password: string }> = ({password}) => {
     const dispatch = useDispatch();

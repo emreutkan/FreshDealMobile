@@ -3,12 +3,12 @@ import {Image, Linking, Platform, StyleSheet, Text, TouchableOpacity, View} from
 import MapView, {Marker} from 'react-native-maps';
 import MapViewDirections from 'react-native-maps-directions';
 import {useSelector} from 'react-redux';
-import {RootState} from '@/store/store';
-import {Address} from '@/store/slices/addressSlice';
-import {Restaurant} from '@/store/slices/restaurantSlice';
+import {RootState} from '@/src/redux/store';
 import Constants from 'expo-constants';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import {scaleFont} from '@/src/utils/ResponsiveFont';
+import {Address} from "@/src/types/api/address/model";
+import {Restaurant} from "@/src/types/api/restaurant/model";
 
 interface MapProps {
     restaurantId: string;
@@ -33,7 +33,7 @@ const LocateToRestaurant = ({restaurantId}: MapProps) => {
         (state: RootState) => state.restaurant.restaurantsProximity
     );
     const restaurant = restaurants.find(
-        (rest: Restaurant) => rest.id === restaurantId
+        (rest: Restaurant) => rest.id === Number(restaurantId)
     );
 
     // If data is missing, return null
@@ -232,7 +232,7 @@ const styles = StyleSheet.create({
     buttonContainer: {
         position: 'absolute',
         right: 20,
-        top: '10%', // Adjust as needed
+        top: '2%', // Adjust as needed
         flexDirection: 'column',
         alignItems: 'center',
     },

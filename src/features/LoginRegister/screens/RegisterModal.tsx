@@ -12,17 +12,17 @@ import {
 } from "react-native";
 import {scaleFont} from "@/src/utils/ResponsiveFont";
 import {useDispatch, useSelector} from "react-redux";
-import {AppDispatch, RootState, store} from "@/store/store";
-import {getUserDataThunk, loginUserThunk, registerUserThunk,} from "@/store/thunks/userThunks";
+import {AppDispatch, RootState, store} from "@/src/redux/store";
+import {getUserDataThunk, loginUserThunk, registerUserThunk,} from "@/src/redux/thunks/userThunks";
 import DefaultButton from "@/src/features/DefaultButton";
 import NameSurnameInputField from "@/src/features/LoginRegister/components/NameSurnameInputField";
 import PhoneInput from "@/src/features/LoginRegister/components/PhoneInput";
 import EmailLoginField from "@/src/features/LoginRegister/components/EmailInput";
 import PasswordInput from "@/src/features/LoginRegister/components/PasswordInput";
 import VerificationCodeInputField from "@/src/features/LoginRegister/components/VerificationCodeInputField"; // Assume this component exists
-import {setToken} from "@/store/slices/userSlice";
+import {setToken} from "@/src/redux/slices/userSlice";
 import {Ionicons} from "@expo/vector-icons";
-import {verifyCode} from "@/store/api/authAPI"; // For navigation
+import {verifyCode} from "@/src/redux/api/authAPI";
 
 interface RegisterModalProps {
     switchToLogin: () => void; // Callback to switch to LoginModal
@@ -134,7 +134,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({switchToLogin}) => {
                 })
             ).unwrap();
 
-            if (loginResult.success) {
+            if (loginResult) {
                 console.log("store.getState().user before setToken = ", store.getState().user);
 
                 dispatch(setToken(loginResult.token));

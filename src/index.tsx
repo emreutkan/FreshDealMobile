@@ -1,52 +1,30 @@
-import React from 'react';
-import {NavigationContainer} from '@react-navigation/native';
-import {createNativeStackNavigator} from '@react-navigation/native-stack';
-import {Provider} from 'react-redux';
-import {store} from '@/store/store';
-import HomeScreen from './features/homeScreen/screens/Home';
-import Landing from './features/LoginRegister/screens/Landing';
-import AddressSelectionScreen from "@/src/features/homeScreen/screens/addressSelectionScreen"; // Renamed from _layout
-import {navigationRef, RootStackParamList} from '@/src/types/navigation';
-import UpdateAddress from "@/src/features/homeScreen/screens/UpdateAddress";
-import {GestureHandlerRootView} from 'react-native-gesture-handler';
-import RestaurantDetails from "@/src/features/RestaurantScreen/RestaurantDetails";
-import FavoritesScreen from "@/src/features/homeScreen/screens/FavoritesScreen";
-
-const Stack = createNativeStackNavigator<RootStackParamList>();
+import React, {useCallback, useEffect, useState} from 'react';
+import * as Font from 'expo-font';
+import AppLoading from 'expo-app-loading'; // Optional: For splash screen during loading
+import AppContent from "@/src/app";
 
 const App: React.FC = () => {
-    return (
-        <GestureHandlerRootView style={{flex: 1, padding: 0, margin: 0}}>
-            <Provider store={store}>
-                <NavigationContainer ref={navigationRef}>
-                    <Stack.Navigator
-                        initialRouteName="Landing"
-                        screenOptions={{
-                            headerShown: false,
-                            statusBarTranslucent: true, // Allows content to overlap the status bar (remove safe area in android)
-                        }}
-                    >
+    const [fontsLoaded, setFontsLoaded] = useState(false);
 
-                        <Stack.Screen name="Landing" component={Landing}/>
-                        <Stack.Screen name="HomeScreen" component={HomeScreen}/>
-                        <Stack.Screen
-                            name="AddressSelectionScreen"
-                            component={AddressSelectionScreen}
-                        />
-                        <Stack.Screen name="UpdateAddress" component={UpdateAddress}/>
-                        <Stack.Screen
-                            name="RestaurantDetails"
-                            component={RestaurantDetails}
+    const loadFonts = useCallback(async () => {
+        await Font.loadAsync({
+            'Poppins-Regular': require('./assets/fonts/Poppins-Regular.ttf'),
+            'Poppins-Bold': require('./assets/fonts/Poppins-Bold.ttf'),
+            'Poppins-SemiBold': require('./assets/fonts/Poppins-SemiBold.ttf'),
+            'Poppins-Medium': require('./assets/fonts/Poppins-Medium.ttf'),
+        });
+        setFontsLoaded(true);
+    }, []);
 
-                        />
-                        <Stack.Screen name="FavoritesScreen" component={FavoritesScreen}
-                                      options={{title: 'Favorites'}}/>
+    useEffect(() => {
+        loadFonts();
+    }, [loadFonts]);
 
-                    </Stack.Navigator>
-                </NavigationContainer>
-            </Provider>
-        </GestureHandlerRootView>
-    );
+    if (!fontsLoaded) {
+        return <AppLoading/>;
+    }
+
+    return <AppContent/>;
 };
 
 export default App;

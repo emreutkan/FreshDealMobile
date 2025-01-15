@@ -3,52 +3,45 @@ import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import {scaleFont} from "@/src/utils/ResponsiveFont";
 import {Feather, Ionicons} from "@expo/vector-icons";
 import {NativeStackNavigationProp} from "@react-navigation/native-stack";
-import {RootStackParamList} from "@/src/types/navigation";
+import {RootStackParamList} from "@/src/utils/navigation";
 import {useNavigation} from "@react-navigation/native";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
+import CartIcon from "@/src/features/RestaurantScreen/components/CartIcon";
 
 interface RestaurantHeaderProps {
     isScrolled: boolean;
     restaurantName: string;
     isMapActive: boolean;                // <-- New prop
     onToggleMap: (active: boolean) => void; // <-- New prop
+    restaurantId: string;
+    isPickup: boolean;
+    setIsPickup: (pickup: boolean) => void;
 }
 
 
-const SearchBar: React.FC = () => {
+export const GoBackButton: React.FC = () => {
 
     type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
     const navigation = useNavigation<NavigationProp>();
+    const inset = useSafeAreaInsets()
     return (
-        <TouchableOpacity onPress={() => navigation.goBack()} style={{padding: scaleFont(8)}}>
+        <TouchableOpacity
+            style={{
+                padding: 8,
+                zIndex: 9999,
+                position: 'absolute',
+                backgroundColor: '#fff',
+                borderRadius: 50,
+                left: inset.left,
+                margin: 12,
+                top: inset.top,
 
-            <Feather name="search" size={24} color="#000"/>
-        </TouchableOpacity>
-    )
-}
+            }}
+            onPress={() => navigation.goBack()}>
+            <Ionicons
 
-
-const CartBar: React.FC = () => {
-
-    type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
-    const navigation = useNavigation<NavigationProp>();
-
-    return (
-        <TouchableOpacity onPress={() => navigation.goBack()} style={{padding: scaleFont(8)}}>
-
-            <Ionicons name="cart-outline" size={scaleFont(24)} color="#000"/>
-        </TouchableOpacity>
-    );
-};
-
-const GoBackButton: React.FC = () => {
-
-    type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
-    const navigation = useNavigation<NavigationProp>();
-
-    return (
-        <TouchableOpacity onPress={() => navigation.goBack()} style={{padding: scaleFont(8)}}>
-            <Feather name="arrow-left" size={24} color="#333"/>
+                name="arrow-back" size={24} color="#000"/>
+            {/*<Ionicons name="arrow-left" size={24} color="#333"/>*/}
         </TouchableOpacity>
     )
 }
@@ -56,8 +49,24 @@ const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({
                                                                isScrolled,
                                                                restaurantName,
                                                                isMapActive,
-                                                               onToggleMap
+                                                               onToggleMap,
+                                                               restaurantId,
+                                                               isPickup,
+                                                               setIsPickup,
                                                            }) => {
+
+
+    const SearchBar: React.FC = () => {
+
+        type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+        const navigation = useNavigation<NavigationProp>();
+        return (
+            <TouchableOpacity onPress={() => navigation.goBack()} style={{padding: scaleFont(8)}}>
+
+                <Feather name="search" size={24} color="#000"/>
+            </TouchableOpacity>
+        )
+    }
 
 
     const inset = useSafeAreaInsets()
@@ -72,7 +81,11 @@ const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({
                 </Text>
 
                 <View style={styles.iconContainer}>
-                    <CartBar/>
+                    <CartIcon
+                        restaurantId={restaurantId}
+                        isPickup={isPickup}
+                        setIsPickup={setIsPickup}
+                    />
                     <SearchBar/>
                 </View>
             </View>
@@ -81,18 +94,17 @@ const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({
                     style={[styles.tabButton, !isMapActive && styles.activeTabButton]}
                     onPress={() => onToggleMap(false)}
                 >
-                    <Text style={[styles.tabButtonText, !isMapActive && styles.activeTabButtonText]}>
-                        Details
-                    </Text>
+                    <Ionicons name={"reader-outline"} size={scaleFont(20)} color={"#333"}
+                              style={{color: !isMapActive ? "#FFF" : "#333",}}/>
+
                 </TouchableOpacity>
 
                 <TouchableOpacity
                     style={[styles.tabButton, isMapActive && styles.activeTabButton]}
                     onPress={() => onToggleMap(true)}
                 >
-                    <Text style={[styles.tabButtonText, isMapActive && styles.activeTabButtonText]}>
-                        Location
-                    </Text>
+                    <Ionicons name={"earth-outline"} size={scaleFont(20)} color={"#333"}
+                              style={{color: isMapActive ? "#FFF" : "#333",}}/>
                 </TouchableOpacity>
             </View>
         </View>
@@ -112,7 +124,7 @@ const styles = StyleSheet.create({
         elevation: 5,
         zIndex: 9999,
         overflow: 'hidden',
-        borderWidth: 1,
+        borderWidth: 2,
         borderTopWidth: 0,
     },
 
@@ -138,12 +150,10 @@ const styles = StyleSheet.create({
     tabsContainer: {
         flexDirection: 'row',
         justifyContent: 'space-around',
-        marginTop: scaleFont(5),
+
     },
     tabButton: {
-        paddingHorizontal: scaleFont(20),
         paddingVertical: scaleFont(8),
-        // borderRadius: scaleFont(20),
         backgroundColor: '#f0f0f0',
         justifyContent: 'center',
         alignItems: 'center',
@@ -154,7 +164,7 @@ const styles = StyleSheet.create({
         color: '#333',
     },
     activeTabButton: {
-        backgroundColor: '#4CAF50',
+        backgroundColor: '#b2f7a5',
     },
     activeTabButtonText: {
         color: '#fff',

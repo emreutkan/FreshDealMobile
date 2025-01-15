@@ -3,11 +3,11 @@
 import React, {useState} from 'react';
 import {Dimensions, Modal, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View,} from 'react-native';
 import {Picker} from '@react-native-picker/picker';
-import {countryCodes} from '@/src/features/countryCodes';
+import {countryCodes} from '@/src/utils/countryCodes';
 import {scaleFont} from "@/src/utils/ResponsiveFont";
 import {useDispatch, useSelector} from 'react-redux';
-import {setPhoneNumber, setSelectedCode,} from '@/store/slices/userSlice'; // Adjust the path as needed // Adjust the path as needed
-import {RootState} from '@/store/store'; // Adjust the path as needed
+import {setPhoneNumber, setSelectedCode,} from '@/src/redux/slices/userSlice'; // Adjust the path as needed // Adjust the path as needed
+import {RootState} from '@/src/redux/store'; // Adjust the path as needed
 
 const PhoneInput: React.FC = () => {
     const dispatch = useDispatch();
