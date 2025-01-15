@@ -8,25 +8,8 @@ import {
     updateUsernameThunk,
 } from "@/src/redux/thunks/userThunks";
 import {verifyCode} from "@/src/redux/api/authAPI";
+import {UserState} from "@/src/types/states";
 
-interface UserState {
-    email: string;
-    name_surname: string;
-    selectedCode: string;
-    phoneNumber: string;
-    password: string;
-    passwordLogin: boolean;
-    verificationCode: string;
-    step: "send_code" | "verify_code" | "skip_verification";
-    login_type: "email" | "phone_number";
-    token: string | null;
-    loading: boolean;
-    error: string | null;
-    role: 'customer';
-    email_verified: boolean
-    isInitialized: boolean;
-
-}
 
 export interface UserDataResponse {
     user_data: {
@@ -125,6 +108,27 @@ const userSlice = createSlice({
             .addCase(loginUserThunk.fulfilled, (state, action) => {
                 state.loading = false;
                 state.token = action.payload.token;
+                console.log("Token: ", state.token);
+                console.log("Token: ", state.token);
+                console.log("Token: ", state.token);
+                console.log("Token: ", state.token);
+                console.log("Token: ", state.token);
+                console.log("Token: ", state.token);
+                console.log("Token: ", state.token);
+                console.log("Token: ", state.token);
+                console.log("Token: ", state.token);
+                console.log("Token: ", state.token);
+                console.log("Token: ", state.token);
+                console.log("Token: ", state.token);
+                console.log("Token: ", state.token);
+                console.log("Token: ", state.token);
+                console.log("Token: ", state.token);
+                console.log("Token: ", state.token);
+                console.log("Token: ", state.token);
+                console.log("Token: ", state.token);
+                console.log("Token: ", state.token);
+                console.log("Token: ", state.token);
+
             })
             .addCase(loginUserThunk.rejected, (state, action) => {
                 state.loading = false;

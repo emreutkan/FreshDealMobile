@@ -22,14 +22,14 @@ const AppContent: React.FC = () => {
             <Provider store={store}>
                 <NavigationContainer ref={navigationRef}>
                     <Stack.Navigator
-                        initialRouteName="Landing"
+                        initialRouteName="Login"
                         screenOptions={{
                             headerShown: false,
                             statusBarTranslucent: true, // Allows content to overlap the status bar (remove safe area in android)
                         }}
                     >
 
-                        <Stack.Screen name="Landing" component={Landing}/>
+                        <Stack.Screen name="Login" component={Landing}/>
                         <Stack.Screen name="HomeScreen" component={HomeScreen}/>
                         <Stack.Screen
                             name="AddressSelectionScreen"

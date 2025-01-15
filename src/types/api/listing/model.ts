@@ -4,11 +4,11 @@ export interface Listing {
     title: string;
     description: string;
     image_url: string;
-    original_price: number;
-    pick_up_price: number;
-    delivery_price: number;
     count: number;
-    consume_within: any;
-    available_for_delivery: boolean;
-    available_for_pickup: boolean;
+    original_price: number | null;
+    pick_up_price: number | null;
+    delivery_price: number | null;
+    consume_within: number | null;
+    available_for_pickup: boolean | null;
+    available_for_delivery: boolean | null;
 }

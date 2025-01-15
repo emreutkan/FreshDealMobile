@@ -2,7 +2,7 @@ import {createNavigationContainerRef} from '@react-navigation/native';
 import {BottomTabNavigationProp} from '@react-navigation/bottom-tabs';
 
 export type RootStackParamList = {
-    Landing: undefined;
+    Login: undefined;
     HomeScreen: undefined;
     AddressSelectionScreen: undefined;
     UpdateAddress: { addressId: string }; // Ensure this is correct

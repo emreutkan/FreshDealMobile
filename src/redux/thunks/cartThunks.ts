@@ -1,7 +1,7 @@
 import {createAsyncThunk} from "@reduxjs/toolkit";
-import {CartItem} from "@/src/redux/slices/cartSlice";
 import {addToCartAPI, getUsersCartItemsAPI, removeFromCart, updateCartAPI} from "@/src/redux/api/cartAPI";
 import {RootState} from "@/src/redux/store";
+import {CartItem} from "@/src/types/api/cart/model";
 
 export const fetchCart = createAsyncThunk<
     CartItem[],

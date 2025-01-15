@@ -3,22 +3,9 @@
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 import {addItemToCart, fetchCart, removeItemFromCart, updateCartItem} from "@/src/redux/thunks/cartThunks";
 import {logout} from "@/src/redux/slices/userSlice";
+import {CartState} from "@/src/types/states";
+import {CartItem} from "@/src/types/api/cart/model";
 
-
-export interface CartItem {
-    id: number;
-    listing_id: number;
-    title: string;
-    price: number;
-    count: number;
-    added_at: string;
-}
-
-interface CartState {
-    cartItems: CartItem[];
-    loading: boolean;
-    error: string | null;
-}
 
 const initialState: CartState = {
     cartItems: [],

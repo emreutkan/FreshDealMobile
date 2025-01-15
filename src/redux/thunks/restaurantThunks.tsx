@@ -1,8 +1,8 @@
 // src/store/thunks/restaurantThunks.ts
 import {createAsyncThunk} from '@reduxjs/toolkit';
 import {getRestaurantsInProximity} from "@/src/redux/api/restaurantAPI";
-import {Restaurant} from '@/src/redux/slices/restaurantSlice';
 import {RootState} from '@/src/redux/store';
+import {Restaurant} from "@/src/types/api/restaurant/model";
 
 // Get restaurants by proximity
 export const getRestaurantsByProximity = createAsyncThunk<

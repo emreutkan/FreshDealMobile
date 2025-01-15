@@ -4,50 +4,9 @@ import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 import {getUserDataThunk} from "@/src/redux/thunks/userThunks";
 import {addAddressAsync, setPrimaryAddress} from "@/src/redux/thunks/addressThunks";
 import {logout} from "@/src/redux/slices/userSlice";
+import {AddressState} from "@/src/types/states";
+import {Address} from "@/src/types/api/address/model";
 
-export interface Address {
-    id: string;
-    title: string;
-    longitude: number;
-    latitude: number;
-    street: string;
-    neighborhood: string;
-    district: string;
-    province: string;
-    country: string;
-    postalCode: string;
-    apartmentNo: string;
-    doorNo: string;
-    is_primary: boolean;
-}
-
-interface AddAddressResponse {
-    address: {
-        apartmentNo: number;
-        country: string;
-        district: string;
-        doorNo: string;
-        id: string;
-        is_primary: boolean;
-        latitude: number;
-        longitude: number;
-        neighborhood: string;
-        postalCode: number;
-        province: string;
-        street: string;
-        title: string;
-        user_id: number;
-    };
-    message: string;
-    success: boolean;
-}
-
-interface AddressState {
-    addresses: Address[];
-    selectedAddressId: string | null;
-    loading: boolean;
-    error: string | null;
-}
 
 const initialState: AddressState = {
     addresses: [],
@@ -90,20 +49,7 @@ const addressSlice = createSlice({
                 state.error = null;
             })
             .addCase(addAddressAsync.fulfilled, (state, action) => {
-                // if (!action.payload) {
-                //     console.error('Invalid payload received in addAddressAsync.fulfilled:', action.payload);
-                //     state.error = 'Failed to add address due to invalid data.';
-                //     state.loading = false;
-                //     return;
-                // }
-                //
-                // const index = state.addresses.findIndex((addr) => addr.id.startsWith('temp-'));
-                // if (index !== -1) {
-                //     state.addresses[index] = {...state.addresses[index], ...action.payload, id: action.payload.id};
-                // } else {
-                //     state.addresses.push(action.payload);
-                // }
-                // state.error = null;
+
                 state.loading = false;
             })
             .addCase(addAddressAsync.rejected, (state, action) => {

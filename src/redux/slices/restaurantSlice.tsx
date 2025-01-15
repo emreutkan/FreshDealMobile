@@ -4,45 +4,8 @@ import {getRestaurantsByProximity,} from '@/src/redux/thunks/restaurantThunks';
 
 import {addFavoriteThunk, getFavoritesThunk, removeFavoriteThunk,} from "@/src/redux/thunks/userThunks";
 import {logout} from '@/src/redux/slices/userSlice';
+import {RestaurantState} from "@/src/types/states";
 
-export interface Restaurant {
-    id: string;
-    owner_id: number;
-    restaurantName: string;
-    restaurantDescription: string;
-    longitude: number;
-    latitude: number;
-    category: string;
-    workingDays: string[];
-    workingHoursStart: string;
-    workingHoursEnd: string;
-    listings: number;
-    rating: number;
-    ratingCount: number;
-    distance_km: number;
-    image_url: string;
-    pickup: boolean;
-    delivery: boolean;
-    maxDeliveryDistance: number;
-    deliveryFee: number;
-    minOrderAmount: number;
-}
-
-export interface RestaurantCreateResponse {
-    success: boolean;
-    message: string;
-    image_url?: string;
-}
-
-interface RestaurantState {
-    restaurantsProximity: Restaurant[];
-    restaurantsProximityStatus: 'idle' | 'loading' | 'succeeded' | 'failed';
-    restaurantsProximityLoading: boolean;
-    favoriteRestaurantsIDs: number[];
-    favoritesStatus: 'idle' | 'loading' | 'succeeded' | 'failed';
-    favoritesLoading: boolean;
-    error: string | null;
-}
 
 const initialState: RestaurantState = {
     restaurantsProximity: [],

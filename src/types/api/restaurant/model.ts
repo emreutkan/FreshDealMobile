@@ -17,6 +17,7 @@ export interface Restaurant {
     image_url: string | null;
     pickup: boolean;
     delivery: boolean;
+    distance_km: number | null; // may cause problems remove if necessary
     maxDeliveryDistance: number | null;
     deliveryFee: number | null;
     minOrderAmount: number | null;

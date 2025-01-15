@@ -1,5 +1,5 @@
-export interface UserAddress {
-    id: number;
+export interface Address {
+    id: string;
     title: string;
     longitude: number;
     latitude: number;
@@ -8,8 +8,8 @@ export interface UserAddress {
     district: string;
     province: string;
     country: string;
-    postalCode: number;
-    apartmentNo: number;
+    postalCode: string;
+    apartmentNo: string;
     doorNo: string;
     is_primary: boolean;
 }

@@ -3,30 +3,9 @@
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 import {getListingsThunk} from "@/src/redux/thunks/listingThunks";
 import {logout} from "@/src/redux/slices/userSlice";
+import {ListingState} from "@/src/types/states";
+import {Listing} from "@/src/types/api/listing/model";
 
-export interface Listing {
-    id: number;
-    restaurant_id: number;
-    title: string;
-    description: string;
-    image_url: string;
-    count: number;
-    original_price: number | null;
-    pick_up_price: number | null;
-    delivery_price: number | null;
-    consume_within: number | null;
-    available_for_pickup: boolean | null;
-    available_for_delivery: boolean | null;
-
-}
-
-
-interface ListingState {
-    listings: Listing[];
-    loading: boolean;
-    error: string | null;
-    pagination: Pagination | null;
-}
 
 export interface Pagination {
     total: number;

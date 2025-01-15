@@ -1,19 +1,8 @@
 import {createSlice} from "@reduxjs/toolkit";
 import {logout} from "@/src/redux/slices/userSlice";
 import {SearchforRestaurantsThunk} from "@/src/redux/thunks/searchThunks";
-import {RestaurantSearchResult} from "@/src/types/api/search/responses";
+import {SearchState} from "@/src/types/states";
 
-
-export interface RestaurantSearchResults {
-    results: RestaurantSearchResult[];
-
-}
-
-interface SearchState {
-    searchResults: RestaurantSearchResults;
-    loading: boolean;
-    error: string | null;
-}
 
 const initialState: SearchState = {
     searchResults: {

@@ -23,7 +23,7 @@ import {
     UpdatePasswordResponse,
     UpdateUsernameResponse
 } from "@/src/types/api/user/responses";
-import {UserDataResponse} from "@/src/redux/slices/userSlice"; // Example import, adjust as needed
+import {setToken, UserDataResponse} from "@/src/redux/slices/userSlice"; // Example import, adjust as needed
 
 // Login
 export const loginUserThunk = createAsyncThunk<
@@ -41,10 +41,11 @@ export const loginUserThunk = createAsyncThunk<
             // { data: { token: string }, message: string, status: number }
 
             if (response.token) {
+                dispatch(setToken(response.token));
                 await dispatch(getUserDataThunk({token: response.token}));
             }
 
-            // Now return an object that exactly matches LoginResponse
+            console.log(response)
             return response;
         } catch (error: any) {
             console.log(error)
