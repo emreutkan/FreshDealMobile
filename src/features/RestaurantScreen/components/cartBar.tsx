@@ -42,7 +42,8 @@ const CartBar: React.FC<CartBarProps> = ({restaurantId, isPickup, setIsPickup, c
                 fontSize: 16,
                 fontWeight: 'bold',
             }}>
-                {`Click to Go To Cart (${cartItems.length} item${cartItems.length > 1 ? 's' : ''})`}
+                {/*{`Click to Go To Cart (${cartItems.length} item${cartItems.length > 1 ? 's' : ''})`}*/}
+                Go to Cart
             </Text>
         </TouchableOpacity>
     );
