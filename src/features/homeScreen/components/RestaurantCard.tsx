@@ -43,10 +43,10 @@ const RestaurantList: React.FC<RestaurantListProps> = ({restaurants, onRestauran
             // If it’s already a favorite, dispatch the remove thunk; otherwise, dispatch the add thunk.
             if (favoriteRestaurantsIDs.includes(id)) {
                 // cast to int before dispatch
-                dispatch(removeFavoriteThunk({restaurantId: Number(id)}));
+                dispatch(removeFavoriteThunk({restaurant_id: Number(id)}));
             } else {
                 console.log('Adding favorite:', id);
-                dispatch(addFavoriteThunk({restaurantId: id}));
+                dispatch(addFavoriteThunk({restaurant_id: Number(id)}));
             }
 
         },

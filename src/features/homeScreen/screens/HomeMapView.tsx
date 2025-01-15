@@ -43,7 +43,7 @@ const HomeMapView: React.FC = () => {
                     </Text>
                     <View style={styles.detailsRow}>
                         <View style={styles.ratingContainer}>
-                            {item.rating !== undefined && (
+                            {item.rating && (
                                 <Text style={styles.ratingText}>⭐ {item.rating.toFixed(1)}</Text>
                             )}
                             <Text style={styles.voteCountText}>({item.ratingCount ?? 0})</Text>

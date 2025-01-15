@@ -22,7 +22,7 @@ import PasswordInput from "@/src/features/LoginRegister/components/PasswordInput
 import VerificationCodeInputField from "@/src/features/LoginRegister/components/VerificationCodeInputField"; // Assume this component exists
 import {setToken} from "@/src/redux/slices/userSlice";
 import {Ionicons} from "@expo/vector-icons";
-import {verifyCode} from "@/src/redux/api/authAPI"; // For navigation
+import {verifyCode} from "@/src/redux/api/authAPI";
 
 interface RegisterModalProps {
     switchToLogin: () => void; // Callback to switch to LoginModal
@@ -134,7 +134,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({switchToLogin}) => {
                 })
             ).unwrap();
 
-            if (loginResult.success) {
+            if (loginResult) {
                 console.log("store.getState().user before setToken = ", store.getState().user);
 
                 dispatch(setToken(loginResult.token));

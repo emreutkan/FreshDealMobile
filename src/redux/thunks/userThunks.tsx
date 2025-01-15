@@ -1,227 +1,201 @@
-import {createAsyncThunk} from '@reduxjs/toolkit';
+// userThunks.ts
 
+import {createAsyncThunk} from "@reduxjs/toolkit";
 import {RootState} from "@/src/redux/store";
-import {UserDataResponse} from "@/src/redux/slices/userSlice";
-import {loginUserAPI, registerUserAPI} from "@/src/redux/api/authAPI";
+
+import {validateToken} from "@/src/services/tokenService";
+import {userApi} from "@/src/redux/api/userAPI";
+import {authApi} from "@/src/redux/api/authAPI";
+import {LoginResponse, RegisterResponse} from "@/src/types/api/auth/responses";
+import {LoginPayload, RegisterPayload} from "@/src/types/api/auth/requests";
 import {
-    addToFavoritesAPI,
-    getFavoritesAPI,
-    getUserDataAPI,
-    removeFromFavoritesAPI,
-    updateEmailAPI,
-    updatePasswordAPI,
-    updateUsernameAPI
-} from "@/src/redux/api/userAPI"; // adjust the path as necessary
+    AddFavoritePayload,
+    RemoveFavoritePayload,
+    UpdateEmailPayload,
+    UpdatePasswordPayload,
+    UpdateUsernamePayload
+} from "@/src/types/api/user/requests";
+import {
+    AddFavoriteResponse,
+    GetFavoritesResponse,
+    RemoveFavoriteResponse,
+    UpdateEmailResponse,
+    UpdatePasswordResponse,
+    UpdateUsernameResponse
+} from "@/src/types/api/user/responses";
+import {UserDataResponse} from "@/src/redux/slices/userSlice"; // Example import, adjust as needed
 
-
-// Login user
-export const loginUserThunk = createAsyncThunk(
-    'user/loginUser',
-    async (
-        payload: {
-            email?: string;
-            phone_number?: string;
-            password?: string;
-            verification_code?: string;
-            step?: "send_code" | "verify_code" | "skip_verification";
-            login_type?: "email" | "phone_number";
-            password_login?: boolean;
-        },
-        {dispatch, rejectWithValue}
-    ) => {
-        try {
-            const response = await loginUserAPI(payload);
-            const token = response.token;
-            dispatch(getUserDataThunk({token}));
-            return response;
-        } catch (error: any) {
-            return rejectWithValue(error.response?.data || 'Login failed');
-        }
-    }
-);
-
-// Register user
-export const registerUserThunk = createAsyncThunk(
-    'user/registerUser',
-    async (
-        userData: {
-            name_surname: string;
-            email?: string;
-            phone_number?: string;
-            password: string;
-            role: "customer";
-        },
-        {rejectWithValue}
-    ) => {
-        try {
-            return await registerUserAPI(userData);
-        } catch (error: any) {
-            return rejectWithValue(error.response?.data || 'Registration failed');
-        }
-    }
-);
-
-export const updateUsername = createAsyncThunk<
-    { username: string },
-    { newUsername: string },
-    { state: RootState; rejectValue: string; dispatch: any }  // <== Notice "dispatch" here
+// Login
+export const loginUserThunk = createAsyncThunk<
+    LoginResponse,
+    LoginPayload,
+    { state: RootState; rejectValue: string }
 >(
-    'user/updateUsername',
-    async ({newUsername}, {dispatch, getState, rejectWithValue}) => {
+    "user/loginUser",
+    async (payload, {dispatch, getState, rejectWithValue}) => {
         try {
-            const token = getState().user.token;
-            if (!token) {
-                console.error('Authentication token is missing.');
-                return rejectWithValue('Authentication token is missing.');
+            const response = await authApi.login(payload);
+            console.log(response)
+            // Transform the response to match LoginResponse.
+            // For example, if your ApiResponse is structured as:
+            // { data: { token: string }, message: string, status: number }
+
+            if (response.token) {
+                await dispatch(getUserDataThunk({token: response.token}));
             }
-            const response = await updateUsernameAPI(newUsername, token);
 
-            dispatch(getUserDataThunk({token}));
-
+            // Now return an object that exactly matches LoginResponse
             return response;
         } catch (error: any) {
-            return rejectWithValue(error.response?.data?.message || 'Failed to update username');
+            console.log(error)
+            return rejectWithValue(error.response?.data || "Login failed");
         }
     }
 );
-// -------------------------------------------------------------------
-// 4) Update email
-// -------------------------------------------------------------------
+
+
+// Registration
+export const registerUserThunk = createAsyncThunk<
+    RegisterResponse,
+    RegisterPayload,
+    { rejectValue: string }
+>(
+    "user/registerUser",
+    async (userData, {rejectWithValue}) => {
+        try {
+            return await authApi.register(userData);
+        } catch (error: any) {
+            return rejectWithValue(error.response?.data || "Registration failed");
+        }
+    }
+);
+
+// Update username
+export const updateUsernameThunk = createAsyncThunk<
+    UpdateUsernameResponse,
+    UpdateUsernamePayload,
+    { state: RootState; rejectValue: string }
+>(
+    "user/updateUsername",
+    async ({username}, {dispatch, getState, rejectWithValue}) => {
+        try {
+            const token = validateToken(getState().user.token);
+            const response = await userApi.updateUsername(username, token);
+            await dispatch(getUserDataThunk({token}));
+            return response;
+        } catch (error: any) {
+            return rejectWithValue(error.response?.data?.message || "Failed to update username");
+        }
+    }
+);
+
+// Update email
 export const updateEmailThunk = createAsyncThunk<
-    { email: string },
-    { oldEmail: string; newEmail: string },
-    { state: RootState; rejectValue: string; dispatch: any } // <== Notice "dispatch" here
+    UpdateEmailResponse,
+    UpdateEmailPayload,
+    { state: RootState; rejectValue: string }
 >(
-    'user/updateEmail',
-    async ({oldEmail, newEmail}, {dispatch, getState, rejectWithValue}) => {
+    "user/updateEmail",
+    async ({old_email, new_email}, {dispatch, getState, rejectWithValue}) => {
         try {
-            const token = getState().user.token;
-            if (!token) {
-                console.error('Authentication token is missing.');
-                return rejectWithValue('Authentication token is missing.');
-            }
-            const response = await updateEmailAPI(oldEmail, newEmail, token);
-
-            dispatch(getUserDataThunk({token}));
-
+            const token = validateToken(getState().user.token);
+            const response = await userApi.updateEmail(old_email, new_email, token);
+            await dispatch(getUserDataThunk({token}));
             return response;
         } catch (error: any) {
-            return rejectWithValue(error.response?.data?.message || 'Failed to update email');
+            return rejectWithValue(error.response?.data?.message || "Failed to update email");
         }
     }
 );
 
-// -------------------------------------------------------------------
-// 5) Update password
-// -------------------------------------------------------------------
+// Update password
 export const updatePasswordThunk = createAsyncThunk<
-    { message: string },
-    { oldPassword: string; newPassword: string },
-    { state: RootState; rejectValue: string; dispatch: any } // <== Notice "dispatch" here
+    UpdatePasswordResponse,
+    UpdatePasswordPayload,
+    { state: RootState; rejectValue: string }
 >(
-    'user/updatePassword',
-    async ({oldPassword, newPassword}, {dispatch, getState, rejectWithValue}) => {
+    "user/updatePassword",
+    async ({old_password, new_password}, {dispatch, getState, rejectWithValue}) => {
         try {
-            const token = getState().user.token;
-            if (!token) {
-                console.error('Authentication token is missing.');
-                return rejectWithValue('Authentication token is missing.');
-            }
-            const response = await updatePasswordAPI(oldPassword, newPassword, token);
-
-            dispatch(getUserDataThunk({token}));
-
+            const token = validateToken(getState().user.token);
+            const response = await userApi.updatePassword(old_password, new_password, token);
+            await dispatch(getUserDataThunk({token}));
             return response;
         } catch (error: any) {
-            return rejectWithValue(error.response?.data?.message || 'Failed to update password');
+            return rejectWithValue(error.response?.data?.message || "Failed to update password");
         }
     }
 );
+
 // Get user data
 export const getUserDataThunk = createAsyncThunk<
     UserDataResponse,
     { token: string },
     { rejectValue: string }
 >(
-    'user/getUserData',
+    "user/getUserData",
     async ({token}, {rejectWithValue}) => {
         try {
-            return await getUserDataAPI(token);
+            return await userApi.getUserData(token);
         } catch (error: any) {
-            return rejectWithValue(error.response?.data || 'Failed to fetch user data');
+            return rejectWithValue(error.response?.data || "Failed to fetch user data");
         }
     }
 );
 
-
+// Add to favorites
 export const addFavoriteThunk = createAsyncThunk<
-    { message: string },
-    { restaurantId: string },
+    AddFavoriteResponse,
+    AddFavoritePayload,
     { state: RootState; rejectValue: string }
 >(
-    'favorites/addFavorite',
-    async ({restaurantId}, {dispatch, getState, rejectWithValue}) => {
-        const token = getState().user.token;
-        if (!token) {
-            return rejectWithValue('Authentication token is missing.');
-        }
-
+    "favorites/addFavorite",
+    async ({restaurant_id}, {dispatch, getState, rejectWithValue}) => {
         try {
-            const response = await addToFavoritesAPI(restaurantId, token);
-            await dispatch(getFavoritesThunk());
-
+            const token = validateToken(getState().user.token);
+            const response = await userApi.addToFavorites(restaurant_id, token);
+            await dispatch(getFavoritesThunk()); // Refresh favorites
             return response;
         } catch (error: any) {
-            return rejectWithValue(
-                error.response?.data?.message || 'Failed to add favorite'
-            );
+            return rejectWithValue(error.response?.data?.message || "Failed to add favorite");
         }
     }
 );
 
-
+// Remove from favorites
 export const removeFavoriteThunk = createAsyncThunk<
-    { message: string },
-    { restaurantId: number },
+    RemoveFavoriteResponse,
+    RemoveFavoritePayload,
     { state: RootState; rejectValue: string }
 >(
-    'favorites/removeFavorite',
-    async ({restaurantId}, {dispatch, getState, rejectWithValue}) => {
-        const token = getState().user.token;
-        if (!token) {
-            return rejectWithValue('Authentication token is missing.');
-        }
-
+    "favorites/removeFavorite",
+    async ({restaurant_id}, {dispatch, getState, rejectWithValue}) => {
         try {
-            const response = await removeFromFavoritesAPI(restaurantId, token);
-            await dispatch(getFavoritesThunk());
+            const token = validateToken(getState().user.token);
+            const response = await userApi.removeFromFavorites(restaurant_id, token);
+            await dispatch(getFavoritesThunk()); // Refresh favorites
             return response;
         } catch (error: any) {
-            return rejectWithValue(
-                error.response?.data?.message || 'Failed to remove favorite'
-            );
+            return rejectWithValue(error.response?.data?.message || "Failed to remove favorite");
         }
     }
 );
-
 
 export const getFavoritesThunk = createAsyncThunk<
-    string[],
+    GetFavoritesResponse,
     void,
     { state: RootState; rejectValue: string }
 >(
-    'favorites/getFavorites',
+    "favorites/getFavorites",
     async (_, {getState, rejectWithValue}) => {
-        const token = getState().user.token;
-        if (!token) {
-            return rejectWithValue('Authentication token is missing.');
-        }
-
         try {
-            return await getFavoritesAPI(token);
+            const token = validateToken(getState().user.token);
+            const response = await userApi.getFavorites(token);
+            // Ensure that we wrap the favorites array inside an object with a favorites property.
+            return {favorites: response.favorites};
         } catch (error: any) {
             return rejectWithValue(
-                error.response?.data?.message || 'Failed to fetch favorites'
+                error.response?.data?.message || "Failed to fetch favorites"
             );
         }
     }

@@ -38,7 +38,7 @@ interface RestaurantState {
     restaurantsProximity: Restaurant[];
     restaurantsProximityStatus: 'idle' | 'loading' | 'succeeded' | 'failed';
     restaurantsProximityLoading: boolean;
-    favoriteRestaurantsIDs: string[];
+    favoriteRestaurantsIDs: number[];
     favoritesStatus: 'idle' | 'loading' | 'succeeded' | 'failed';
     favoritesLoading: boolean;
     error: string | null;
@@ -84,13 +84,13 @@ const restaurantSlice = createSlice({
             .addCase(getFavoritesThunk.fulfilled, (state, action) => {
                 state.favoritesStatus = 'succeeded';
                 state.favoritesLoading = false;
-                state.favoriteRestaurantsIDs = action.payload;
+                state.favoriteRestaurantsIDs = action.payload.favorites;
                 console.log('Favorites:', action.payload);
             })
             .addCase(getFavoritesThunk.rejected, (state, action) => {
                 state.favoritesStatus = 'failed';
                 state.favoritesLoading = false;
-                state.error = action.payload || 'Failed to fetch favorites';
+                // state.error = action.payload || 'Failed to fetch favorites';
             })
             .addCase(addFavoriteThunk.pending, (state) => {
             })

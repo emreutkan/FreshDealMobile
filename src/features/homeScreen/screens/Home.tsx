@@ -18,7 +18,7 @@ import HomeCardView from '@/src/features/homeScreen/screens/HomeCardView';
 import HomeMapView from '@/src/features/homeScreen/screens/HomeMapView';
 import AccountScreen from '@/src/features/homeScreen/components/accountScreen';
 import Header from '@/src/features/homeScreen/components/Header';
-import RestaurantSearch from "@/src/features/homeScreen/screens/RestaurantSearch";
+import Search from "@/src/features/search/Search";
 import {getRestaurantsByProximity} from "@/src/redux/thunks/restaurantThunks";
 import {getFavoritesThunk} from "@/src/redux/thunks/userThunks";
 // Enable LayoutAnimation on Android
@@ -50,8 +50,6 @@ const HomeScreen: React.FC = () => {
         console.log('Primary Address Data:', primaryAddressData);
 
         dispatch(getRestaurantsByProximity({
-            latitude: primaryAddressData.latitude,
-            longitude: primaryAddressData.longitude,
             radius: 10000,
         }));
 
@@ -147,7 +145,7 @@ const HomeScreen: React.FC = () => {
                         {() => <HomeCardView onScroll={handleScroll}/>}
                     </Tab.Screen>
                     <Tab.Screen name="HomeMapView" component={HomeMapView} options={{tabBarLabel: 'Map'}}/>
-                    <Tab.Screen name={"Search"} component={RestaurantSearch} options={{tabBarLabel: 'Search'}}/>
+                    <Tab.Screen name={"Search"} component={Search} options={{tabBarLabel: 'Search'}}/>
 
                     <Tab.Screen name="Account" component={AccountScreen} options={{tabBarLabel: 'Account'}}/>
                 </Tab.Navigator>

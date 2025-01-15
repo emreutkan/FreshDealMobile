@@ -4,7 +4,7 @@ import addressReducer from '@/src/redux/slices/addressSlice';
 import cartReducer from '@/src/redux/slices/cartSlice';
 import restaurantReducer from '@/src/redux/slices/restaurantSlice';
 import listingReducer from '@/src/redux/slices/listingSlice';
-
+import searchReducer from '@/src/redux/slices/searchSlice';
 // Create the listener middleware
 
 export const store = configureStore({
@@ -14,6 +14,7 @@ export const store = configureStore({
         cart: cartReducer,
         restaurant: restaurantReducer,
         listing: listingReducer,
+        search: searchReducer,
     },
 });
 

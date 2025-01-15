@@ -1,64 +1,67 @@
-import axios from "axios";
-import {API_BASE_URL} from "@/src/redux/api/API";
-import {logError, logRequest, logResponse} from "@/src/utils/logger";
-import {createAsyncThunk} from "@reduxjs/toolkit";
+// authAPI.ts
 
-export const LOGIN_ENDPOINT = `${API_BASE_URL}/login`;
-export const REGISTER_ENDPOINT = `${API_BASE_URL}/register`;
+import {apiClient} from "@/src/services/apiClient";
+import {API_BASE_URL} from "@/src/redux/api/API";
+import {LoginPayload, RegisterPayload} from "@/src/types/api/auth/requests";
+import {ApiResponse} from "@/src/types/api/common";
+import {createAsyncThunk} from "@reduxjs/toolkit";
+import axios from "axios";
+
+/*
+  Define constants for your authentication endpoints.
+  You can adjust these to match your actual API routes.
+*/
+const LOGIN_ENDPOINT = `${API_BASE_URL}/login`;
+const REGISTER_ENDPOINT = `${API_BASE_URL}/register`;
 const VERIFY_EMAIL_ENDPOINT = `${API_BASE_URL}/verify_email`;
 
+/*
+  Example structure for auth-related API calls using the apiClient.
+  The return types are defined using your custom ApiResponse interface,
+  which can carry additional fields like 'success', 'message', or tokens.
+*/
+export const authApi = {
+    /*
+      Logs in a user using a POST request.
+      The payload uses the LoginPayload type from your types/api.ts.
+      Adjust the ApiResponse generic parameter to match what your actual
+      API returns (e.g., { token: string }).
+    */
+    async login(payload: LoginPayload): Promise<ApiResponse<{ token: string }>> {
+        return apiClient.request({
+            method: "POST",
+            url: LOGIN_ENDPOINT,
+            data: payload
+        });
+    },
 
-export const loginUserAPI = async (payload: {
-    email?: string;
-    phone_number?: string;
-    password?: string;
-    verification_code?: string;
-    step?: "send_code" | "verify_code" | "skip_verification";
-    login_type?: "email" | "phone_number";
-    password_login?: boolean;
-}) => {
-    const functionName = 'loginUserAPI';
+    /*
+      Registers a user. The payload uses the RegisterPayload type.
+      You can adjust the return type to match your registration endpoint’s response
+      (e.g., { success: boolean; message: string; token?: string }).
+    */
+    async register(userData: RegisterPayload): Promise<ApiResponse<{ success: boolean; message: string }>> {
+        return apiClient.request({
+            method: "POST",
+            url: REGISTER_ENDPOINT,
+            data: userData
+        });
+    },
 
-
-    logRequest(functionName, LOGIN_ENDPOINT, payload);
-
-    try {
-        const response = await axios.post(LOGIN_ENDPOINT, payload);
-        logResponse(functionName, LOGIN_ENDPOINT, response.data);
-        return response.data;
-    } catch (error: any) {
-        logError(functionName, LOGIN_ENDPOINT, error);
-        throw error;
-    }
-};
-
-interface registerUserPayload {
-    name_surname: string;
-    email?: string;
-    phone_number?: string;
-    password: string;
-    role: "customer";
-}
-
-interface registerUserResponse {
-    success: boolean;
-    message: string;
-}
-
-// User Registration API Call
-
-export const registerUserAPI = async (userData: registerUserPayload) => {
-    const functionName = 'registerUserAPI';
-    logRequest(functionName, REGISTER_ENDPOINT, userData);
-
-    try {
-        const response = await axios.post(REGISTER_ENDPOINT, userData);
-        logResponse(functionName, REGISTER_ENDPOINT, response.data);
-        console.log('Request URL:', axios.getUri({method: 'POST', url: REGISTER_ENDPOINT}));
-        return response.data;
-    } catch (error: any) {
-        logError(functionName, REGISTER_ENDPOINT, error);
-        throw error;
+    /*
+      Verifies an email using a verification code. You might have a specialized
+      payload type such as VerifyCodePayload that includes fields like email
+      and verification_code. Adjust accordingly to match your API’s structure.
+    */
+    async verifyEmail(payload: { verification_code: string; email: string }): Promise<ApiResponse<{
+        success: boolean;
+        message: string
+    }>> {
+        return apiClient.request({
+            method: "POST",
+            url: VERIFY_EMAIL_ENDPOINT,
+            data: payload
+        });
     }
 };
 

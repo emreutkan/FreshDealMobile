@@ -37,7 +37,10 @@ export default {
             output: "static",
             favicon: "./assets/images/favicon.png"
         },
-        plugins: ["expo-font"],
+        plugins: [
+            "expo-font",
+            "expo-secure-store"
+        ],
         experiments: {
             typedRoutes: true
         },

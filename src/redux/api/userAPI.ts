@@ -1,140 +1,78 @@
 // api/userAPI.ts
-import axios from 'axios';
-import {logError, logRequest, logResponse} from "@/src/utils/logger";
 import {API_BASE_URL} from "@/src/redux/api/API";
+// api/userAPI.ts
+import {apiClient} from '@/src/services/apiClient';
+import {UserDataResponse} from "@/src/redux/slices/userSlice";
+import {
+    AddFavoriteResponse,
+    GetFavoritesResponse,
+    RemoveFavoriteResponse,
+    UpdateEmailResponse,
+    UpdatePasswordResponse,
+    UpdateUsernameResponse
+} from "@/src/types/api/user/responses";
 
 const USER_ENDPOINT = `${API_BASE_URL}/user`;
-const UPDATE_USERNAME_ENDPOINT = `${USER_ENDPOINT}/username`;
-const UPDATE_EMAIL_ENDPOINT = `${USER_ENDPOINT}/email`;
-const UPDATE_PASSWORD_ENDPOINT = `${USER_ENDPOINT}/password`;
-const FAVORITES_ENDPOINT = `${USER_ENDPOINT}/favorites`;
 
-export const updateUsernameAPI = async (newUsername: string, token: string) => {
-    const functionName = 'updateUsername';
-    const payload = {username: newUsername};
-    logRequest(functionName, UPDATE_USERNAME_ENDPOINT, payload);
-    try {
-        const response = await axios.put(
-            UPDATE_USERNAME_ENDPOINT,
-            payload,
-            {headers: {Authorization: `Bearer ${token}`}}
-        );
-        logResponse(functionName, UPDATE_USERNAME_ENDPOINT, response.data);
-        return response.data;
-    } catch (error: any) {
-        logError(functionName, UPDATE_USERNAME_ENDPOINT, error);
-        throw error;
-    }
-};
 
-// Update Email API Call
-export const updateEmailAPI = async (oldEmail: string, newEmail: string, token: string) => {
-    const functionName = 'updateEmail';
-    const payload = {old_email: oldEmail, new_email: newEmail};
-
-    logRequest(functionName, UPDATE_EMAIL_ENDPOINT, payload);
-
-    try {
-        const response = await axios.put(
-            UPDATE_EMAIL_ENDPOINT,
-            payload,
-            {headers: {Authorization: `Bearer ${token}`}}
-        );
-        logResponse(functionName, UPDATE_EMAIL_ENDPOINT, response.data);
-        return response.data;
-    } catch (error: any) {
-        logError(functionName, UPDATE_EMAIL_ENDPOINT, error);
-        throw error;
-    }
-};
-
-export const updatePasswordAPI = async (oldPassword: string, newPassword: string, token: string) => {
-    const functionName = 'updatePassword';
-    const payload = {old_password: oldPassword, new_password: newPassword};
-
-    logRequest(functionName, UPDATE_PASSWORD_ENDPOINT, payload);
-
-    try {
-        const response = await axios.put(
-            UPDATE_PASSWORD_ENDPOINT,
-            payload,
-            {headers: {Authorization: `Bearer ${token}`}}
-        );
-        logResponse(functionName, UPDATE_PASSWORD_ENDPOINT, response.data);
-        return response.data;
-    } catch (error: any) {
-        logError(functionName, UPDATE_PASSWORD_ENDPOINT, error);
-        throw error;
-    }
-};
-
-export const getUserDataAPI = async (token: string) => {
-    const functionName = 'getUserData';
-    try {
-        const response = await axios.get(USER_ENDPOINT, {
-            headers: {Authorization: `Bearer ${token}`}
+export const userApi = {
+    async updateUsername(newUsername: string, token: string): Promise<UpdateUsernameResponse> {
+        return apiClient.request({
+            method: 'PUT',
+            url: `${USER_ENDPOINT}/username`,
+            data: {username: newUsername},
+            token,
         });
-        logResponse(functionName, USER_ENDPOINT, response.data);
-        return response.data;
-    } catch (error: any) {
-        logError(functionName, USER_ENDPOINT, error);
-        throw error;
-    }
-};
+    },
 
-
-export const addToFavoritesAPI = async (restaurantId: string, token: string) => {
-    const functionName = 'addToFavorites';
-    const payload = {restaurant_id: restaurantId};
-
-    logRequest(functionName, FAVORITES_ENDPOINT, payload);
-
-    try {
-        const response = await axios.post(FAVORITES_ENDPOINT, payload, {
-            headers: {Authorization: `Bearer ${token}`}
+    async updateEmail(oldEmail: string, newEmail: string, token: string): Promise<UpdateEmailResponse> {
+        return apiClient.request({
+            method: 'PUT',
+            url: `${USER_ENDPOINT}/email`,
+            data: {old_email: oldEmail, new_email: newEmail},
+            token,
         });
-        logResponse(functionName, FAVORITES_ENDPOINT, response.data);
-        return response.data;
-    } catch (error: any) {
-        logError(functionName, FAVORITES_ENDPOINT, error);
-        throw error;
-    }
-};
-
-export const removeFromFavoritesAPI = async (restaurantId: number, token: string) => {
-    const functionName = 'removeFromFavoritesAPI';
-    const payload = {restaurant_id: restaurantId};
-
-    logRequest(functionName, FAVORITES_ENDPOINT, payload);
-
-    try {
-        const response = await axios.delete(FAVORITES_ENDPOINT, {
-            headers: {Authorization: `Bearer ${token}`},
-            data: payload
+    },
+    async updatePassword(oldPassword: string, newPassword: string, token: string): Promise<UpdatePasswordResponse> {
+        return apiClient.request({
+            method: 'PUT',
+            url: `${USER_ENDPOINT}/password`,
+            data: {old_password: oldPassword, new_password: newPassword},
+            token,
         });
-        logResponse(functionName, FAVORITES_ENDPOINT, response.data);
-        return response.data;
-    } catch (error: any) {
-        logError(functionName, FAVORITES_ENDPOINT, error);
-        throw error;
-    }
-};
+    },
 
-// Get Favorites API Call
-export const getFavoritesAPI = async (token: string): Promise<string[]> => {
-    const functionName = 'getFavorites';
-
-    logRequest(functionName, FAVORITES_ENDPOINT, {});
-
-    try {
-        const response = await axios.get(FAVORITES_ENDPOINT, {
-            headers: {Authorization: `Bearer ${token}`}
+    async getUserData(token: string): Promise<UserDataResponse> {
+        return apiClient.request({
+            method: 'GET',
+            url: USER_ENDPOINT,
+            token,
         });
-        logResponse(functionName, FAVORITES_ENDPOINT, response.data);
-        return response.data.favorites;
-    } catch (error: any) {
-        logError(functionName, FAVORITES_ENDPOINT, error);
-        throw error;
-    }
-};
+    },
 
+    async addToFavorites(restaurantId: number, token: string): Promise<AddFavoriteResponse> {
+        return apiClient.request({
+            method: 'POST',
+            url: `${USER_ENDPOINT}/favorites`,
+            data: {restaurant_id: restaurantId},
+            token,
+        });
+    },
+
+    async removeFromFavorites(restaurantId: number, token: string): Promise<RemoveFavoriteResponse> {
+        return apiClient.request({
+            method: 'DELETE',
+            url: `${USER_ENDPOINT}/favorites`,
+            data: {restaurant_id: restaurantId},
+            token,
+        });
+    },
+
+    async getFavorites(token: string): Promise<GetFavoritesResponse> {
+        return apiClient.request({
+            method: 'GET',
+            url: `${USER_ENDPOINT}/favorites`,
+            token,
+        });
+    },
+};

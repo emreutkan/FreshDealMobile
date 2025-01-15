@@ -5,7 +5,7 @@ import {AppDispatch, RootState} from '@/src/redux/store';
 import {Feather} from '@expo/vector-icons';
 import {useNavigation} from '@react-navigation/native';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {updateEmailThunk, updatePasswordThunk, updateUsername} from '@/src/redux/thunks/userThunks';
+import {updateEmailThunk, updatePasswordThunk, updateUsernameThunk} from '@/src/redux/thunks/userThunks';
 import {logout} from '@/src/redux/slices/userSlice';
 import {RootStackParamList} from "@/src/utils/navigation";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
@@ -58,8 +58,8 @@ const AccountScreen: React.FC = () => {
                             if (newPassword) {
                                 try {
                                     const resultAction = await dispatch(updatePasswordThunk({
-                                        oldPassword,
-                                        newPassword
+                                        old_password: oldPassword,
+                                        new_password: newPassword,
                                     }));
                                     if (updatePasswordThunk.fulfilled.match(resultAction)) {
                                         Alert.alert('Success', 'Password updated successfully');
@@ -88,10 +88,10 @@ const AccountScreen: React.FC = () => {
                     onPress: async () => {
                         const updates = [];
                         if (editedValues.name_surname !== name_surname) {
-                            updates.push(dispatch(updateUsername({newUsername: editedValues.name_surname})));
+                            updates.push(dispatch(updateUsernameThunk({username: editedValues.name_surname})));
                         }
                         if (editedValues.email !== email) {
-                            updates.push(dispatch(updateEmailThunk({oldEmail: email, newEmail: editedValues.email})));
+                            updates.push(dispatch(updateEmailThunk({old_email: email, new_email: editedValues.email})));
                         }
 
                         if (updates.length > 0) {
