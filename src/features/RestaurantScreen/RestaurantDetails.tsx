@@ -1,17 +1,19 @@
 import React, {useEffect, useState} from 'react';
 import {Dimensions, Image, Modal, StyleSheet, Text, TouchableOpacity, View,} from 'react-native';
-import {RouteProp, useNavigation, useRoute} from '@react-navigation/native';
+import {NavigationProp, RouteProp, useNavigation, useRoute} from '@react-navigation/native';
 import {useDispatch, useSelector} from 'react-redux';
 import {AppDispatch, RootState} from '@/src/redux/store';
 import {RootStackParamList} from "@/src/utils/navigation";
 import {getListingsThunk} from "@/src/redux/thunks/listingThunks";
 import ListingsCard from "@/src/features/RestaurantScreen/components/listingsCard";
-import {NativeStackNavigationProp} from "@react-navigation/native-stack";
 import {GoBackButton} from "@/src/features/RestaurantScreen/components/RestaurantHeader";
 import {Ionicons} from "@expo/vector-icons";
 import PickUpDeliveryToggle from "@/src/features/RestaurantScreen/components/PickUpDeliveryToggle";
 import LocateToRestaurant from "@/src/features/RestaurantScreen/components/locateToRestaurant";
+import CartBar from "@/src/features/RestaurantScreen/components/cartBar";
+import {NativeStackNavigationProp} from "@react-navigation/native-stack";
 
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const RestaurantDetails: React.FC = () => {
     const route = useRoute<RouteProp<RootStackParamList, 'RestaurantDetails'>>();
@@ -29,6 +31,17 @@ const RestaurantDetails: React.FC = () => {
     }
     const [showInfoModal, setShowInfoModal] = useState(false);
     const {height: screenHeight} = Dimensions.get("window");
+    const handleGoToCart = () => {
+        if (!restaurantId) {
+            console.error('No restaurant ID available');
+            return;
+        }
+
+        navigation.navigate('Cart', {
+            restaurantId: restaurantId,
+            isPickup: isPickup,
+        });
+    };
 
 // helper functions for walking / driving times
     function getWalkingTime(distance_km: number) {
@@ -64,49 +77,15 @@ const RestaurantDetails: React.FC = () => {
         // cartItems
     ]);
 
-    const CartBar: React.FC = () => {
+    const navigation = useNavigation<NavigationProp>();
 
-        type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
-        const navigation = useNavigation<NavigationProp>();
-
-
-        return (
-            <TouchableOpacity
-                style={{
-                    position: 'absolute',
-                    bottom: 20,
-                    left: 20,
-                    right: 20,
-                    backgroundColor: '#b2f7a5', // You can change this color to match your branding
-                    paddingVertical: 15,
-                    borderRadius: 30,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    elevation: 5, // Add shadow for Android
-                    shadowColor: '#000', // Shadow for iOS
-                    shadowOffset: {width: 0, height: 2},
-                    shadowOpacity: 0.3,
-                    shadowRadius: 4,
-                }}
-                onPress={handleGoToCart}
-            >
-                <Text style={{
-                    color: '#fff',
-                    fontSize: 16,
-                    fontWeight: 'bold',
-                }}>
-                    {`Click to Go To Cart (${cartItems.length} item${cartItems.length > 1 ? 's' : ''})`}
-                </Text>
-            </TouchableOpacity>
-        );
-    };
 
     useEffect(() => {
         console.log("Cart updated: ", cart);
     }, [cart]);
     // GET RESTAURANT DATA
     const restaurant = useSelector((state: RootState) =>
-        state.restaurant.restaurantsProximity.find(r => r.id === restaurantId)
+        state.restaurant.restaurantsProximity.find(r => r.id === Number(restaurantId))
     );
 
 
@@ -123,27 +102,16 @@ const RestaurantDetails: React.FC = () => {
         const deliveryAvailable = restaurant.delivery;
         return (
             <>
-                {/*<RestaurantHeader*/}
-                {/*    isScrolled={true}*/}
-                {/*    restaurantName={restaurant.restaurantName.toString()}*/}
-                {/*    isMapActive={isMapActive}*/}
-                {/*    onToggleMap={setIsMapActive}*/}
-                {/*    restaurantId={restaurantId}*/}
-                {/*    isPickup={isPickup}*/}
-                {/*    setIsPickup={setIsPickup}*/}
-                {/*/>*/}
 
                 <View style={styles.container}>
                     <View style={{flex: 1}}>
-                        {/* Scrollable wrapper */}
                         <View
                             style={{
                                 bottom: 20,
-                            }}
-                            contentContainerStyle={{
                                 alignItems: "center",
                                 justifyContent: "flex-start",
                             }}
+
                         >
 
                             {restaurant?.image_url ? (
@@ -339,7 +307,7 @@ const RestaurantDetails: React.FC = () => {
                                         borderRadius: 12,
                                         overflow: "hidden",
                                     }}>
-                                        <LocateToRestaurant restaurantId={restaurant.id}/>
+                                        <LocateToRestaurant restaurantId={(restaurant.id.toString())}/>
                                     </View>
                                 </View>
                             </View>
@@ -361,7 +329,13 @@ const RestaurantDetails: React.FC = () => {
                     {/*    <LocateToRestaurant restaurantId={restaurantId}/>*/}
                     {/*)}*/}
                 </View>
-
+                {cart.cartItems.length > 0 && (
+                    <CartBar
+                        cartItems={cart.cartItems}
+                        isPickup={isPickup}
+                        setIsPickup={setIsPickup}
+                        restaurantId={restaurantId}
+                    />)}
             </>
         );
     }

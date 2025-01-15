@@ -5,13 +5,12 @@ import {useNavigation} from "@react-navigation/native";
 import {Text, TouchableOpacity} from "react-native";
 
 interface CartBarProps {
-    restaurantId: string;
     isPickup: boolean;
     setIsPickup: (pickup: boolean) => void;
     cartItems: any;
 }
 
-const CartBar: React.FC<CartBarProps> = ({restaurantId, isPickup, setIsPickup, cartItems}) => {
+const CartBar: React.FC<CartBarProps> = ({isPickup, setIsPickup, cartItems}) => {
 
     type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
     const navigation = useNavigation<NavigationProp>();
@@ -35,7 +34,7 @@ const CartBar: React.FC<CartBarProps> = ({restaurantId, isPickup, setIsPickup, c
                 shadowOpacity: 0.3,
                 shadowRadius: 4,
             }}
-            onPress={() => navigation.navigate('Cart', {restaurantId, isPickup, setIsPickup})}
+            onPress={() => navigation.navigate('Cart', {isPickup, setIsPickup})}
         >
             <Text style={{
                 color: '#fff',

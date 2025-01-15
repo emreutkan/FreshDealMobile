@@ -1,34 +1,33 @@
 import React, {FC, useEffect} from 'react';
 import {FlatList, Image, StyleSheet, Text, TouchableOpacity, View,} from 'react-native';
 import {addItemToCart, fetchCart, removeItemFromCart, updateCartItem,} from '@/src/redux/thunks/cartThunks';
-import {Listing} from '@/src/redux/slices/listingSlice';
 import {useDispatch, useSelector} from 'react-redux';
 import {AppDispatch, RootState} from '@/src/redux/store';
+import {Listing} from "@/src/types/api/listing/model";
 
 interface ListingCardProps {
     listingList: Listing[];
     isPickup: boolean;
 }
 
-
 export const ListingCard: FC<ListingCardProps> = ({listingList, isPickup}) => {
-
     const dispatch = useDispatch<AppDispatch>();
-    // 1) Grab the entire cart from Redux here
+
+    // Get the entire cart state from Redux
     const cart = useSelector((state: RootState) => state.cart);
+
     useEffect(() => {
         dispatch(fetchCart());
-    }, []);
-
+    }, [dispatch]);
 
     const renderListingItem = ({item}: { item: Listing }) => {
         const displayPrice = isPickup
             ? item.pick_up_price ?? 0
             : item.delivery_price ?? 0;
 
-        // 2) Now get countInCart from the cart in Redux
+        // Get the corresponding cart item (if any) by matching listing_id.
         const cartItem = cart.cartItems.find(
-            (cartItem: any) => cartItem.listing_id === item.id
+            (cartItem) => cartItem.listing_id === item.id
         );
         const countInCart = cartItem ? cartItem.count : 0;
 
@@ -39,32 +38,45 @@ export const ListingCard: FC<ListingCardProps> = ({listingList, isPickup}) => {
         }
 
         const handleAddToCart = async () => {
-            if (countInCart === 0) {
-                dispatch(addItemToCart({listingId: item.id}));
-            } else if (countInCart === item.count) {
-                // If there's some max quantity logic, keep it or remove it if incorrect
-                alert('You have reached the maximum quantity for this item');
-            } else {
-                dispatch(
-                    updateCartItem({
-                        listingId: item.id,
-                        count: countInCart + 1,
-                    })
-                );
+            const existingCartItems = cart.cartItems;
+
+            // If there are items in the cart, check if they belong to the same restaurant
+            if (existingCartItems.length > 0) {
+                const existingRestaurantId = existingCartItems[0].restaurant_id;
+                if (existingRestaurantId !== item.restaurant_id) {
+                    console.log(existingCartItems)
+                    console.log(existingRestaurantId)
+                    console.log(item.restaurant_id)
+                    alert(
+                        'You can only add items from the same restaurant to your cart. ' +
+                        'Please empty your cart first or complete your current order.'
+                    );
+                    return;
+                }
             }
 
-        };
+            // Check if adding one more would exceed the item's available count
+            if (countInCart >= item.count) {
+                alert('You have reached the maximum quantity for this item');
+                return;
+            }
 
+            // Add or update the item in the cart
+            if (countInCart === 0) {
+                dispatch(addItemToCart({payload: {listing_id: item.id}}));
+            } else {
+                dispatch(
+                    updateCartItem({payload: {listing_id: item.id, count: countInCart + 1}})
+                );
+            }
+        };
 
         const handleRemoveOneFromCart = () => {
             if (countInCart === 1) {
-                dispatch(removeItemFromCart({listingId: item.id}));
+                dispatch(removeItemFromCart({listing_id: item.id}));
             } else {
                 dispatch(
-                    updateCartItem({
-                        listingId: item.id,
-                        count: countInCart - 1,
-                    })
+                    updateCartItem({payload: {listing_id: item.id, count: countInCart - 1}})
                 );
             }
         };
@@ -87,11 +99,11 @@ export const ListingCard: FC<ListingCardProps> = ({listingList, isPickup}) => {
 
                     <View style={styles.priceRow}>
                         {item.original_price !== null && item.original_price > 0 && (
-                            <Text style={styles.originalPrice}>{item.original_price} TL</Text>
+                            <Text style={styles.originalPrice}>
+                                {item.original_price} TL
+                            </Text>
                         )}
-
                         <Text style={styles.displayPrice}>{displayPrice} TL</Text>
-
                         {discountPercentage > 0 && (
                             <View style={styles.discountContainer}>
                                 <Text style={styles.discountText}>{discountPercentage}% OFF</Text>
@@ -155,7 +167,6 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         backgroundColor: '#FFF',
         alignItems: 'center',
-        // shadow for iOS, elevation for Android
         shadowColor: '#000',
         shadowOffset: {width: 0, height: 2},
         shadowOpacity: 0.15,
@@ -163,7 +174,6 @@ const styles = StyleSheet.create({
         elevation: 3,
     },
     listingImage: {
-
         width: 70,
         height: 70,
         borderRadius: 8,
@@ -213,8 +223,6 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         color: '#34A853',
     },
-
-    /* Cart Controls */
     cartControls: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -243,8 +251,6 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         color: '#333',
     },
-
-    /* Single + Button */
     addButton: {
         width: 32,
         height: 32,

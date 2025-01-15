@@ -1,11 +1,10 @@
 // src/store/slices/cartSlice.ts
 
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
-import {addItemToCart, fetchCart, removeItemFromCart, updateCartItem} from "@/src/redux/thunks/cartThunks";
+import {addItemToCart, fetchCart, removeItemFromCart, resetCart, updateCartItem} from "@/src/redux/thunks/cartThunks";
 import {logout} from "@/src/redux/slices/userSlice";
 import {CartState} from "@/src/types/states";
 import {CartItem} from "@/src/types/api/cart/model";
-
 
 const initialState: CartState = {
     cartItems: [],
@@ -13,13 +12,11 @@ const initialState: CartState = {
     error: null,
 };
 
-// Slice
-
 const cartSlice = createSlice({
     name: 'cart',
     initialState,
     reducers: {
-        // Optional: Define synchronous actions if needed
+        // Synchronous action to clear the cart
         clearCart: (state) => {
             state.cartItems = [];
             state.error = null;
@@ -27,71 +24,92 @@ const cartSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
-            .addCase(logout, () => initialState) // Reset state on global action
+            // When logging out, reset the cart state to its initial state
+            .addCase(logout, () => initialState)
 
-        // Fetch Cart
-        builder.addCase(fetchCart.pending, (state) => {
-            state.loading = true;
-            state.error = null;
-        });
-        builder.addCase(fetchCart.fulfilled, (state, action: PayloadAction<CartItem[]>) => {
-            state.loading = false;
-            state.cartItems = action.payload;
-        });
-        builder.addCase(fetchCart.rejected, (state, action) => {
-            state.loading = false;
-            state.error = action.payload as string;
-        });
+            // ----------------------------
+            // Fetch Cart Thunk
+            // ----------------------------
+            .addCase(fetchCart.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(fetchCart.fulfilled, (state, action: PayloadAction<CartItem[]>) => {
+                state.loading = false;
+                state.cartItems = action.payload;
+                console.log(state.cartItems)
+                console.log(action.payload)
+            })
+            .addCase(fetchCart.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload as string;
+            })
 
-        // Add Item to Cart
-        builder.addCase(addItemToCart.pending, (state) => {
-            state.loading = true;
-            state.error = null;
-        });
-        builder.addCase(addItemToCart.fulfilled, (state, action: PayloadAction<CartItem>) => {
-            state.loading = false;
-            const existingItem = state.cartItems.find(item => item.listing_id === action.payload.listing_id);
-            if (existingItem) {
-                existingItem.count += action.payload.count;
-            } else {
-                state.cartItems.push(action.payload);
-            }
-        });
-        builder.addCase(addItemToCart.rejected, (state, action) => {
-            state.loading = false;
-            state.error = action.payload as string;
-        });
+            // ----------------------------
+            // Add Item to Cart Thunk
+            // ----------------------------
+            .addCase(addItemToCart.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            // Since the addItemToCart thunk dispatches fetchCart, state will be updated in that reducer.
+            // Optionally, you can update state here if your API returns a cart item.
+            .addCase(addItemToCart.fulfilled, (state) => {
+                state.loading = false;
+            })
+            .addCase(addItemToCart.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload as string;
+            })
 
-        // Remove Item from Cart
-        builder.addCase(removeItemFromCart.pending, (state) => {
-            state.loading = true;
-            state.error = null;
-        });
-        builder.addCase(removeItemFromCart.fulfilled, (state, action: PayloadAction<string>) => {
-            state.loading = false;
-            state.cartItems = state.cartItems.filter(item => item.id.toString() !== action.payload);
-        });
-        builder.addCase(removeItemFromCart.rejected, (state, action) => {
-            state.loading = false;
-            state.error = action.payload as string;
-        });
+            // ----------------------------
+            // Update Cart Item Thunk
+            // ----------------------------
+            .addCase(updateCartItem.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            // Similarly, fetchCart is dispatched after update
+            .addCase(updateCartItem.fulfilled, (state) => {
+                state.loading = false;
+            })
+            .addCase(updateCartItem.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload as string;
+            })
 
-        // Update Cart Item
-        builder.addCase(updateCartItem.pending, (state) => {
-            state.loading = true;
-            state.error = null;
-        });
-        builder.addCase(updateCartItem.fulfilled, (state, action: PayloadAction<CartItem>) => {
-            state.loading = false;
-            const index = state.cartItems.findIndex(item => item.id === action.payload.id);
-            if (index !== -1) {
-                state.cartItems[index] = action.payload;
-            }
-        });
-        builder.addCase(updateCartItem.rejected, (state, action) => {
-            state.loading = false;
-            state.error = action.payload as string;
-        });
+            // ----------------------------
+            // Remove Item from Cart Thunk
+            // ----------------------------
+            .addCase(removeItemFromCart.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            // After removal, fetchCart is dispatched so the state will be updated accordingly.
+            .addCase(removeItemFromCart.fulfilled, (state) => {
+                state.loading = false;
+            })
+            .addCase(removeItemFromCart.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload as string;
+            })
+
+            // ----------------------------
+            // Reset Cart Thunk
+            // ----------------------------
+            .addCase(resetCart.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(resetCart.fulfilled, (state) => {
+                state.loading = false;
+                // Clearing the cart after a reset
+                state.cartItems = [];
+            })
+            .addCase(resetCart.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload as string;
+            });
     },
 });
 

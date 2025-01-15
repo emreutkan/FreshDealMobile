@@ -1,5 +1,5 @@
 import React from 'react';
-import {ScrollView, StyleSheet, Text, View} from 'react-native';
+import {ScrollView, StyleSheet, View} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
 import {AppDispatch, RootState} from '@/src/redux/store';
 import ListingCard from "@/src/features/RestaurantScreen/components/listingsCard";
@@ -7,7 +7,6 @@ import {RouteProp, useRoute} from "@react-navigation/native";
 import {RootStackParamList} from "@/src/utils/navigation";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
 import GoBackIcon from "@/src/features/homeScreen/components/goBackIcon";
-import PickupDeliveryToggle from "@/src/features/RestaurantScreen/components/PickUpDeliveryToggle";
 import {scaleFont} from "@/src/utils/ResponsiveFont";
 
 
@@ -15,60 +14,46 @@ const CartScreen: React.FC = () => {
 
     // Only call the hook at the top level
     const dispatch = useDispatch<AppDispatch>();
-    const cartItems = useSelector((state: RootState) => state.cart.cartItems);
     const route = useRoute<RouteProp<RootStackParamList, 'Cart'>>();
-    const {restaurantId, isPickup, setIsPickup} = route.params;
-    const Restaurant = useSelector((state: RootState) => state.restaurant.restaurantsProximity.find(r => r.id === restaurantId));
+    const {isPickup, setIsPickup} = route.params;
 
     const cart = useSelector((state: RootState) => state.cart.cartItems);
     const listings = useSelector((state: RootState) => state.listing.listings);
     const ListingsInCart = listings.filter(listing => cart.some(cartItem => cartItem.listing_id));
 
     const insets = useSafeAreaInsets();
-    if (!Restaurant) {
-        return (
-            <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-                <Text style={{color: 'red'}}>Error: Missing restaurantId.</Text>
+
+
+    return (
+        <View style={
+            {
+                ...styles.container,
+                paddingTop: insets.top,
+                paddingBottom: insets.bottom,
+            }
+        }>
+            <GoBackIcon></GoBackIcon>
+            <View
+                style={{
+                    alignItems: 'center',
+
+                }}
+            >
+
             </View>
-        );
-    } else {
-        const pickupAvailable = Restaurant.pickup;
-        const deliveryAvailable = Restaurant.delivery;
+            <ScrollView
+                style={{
+                    flex: 1,
+                    padding: scaleFont(16),
+                    backgroundColor: '#f9f9f9',
+                }}
+            >
 
-        return (
-            <View style={
-                {
-                    ...styles.container,
-                    paddingTop: insets.top,
-                    paddingBottom: insets.bottom,
-                }
-            }>
-                <GoBackIcon></GoBackIcon>
-                <View
-                    style={{
-                        alignItems: 'center',
+                <ListingCard listingList={ListingsInCart} isPickup={isPickup}/>
 
-                    }}
-                >
-                    <PickupDeliveryToggle isPickup={isPickup} setIsPickup={setIsPickup}
-                                          pickupAvailable={pickupAvailable}
-                                          deliveryAvailable={deliveryAvailable}
-                    />
-                </View>
-                <ScrollView
-                    style={{
-                        flex: 1,
-                        padding: scaleFont(16),
-                        backgroundColor: '#f9f9f9',
-                    }}
-                >
-
-                    <ListingCard listingList={ListingsInCart} isPickup={isPickup}/>
-
-                </ScrollView>
-            </View>
-        );
-    }
+            </ScrollView>
+        </View>
+    );
 
 
 };
