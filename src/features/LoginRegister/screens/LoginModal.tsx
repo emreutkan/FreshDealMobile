@@ -12,18 +12,16 @@ import {
 import {useDispatch, useSelector} from 'react-redux';
 import {AppDispatch, RootState} from '@/src/redux/store';
 import {scaleFont} from '@/src/utils/ResponsiveFont';
-import DefaultButton from '@/src/features/DefaultButton';
 import AppleOTP from '@/src/features/LoginRegister/components/AppleOTPLogin';
 import EmailLoginField from '@/src/features/LoginRegister/components/EmailInput';
 import PhoneInput from '@/src/features/LoginRegister/components/PhoneInput';
-import {
-    EmailSignInButton,
-    GoogleSignInButton,
-    PhoneSignInButton,
-} from '@/src/features/LoginRegister/components/LoginRegisterScreenButtons';
+import {GoogleSignInButton,} from '@/src/features/LoginRegister/components/GoogleSignInButton';
 import PasswordInput from '@/src/features/LoginRegister/components/PasswordInput';
 import {setLoginType, setPasswordLogin} from '@/src/redux/slices/userSlice';
 import {loginUserThunk} from '@/src/redux/thunks/userThunks';
+import {EmailSignInButton} from "@/src/features/LoginRegister/components/EmailSignInButton";
+import {PhoneSignInButton} from "@/src/features/LoginRegister/components/PhoneSignInButton";
+import {ButtonStyles} from "@/src/styles/ButtonStyles";
 
 interface LoginModalProps {
     switchToRegister: () => void; // Callback to switch to RegisterModal
@@ -51,18 +49,7 @@ const LoginModal: React.FC<LoginModalProps> = ({switchToRegister}) => {
         }
     }, [passwordLogin]);
 
-    // // Display error alerts when 'error' state changes
-    // React.useEffect(() => {
-    //     if (error) {
-    //         Alert.alert('Error', error);
-    //     }
-    // }, [error]);
 
-    /**
-     * Handles the login button click.
-     * Performs validation checks and dispatches the login request.
-     * Resets passwordLogin state to false after the login attempt.
-     */
     const handleLoginButton = async () => {
         console.log('login button pressed');
         if (login_type === 'phone_number' && !phoneNumber) {
@@ -130,10 +117,15 @@ const LoginModal: React.FC<LoginModalProps> = ({switchToRegister}) => {
                     {!phoneNumber && !email && (
                         <>
                             <View style={styles.buttonContainer}>
-                                <DefaultButton
-                                    onPress={switchToRegister} // Switch to RegisterModal
-                                    title="Sign up"
-                                />
+
+                                <TouchableOpacity
+                                    style={ButtonStyles.defaultGreenButton}
+                                    onPress={switchToRegister}
+                                >
+                                    <Text style={ButtonStyles.ButtonText}>
+                                        Sign up
+                                    </Text>
+                                </TouchableOpacity>
                             </View>
                             {loading ? (
                                 <View style={styles.loaderContainer}>
@@ -145,7 +137,15 @@ const LoginModal: React.FC<LoginModalProps> = ({switchToRegister}) => {
                                 </Text>
                             ) : (
                                 <View style={styles.buttonContainer}>
-                                    <DefaultButton onPress={handleLoginButton} title="Login"/>
+
+                                    <TouchableOpacity
+                                        style={ButtonStyles.defaultGreenButton}
+                                        onPress={handleLoginButton}
+                                    >
+                                        <Text style={ButtonStyles.ButtonText}>
+                                            Login
+                                        </Text>
+                                    </TouchableOpacity>
                                 </View>
                             )}
                         </>
@@ -153,12 +153,17 @@ const LoginModal: React.FC<LoginModalProps> = ({switchToRegister}) => {
 
                     {(phoneNumber || email) && (
                         <View style={styles.loginContainer}>
-                            <DefaultButton
+
+                            <TouchableOpacity
+                                style={ButtonStyles.defaultGreenButton}
                                 onPress={() => {
                                     dispatch(setPasswordLogin(true));
                                 }}
-                                title="Login"
-                            />
+                            >
+                                <Text style={ButtonStyles.ButtonText}>
+                                    Login
+                                </Text>
+                            </TouchableOpacity>
                             <TouchableOpacity
                                 style={styles.passwordlessLoginContainer}
                                 onPress={() => {

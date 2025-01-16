@@ -49,9 +49,7 @@ const HomeScreen: React.FC = () => {
 
         console.log('Primary Address Data:', primaryAddressData);
 
-        dispatch(getRestaurantsByProximity({
-            radius: 10000,
-        }));
+        dispatch(getRestaurantsByProximity());
 
         dispatch(getFavoritesThunk());
     }, [dispatch, primaryAddressData]);

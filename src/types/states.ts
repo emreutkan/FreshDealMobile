@@ -43,6 +43,7 @@ export interface RestaurantState {
     favoriteRestaurantsIDs: number[];
     favoritesStatus: 'idle' | 'loading' | 'succeeded' | 'failed';
     favoritesLoading: boolean;
+    radius: number;
     error: string | null;
 }
 

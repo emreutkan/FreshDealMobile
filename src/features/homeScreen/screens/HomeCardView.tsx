@@ -3,25 +3,28 @@ import {
     ActivityIndicator,
     NativeScrollEvent,
     NativeSyntheticEvent,
+    Platform,
     ScrollView,
     StyleSheet,
     Text,
     TouchableOpacity,
     View,
 } from 'react-native';
-
 import RestaurantList from "@/src/features/homeScreen/components/RestaurantCard";
 import {Feather} from '@expo/vector-icons';
-import {scaleFont} from "@/src/utils/ResponsiveFont";
-import {RootState} from "@/src/redux/store";
-import {useSelector} from "react-redux";
+import {AppDispatch, RootState} from "@/src/redux/store";
+import {useDispatch, useSelector} from "react-redux";
+import {getRestaurantsByProximity} from "@/src/redux/thunks/restaurantThunks";
+import FavoriteRestaurantList from "@/src/features/homeScreen/components/FavoriteRestaurantCard";
+import Slider from '@react-native-community/slider';
+import {setRadius} from "@/src/redux/slices/restaurantSlice";
 
 interface HomeCardViewProps {
     onScroll: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
     onRestaurantPress?: (restaurantId: string) => void;
 }
 
-const MIN_LOADING_DURATION = 1000; // main loading duration (redux)
+const MIN_LOADING_DURATION = 200; // main loading duration (redux)
 const FILTER_LOADING_DURATION = 200; // duration for filter toggling/loading
 
 const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll, onRestaurantPress}) => {
@@ -32,9 +35,15 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll, onRestaurantPress}
     // For the main loading animation from redux's `loading`
     const [showMainLoading, setShowMainLoading] = useState(restaurantsProximityLoading);
 
+    const dispatch = useDispatch<AppDispatch>();
     // For filtering transition loading animation
     const [filterLoading, setFilterLoading] = useState(false);
+    const reduxRadius = useSelector((state: RootState) => state.restaurant.radius);
+    const [localRadius, setLocalRadius] = useState(reduxRadius);
 
+    useEffect(() => {
+        dispatch(getRestaurantsByProximity());
+    }, [dispatch, reduxRadius]);
     useEffect(() => {
         let timer: NodeJS.Timeout;
         if (restaurantsProximityLoading) {
@@ -123,11 +132,17 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll, onRestaurantPress}
     }, [restaurantsProximity, filters]);
 
 
+    const setRadiusAction = (value: number) => {
+        console.log('Setting radius:', value);
+        dispatch(setRadius(value));
+    };
     return (
         <View style={styles.safeArea}>
+
             {/* Top Bar */}
             <View style={styles.topBar}>
-                <Text style={styles.title}>Restaurants in Area</Text>
+                <Text style={styles.title}>Restaurants Near You</Text>
+
             </View>
 
             {/* Filter Bar */}
@@ -141,6 +156,7 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll, onRestaurantPress}
                 <TouchableOpacity style={styles.iconButton}>
                     <Feather name="sliders" size={16} color="#333"/>
                 </TouchableOpacity>
+
 
                 {/* Pick Up Button */}
                 <TouchableOpacity
@@ -248,15 +264,16 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll, onRestaurantPress}
                 {isLoading ? (
                     <View style={styles.loadingContainer}>
                         <ActivityIndicator size="large" color="#50703C"/>
-                        <Text style={styles.loadingText}>Loading restaurants...</Text>
+                        <Text style={styles.loadingText}>Finding the best restaurants...</Text>
                     </View>
                 ) : restaurantsProximityStatus !== 'succeeded' || filteredRestaurants.length === 0 ? (
-                    // 2) If NOT succeeded, or length=0 => No restaurants found
                     <View style={styles.noDataContainer}>
-                        <Feather name="frown" size={48} color="#555"/>
+                        <View style={styles.noDataIconContainer}>
+                            <Feather name="coffee" size={48} color="#50703C"/>
+                        </View>
                         <Text style={styles.noDataTitle}>No Restaurants Found</Text>
                         <Text style={styles.noDataMessage}>
-                            There are no restaurants available in your area currently.
+                            Try adjusting your filters or expanding your search area
                         </Text>
                     </View>
                 ) : (
@@ -271,12 +288,33 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll, onRestaurantPress}
                         overScrollMode="never"
                         bounces={false}
                     >
+                        <View style={styles.radiusContainer}>
+                            <Text style={styles.radiusText}>Search Radius: {localRadius}km</Text>
+                            <Slider
+                                style={styles.slider}
+                                minimumValue={1}
+                                maximumValue={100}
+                                step={1} // Add step prop for whole numbers
+                                value={localRadius}
+                                onValueChange={(value) => setLocalRadius(Math.round(value))} // Update local state while sliding
+                                onSlidingComplete={(value) => {
+                                    const roundedValue = Math.round(value);
+                                    setLocalRadius(roundedValue);
+                                    dispatch(setRadius(roundedValue)); // Update Redux only when sliding ends
+                                }}
+                                minimumTrackTintColor="#50703C"
+                                maximumTrackTintColor="#E5E7EB"
+                                thumbTintColor="#50703C"
+                            />
+                        </View>
+
+                        <FavoriteRestaurantList
+                            restaurants={filteredRestaurants}
+                            onRestaurantPress={onRestaurantPress}
+                        />
                         <RestaurantList
                             restaurants={filteredRestaurants}
-                            onRestaurantPress={(id) => {
-                                console.log('Selected restaurant:', id);
-                                if (onRestaurantPress) onRestaurantPress(id);
-                            }}
+                            onRestaurantPress={onRestaurantPress}
                         />
                     </ScrollView>
                 )}
@@ -285,6 +323,7 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll, onRestaurantPress}
     );
 };
 
+
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
@@ -292,64 +331,149 @@ const styles = StyleSheet.create({
     },
     topBar: {
         paddingHorizontal: 16,
-        paddingVertical: 12,
+        paddingVertical: 16,
         backgroundColor: '#FFFFFF',
-        alignItems: 'center',
+        flexDirection: 'column',
+        alignItems: 'flex-start',
         borderBottomWidth: 1,
-        borderBottomColor: '#e0e0e0',
+        borderBottomColor: '#E5E7EB',
+        ...Platform.select({
+            ios: {
+                shadowColor: '#000',
+                shadowOffset: {width: 0, height: 1},
+                shadowOpacity: 0.05,
+                shadowRadius: 2,
+            },
+            android: {
+                elevation: 2,
+            },
+        }),
     },
     title: {
-        fontSize: 20,
-        fontWeight: '600',
-        color: '#333',
+        fontSize: 24,
+        fontWeight: '700',
+        color: '#111827',
+        marginBottom: 4,
+        fontFamily: 'Poppins-SemiBold',
     },
     filterBar: {
         backgroundColor: '#FFFFFF',
-        paddingVertical: scaleFont(12),
-        maxHeight: scaleFont(45),
+        paddingVertical: 12,
+        maxHeight: 60,
+
     },
+    filterContainer: {
+        backgroundColor: '#FFFFFF',
+        paddingBottom: 8,
+        borderBottomWidth: 1,
+        borderBottomColor: '#E5E7EB',
+    },
+
     filterContentContainer: {
-        paddingHorizontal: 8,
+        paddingHorizontal: 16,
         flexDirection: 'row',
         alignItems: 'center',
+        gap: 8,
     },
     iconButton: {
-        width: 36,
-        height: 36,
-        borderRadius: 18,
-        backgroundColor: '#F1F1F1',
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: '#F3F4F6',
         justifyContent: 'center',
         alignItems: 'center',
-        marginRight: 8,
+        ...Platform.select({
+            ios: {
+                shadowColor: '#000',
+                shadowOffset: {width: 0, height: 1},
+                shadowOpacity: 0.1,
+                shadowRadius: 2,
+            },
+            android: {
+                elevation: 2,
+            },
+        }),
     },
     filterButton: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
         paddingHorizontal: 16,
-        height: 36,
-        backgroundColor: '#F1F1F1',
-        borderRadius: 18,
-        marginHorizontal: 4,
+        height: 40,
+        backgroundColor: '#F3F4F6',
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: '#E5E7EB',
     },
     filterButtonSelected: {
         backgroundColor: '#50703C',
+        borderColor: '#50703C',
+    },
+    filterIcon: {
+        marginRight: 6,
     },
     filterText: {
         fontSize: 14,
-        fontWeight: '500',
-        color: '#333',
+        fontWeight: '600',
+        color: '#50703C',
+        fontFamily: 'Poppins-Regular',
+
     },
     filterTextSelected: {
-        color: '#FFF',
+        color: '#FFFFFF',
     },
     dropdownIcon: {
-        marginLeft: 6,
+        marginLeft: 4,
+    },
+    priceDropdown: {
+        margin: 16,
+        padding: 8,
+        backgroundColor: '#FFFFFF',
+        borderRadius: 12,
+        ...Platform.select({
+            ios: {
+                shadowColor: '#000',
+                shadowOffset: {width: 0, height: 2},
+                shadowOpacity: 0.1,
+                shadowRadius: 4,
+            },
+            android: {
+                elevation: 4,
+            },
+        }),
+    },
+    priceOption: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        marginVertical: 2,
+        borderRadius: 8,
+    },
+    priceOptionSelected: {
+        backgroundColor: '#50703C',
+    },
+    priceOptionText: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#374151',
+        fontFamily: 'Poppins-Regular',
+
+    },
+    priceDescription: {
+        fontSize: 14,
+        color: '#6B7280',
+        fontFamily: 'Poppins-Regular',
+
+    },
+    priceOptionTextSelected: {
+        color: '#FFFFFF',
     },
     container: {
         flex: 1,
         paddingHorizontal: 16,
-        paddingVertical: 20,
+        paddingVertical: 16,
     },
     scrollContainer: {
         flex: 1,
@@ -358,49 +482,74 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+        paddingBottom: 40,
     },
     loadingText: {
-        marginTop: 10,
+        marginTop: 16,
         fontSize: 16,
-        color: '#555',
+        color: '#374151',
+        fontWeight: '500',
+        fontFamily: 'Poppins-Regular',
     },
     noDataContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        paddingHorizontal: 20,
+        paddingHorizontal: 24,
+    },
+    noDataIconContainer: {
+        width: 80,
+        height: 80,
+        borderRadius: 40,
+        backgroundColor: '#F3F4F6',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 16,
     },
     noDataTitle: {
-        fontSize: 22,
-        fontWeight: 'bold',
-        color: '#555',
-        marginTop: 10,
+        fontSize: 20,
+        fontWeight: '700',
+        color: '#111827',
+        marginBottom: 8,
         textAlign: 'center',
+        fontFamily: 'Poppins-Regular',
+
     },
     noDataMessage: {
         fontSize: 16,
-        color: '#555',
+        color: '#6B7280',
         textAlign: 'center',
-        marginVertical: 10,
+        lineHeight: 24,
+        fontFamily: 'Poppins-Regular',
+
     },
-    priceDropdown: {
-        padding: 10,
+    radiusContainer: {
         backgroundColor: '#FFFFFF',
-        borderRadius: 8,
-        marginHorizontal: 16,
-        marginBottom: 8,
-        shadowColor: '#000',
-        shadowOpacity: 0.1,
-        shadowOffset: {width: 0, height: 2},
-        shadowRadius: 4,
-        elevation: 3,
+        padding: 16,
+        borderRadius: 12,
+        marginBottom: 16,
+        ...Platform.select({
+            ios: {
+                shadowColor: '#000',
+                shadowOffset: {width: 0, height: 2},
+                shadowOpacity: 0.1,
+                shadowRadius: 4,
+            },
+            android: {
+                elevation: 4,
+            },
+        }),
     },
-    priceOption: {
-        paddingVertical: 8,
-        paddingHorizontal: 12,
-        marginVertical: 4,
-        borderRadius: 8,
-        backgroundColor: '#F1F1F1',
+    radiusText: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#374151',
+        marginBottom: 8,
+        fontFamily: 'Poppins-Regular',
+    },
+    slider: {
+        height: 40,
+        width: '100%',
     },
 });
 

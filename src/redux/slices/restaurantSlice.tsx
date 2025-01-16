@@ -1,5 +1,5 @@
 // src/store/slices/restaurantSlice.ts
-import {createSlice} from '@reduxjs/toolkit';
+import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 import {getRestaurantsByProximity,} from '@/src/redux/thunks/restaurantThunks';
 
 import {addFavoriteThunk, getFavoritesThunk, removeFavoriteThunk,} from "@/src/redux/thunks/userThunks";
@@ -14,16 +14,23 @@ const initialState: RestaurantState = {
     favoriteRestaurantsIDs: [],
     favoritesStatus: 'idle',
     favoritesLoading: false,
+    radius: 50,
     error: null,
 };
 
 const restaurantSlice = createSlice({
     name: 'restaurant',
     initialState,
-    reducers: {},
+    reducers: {
+        setRadius(state, action: PayloadAction<number>) {
+            state.radius = action.payload;
+        },
+
+    },
     extraReducers: (builder) => {
         builder
             .addCase(logout, () => initialState)
+
             .addCase(getRestaurantsByProximity.pending, (state) => {
                 state.restaurantsProximityStatus = 'loading';
                 state.restaurantsProximityLoading = true;
@@ -71,5 +78,7 @@ const restaurantSlice = createSlice({
             });
     },
 });
+
+export const {setRadius} = restaurantSlice.actions;
 
 export default restaurantSlice.reducer;

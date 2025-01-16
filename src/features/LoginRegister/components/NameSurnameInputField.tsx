@@ -86,6 +86,13 @@ const NameSurnameInputField: React.FC = () => {
                     autoCapitalize="words"
                     onFocus={handleFocus}
                     onBlur={handleBlur}
+                    textContentType="oneTimeCode"
+                    // Additional security measures
+                    autoComplete="off"
+                    autoCorrect={false}
+                    spellCheck={false}
+                    // For Android
+                    importantForAutofill="no"
                 />
                 {isTyping && (
                     <TouchableOpacity onPress={handleClearText} style={styles.clearButton}>

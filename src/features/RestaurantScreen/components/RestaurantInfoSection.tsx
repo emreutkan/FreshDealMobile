@@ -49,10 +49,7 @@ const RestaurantInfoSection: React.FC<RestaurantInfoSectionParams> = ({
                 style={{
                     bottom: 20,
                 }}
-                contentContainerStyle={{
-                    alignItems: "center",
-                    justifyContent: "flex-start",
-                }}
+
             >
 
                 {restaurant?.image_url ? (

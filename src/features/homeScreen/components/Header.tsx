@@ -12,7 +12,7 @@ interface HeaderProps {
     activeTab: string;
 }
 
-const Header: React.FC<HeaderProps> = ({activeTab}) => {
+export const Header: React.FC<HeaderProps> = ({activeTab}) => {
     const insets = useSafeAreaInsets();
 
     return (
@@ -96,7 +96,10 @@ const styles = StyleSheet.create({
         paddingRight: scaleFont(10),
     },
     transparentHeader: {
-        backgroundColor: "rgba(255, 255, 255, 0.85)",
+        backgroundColor: "rgba(255,255,255,0.42)",
+        shadowRadius: 0,
+        borderColor: 'transparent',
+
     },
 });
 

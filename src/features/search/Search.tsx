@@ -79,8 +79,8 @@ const Search: React.FC<RestaurantSearchProps> = ({onRestaurantPress}) => {
 
     const navigation = useNavigation<NavigationProp>();
     useEffect(() => {
-        const radius = 12;
-        dispatch(getRestaurantsByProximity({radius}));
+
+        dispatch(getRestaurantsByProximity());
     }, []);
     // Handler for restaurant selection
     const handleRestaurantPress = (restaurantId: string) => {

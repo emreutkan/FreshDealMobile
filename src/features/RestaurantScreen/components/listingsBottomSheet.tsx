@@ -3,7 +3,7 @@ import {StyleSheet, View,} from 'react-native';
 import BottomSheet, {BottomSheetScrollView} from "@gorhom/bottom-sheet";
 import ListingCard from "@/src/features/RestaurantScreen/components/listingsCard";
 import PickupDeliveryToggle from "@/src/features/RestaurantScreen/components/PickUpDeliveryToggle";
-import {Listing} from "@/src/redux/slices/listingSlice";
+import {Listing} from "@/src/types/api/listing/model";
 
 interface ListingsBottomSheetProps {
     isPickup: boolean;

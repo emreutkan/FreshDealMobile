@@ -42,7 +42,7 @@ export default FavoritesScreen;
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F9FAFB',
+        backgroundColor: 'rgb(28,27,27)',
         paddingTop: 20,
     },
     title: {

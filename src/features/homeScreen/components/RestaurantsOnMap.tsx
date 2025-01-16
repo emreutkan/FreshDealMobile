@@ -50,6 +50,20 @@ const RestaurantsOnMap: React.FC<MapProps> = ({
         setSelectedRestaurantId(restaurantId);
     };
 
+
+// Add map style customization
+    const customMapStyle = [
+        {
+            "featureType": "poi",
+            "elementType": "labels",
+            "stylers": [
+                {
+                    "visibility": "off"
+                }
+            ]
+        }
+    ];
+
     return (
         <>
             <MapView
@@ -63,6 +77,7 @@ const RestaurantsOnMap: React.FC<MapProps> = ({
                         bottom: 0,
                     },
                 ]}
+
                 ref={mapRef}
                 initialRegion={{
                     latitude: userLatitude,
@@ -70,6 +85,12 @@ const RestaurantsOnMap: React.FC<MapProps> = ({
                     latitudeDelta: setLatitudeDelta,
                     longitudeDelta: setLongitudeDelta,
                 }}
+                showsUserLocation={true}
+                showsPointsOfInterest={false} // Hides unnecessary POIs
+                customMapStyle={customMapStyle}
+                // onMapReady={mapReadyAnimation}
+                showsCompass={true}
+                showsScale={true}
             >
                 {/** Render user location marker */}
                 <Marker

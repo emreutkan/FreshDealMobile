@@ -78,6 +78,13 @@ const PhoneInput: React.FC = () => {
                 style={styles.phoneInput}
                 placeholder="Phone number"
                 placeholderTextColor="#999"
+                autoComplete="off"
+                textContentType="oneTimeCode"
+                autoCorrect={false}
+                autoCapitalize="none"
+                spellCheck={false}
+                // For Android
+                importantForAutofill="no"
 
                 onChangeText={handleChangeText}
                 value={phoneNumber}

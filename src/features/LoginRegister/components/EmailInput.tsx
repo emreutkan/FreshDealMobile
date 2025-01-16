@@ -58,12 +58,19 @@ const EmailLoginField: React.FC = () => {
                     ref={inputRef}
                     style={styles.inputText}
                     keyboardType="email-address"
-                    autoCapitalize="none"
-                    autoCorrect={false}
+        
                     value={email}
                     onChangeText={handleEmailChange}
                     onFocus={handleFocus}
                     onBlur={handleBlur}
+                    textContentType="oneTimeCode"
+                    // Additional security measures
+                    autoComplete="off"
+                    autoCorrect={false}
+                    autoCapitalize="none"
+                    spellCheck={false}
+                    // For Android
+                    importantForAutofill="no"
                 />
                 {email && (
                     <TouchableOpacity
