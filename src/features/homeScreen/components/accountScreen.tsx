@@ -1,21 +1,21 @@
 import React, {useState} from 'react';
-import {ActivityIndicator, Alert, Image, StyleSheet, Text, TextInput, TouchableOpacity, View,} from 'react-native';
+import {ActivityIndicator, Alert, StyleSheet, Text, TextInput, TouchableOpacity, View,} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
 import {AppDispatch, RootState} from '@/src/redux/store';
-import {Feather} from '@expo/vector-icons';
+import {Feather, MaterialCommunityIcons, MaterialIcons} from '@expo/vector-icons';
 import {useNavigation} from '@react-navigation/native';
-import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {updateEmailThunk, updatePasswordThunk, updateUsernameThunk} from '@/src/redux/thunks/userThunks';
 import {logout} from '@/src/redux/slices/userSlice';
-import {RootStackParamList} from "@/src/utils/navigation";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
-import GoBackIcon from "@/src/features/homeScreen/components/goBackIcon";
+import {GoBackIcon} from "@/src/features/homeScreen/components/goBack";
+import type {NativeStackNavigationProp} from "@react-navigation/native-stack";
+import {RootStackParamList} from "@/src/utils/navigation";
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 
 const AccountScreen: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
-    type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
-
     const navigation = useNavigation<NavigationProp>();
     const {name_surname, email, phoneNumber, loading} = useSelector((state: RootState) => state.user);
 
@@ -34,7 +34,7 @@ const AccountScreen: React.FC = () => {
                 style: 'destructive',
                 onPress: () => {
                     dispatch(logout());
-                    navigation.replace('Landing'); // Use React Navigation
+                    navigation.navigate('Login'); // Use React Navigation
                 },
             },
         ]);
@@ -128,21 +128,23 @@ const AccountScreen: React.FC = () => {
 
     const inset = useSafeAreaInsets()
     return (
-        // add safe area instets to top view as padding top
-
         <View style={[styles.safeArea, {paddingTop: inset.top}]}>
+            {/* Header */}
             <View style={styles.topBar}>
                 <GoBackIcon/>
-                <Text style={styles.title}>Account</Text>
+                <Text style={styles.title}>Profile</Text>
                 <TouchableOpacity onPress={handleEditInfo} style={styles.iconButton}>
-                    <Feather name={isEditing ? 'check' : 'settings'} size={24} color="#333"/>
+                    <Feather name={isEditing ? 'check' : 'edit-2'} size={24} color="#50703C"/>
                 </TouchableOpacity>
             </View>
 
             <View style={styles.container}>
-                <View style={styles.profileCard}>
-                    <View style={styles.profileHeader}>
-                        <Image source={{uri: 'https://via.placeholder.com/100'}} style={styles.profileImage}/>
+                {/* Profile Section */}
+                <View style={styles.profileSection}>
+                    <View style={styles.avatarContainer}>
+                        <View style={styles.avatar}>
+                            <MaterialCommunityIcons name="food" size={40} color="#50703C"/>
+                        </View>
                         {isEditing ? (
                             <TextInput
                                 style={[styles.userName, styles.input]}
@@ -154,34 +156,59 @@ const AccountScreen: React.FC = () => {
                             <Text style={styles.userName}>{name_surname}</Text>
                         )}
                     </View>
-                    <View style={styles.infoSection}>
-                        <View style={styles.infoItem}>
-                            <Text style={styles.infoTitle}>Email</Text>
+                </View>
+
+                {/* Info Cards */}
+                <View style={styles.infoCards}>
+                    <View style={styles.card}>
+                        <View style={styles.cardIcon}>
+                            <MaterialIcons name="email" size={24} color="#50703C"/>
+                        </View>
+                        <View style={styles.cardContent}>
+                            <Text style={styles.cardLabel}>Email</Text>
                             {isEditing ? (
                                 <TextInput
-                                    style={[styles.infoText, styles.input]}
+                                    style={[styles.cardValue, styles.input]}
                                     value={editedValues.email}
                                     onChangeText={(text) => setEditedValues({...editedValues, email: text})}
                                     keyboardType="email-address"
                                     placeholder="Enter your email"
                                 />
                             ) : (
-                                <Text style={styles.infoText}>{email || 'No email provided'}</Text>
+                                <Text style={styles.cardValue}>{email || 'No email provided'}</Text>
                             )}
                         </View>
+                    </View>
 
-                        <View style={styles.infoItem}>
-                            <Text style={styles.infoTitle}>Phone Number</Text>
-                            <Text style={styles.infoText}>{phoneNumber || 'No phone number provided'}</Text>
+                    <View style={styles.card}>
+                        <View style={styles.cardIcon}>
+                            <MaterialIcons name="phone" size={24} color="#50703C"/>
+                        </View>
+                        <View style={styles.cardContent}>
+                            <Text style={styles.cardLabel}>Phone</Text>
+                            <Text style={styles.cardValue}>{phoneNumber || 'No phone number provided'}</Text>
                         </View>
                     </View>
                 </View>
 
-                <TouchableOpacity style={styles.resetButton} onPress={handlePasswordReset}>
-                    <Text style={styles.resetButtonText}>Reset Password</Text>
-                </TouchableOpacity>
+                {/* Actions Section */}
+                <View style={styles.actionsSection}>
+                    <TouchableOpacity style={styles.actionButton} onPress={() => navigation.navigate('Orders')}>
+                        <MaterialIcons name="history" size={24} color="#50703C"/>
+                        <Text style={styles.actionButtonText}>Previous Orders</Text>
+                        <MaterialIcons name="chevron-right" size={24} color="#666"/>
+                    </TouchableOpacity>
 
+                    <TouchableOpacity style={styles.actionButton} onPress={handlePasswordReset}>
+                        <MaterialIcons name="lock" size={24} color="#50703C"/>
+                        <Text style={styles.actionButtonText}>Reset Password</Text>
+                        <MaterialIcons name="chevron-right" size={24} color="#666"/>
+                    </TouchableOpacity>
+                </View>
+
+                {/* Logout Button */}
                 <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+                    <MaterialIcons name="logout" size={24} color="#FFF"/>
                     <Text style={styles.logoutButtonText}>Logout</Text>
                 </TouchableOpacity>
             </View>
@@ -192,8 +219,7 @@ const AccountScreen: React.FC = () => {
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
-        backgroundColor: "#fff",
-
+        backgroundColor: "#f8f9fa",
     },
     topBar: {
         flexDirection: 'row',
@@ -201,13 +227,12 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingVertical: 12,
         backgroundColor: '#FFFFFF',
-        shadowColor: '#000',
-        shadowOffset: {width: 0, height: 2},
-        shadowOpacity: 0.15,
-        shadowRadius: 1,
-        elevation: 2,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f0f0f0',
     },
-    iconButton: {padding: 8},
+    iconButton: {
+        padding: 8,
+    },
     title: {
         flex: 1,
         textAlign: 'center',
@@ -215,50 +240,127 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         color: '#333',
     },
-    container: {flex: 1, paddingHorizontal: 16, paddingVertical: 20},
-    loadingContainer: {flex: 1, justifyContent: 'center', alignItems: 'center'},
-    profileCard: {
-        backgroundColor: '#FFF',
+    container: {
+        flex: 1,
+        padding: 16,
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    profileSection: {
+        alignItems: 'center',
+        marginBottom: 24,
+    },
+    avatarContainer: {
+        alignItems: 'center',
+    },
+    avatar: {
+        width: 100,
+        height: 100,
+        borderRadius: 50,
+        backgroundColor: '#e8f5e9',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 12,
+        borderWidth: 3,
+        borderColor: '#50703C',
+    },
+    userName: {
+        fontSize: 24,
+        fontWeight: '600',
+        color: '#333',
+        textAlign: 'center',
+    },
+    infoCards: {
+        marginBottom: 24,
+    },
+    card: {
+        flexDirection: 'row',
+        backgroundColor: '#FFFFFF',
         borderRadius: 12,
         padding: 16,
+        marginBottom: 12,
         shadowColor: '#000',
         shadowOffset: {width: 0, height: 2},
-        shadowOpacity: 0.15,
-        shadowRadius: 4,
-        elevation: 3,
-        marginBottom: 20,
+        shadowOpacity: 0.05,
+        shadowRadius: 3.84,
+        elevation: 2,
     },
-    profileHeader: {flexDirection: 'row', alignItems: 'center', marginBottom: 16},
-    profileImage: {width: 80, height: 80, borderRadius: 40, backgroundColor: '#ccc'},
-    userName: {fontSize: 18, fontWeight: '600', marginLeft: 15, color: '#333', flex: 1},
-    infoSection: {marginTop: 4},
-    infoItem: {marginBottom: 10},
-    infoTitle: {fontSize: 14, fontWeight: 'bold', color: '#555', marginBottom: 4},
-    infoText: {fontSize: 14, color: '#333'},
+    cardIcon: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: '#e8f5e9',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 12,
+    },
+    cardContent: {
+        flex: 1,
+        justifyContent: 'center',
+    },
+    cardLabel: {
+        fontSize: 14,
+        color: '#666',
+        marginBottom: 4,
+    },
+    cardValue: {
+        fontSize: 16,
+        color: '#333',
+        fontWeight: '500',
+    },
     input: {
         borderWidth: 1,
-        borderColor: '#ddd',
-        borderRadius: 6,
+        borderColor: '#e0e0e0',
+        borderRadius: 8,
         padding: 8,
         backgroundColor: '#fff',
-        marginTop: 2,
+        fontSize: 16,
     },
-    resetButton: {
-        marginTop: 10,
-        backgroundColor: '#50703C',
-        paddingVertical: 14,
-        borderRadius: 8,
+    actionsSection: {
+        marginBottom: 24,
+    },
+    actionButton: {
+        flexDirection: 'row',
         alignItems: 'center',
+        backgroundColor: '#FFFFFF',
+        padding: 16,
+        borderRadius: 12,
+        marginBottom: 12,
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.05,
+        shadowRadius: 3.84,
+        elevation: 2,
     },
-    resetButtonText: {fontSize: 16, color: '#fff', fontWeight: '600'},
+    actionButtonText: {
+        flex: 1,
+        fontSize: 16,
+        color: '#333',
+        marginLeft: 12,
+        fontWeight: '500',
+    },
     logoutButton: {
-        marginTop: 15,
-        backgroundColor: '#FF4444',
-        paddingVertical: 14,
-        borderRadius: 8,
+        flexDirection: 'row',
+        backgroundColor: '#ff4444',
+        paddingVertical: 16,
+        borderRadius: 12,
         alignItems: 'center',
+        justifyContent: 'center',
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.1,
+        shadowRadius: 3.84,
+        elevation: 5,
     },
-    logoutButtonText: {fontSize: 16, color: '#fff', fontWeight: '600'},
+    logoutButtonText: {
+        fontSize: 16,
+        color: '#fff',
+        fontWeight: '600',
+        marginLeft: 8,
+    },
 });
 
 export default AccountScreen;

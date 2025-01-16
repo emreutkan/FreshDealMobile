@@ -10,8 +10,8 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
-import {useSelector} from 'react-redux';
-import {RootState} from '@/src/redux/store';
+import {useDispatch, useSelector} from 'react-redux';
+import {AppDispatch, RootState} from '@/src/redux/store';
 import {Restaurant} from '@/src/types/api/restaurant/model';
 import BottomSheet, {BottomSheetScrollView} from '@gorhom/bottom-sheet';
 import RestaurantsOnMap from '@/src/features/homeScreen/components/RestaurantsOnMap';
@@ -26,11 +26,12 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'RestaurantD
 const HomeMapView: React.FC = () => {
     const navigation = useNavigation<NavigationProp>();
     const bottomSheetRef = useRef<BottomSheet>(null);
-    const snapPoints = useMemo(() => ['15%', '50%', '70%'], []);
+    const snapPoints = useMemo(() => ['5%', '50%', '80%'], []);
     const {restaurantsProximity} = useSelector((state: RootState) => state.restaurant);
     const [isImageLoading, setIsImageLoading] = useState(true);
     const [isPullingBeyondMax, setIsPullingBeyondMax] = useState(false);
     const isAtMaxHeight = useRef(false);
+    const dispatch = useDispatch<AppDispatch>();
 
     const [refreshing, setRefreshing] = useState(false);
     const [currentSheetIndex, setCurrentSheetIndex] = useState(1);
@@ -149,6 +150,8 @@ const HomeMapView: React.FC = () => {
                     snapPoints={snapPoints}
                     enablePanDownToClose={false}
                     handleIndicatorStyle={styles.bottomSheetHandle}
+                    backgroundStyle={{backgroundColor: '#ffffff'}} // Add this line
+
                     onChange={(index) => {
                         if (index === 3 && lastIndexRef.current !== 2) {  // 2 is the index of '70%' (maximum height)
                             onRefresh();

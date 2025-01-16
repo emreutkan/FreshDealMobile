@@ -1,12 +1,16 @@
-import React, {useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
+    ActivityIndicator,
+    Animated,
     Keyboard,
     KeyboardAvoidingView,
+    Platform,
     ScrollView,
     StyleSheet,
+    Text,
     TextInput,
     TouchableWithoutFeedback,
-    View,
+    View
 } from 'react-native';
 import {useDispatch, useSelector} from "react-redux";
 import {AppDispatch, RootState} from "@/src/redux/store";
@@ -18,35 +22,32 @@ import {scaleFont} from "@/src/utils/ResponsiveFont";
 import {getRestaurantsByProximity} from "@/src/redux/thunks/restaurantThunks";
 import {SearchforRestaurantsThunk} from "@/src/redux/thunks/searchThunks";
 import RestaurantList from "@/src/features/homeScreen/components/RestaurantCard";
+import debounce from 'lodash/debounce';
+import Icon from 'react-native-vector-icons/Ionicons'; // Make sure to install this package
 
-interface RestaurantSearchProps {
-    onRestaurantPress?: (restaurantId: string) => void; // Add this new prop
-}
 
-const dismissKeyboard = () => {
-    Keyboard.dismiss();
-};
-
-const Search: React.FC<RestaurantSearchProps> = ({onRestaurantPress}) => {
-    const [searchText, setSearchText] = React.useState<string>("");
+const Search: React.FC = () => {
+    const [searchText, setSearchText] = useState<string>("");
+    const [isSearching, setIsSearching] = useState<boolean>(false);
+    const searchAnimation = new Animated.Value(0);
 
     const dispatch = useDispatch<AppDispatch>();
-    type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
     const inputRef = React.useRef<TextInput>(null);
-    // const {restaurantsProximity, restaurantsProximityLoading, restaurantsProximityStatus} = useSelector(
-    //     (state: RootState) => state.restaurant
-    // );
+    const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+    const insets = useSafeAreaInsets();
 
-
-    // Move all useSelector calls to the top level
+    // Selectors
     const searchResults = useSelector((state: RootState) =>
         state.search.searchResults?.results ?? []
     );
     const restaurants = useSelector((state: RootState) =>
         state.restaurant.restaurantsProximity ?? []
     );
+    const isLoading = useSelector((state: RootState) =>
+        state.restaurant.restaurantsProximityLoading
+    );
 
-    // Then calculate filteredRestaurants based on the data
+    // Filtered restaurants logic
     const filteredRestaurants = searchText === ""
         ? restaurants
         : restaurants.filter((restaurant) =>
@@ -55,121 +56,180 @@ const Search: React.FC<RestaurantSearchProps> = ({onRestaurantPress}) => {
                 .includes(Number(restaurant?.id))
         );
 
-
-    useEffect(() => {
-
-        if (searchText.toString() !== "") {
-            const request = {
-                type: 'restaurant',
-                query: searchText,
+    // Debounced search function
+    const debouncedSearch = React.useCallback(
+        debounce((text: string) => {
+            if (text) {
+                setIsSearching(true);
+                dispatch(SearchforRestaurantsThunk({
+                    type: 'restaurant',
+                    query: text,
+                })).finally(() => setIsSearching(false));
             }
-            dispatch(SearchforRestaurantsThunk(request));
-        }
+        }, 500),
+        []
+    );
 
-        console.log('Search Text:', searchText);
-        console.log(restaurants)
-        console.log("Filtered Restaurants:", filteredRestaurants);
-
-    }, [searchText]);
-
+    // Handle search input
     const handleSearch = (text: string) => {
         setSearchText(text);
+        debouncedSearch(text);
 
-    }
-
-    const navigation = useNavigation<NavigationProp>();
-    useEffect(() => {
-
-        dispatch(getRestaurantsByProximity());
-    }, []);
-    // Handler for restaurant selection
-    const handleRestaurantPress = (restaurantId: string) => {
-        if (onRestaurantPress) {
-            onRestaurantPress(restaurantId);
-        }
+        // Animate the search bar
+        Animated.spring(searchAnimation, {
+            toValue: text.length > 0 ? 1 : 0,
+            useNativeDriver: true,
+            tension: 50,
+            friction: 7
+        }).start();
     };
 
+    // Clear search
+    const handleClearSearch = () => {
+        setSearchText("");
+        inputRef.current?.clear();
+        Keyboard.dismiss();
+    };
 
-    const inset = useSafeAreaInsets()
+    useEffect(() => {
+        dispatch(getRestaurantsByProximity());
+    }, []);
+
     return (
-        <>
+        <View style={styles.container}>
             <KeyboardAvoidingView
-                style={[styles.safeArea, {paddingTop: inset.top}]}
-                behavior="padding">
-                <TouchableWithoutFeedback onPress={dismissKeyboard}>
-                    <View style={{flex: 1}}>
-                        <View
-                            style={{
-                                paddingTop: scaleFont(10),
-                                paddingHorizontal: scaleFont(10),
-                            }}>
+                style={[styles.safeArea, {paddingTop: insets.top}]}
+                behavior={Platform.OS === "ios" ? "padding" : "height"}
+            >
+                <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                    <View style={styles.searchContainer}>
+                        <View style={styles.searchInputContainer}>
+                            <Icon
+                                name="search-outline"
+                                size={20}
+                                color="#666"
+                                style={styles.searchIcon}
+                            />
                             <TextInput
-                                style={{
-                                    paddingVertical: scaleFont(10),
-                                    paddingHorizontal: scaleFont(15),
-                                    borderRadius: scaleFont(20),
-                                    backgroundColor: '#f9f9f9',
-                                    borderColor: '#b2f7a5',
-                                    borderWidth: 1,
-                                    shadowColor: '#000',
-                                    shadowOffset: {width: 0, height: 1},
-                                    shadowOpacity: 0.1,
-                                    shadowRadius: 1,
-                                    elevation: 1,
-                                }}
                                 ref={inputRef}
+                                style={styles.searchInput}
                                 placeholder="Search for restaurants..."
                                 placeholderTextColor="#999"
                                 onChangeText={handleSearch}
+                                value={searchText}
+                                returnKeyType="search"
+                                autoCapitalize="none"
+                                autoCorrect={false}
                             />
+                            {searchText.length > 0 && (
+                                <TouchableWithoutFeedback onPress={handleClearSearch}>
+                                    <Icon
+                                        name="close-circle"
+                                        size={20}
+                                        color="#666"
+                                        style={styles.clearIcon}
+                                    />
+                                </TouchableWithoutFeedback>
+                            )}
                         </View>
-
                     </View>
                 </TouchableWithoutFeedback>
-
             </KeyboardAvoidingView>
-            <ScrollView
-                style={{
-                    flex: 1,
-                    height: '100%', // Ensure it occupies full height
-                    borderWidth: 0, // Remove extra borders for cleaner layout
-                }}
-                showsVerticalScrollIndicator={true} // Show scroll indicator for debugging
-                bounces={true} // Allow bounce for visual clarity
-            >
-                <>
 
-                    <RestaurantList
-                        restaurants={filteredRestaurants}
-                        onRestaurantPress={(id) => {
-                            console.log('Selected restaurant:', id);
-                            if (onRestaurantPress) onRestaurantPress(id);
-                        }}
-                    />
-                </>
-            </ScrollView></>
+            {/* Results Section */}
+            <View style={styles.resultsContainer}>
+                {isSearching ? (
+                    <View style={styles.loadingContainer}>
+                        <ActivityIndicator size="large" color="#b2f7a5"/>
+                    </View>
+                ) : (
+                    <>
+                        {searchText.length > 0 && (
+                            <Text style={styles.resultCount}>
+                                {filteredRestaurants.length} results found
+                            </Text>
+                        )}
+                        <ScrollView
+                            style={styles.scrollView}
+                            showsVerticalScrollIndicator={false}
+                            bounces={true}
+                            contentContainerStyle={styles.scrollViewContent}
+                        >
+                            <RestaurantList
+                                restaurants={filteredRestaurants}
+                            />
+                        </ScrollView>
+                    </>
+                )}
+            </View>
+        </View>
     );
 };
 
-
 const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: '#fff',
+    },
     safeArea: {
-        backgroundColor: "#fff",
+        backgroundColor: "rgb(176,244,132)",
         borderColor: '#b2f7a5',
         borderBottomLeftRadius: scaleFont(20),
         borderBottomRightRadius: scaleFont(20),
-        shadowOffset: {width: 0, height: 8},
-        shadowOpacity: 0.08,
-        shadowRadius: 4,
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 4},
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
         elevation: 5,
-        zIndex: 9999,
-        overflow: 'hidden',
-        borderWidth: 1,
-        borderTopWidth: 0,
-        height: scaleFont(110),
+        zIndex: 999,
     },
-
-
+    searchContainer: {
+        padding: scaleFont(15),
+    },
+    searchInputContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#f8f8f8',
+        borderRadius: scaleFont(25),
+        paddingHorizontal: scaleFont(15),
+        height: scaleFont(50),
+        borderWidth: 1,
+        borderColor: '#e0e0e0',
+    },
+    searchIcon: {
+        marginRight: scaleFont(10),
+    },
+    searchInput: {
+        flex: 1,
+        fontSize: scaleFont(16),
+        color: '#333',
+        paddingVertical: scaleFont(10),
+    },
+    clearIcon: {
+        padding: scaleFont(5),
+    },
+    resultsContainer: {
+        flex: 1,
+        backgroundColor: '#fff',
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    resultCount: {
+        padding: scaleFont(15),
+        color: '#666',
+        fontSize: scaleFont(14),
+        fontWeight: '500',
+    },
+    scrollView: {
+        flex: 1,
+    },
+    scrollViewContent: {
+        paddingHorizontal: scaleFont(15),
+        paddingBottom: scaleFont(20),
+    },
 });
 
 export default Search;

@@ -8,6 +8,9 @@ import {CartItem} from "@/src/types/api/cart/model";
 
 const initialState: CartState = {
     cartItems: [],
+    isPickup: true,
+    cartTotal: 0,
+    count: 0,
     loading: false,
     error: null,
 };

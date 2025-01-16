@@ -3,11 +3,11 @@ import React, {useRef, useState} from 'react';
 import {Image, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import MapView, {Callout, Marker} from 'react-native-maps';
 import {RootState} from '@/src/redux/store';
-import {Address} from '@/src/redux/slices/addressSlice';
-import {Restaurant} from '@/src/redux/slices/restaurantSlice';
 import {useSelector} from 'react-redux';
 import {Ionicons} from '@expo/vector-icons';
 import {scaleFont} from '@/src/utils/ResponsiveFont';
+import {Restaurant} from "@/src/types/api/restaurant/model";
+import {Address} from "@/src/types/api/address/model";
 
 interface MapProps {
     restaurants: Restaurant[];
@@ -113,14 +113,14 @@ const RestaurantsOnMap: React.FC<MapProps> = ({
                             latitude: restaurant.latitude,
                             longitude: restaurant.longitude,
                         }}
-                        onPress={() => handleMarkerPress(restaurant.id)}
+                        onPress={() => handleMarkerPress(restaurant.id.toString())}
                     >
                         {/** Custom marker view: if image exists, show image; otherwise, show default icon */}
                         {restaurant.image_url ? (
                             <View
                                 style={[
                                     styles.markerContainer,
-                                    selectedRestaurantId === restaurant.id && styles.selectedMarker,
+                                    selectedRestaurantId === restaurant.id.toString() && styles.selectedMarker,
                                 ]}
                             >
                                 <Image
@@ -134,7 +134,7 @@ const RestaurantsOnMap: React.FC<MapProps> = ({
                             <View
                                 style={[
                                     styles.defaultMarkerContainer,
-                                    selectedRestaurantId === restaurant.id && styles.selectedMarker,
+                                    selectedRestaurantId === restaurant.id.toString() && styles.selectedMarker,
                                 ]}
                             >
                                 <Ionicons name="restaurant-outline" size={30} color="#333"/>

@@ -19,32 +19,6 @@ interface RestaurantHeaderProps {
 }
 
 
-export const GoBackButton: React.FC = () => {
-
-    type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
-    const navigation = useNavigation<NavigationProp>();
-    const inset = useSafeAreaInsets()
-    return (
-        <TouchableOpacity
-            style={{
-                padding: 8,
-                zIndex: 9999,
-                position: 'absolute',
-                backgroundColor: '#fff',
-                borderRadius: 50,
-                left: inset.left,
-                margin: 12,
-                top: inset.top,
-
-            }}
-            onPress={() => navigation.goBack()}>
-            <Ionicons
-
-                name="arrow-back" size={24} color="#000"/>
-            {/*<Ionicons name="arrow-left" size={24} color="#333"/>*/}
-        </TouchableOpacity>
-    )
-}
 const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({
                                                                isScrolled,
                                                                restaurantName,
@@ -82,9 +56,7 @@ const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({
 
                 <View style={styles.iconContainer}>
                     <CartIcon
-                        restaurantId={restaurantId}
-                        isPickup={isPickup}
-                        setIsPickup={setIsPickup}
+
                     />
                     <SearchBar/>
                 </View>

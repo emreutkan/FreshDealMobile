@@ -1,9 +1,10 @@
 import React, {useState} from "react";
-import {Dimensions, Image, Modal, StyleSheet, Text, TouchableOpacity, View,} from "react-native";
+import {Dimensions, Image, Modal, StatusBar, StyleSheet, Text, TouchableOpacity, View,} from "react-native";
 import {Ionicons} from "@expo/vector-icons";
 import PickUpDeliveryToggle from "@/src/features/RestaurantScreen/components/PickUpDeliveryToggle";
-import {GoBackButton} from "@/src/features/RestaurantScreen/components/RestaurantHeader";
 import LocateToRestaurant from "@/src/features/RestaurantScreen/components/locateToRestaurant";
+import {LinearGradient} from "expo-linear-gradient";
+import GoBack from "@/src/features/homeScreen/components/goBack";
 
 interface RestaurantInfoSectionParams {
     restaurant: any;
@@ -11,6 +12,7 @@ interface RestaurantInfoSectionParams {
     setIsPickup: (pickup: boolean) => void;
     pickupAvailable: boolean;
     deliveryAvailable: boolean;
+    children?: React.ReactNode;
 }
 
 
@@ -20,6 +22,7 @@ const RestaurantInfoSection: React.FC<RestaurantInfoSectionParams> = ({
                                                                           setIsPickup,
                                                                           pickupAvailable,
                                                                           deliveryAvailable,
+                                                                          children
                                                                       }) => {
     const [showInfoModal, setShowInfoModal] = useState(false);
     const {height: screenHeight} = Dimensions.get("window");
@@ -42,157 +45,106 @@ const RestaurantInfoSection: React.FC<RestaurantInfoSectionParams> = ({
         return `${start} - ${end}`;
     };
 
+
     return (
-        <View style={{flex: 1}}>
-            {/* Scrollable wrapper */}
-            <View
-                style={{
-                    bottom: 20,
-                }}
+        <View style={styles.container}>
+            <StatusBar barStyle="light-content"/>
 
-            >
-
+            {/* Restaurant Image */}
+            <View style={styles.imageContainer}>
                 {restaurant?.image_url ? (
-                    <Image
-                        source={{uri: restaurant.image_url}}
-                        style={{
-                            width: "100%",
-                            height: 200,
-                        }}
-                        resizeMode="cover"
-                    />
+                    <>
+                        <Image
+                            source={{uri: restaurant.image_url}}
+                            style={styles.restaurantImage}
+                            resizeMode="cover"
+                        />
+                        <LinearGradient
+                            colors={['transparent', 'rgba(0,0,0,0.7)']}
+                            style={styles.imageOverlay}
+                        />
+                    </>
                 ) : (
-                    <View style={styles.headerNoImage}>
-                        <Text style={styles.headerTitle}>
-                            {restaurant?.restaurantName || "Restaurant"}
+                    <View style={styles.noImageContainer}>
+                        <Ionicons
+                            name="restaurant-outline"
+                            size={48}
+                            color="#CCCCCC"
+                            style={styles.noImageIcon}
+                        />
+                        <Text style={styles.noImageText}>
+                            No image available
                         </Text>
                     </View>
                 )}
-                <GoBackButton/>
+                <GoBack/>
+            </View>
 
-                {/* Title + Ionicon row */}
-                <View
-                    style={{
-                        padding: 12,
-                        justifyContent: "center",
-                        alignItems: "center",
-                        width: "100%",
-                    }}
-                >
-                    <View style={styles.titleRow}>
-                        <Text style={styles.mainRestaurantTitle}>
-                            {restaurant?.restaurantName || "Restaurant"}
+            {/* Content Container */}
+            <View style={styles.contentContainer}>
+                {/* Title Section */}
+                <View style={styles.titleRow}>
+                    <Text style={styles.mainRestaurantTitle} numberOfLines={1}>
+                        {restaurant?.restaurantName || "Restaurant"}
+                    </Text>
+                    <TouchableOpacity
+                        style={styles.infoButton}
+                        onPress={() => setShowInfoModal(true)}
+                    >
+                        <Ionicons name="information-circle-outline" size={24} color="#666666"/>
+                    </TouchableOpacity>
+                </View>
+
+                {/* Rating & Distance */}
+                <View style={styles.ratingContainer}>
+                    <View style={styles.ratingBox}>
+                        <Ionicons name="star" size={18} color="#FFD700"/>
+                        <Text style={styles.ratingText}>
+                            {(restaurant?.rating ?? 0).toFixed(1)}
                         </Text>
-                        <TouchableOpacity
-                            style={styles.infoIconContainer}
-                            onPress={() => setShowInfoModal(true)}
-                        >
-                            <Ionicons
-                                name="information-circle-outline"
-                                size={30}
-                                color="#666"
-                            />
-                        </TouchableOpacity>
+                        <Text style={styles.ratingCount}>
+                            ({restaurant?.ratingCount ?? 0}+)
+                        </Text>
                     </View>
-
-                    {/* Rating + distance */}
-                    <View style={styles.ratingDistanceRow}>
-                        <View style={styles.ratingRow}>
-                            <Ionicons name="star" size={20} color="#ACF283"/>
-                            <Text style={styles.ratingNumber}>
-                                {(restaurant?.rating ?? 0).toFixed(1)}
-                            </Text>
-                            <Text style={styles.ratingCount}>
-                                ({restaurant?.ratingCount ?? 0}+)
-                            </Text>
-                        </View>
-                        <Text style={styles.separator}>•</Text>
-                        <Text style={styles.distance}>
+                    <View style={styles.distanceBox}>
+                        <Text style={styles.distanceText}>
                             {(restaurant?.distance_km ?? 0).toFixed(1)} km
                         </Text>
                     </View>
-
-                    {/* Pickup/Delivery Toggle */}
-                    <View style={{paddingVertical: 8}}>
-                        <PickUpDeliveryToggle
-                            isPickup={isPickup}
-                            setIsPickup={setIsPickup}
-                            pickupAvailable={pickupAvailable}
-                            deliveryAvailable={deliveryAvailable}
-                        />
-                    </View>
-
-                    {/* Pricing and fees section */}
-                    <View style={styles.pricingContainer}>
-                        <View style={styles.pricingColumn}>
-                            <Text style={styles.pricingHeader}>Pricing and fees</Text>
-                            <Text style={styles.pricingValue}>{restaurant?.deliveryFee ?? "N/A"} TL</Text>
-                        </View>
-                        <View style={styles.divider}/>
-                        <View style={styles.pricingColumn}>
-                            <Text style={styles.pricingHeader}>Pick-up time</Text>
-                            <Text style={styles.pickupTimes}>
-                                <Ionicons name="walk-outline"
-                                          size={16}/> {getWalkingTime(restaurant?.distance_km ?? 0)} min walking
-                            </Text>
-                            <Text style={styles.pickupTimes}>
-                                <Ionicons name="car-outline"
-                                          size={16}/> {getDrivingTime(restaurant?.distance_km ?? 0)} min drive
-                            </Text>
-                        </View>
-                    </View>
-
                 </View>
 
-                {/* Optional "View Details" section from original code */}
-                <View style={{width: "90%", marginBottom: 40}}>
-                    {viewDetails && (
-                        <View style={styles.detailsSection}>
-                            <Text style={styles.sectionTitle}>Details</Text>
+                {/* Pickup/Delivery Toggle */}
+                <PickUpDeliveryToggle
+                    isPickup={isPickup}
+                    setIsPickup={setIsPickup}
+                    pickupAvailable={pickupAvailable}
+                    deliveryAvailable={deliveryAvailable}
+                />
 
-                            <View style={styles.detailRow}>
-                                <Ionicons name="reader-outline" size={20} color="#666"/>
-                                <Text style={styles.detailText}>
-                                    About: {restaurant.restaurantDescription}
-                                </Text>
-                            </View>
-                            <View style={styles.detailRow}>
-                                <Ionicons name="restaurant-outline" size={20} color="#666"/>
-                                <Text style={styles.detailText}>
-                                    Category: {restaurant.category}
-                                </Text>
-                            </View>
-
-                            <View style={styles.detailRow}>
-                                <Ionicons name="time-outline" size={20} color="#666"/>
-                                <Text style={styles.detailText}>
-                                    Hours:{" "}
-                                    {formatWorkingHours(
-                                        restaurant.workingHoursStart,
-                                        restaurant.workingHoursEnd
-                                    )}
-                                </Text>
-                            </View>
-
-                            <View style={styles.detailRow}>
-                                <Ionicons name="calendar-outline" size={20} color="#666"/>
-                                <Text style={styles.detailText}>
-                                    Open: {restaurant?.workingDays.join(", ")}
-                                </Text>
-                            </View>
-
-                            <View style={styles.detailRow}>
-                                <Ionicons name="location-outline" size={20} color="#666"/>
-                                <Text style={styles.detailText}>
-                                    Location: {restaurant?.latitude.toFixed(6)},{" "}
-                                    {restaurant?.longitude.toFixed(6)}
-                                </Text>
-                            </View>
+                {/* Info Cards */}
+                <View style={styles.infoCard}>
+                    <Text style={styles.cardTitle}>Delivery Information</Text>
+                    <View style={styles.timeRow}>
+                        <View style={styles.timeIcon}>
+                            <Ionicons name="walk-outline" size={20} color="#666666"/>
                         </View>
-                    )}
+                        <Text style={styles.timeText}>
+                            {getWalkingTime(restaurant?.distance_km ?? 0)} min walking
+                        </Text>
+                    </View>
+                    <View style={styles.timeRow}>
+                        <View style={styles.timeIcon}>
+                            <Ionicons name="car-outline" size={20} color="#666666"/>
+                        </View>
+                        <Text style={styles.timeText}>
+                            {getDrivingTime(restaurant?.distance_km ?? 0)} min driving
+                        </Text>
+                    </View>
                 </View>
             </View>
+            {children}
 
+            {/* Info Modal */}
             <Modal
                 transparent
                 visible={showInfoModal}
@@ -205,30 +157,24 @@ const RestaurantInfoSection: React.FC<RestaurantInfoSectionParams> = ({
                         onPress={() => setShowInfoModal(false)}
                     />
                     <View style={styles.modalContent}>
-                        <View style={{
-                            flexDirection: "row",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                            marginBottom: 10,
-                        }}>
+                        <View style={styles.modalHeader}>
                             <Text style={styles.modalTitle}>Restaurant Info</Text>
                             <TouchableOpacity
                                 style={styles.closeButton}
                                 onPress={() => setShowInfoModal(false)}
                             >
-                                <Text style={{color: "#fff"}}>Close</Text>
+                                <Text style={styles.closeButtonText}>Close</Text>
                             </TouchableOpacity>
                         </View>
-                        <View style={{
-                            marginBottom: 10,
-                        }}>
-                            <Text style={{marginBottom: 10, color: "#333"}}>
+
+                        <View style={styles.modalInfoSection}>
+                            <Text style={styles.modalInfoText}>
                                 {restaurant?.restaurantDescription || "No info available."}
                             </Text>
-                            <Text style={{marginBottom: 10, color: "#333"}}>
+                            <Text style={styles.modalInfoText}>
                                 Category: {restaurant?.category || "N/A"}
                             </Text>
-                            <Text style={{marginBottom: 10, color: "#333"}}>
+                            <Text style={styles.modalInfoText}>
                                 Working hours:{" "}
                                 {formatWorkingHours(
                                     restaurant?.workingHoursStart || "",
@@ -236,27 +182,233 @@ const RestaurantInfoSection: React.FC<RestaurantInfoSectionParams> = ({
                                 )}
                             </Text>
                         </View>
-                        <View style={{
-                            flex: 1,
-                            width: "100%",
-                            backgroundColor: "#f5f5f5",
-                            borderRadius: 12,
-                            overflow: "hidden",
-                        }}>
+
+                        <View style={styles.mapContainer}>
                             <LocateToRestaurant restaurantId={restaurant.id}/>
                         </View>
                     </View>
                 </View>
             </Modal>
-
-
         </View>
     );
 };
-
-export default RestaurantInfoSection;
-
 const styles = StyleSheet.create({
+    modalContainer: {
+        flex: 1,
+        justifyContent: "flex-end",
+        alignItems: "center",
+        backgroundColor: 'rgba(0,0,0,0.5)',
+    },
+    backdrop: {
+        position: "absolute",
+        top: 0,
+        bottom: 0,
+        left: 0,
+        right: 0,
+    },
+    modalContent: {
+        width: "100%",
+        height: "85%",
+        backgroundColor: "#fff",
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        padding: 20,
+    },
+    modalHeader: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginBottom: 16,
+    },
+    modalTitle: {
+        fontSize: 24,
+        fontWeight: "700",
+        color: "#333",
+    },
+    closeButton: {
+        backgroundColor: "#333",
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        borderRadius: 8,
+    },
+    closeButtonText: {
+        color: "#fff",
+        fontSize: 16,
+        fontWeight: "600",
+    },
+    modalInfoSection: {
+        marginBottom: 20,
+    },
+    modalInfoText: {
+        fontSize: 16,
+        color: "#333",
+        marginBottom: 12,
+        lineHeight: 24,
+    },
+    mapContainer: {
+        flex: 1,
+        width: "100%",
+        backgroundColor: "#f5f5f5",
+        borderRadius: 12,
+        overflow: "hidden",
+    },
+    container: {
+        flex: 1,
+        backgroundColor: '#FFFFFF',
+    },
+    imageContainer: {
+        width: '100%',
+        height: 240,
+        backgroundColor: '#f5f5f5',
+        position: 'relative',
+    },
+    restaurantImage: {
+        width: '100%',
+        height: '100%',
+    },
+    imageOverlay: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: 80,
+        backgroundColor: 'rgba(0,0,0,0.3)',
+
+    },
+    contentContainer: {
+        flex: 1,
+        backgroundColor: '#FFFFFF',
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
+        marginTop: -24,
+        paddingHorizontal: 20,
+        paddingTop: 24,
+    },
+    titleRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: 12,
+    },
+    mainRestaurantTitle: {
+        fontSize: 28,
+        fontWeight: '700',
+        color: '#1A1A1A',
+        flex: 1,
+    },
+    infoButton: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        backgroundColor: '#F5F5F5',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginLeft: 12,
+    },
+    ratingContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 16,
+    },
+    ratingBox: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#F8F8F8',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 16,
+    },
+    ratingText: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#1A1A1A',
+        marginLeft: 4,
+    },
+    ratingCount: {
+        fontSize: 14,
+        color: '#666666',
+        marginLeft: 4,
+    },
+    distanceBox: {
+        backgroundColor: '#F8F8F8',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 16,
+        marginLeft: 8,
+    },
+    distanceText: {
+        fontSize: 14,
+        color: '#666666',
+    },
+    infoCard: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 16,
+        padding: 16,
+        marginTop: 16,
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        elevation: 3,
+    },
+    cardTitle: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#1A1A1A',
+        marginBottom: 12,
+    },
+    timeRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 8,
+    },
+    timeIcon: {
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        backgroundColor: '#F5F5F5',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 12,
+    },
+    timeText: {
+        fontSize: 15,
+        color: '#666666',
+    },
+
+    modalHandle: {
+        width: 40,
+        height: 4,
+        backgroundColor: '#E0E0E0',
+        borderRadius: 2,
+        alignSelf: 'center',
+        marginBottom: 16,
+    },
+
+    detailRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: '#F5F5F5',
+    },
+    detailIcon: {
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        backgroundColor: '#F5F5F5',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 12,
+    },
+    detailText: {
+        flex: 1,
+        fontSize: 15,
+        color: '#666666',
+    },
     headerNoImage: {
         width: "100%",
         height: 150,
@@ -270,18 +422,7 @@ const styles = StyleSheet.create({
         color: "#333",
     },
     // Title row with icon
-    titleRow: {
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "center",
-        width: "100%",
-    },
-    mainRestaurantTitle: {
-        fontSize: 24,
-        fontWeight: "bold",
-        color: "#333",
-        fontFamily: "Poppins-Regular",
-    },
+
     infoIconContainer: {
         marginLeft: 10,
         alignItems: "center",
@@ -303,11 +444,7 @@ const styles = StyleSheet.create({
         color: "#333",
         marginLeft: 4,
     },
-    ratingCount: {
-        fontSize: 14,
-        color: "#666",
-        marginLeft: 4,
-    },
+
     separator: {
         marginHorizontal: 8,
         color: "#666",
@@ -347,66 +484,13 @@ const styles = StyleSheet.create({
         color: "#333",
         marginBottom: 8,
     },
-    detailRow: {
-        flexDirection: "row",
-        alignItems: "center",
-        marginBottom: 12,
-    },
-    detailText: {
-        fontSize: 14,
-        color: "#666",
-        marginLeft: 8,
-    },
-    // Modal styles
-    modalContainer: {
-        flex: 1,
-        justifyContent: "flex-end",
-        alignItems: "center",
-    },
-    backdrop: {
-        position: "absolute",
-        top: 0,
-        bottom: 0,
-        left: 0,
-        right: 0,
-        backgroundColor: "rgba(0,0,0,0.5)",
-    },
-    modalContent: {
-        width: "100%",
-        height: "85%",
-        backgroundColor: "#fff",
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
-        padding: 20,
-    },
-    modalHeader: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        marginBottom: 10,
-    },
-    modalTitle: {
-        fontSize: 20,
-        fontWeight: "bold",
-        color: "#333",
-    },
-    closeButton: {
-        backgroundColor: "#333",
-        padding: 10,
-        borderRadius: 8,
-        alignItems: "center",
-    },
+
+
     restaurantDetails: {
         flex: 1,
         marginBottom: 10,
     },
-    mapContainer: {
-        flex: 1,
-        width: "100%",
-        backgroundColor: "#f5f5f5",
-        borderRadius: 12,
-        overflow: "hidden", // Ensures map content stays within boundaries
-    },
+
 
     pricingContainer: {
         flexDirection: "row",
@@ -453,4 +537,7 @@ const styles = StyleSheet.create({
         alignItems: "center",
     },
 
+
 });
+export default RestaurantInfoSection;
+

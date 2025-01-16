@@ -2,7 +2,6 @@ import React from 'react';
 import {
     ActivityIndicator,
     Alert,
-    Keyboard,
     StyleSheet,
     Text,
     TouchableOpacity,
@@ -97,7 +96,9 @@ const LoginModal: React.FC<LoginModalProps> = ({switchToRegister}) => {
     }, [login_type]);
 
     return (
-        <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+        <TouchableWithoutFeedback
+            // onPress={() => Keyboard.dismiss()}
+        >
             <View style={styles.bottomContainer}>
                 <Text style={styles.welcomeText}>Last Call,</Text>
                 <Text style={styles.welcomeText2}>Tasty Deals Await!</Text>

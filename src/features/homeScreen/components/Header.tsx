@@ -1,12 +1,9 @@
 import React, {useEffect} from 'react';
-import {Animated, StyleSheet, TouchableOpacity, View} from 'react-native';
+import {Animated, StyleSheet, View} from 'react-native';
 import AddressBar from "@/src/features/homeScreen/components/AddressBar";
 import {scaleFont} from "@/src/utils/ResponsiveFont";
-import {Ionicons} from "@expo/vector-icons";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
-import {useNavigation} from '@react-navigation/native';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {RootStackParamList} from '@/src/utils/navigation';
+import CartIcon from "@/src/features/RestaurantScreen/components/CartIcon";
 
 interface HeaderProps {
     activeTab: string;
@@ -61,8 +58,8 @@ export const Header: React.FC<HeaderProps> = ({activeTab, scrollY}) => {
                         <AddressBar textColor={contentColor || '#000000'}/>
                     </View>
                     <View style={styles.iconContainer}>
-                        {/*<FavoritesBar iconColor={contentColor || '#000000'}/>*/}
-                        <FavoritesBar/>
+                        <CartIcon></CartIcon>
+
                     </View>
                 </View>
             </View>
@@ -70,27 +67,6 @@ export const Header: React.FC<HeaderProps> = ({activeTab, scrollY}) => {
     );
 };
 
-type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'FavoritesScreen'>;
-
-const FavoritesBar: React.FC = () => {
-    const navigation = useNavigation<NavigationProp>();
-
-    const handleRouteToFavoritesScreen = () => {
-        // Navigate to FavoritesScreen
-        navigation.navigate('FavoritesScreen');
-    };
-
-    return (
-        <TouchableOpacity
-            onPress={handleRouteToFavoritesScreen}
-            style={styles.favoritesBarContainer}
-            accessibilityLabel="View Favorites"
-            accessibilityHint="Navigates to your favorited restaurants"
-        >
-            <Ionicons name="heart-outline" size={scaleFont(24)} color="#000"/>
-        </TouchableOpacity>
-    );
-};
 
 const styles = StyleSheet.create({
     header: {
@@ -125,9 +101,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'flex-end',
     },
-    favoritesBarContainer: {
-        paddingRight: scaleFont(10),
-    },
+
     transparentHeader: {
         backgroundColor: "rgba(255,255,255,0.42)",
         shadowRadius: 0,

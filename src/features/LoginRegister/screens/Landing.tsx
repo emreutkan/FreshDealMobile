@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState} from 'react';
-import {Animated, Dimensions, KeyboardAvoidingView, Platform, StatusBar, StyleSheet} from 'react-native';
+import {Animated, Dimensions, Platform, StatusBar, StyleSheet} from 'react-native';
 import {LinearGradient} from 'expo-linear-gradient';
 import LoginModal from "@/src/features/LoginRegister/screens/LoginModal";
 import RegisterModal from "@/src/features/LoginRegister/screens/RegisterModal";
@@ -121,17 +121,12 @@ const Landing: React.FC = () => {
                     }
                 ]}
             >
-                <KeyboardAvoidingView
-                    style={{flex: 1}}
-                    behavior={Platform.OS === "ios" ? "padding" : "height"}
-                    keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
-                >
-                    {activeModal === 'login' ? (
-                        <LoginModal switchToRegister={() => setActiveModal('register')}/>
-                    ) : (
-                        <RegisterModal switchToLogin={() => setActiveModal('login')}/>
-                    )}
-                </KeyboardAvoidingView>
+
+                {activeModal === 'login' ? (
+                    <LoginModal switchToRegister={() => setActiveModal('register')}/>
+                ) : (
+                    <RegisterModal switchToLogin={() => setActiveModal('login')}/>
+                )}
             </Animated.View>
 
         </LinearGradient>

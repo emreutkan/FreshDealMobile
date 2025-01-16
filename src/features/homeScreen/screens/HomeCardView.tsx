@@ -13,13 +13,16 @@ import {
     View,
 } from 'react-native';
 import RestaurantList from "@/src/features/homeScreen/components/RestaurantCard";
-import {Feather} from '@expo/vector-icons';
+import {Feather, Ionicons} from '@expo/vector-icons';
 import {AppDispatch, RootState} from "@/src/redux/store";
 import {useDispatch, useSelector} from "react-redux";
 import {getRestaurantsByProximity} from "@/src/redux/thunks/restaurantThunks";
 import FavoriteRestaurantList from "@/src/features/homeScreen/components/FavoriteRestaurantCard";
 import Slider from '@react-native-community/slider';
 import {setRadius} from "@/src/redux/slices/restaurantSlice";
+import {NativeStackNavigationProp} from "@react-navigation/native-stack";
+import {RootStackParamList} from "@/src/utils/navigation";
+import {useNavigation} from "@react-navigation/native";
 
 interface HomeCardViewProps {
     onScroll: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
@@ -28,6 +31,7 @@ interface HomeCardViewProps {
 
 const MIN_LOADING_DURATION = 200; // main loading duration (redux)
 const FILTER_LOADING_DURATION = 200; // duration for filter toggling/loading
+type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'FavoritesScreen'>;
 
 const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll, onRestaurantPress}) => {
     const scrollY = useRef(new Animated.Value(0)).current;
@@ -39,6 +43,7 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll, onRestaurantPress}
         outputRange: [HEADER_MAX_HEIGHT, HEADER_MIN_HEIGHT],
         extrapolate: 'clamp',
     });
+    const navigation = useNavigation<NavigationProp>();
     const [refreshing, setRefreshing] = useState(false);
 
     const headerOpacity = scrollY.interpolate({
@@ -319,18 +324,18 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll, onRestaurantPress}
                 ) : (
 
                     <Animated.ScrollView
-                        style={[
-                            styles.scrollContainer,
-                            {
-                                paddingTop: HEADER_MAX_HEIGHT,
-                            }
-                        ]}
+                        style={[styles.scrollContainer]}
+                        contentContainerStyle={{
+                            paddingTop: HEADER_MAX_HEIGHT,
+                            paddingBottom: 20, // Add some bottom padding
+                            flexGrow: 1,
+                        }}
                         onScroll={Animated.event(
                             [{nativeEvent: {contentOffset: {y: scrollY}}}],
                             {
                                 useNativeDriver: false,
                                 listener: (event) => {
-                                    onScroll(event); // Pass the event to parent's onScroll
+                                    onScroll(event);
                                 }
                             }
                         )}
@@ -365,9 +370,21 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll, onRestaurantPress}
                                 thumbTintColor="#50703C"
                             />
                         </View>
-                        <View style={styles.topBar}>
-                            <Text style={styles.Subtitle}>Favorites</Text>
-                        </View>
+                        <TouchableOpacity style={{
+                            padding: 16,
+                            backgroundColor: '#FFFFFF',
+
+                            flexDirection: 'row',
+
+                            justifyContent: 'space-between',
+                            borderBottomWidth: 1,
+                            borderBottomColor: '#E5E7EB',
+                        }}
+                                          onPress={() => navigation.navigate('FavoritesScreen')}
+                        >
+                            <Text style={styles.Subtitle}>Favorites </Text>
+                            <Ionicons name={"chevron-forward-outline"} size={18} color="#50703C"/>
+                        </TouchableOpacity>
 
                         <FavoriteRestaurantList
                             restaurants={filteredRestaurants}
@@ -387,11 +404,19 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll, onRestaurantPress}
 
 
 const styles = StyleSheet.create({
-
     safeArea: {
         flex: 1,
         backgroundColor: '#F9FAFB',
     },
+    container: {
+        flex: 1,
+        paddingHorizontal: 16,
+    },
+    scrollContainer: {
+        flex: 1,
+        backgroundColor: '#F9FAFB',
+    },
+
     headerContainer: {
         backgroundColor: '#FFFFFF',
         borderBottomWidth: 1,
@@ -408,14 +433,6 @@ const styles = StyleSheet.create({
                 elevation: 4,
             },
         }),
-    },
-    scrollContainer: {
-        flex: 1,
-        backgroundColor: '#F9FAFB',
-    },
-    container: {
-        flex: 1,
-        paddingHorizontal: 16,
     },
 
 

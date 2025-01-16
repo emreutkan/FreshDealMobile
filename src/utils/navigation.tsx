@@ -9,10 +9,7 @@ export type RootStackParamList = {
     UpdateAddress: { addressId: string }; // Ensure this is correct
     RestaurantDetails: { restaurantId: string };
     FavoritesScreen: undefined;
-    Cart: {
-        isPickup: boolean;
-        setIsPickup: (isPickup: boolean) => void;
-    };
+    Cart: undefined;
 
 };
 

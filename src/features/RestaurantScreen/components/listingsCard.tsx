@@ -1,5 +1,5 @@
 import React, {FC, useEffect} from 'react';
-import {FlatList, Image, StyleSheet, Text, TouchableOpacity, View,} from 'react-native';
+import {Dimensions, FlatList, Image, StyleSheet, Text, TouchableOpacity, View,} from 'react-native';
 import {addItemToCart, fetchCart, removeItemFromCart, updateCartItem,} from '@/src/redux/thunks/cartThunks';
 import {useDispatch, useSelector} from 'react-redux';
 import {AppDispatch, RootState} from '@/src/redux/store';
@@ -10,6 +10,13 @@ interface ListingCardProps {
     isPickup: boolean;
 }
 
+const {width} = Dimensions.get('window');
+
+// Create reusable animation values
+const SPRING_CONFIG = {
+    damping: 15,
+    stiffness: 200,
+};
 export const ListingCard: FC<ListingCardProps> = ({listingList, isPickup}) => {
     const dispatch = useDispatch<AppDispatch>();
 
@@ -90,12 +97,18 @@ export const ListingCard: FC<ListingCardProps> = ({listingList, isPickup}) => {
                         resizeMode="cover"
                     />
                 ) : (
-                    <View style={[styles.listingImage, styles.noImage]}/>
+                    <View style={[styles.listingImage, styles.noImage]}>
+                        <Text style={styles.noImageText}>No Image</Text>
+                    </View>
                 )}
 
                 <View style={styles.listingDetails}>
-                    <Text style={styles.listingTitle}>{item.title}</Text>
-                    <Text style={styles.listingDescription}>{item.description}</Text>
+                    <Text style={styles.listingTitle} numberOfLines={1}>
+                        {item.title}
+                    </Text>
+                    <Text style={styles.listingDescription} numberOfLines={2}>
+                        {item.description}
+                    </Text>
 
                     <View style={styles.priceRow}>
                         {item.original_price !== null && item.original_price > 0 && (
@@ -106,7 +119,9 @@ export const ListingCard: FC<ListingCardProps> = ({listingList, isPickup}) => {
                         <Text style={styles.displayPrice}>{displayPrice} TL</Text>
                         {discountPercentage > 0 && (
                             <View style={styles.discountContainer}>
-                                <Text style={styles.discountText}>{discountPercentage}% OFF</Text>
+                                <Text style={styles.discountText}>
+                                    {discountPercentage}% OFF
+                                </Text>
                             </View>
                         )}
                     </View>
@@ -118,7 +133,9 @@ export const ListingCard: FC<ListingCardProps> = ({listingList, isPickup}) => {
                             style={[styles.button, styles.decrementButton]}
                             onPress={handleRemoveOneFromCart}
                         >
-                            <Text style={styles.buttonText}>-</Text>
+                            <Text style={[styles.buttonText, styles.decrementButtonText]}>
+                                -
+                            </Text>
                         </TouchableOpacity>
 
                         <Text style={styles.countText}>{countInCart}</Text>
@@ -127,7 +144,9 @@ export const ListingCard: FC<ListingCardProps> = ({listingList, isPickup}) => {
                             style={[styles.button, styles.incrementButton]}
                             onPress={handleAddToCart}
                         >
-                            <Text style={styles.buttonText}>+</Text>
+                            <Text style={[styles.buttonText, styles.incrementButtonText]}>
+                                +
+                            </Text>
                         </TouchableOpacity>
                     </View>
                 ) : (
@@ -137,7 +156,7 @@ export const ListingCard: FC<ListingCardProps> = ({listingList, isPickup}) => {
                 )}
             </View>
         );
-    };
+    }
 
     return (
         <View style={styles.container}>
@@ -156,113 +175,167 @@ export const ListingCard: FC<ListingCardProps> = ({listingList, isPickup}) => {
 
 export default ListingCard;
 
+
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        backgroundColor: '#F5F7FA', // Light gray background
+        paddingHorizontal: 16,
     },
     listingItem: {
         flexDirection: 'row',
-        marginVertical: 8,
-        padding: 12,
-        borderRadius: 8,
-        backgroundColor: '#FFF',
+        marginVertical: 10,
+        padding: 16,
+        borderRadius: 16,
+        backgroundColor: '#FFFFFF',
         alignItems: 'center',
+        // Enhanced shadow
         shadowColor: '#000',
-        shadowOffset: {width: 0, height: 2},
-        shadowOpacity: 0.15,
-        shadowRadius: 4,
-        elevation: 3,
+        shadowOffset: {
+            width: 0,
+            height: 4,
+        },
+        shadowOpacity: 0.1,
+        shadowRadius: 12,
+        elevation: 5,
+        // Add border for better definition
+        borderWidth: 1,
+        borderColor: 'rgba(0,0,0,0.05)',
     },
     listingImage: {
-        width: 70,
-        height: 70,
-        borderRadius: 8,
-        marginRight: 12,
+        width: 90,
+        height: 90,
+        borderRadius: 12,
+        marginRight: 16,
     },
     noImage: {
-        backgroundColor: '#ccc',
+        backgroundColor: '#E5E9F0',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    noImageText: {
+        color: '#8390A3',
+        fontSize: 12,
     },
     listingDetails: {
         flex: 1,
+        justifyContent: 'space-between',
     },
     listingTitle: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#333',
-        marginBottom: 4,
+        fontSize: 18,
+        fontWeight: '700',
+        color: '#1A1D1E',
+        marginBottom: 6,
+        letterSpacing: 0.3,
     },
     listingDescription: {
         fontSize: 14,
-        color: '#666',
-        marginBottom: 8,
+        color: '#6B7280',
+        marginBottom: 12,
+        lineHeight: 20,
     },
     priceRow: {
         flexDirection: 'row',
         alignItems: 'center',
+        flexWrap: 'wrap',
     },
     originalPrice: {
-        fontSize: 14,
-        color: '#999',
-        marginRight: 8,
+        fontSize: 15,
+        color: '#9CA3AF',
+        marginRight: 10,
         textDecorationLine: 'line-through',
+        textDecorationStyle: 'solid',
     },
     displayPrice: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: '#333',
-        marginRight: 8,
+        fontSize: 18,
+        fontWeight: '800',
+        color: '#059669', // Green color for price
+        marginRight: 10,
     },
     discountContainer: {
-        paddingHorizontal: 6,
-        paddingVertical: 2,
-        backgroundColor: '#EBF9ED',
-        borderRadius: 4,
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        backgroundColor: '#ECFDF5',
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: '#059669',
     },
     discountText: {
-        fontSize: 12,
-        fontWeight: '600',
-        color: '#34A853',
+        fontSize: 13,
+        fontWeight: '700',
+        color: '#059669',
     },
     cartControls: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginLeft: 8,
+        backgroundColor: '#F3F4F6',
+        borderRadius: 12,
+        padding: 4,
     },
     button: {
-        width: 28,
-        height: 28,
-        borderRadius: 14,
+        width: 36,
+        height: 36,
+        borderRadius: 10,
         alignItems: 'center',
         justifyContent: 'center',
     },
     decrementButton: {
-        backgroundColor: '#ef5350',
+        backgroundColor: '#FEE2E2',
     },
     incrementButton: {
-        backgroundColor: '#4CAF50',
+        backgroundColor: '#ECFDF5',
     },
     buttonText: {
-        color: '#fff',
+        fontSize: 18,
         fontWeight: '600',
+    },
+    decrementButtonText: {
+        color: '#DC2626',
+    },
+    incrementButtonText: {
+        color: '#059669',
     },
     countText: {
-        marginHorizontal: 8,
+        marginHorizontal: 12,
         fontSize: 16,
-        fontWeight: '600',
-        color: '#333',
+        fontWeight: '700',
+        color: '#1A1D1E',
+        minWidth: 24,
+        textAlign: 'center',
     },
     addButton: {
-        width: 32,
-        height: 32,
-        borderRadius: 16,
-        backgroundColor: '#4CAF50',
+        width: 40,
+        height: 40,
+        borderRadius: 12,
+        backgroundColor: '#059669',
         alignItems: 'center',
         justifyContent: 'center',
-        marginLeft: 8,
+        marginLeft: 12,
+        // Add subtle shadow
+        shadowColor: '#059669',
+        shadowOffset: {
+            width: 0,
+            height: 4,
+        },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 4,
     },
     addButtonText: {
-        fontSize: 18,
-        color: '#FFF',
+        fontSize: 20,
+        color: '#FFFFFF',
         fontWeight: '600',
+    },
+    emptyStateContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingVertical: 40,
+    },
+    emptyStateText: {
+        fontSize: 16,
+        color: '#6B7280',
+        textAlign: 'center',
+        marginTop: 16,
     },
 });

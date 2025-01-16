@@ -26,6 +26,9 @@ export interface AddressState {
 export interface CartState {
     cartItems: CartItem[];
     loading: boolean;
+    isPickup: boolean,
+    cartTotal: number,
+    count: number,
     error: string | null;
 }
 
