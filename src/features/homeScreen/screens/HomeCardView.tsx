@@ -1,9 +1,11 @@
-import React, {useEffect, useMemo, useState} from 'react';
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {
     ActivityIndicator,
+    Animated,
     NativeScrollEvent,
     NativeSyntheticEvent,
     Platform,
+    RefreshControl,
     ScrollView,
     StyleSheet,
     Text,
@@ -28,6 +30,22 @@ const MIN_LOADING_DURATION = 200; // main loading duration (redux)
 const FILTER_LOADING_DURATION = 200; // duration for filter toggling/loading
 
 const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll, onRestaurantPress}) => {
+    const scrollY = useRef(new Animated.Value(0)).current;
+    const HEADER_MAX_HEIGHT = 130; // Adjust based on your header's full height
+    const HEADER_MIN_HEIGHT = 0; // Adjust based on your header's minimum height
+    const HEADER_SCROLL_DISTANCE = HEADER_MAX_HEIGHT - HEADER_MIN_HEIGHT;
+    const headerHeight = scrollY.interpolate({
+        inputRange: [0, HEADER_SCROLL_DISTANCE],
+        outputRange: [HEADER_MAX_HEIGHT, HEADER_MIN_HEIGHT],
+        extrapolate: 'clamp',
+    });
+    const [refreshing, setRefreshing] = useState(false);
+
+    const headerOpacity = scrollY.interpolate({
+        inputRange: [0, HEADER_SCROLL_DISTANCE / 2, HEADER_SCROLL_DISTANCE],
+        outputRange: [1, 1, 0.9],
+        extrapolate: 'clamp',
+    });
     const {restaurantsProximity, restaurantsProximityLoading, restaurantsProximityStatus} = useSelector(
         (state: RootState) => state.restaurant
     );
@@ -58,7 +76,12 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll, onRestaurantPress}
             if (timer) clearTimeout(timer);
         };
     }, [restaurantsProximityLoading]);
-
+    const onRefresh = useCallback(() => {
+        setRefreshing(true);
+        dispatch(getRestaurantsByProximity()).finally(() => {
+            setRefreshing(false);
+        });
+    }, [dispatch]);
     // Combined overall loading state: either main loading or filter transition loading.
     const isLoading = showMainLoading || filterLoading;
 
@@ -132,107 +155,119 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll, onRestaurantPress}
     }, [restaurantsProximity, filters]);
 
 
-    const setRadiusAction = (value: number) => {
-        console.log('Setting radius:', value);
-        dispatch(setRadius(value));
-    };
+    const handleScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
+        const y = event.nativeEvent.contentOffset.y;
+        scrollY.setValue(y);
+    }, [scrollY]);
+
     return (
         <View style={styles.safeArea}>
-
-            {/* Top Bar */}
-            <View style={styles.topBar}>
-                <Text style={styles.title}>Restaurants Near You</Text>
-
-            </View>
-
-            {/* Filter Bar */}
-            <ScrollView
-                horizontal
-                style={styles.filterBar}
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.filterContentContainer}
+            <Animated.View
+                style={[
+                    styles.headerContainer,
+                    {
+                        height: headerHeight,
+                        opacity: headerOpacity,
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        zIndex: 1000,
+                    }
+                ]}
             >
-                {/* Icon Button */}
-                <TouchableOpacity style={styles.iconButton}>
-                    <Feather name="sliders" size={16} color="#333"/>
-                </TouchableOpacity>
+                <View style={styles.topBar}>
+                    <Text style={styles.title}>Restaurants Near You</Text>
+                </View>
 
-
-                {/* Pick Up Button */}
-                <TouchableOpacity
-                    style={[
-                        styles.filterButton,
-                        filters.pickup && styles.filterButtonSelected,
-                    ]}
-                    onPress={() => handleToggleFilter('pickup')}
+                <ScrollView
+                    horizontal
+                    style={styles.filterBar}
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.filterContentContainer}
                 >
-                    <Text
-                        style={[
-                            styles.filterText,
-                            filters.pickup && styles.filterTextSelected,
-                        ]}
-                    >
-                        Pick Up
-                    </Text>
-                </TouchableOpacity>
+                    {/* Icon Button */}
+                    <TouchableOpacity style={styles.iconButton}>
+                        <Feather name="sliders" size={16} color="#333"/>
+                    </TouchableOpacity>
 
-                {/* Delivery Button */}
-                <TouchableOpacity
-                    style={[
-                        styles.filterButton,
-                        filters.delivery && styles.filterButtonSelected,
-                    ]}
-                    onPress={() => handleToggleFilter('delivery')}
-                >
-                    <Text
-                        style={[
-                            styles.filterText,
-                            filters.delivery && styles.filterTextSelected,
-                        ]}
-                    >
-                        Delivery
-                    </Text>
-                </TouchableOpacity>
 
-                {/* Price Button */}
-                <TouchableOpacity
-                    style={[styles.filterButton, isPriceExpanded && styles.filterButtonSelected]}
-                    onPress={togglePriceDropdown}
-                >
-                    <Text
+                    {/* Pick Up Button */}
+                    <TouchableOpacity
                         style={[
-                            styles.filterText,
-                            isPriceExpanded && styles.filterTextSelected,
+                            styles.filterButton,
+                            filters.pickup && styles.filterButtonSelected,
                         ]}
+                        onPress={() => handleToggleFilter('pickup')}
                     >
-                        Price
-                    </Text>
-                    <Feather
-                        name={isPriceExpanded ? 'chevron-up' : 'chevron-down'}
-                        size={14}
-                        color={isPriceExpanded ? '#FFF' : '#333'}
-                        style={styles.dropdownIcon}
-                    />
-                </TouchableOpacity>
+                        <Text
+                            style={[
+                                styles.filterText,
+                                filters.pickup && styles.filterTextSelected,
+                            ]}
+                        >
+                            Pick Up
+                        </Text>
+                    </TouchableOpacity>
 
-                {/* Under 30 min Button */}
-                <TouchableOpacity
-                    style={[
-                        styles.filterButton,
-                        filters.under30 && styles.filterButtonSelected,
-                    ]}
-                    onPress={() => handleToggleFilter('under30')}
-                >
-                    <Text
+                    {/* Delivery Button */}
+                    <TouchableOpacity
                         style={[
-                            styles.filterText,
-                            filters.under30 && styles.filterTextSelected,
+                            styles.filterButton,
+                            filters.delivery && styles.filterButtonSelected,
                         ]}
+                        onPress={() => handleToggleFilter('delivery')}
                     >
-                        Under 30 min
-                    </Text>
-                </TouchableOpacity>
-            </ScrollView>
+                        <Text
+                            style={[
+                                styles.filterText,
+                                filters.delivery && styles.filterTextSelected,
+                            ]}
+                        >
+                            Delivery
+                        </Text>
+                    </TouchableOpacity>
+
+                    {/* Price Button */}
+                    <TouchableOpacity
+                        style={[styles.filterButton, isPriceExpanded && styles.filterButtonSelected]}
+                        onPress={togglePriceDropdown}
+                    >
+                        <Text
+                            style={[
+                                styles.filterText,
+                                isPriceExpanded && styles.filterTextSelected,
+                            ]}
+                        >
+                            Price
+                        </Text>
+                        <Feather
+                            name={isPriceExpanded ? 'chevron-up' : 'chevron-down'}
+                            size={14}
+                            color={isPriceExpanded ? '#FFF' : '#333'}
+                            style={styles.dropdownIcon}
+                        />
+                    </TouchableOpacity>
+
+                    {/* Under 30 min Button */}
+                    <TouchableOpacity
+                        style={[
+                            styles.filterButton,
+                            filters.under30 && styles.filterButtonSelected,
+                        ]}
+                        onPress={() => handleToggleFilter('under30')}
+                    >
+                        <Text
+                            style={[
+                                styles.filterText,
+                                filters.under30 && styles.filterTextSelected,
+                            ]}
+                        >
+                            Under 30 min
+                        </Text>
+                    </TouchableOpacity>
+                </ScrollView>
+            </Animated.View>
 
             {/* Expandable Price Section */}
             {isPriceExpanded && (
@@ -277,16 +312,31 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll, onRestaurantPress}
                         </Text>
                     </View>
                 ) : (
-                    <ScrollView
-                        onScroll={onScroll}
-                        style={styles.scrollContainer}
-                        showsVerticalScrollIndicator={false}
-                        removeClippedSubviews={true}
-                        decelerationRate="normal"
+                    <Animated.ScrollView
+                        style={[
+                            styles.scrollContainer,
+                            {
+                                paddingTop: HEADER_MAX_HEIGHT, // Add padding to account for fixed header
+                            }
+                        ]}
+                        onScroll={Animated.event(
+                            [{nativeEvent: {contentOffset: {y: scrollY}}}],
+                            {
+                                useNativeDriver: false,
+                                listener: handleScroll,
+                            }
+                        )}
                         scrollEventThrottle={16}
-                        renderToHardwareTextureAndroid
-                        overScrollMode="never"
-                        bounces={false}
+                        showsVerticalScrollIndicator={false}
+                        refreshControl={
+                            <RefreshControl
+                                refreshing={refreshing}
+                                onRefresh={onRefresh}
+                                tintColor="#50703C"
+                                colors={['#50703C']}
+                                progressViewOffset={HEADER_MAX_HEIGHT} // Add offset for refresh control
+                            />
+                        }
                     >
                         <View style={styles.radiusContainer}>
                             <Text style={styles.radiusText}>Search Radius: {localRadius}km</Text>
@@ -307,16 +357,20 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll, onRestaurantPress}
                                 thumbTintColor="#50703C"
                             />
                         </View>
+                        <View style={styles.topBar}>
+                            <Text style={styles.Subtitle}>Favorites</Text>
+                        </View>
 
                         <FavoriteRestaurantList
                             restaurants={filteredRestaurants}
-                            onRestaurantPress={onRestaurantPress}
                         />
+                        <View style={styles.topBar}>
+                            <Text style={styles.Subtitle}>Explore</Text>
+                        </View>
                         <RestaurantList
                             restaurants={filteredRestaurants}
-                            onRestaurantPress={onRestaurantPress}
                         />
-                    </ScrollView>
+                    </Animated.ScrollView>
                 )}
             </View>
         </View>
@@ -325,30 +379,38 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll, onRestaurantPress}
 
 
 const styles = StyleSheet.create({
+
     safeArea: {
         flex: 1,
         backgroundColor: '#F9FAFB',
     },
-    topBar: {
-        paddingHorizontal: 16,
-        paddingVertical: 16,
+    headerContainer: {
         backgroundColor: '#FFFFFF',
-        flexDirection: 'column',
-        alignItems: 'flex-start',
         borderBottomWidth: 1,
         borderBottomColor: '#E5E7EB',
+        overflow: 'hidden', // Ensure content doesn't overflow during animation
         ...Platform.select({
             ios: {
                 shadowColor: '#000',
-                shadowOffset: {width: 0, height: 1},
-                shadowOpacity: 0.05,
-                shadowRadius: 2,
+                shadowOffset: {width: 0, height: 2},
+                shadowOpacity: 0.1,
+                shadowRadius: 4,
             },
             android: {
-                elevation: 2,
+                elevation: 4,
             },
         }),
     },
+    scrollContainer: {
+        flex: 1,
+        backgroundColor: '#F9FAFB',
+    },
+    container: {
+        flex: 1,
+        paddingHorizontal: 16,
+    },
+
+
     title: {
         fontSize: 24,
         fontWeight: '700',
@@ -360,7 +422,6 @@ const styles = StyleSheet.create({
         backgroundColor: '#FFFFFF',
         paddingVertical: 12,
         maxHeight: 60,
-
     },
     filterContainer: {
         backgroundColor: '#FFFFFF',
@@ -370,12 +431,15 @@ const styles = StyleSheet.create({
     },
 
     filterContentContainer: {
+        paddingTop: 6,
+
         paddingHorizontal: 16,
         flexDirection: 'row',
         alignItems: 'center',
         gap: 8,
     },
     iconButton: {
+
         width: 40,
         height: 40,
         borderRadius: 20,
@@ -470,19 +534,23 @@ const styles = StyleSheet.create({
     priceOptionTextSelected: {
         color: '#FFFFFF',
     },
-    container: {
-        flex: 1,
-        paddingHorizontal: 16,
-        paddingVertical: 16,
-    },
-    scrollContainer: {
-        flex: 1,
-    },
+
     loadingContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
         paddingBottom: 40,
+    },
+    topBar: {
+        paddingHorizontal: 16,
+        paddingTop: 16,
+        paddingBottom: 10,
+        backgroundColor: '#FFFFFF',
+        flexDirection: 'column',
+        alignItems: 'flex-start',
+        overflow: 'hidden', // Ensure content doesn't overflow during animation
+        borderBottomWidth: 1,
+        borderBottomColor: '#E5E7EB',
     },
     loadingText: {
         marginTop: 16,
@@ -524,6 +592,7 @@ const styles = StyleSheet.create({
 
     },
     radiusContainer: {
+        marginTop: 10,
         backgroundColor: '#FFFFFF',
         padding: 16,
         borderRadius: 12,
@@ -551,6 +620,16 @@ const styles = StyleSheet.create({
         height: 40,
         width: '100%',
     },
+    Subtitle: {
+        fontSize: 20,
+        fontWeight: '700',
+        color: '#111827',
+        marginBottom: 4,
+        fontFamily: 'Poppins-Regular',
+
+    }
+
+
 });
 
 export default HomeCardView;

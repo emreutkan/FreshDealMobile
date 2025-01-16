@@ -12,14 +12,13 @@ import {addFavoriteThunk, removeFavoriteThunk} from "@/src/redux/thunks/userThun
 
 interface RestaurantListProps {
     restaurants: Restaurant[];
-    onRestaurantPress: (restaurantId: string) => void;
 }
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'RestaurantDetails'>;
 const {width} = Dimensions.get('window');
 const CARD_MARGIN = 12;
 const CARD_WIDTH = width - (CARD_MARGIN * 4);
-const RestaurantList: React.FC<RestaurantListProps> = ({restaurants, onRestaurantPress}) => {
+const RestaurantList: React.FC<RestaurantListProps> = ({restaurants}) => {
     const dispatch = useDispatch<AppDispatch>();
     const navigation = useNavigation<NavigationProp>();
 
