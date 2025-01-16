@@ -1,5 +1,6 @@
-import React, {useCallback, useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {
+    Animated,
     LayoutAnimation,
     NativeScrollEvent,
     NativeSyntheticEvent,
@@ -34,6 +35,7 @@ const HomeScreen: React.FC = () => {
     const primaryAddressId = useSelector((state: RootState) => state.address.selectedAddressId);
     const primaryAddressData = addresses.find((address) => address.id === primaryAddressId);
     const dispatch = useDispatch<AppDispatch>();
+    const scrollY = useRef(new Animated.Value(0)).current;
 
     // States for header and scroll behavior
     const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(false);
@@ -72,24 +74,26 @@ const HomeScreen: React.FC = () => {
         }
     };
 
-    const handleScroll = useCallback(
-        (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-            const currentOffsetY = e.nativeEvent.contentOffset.y;
-            const shouldCollapseHeader = currentOffsetY > SCROLL_THRESHOLD;
+    const handleScroll = Animated.event(
+        [{nativeEvent: {contentOffset: {y: scrollY}}}],
+        {
+            useNativeDriver: false,
+            listener: (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+                const currentOffsetY = event.nativeEvent.contentOffset.y;
+                const shouldCollapseHeader = currentOffsetY > SCROLL_THRESHOLD;
 
-            if (shouldCollapseHeader !== isHeaderCollapsed) {
-                LayoutAnimation.configureNext({
-                    duration: 200,
-                    update: {type: LayoutAnimation.Types.easeInEaseOut},
-                });
-                setIsHeaderCollapsed(shouldCollapseHeader);
-
-                // Save the state for HomeCardView
-                setHomeCardHeaderState(shouldCollapseHeader);
+                if (shouldCollapseHeader !== isHeaderCollapsed) {
+                    LayoutAnimation.configureNext({
+                        duration: 200,
+                        update: {type: LayoutAnimation.Types.easeInEaseOut},
+                    });
+                    setIsHeaderCollapsed(shouldCollapseHeader);
+                    setHomeCardHeaderState(shouldCollapseHeader);
+                }
             }
-        },
-        [isHeaderCollapsed]
+        }
     );
+
 
     // Render AddressSelectorScreen if no addresses exist
     if (!addresses || addresses.length === 0) {
@@ -105,6 +109,7 @@ const HomeScreen: React.FC = () => {
                 <Header
                     // isScrolled={isHeaderCollapsed}
                     activeTab={activeTab}
+                    scrollY={scrollY}
                     // setIsScrolled={setIsHeaderCollapsed}
                 />
             )}
@@ -142,6 +147,8 @@ const HomeScreen: React.FC = () => {
                     <Tab.Screen name="HomeCardView" options={{tabBarLabel: 'Home'}}>
                         {() => <HomeCardView onScroll={handleScroll}/>}
                     </Tab.Screen>
+
+
                     <Tab.Screen name="HomeMapView" component={HomeMapView} options={{tabBarLabel: 'Map'}}/>
                     <Tab.Screen name={"Search"} component={Search} options={{tabBarLabel: 'Search'}}/>
 

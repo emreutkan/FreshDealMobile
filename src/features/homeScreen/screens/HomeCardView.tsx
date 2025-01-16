@@ -50,6 +50,7 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll, onRestaurantPress}
         (state: RootState) => state.restaurant
     );
 
+
     // For the main loading animation from redux's `loading`
     const [showMainLoading, setShowMainLoading] = useState(restaurantsProximityLoading);
 
@@ -58,7 +59,11 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll, onRestaurantPress}
     const [filterLoading, setFilterLoading] = useState(false);
     const reduxRadius = useSelector((state: RootState) => state.restaurant.radius);
     const [localRadius, setLocalRadius] = useState(reduxRadius);
-
+    const contentPadding = scrollY.interpolate({
+        inputRange: [0, HEADER_SCROLL_DISTANCE],
+        outputRange: [HEADER_MAX_HEIGHT, 0], // Animate from max height to 0
+        extrapolate: 'clamp',
+    });
     useEffect(() => {
         dispatch(getRestaurantsByProximity());
     }, [dispatch, reduxRadius]);
@@ -312,18 +317,21 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll, onRestaurantPress}
                         </Text>
                     </View>
                 ) : (
+
                     <Animated.ScrollView
                         style={[
                             styles.scrollContainer,
                             {
-                                paddingTop: HEADER_MAX_HEIGHT, // Add padding to account for fixed header
+                                paddingTop: HEADER_MAX_HEIGHT,
                             }
                         ]}
                         onScroll={Animated.event(
                             [{nativeEvent: {contentOffset: {y: scrollY}}}],
                             {
                                 useNativeDriver: false,
-                                listener: handleScroll,
+                                listener: (event) => {
+                                    onScroll(event); // Pass the event to parent's onScroll
+                                }
                             }
                         )}
                         scrollEventThrottle={16}
@@ -334,7 +342,7 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll, onRestaurantPress}
                                 onRefresh={onRefresh}
                                 tintColor="#50703C"
                                 colors={['#50703C']}
-                                progressViewOffset={HEADER_MAX_HEIGHT} // Add offset for refresh control
+                                progressViewOffset={HEADER_MAX_HEIGHT}
                             />
                         }
                     >
