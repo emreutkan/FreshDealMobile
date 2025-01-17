@@ -6,7 +6,6 @@ import {AppDispatch} from "@/src/redux/store";
 import {RootState} from "@/src/types/store";
 
 import {Ionicons, MaterialCommunityIcons} from "@expo/vector-icons";
-// Import the thunk actions
 import {addFavoriteThunk, removeFavoriteThunk} from "@/src/redux/thunks/userThunks";
 import {useHandleRestaurantPress} from "@/src/hooks/handleRestaurantPress";
 import {tokenService} from "@/src/services/tokenService";
