@@ -1,5 +1,5 @@
 import React, {useState} from 'react';
-import {ActivityIndicator, Alert, StyleSheet, Text, TextInput, TouchableOpacity, View,} from 'react-native';
+import {ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View,} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
 import {AppDispatch, RootState} from '@/src/redux/store';
 import {Feather, MaterialCommunityIcons, MaterialIcons} from '@expo/vector-icons';
@@ -128,91 +128,108 @@ const AccountScreen: React.FC = () => {
 
     const inset = useSafeAreaInsets()
     return (
-        <View style={[styles.safeArea, {paddingTop: inset.top}]}>
-            {/* Header */}
-            <View style={styles.topBar}>
+        <>
+            <View style={[styles.topBar, {paddingTop: inset.top}]}>
                 <GoBackIcon/>
                 <Text style={styles.title}>Profile</Text>
                 <TouchableOpacity onPress={handleEditInfo} style={styles.iconButton}>
                     <Feather name={isEditing ? 'check' : 'edit-2'} size={24} color="#50703C"/>
                 </TouchableOpacity>
             </View>
+            <ScrollView style={styles.safeArea}>
 
-            <View style={styles.container}>
-                {/* Profile Section */}
-                <View style={styles.profileSection}>
-                    <View style={styles.avatarContainer}>
-                        <View style={styles.avatar}>
-                            <MaterialCommunityIcons name="food" size={40} color="#50703C"/>
-                        </View>
-                        {isEditing ? (
-                            <TextInput
-                                style={[styles.userName, styles.input]}
-                                value={editedValues.name_surname}
-                                onChangeText={(text) => setEditedValues({...editedValues, name_surname: text})}
-                                placeholder="Enter your name"
-                            />
-                        ) : (
-                            <Text style={styles.userName}>{name_surname}</Text>
-                        )}
-                    </View>
-                </View>
-
-                {/* Info Cards */}
-                <View style={styles.infoCards}>
-                    <View style={styles.card}>
-                        <View style={styles.cardIcon}>
-                            <MaterialIcons name="email" size={24} color="#50703C"/>
-                        </View>
-                        <View style={styles.cardContent}>
-                            <Text style={styles.cardLabel}>Email</Text>
+                <View style={styles.container}>
+                    {/* Profile Section */}
+                    <View style={styles.profileSection}>
+                        <View style={styles.avatarContainer}>
+                            <View style={styles.avatar}>
+                                <MaterialCommunityIcons name="food" size={40} color="#50703C"/>
+                            </View>
                             {isEditing ? (
                                 <TextInput
-                                    style={[styles.cardValue, styles.input]}
-                                    value={editedValues.email}
-                                    onChangeText={(text) => setEditedValues({...editedValues, email: text})}
-                                    keyboardType="email-address"
-                                    placeholder="Enter your email"
+                                    style={[styles.userName, styles.input]}
+                                    value={editedValues.name_surname}
+                                    onChangeText={(text) => setEditedValues({...editedValues, name_surname: text})}
+                                    placeholder="Enter your name"
                                 />
                             ) : (
-                                <Text style={styles.cardValue}>{email || 'No email provided'}</Text>
+                                <Text style={styles.userName}>{name_surname}</Text>
                             )}
                         </View>
                     </View>
 
-                    <View style={styles.card}>
-                        <View style={styles.cardIcon}>
-                            <MaterialIcons name="phone" size={24} color="#50703C"/>
+                    {/* Info Cards */}
+                    <View style={styles.infoCards}>
+                        <View style={styles.card}>
+                            <View style={styles.cardIcon}>
+                                <MaterialIcons name="email" size={24} color="#50703C"/>
+                            </View>
+                            <View style={styles.cardContent}>
+                                <Text style={styles.cardLabel}>Email</Text>
+                                {isEditing ? (
+                                    <TextInput
+                                        style={[styles.cardValue, styles.input]}
+                                        value={editedValues.email}
+                                        onChangeText={(text) => setEditedValues({...editedValues, email: text})}
+                                        keyboardType="email-address"
+                                        placeholder="Enter your email"
+                                    />
+                                ) : (
+                                    <Text style={styles.cardValue}>{email || 'No email provided'}</Text>
+                                )}
+                            </View>
                         </View>
-                        <View style={styles.cardContent}>
-                            <Text style={styles.cardLabel}>Phone</Text>
-                            <Text style={styles.cardValue}>{phoneNumber || 'No phone number provided'}</Text>
+
+                        <View style={styles.card}>
+                            <View style={styles.cardIcon}>
+                                <MaterialIcons name="phone" size={24} color="#50703C"/>
+                            </View>
+                            <View style={styles.cardContent}>
+                                <Text style={styles.cardLabel}>Phone</Text>
+                                <Text style={styles.cardValue}>{phoneNumber || 'No phone number provided'}</Text>
+                            </View>
                         </View>
                     </View>
-                </View>
+                    <View style={styles.orderSection}>
+                        <Text style={styles.sectionTitle}>Orders</Text>
 
-                {/* Actions Section */}
-                <View style={styles.actionsSection}>
-                    <TouchableOpacity style={styles.actionButton} onPress={() => navigation.navigate('Orders')}>
-                        <MaterialIcons name="history" size={24} color="#50703C"/>
-                        <Text style={styles.actionButtonText}>Previous Orders</Text>
-                        <MaterialIcons name="chevron-right" size={24} color="#666"/>
+                        <TouchableOpacity
+                            style={[styles.actionButton, styles.activeOrderButton]}
+                            onPress={() => navigation.navigate('Orders', {status: 'active'})}
+                        >
+                            <MaterialIcons name="pending-actions" size={24} color="#50703C"/>
+                            <Text style={styles.actionButtonText}>Active Orders</Text>
+                            <MaterialIcons name="chevron-right" size={24} color="#666"/>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={styles.actionButton}
+                            onPress={() => navigation.navigate('Orders', {status: 'previous'})}
+                        >
+                            <MaterialIcons name="history" size={24} color="#50703C"/>
+                            <Text style={styles.actionButtonText}>Previous Orders</Text>
+                            <MaterialIcons name="chevron-right" size={24} color="#666"/>
+                        </TouchableOpacity>
+                    </View>
+                    {/* Actions Section */}
+                    <View style={styles.actionsSection}>
+
+                        <TouchableOpacity style={styles.actionButton} onPress={handlePasswordReset}>
+                            <MaterialIcons name="lock" size={24} color="#50703C"/>
+                            <Text style={styles.actionButtonText}>Reset Password</Text>
+                            <MaterialIcons name="chevron-right" size={24} color="#666"/>
+                        </TouchableOpacity>
+                    </View>
+
+                    {/* Logout Button */}
+                    <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+                        <MaterialIcons name="logout" size={24} color="#FFF"/>
+                        <Text style={styles.logoutButtonText}>Logout</Text>
                     </TouchableOpacity>
-
-                    <TouchableOpacity style={styles.actionButton} onPress={handlePasswordReset}>
-                        <MaterialIcons name="lock" size={24} color="#50703C"/>
-                        <Text style={styles.actionButtonText}>Reset Password</Text>
-                        <MaterialIcons name="chevron-right" size={24} color="#666"/>
-                    </TouchableOpacity>
                 </View>
+            </ScrollView>
 
-                {/* Logout Button */}
-                <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-                    <MaterialIcons name="logout" size={24} color="#FFF"/>
-                    <Text style={styles.logoutButtonText}>Logout</Text>
-                </TouchableOpacity>
-            </View>
-        </View>
+        </>
     );
 };
 
@@ -239,6 +256,7 @@ const styles = StyleSheet.create({
         fontSize: 20,
         fontWeight: '600',
         color: '#333',
+        fontFamily: 'Poppins-Regular',
     },
     container: {
         flex: 1,
@@ -251,7 +269,7 @@ const styles = StyleSheet.create({
     },
     profileSection: {
         alignItems: 'center',
-        marginBottom: 24,
+        marginBottom: 18,
     },
     avatarContainer: {
         alignItems: 'center',
@@ -272,9 +290,11 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         color: '#333',
         textAlign: 'center',
+        fontFamily: 'Poppins-Regular',
+
     },
     infoCards: {
-        marginBottom: 24,
+        marginBottom: 12,
     },
     card: {
         flexDirection: 'row',
@@ -318,9 +338,11 @@ const styles = StyleSheet.create({
         padding: 8,
         backgroundColor: '#fff',
         fontSize: 16,
+        fontFamily: 'Poppins-Regular',
+
     },
     actionsSection: {
-        marginBottom: 24,
+        marginBottom: 12,
     },
     actionButton: {
         flexDirection: 'row',
@@ -341,6 +363,8 @@ const styles = StyleSheet.create({
         color: '#333',
         marginLeft: 12,
         fontWeight: '500',
+        fontFamily: 'Poppins-Regular',
+
     },
     logoutButton: {
         flexDirection: 'row',
@@ -356,10 +380,29 @@ const styles = StyleSheet.create({
         elevation: 5,
     },
     logoutButtonText: {
+        fontFamily: 'Poppins-Regular',
+
         fontSize: 16,
         color: '#fff',
         fontWeight: '600',
         marginLeft: 8,
+    },
+    orderSection: {
+        marginBottom: 24,
+    },
+
+    sectionTitle: {
+        fontFamily: 'Poppins-Regular',
+
+        fontSize: 18,
+        fontWeight: '600',
+        color: '#333',
+        marginBottom: 12,
+        paddingLeft: 4,
+    },
+    activeOrderButton: {
+        borderColor: '#50703C',
+        borderWidth: 1,
     },
 });
 

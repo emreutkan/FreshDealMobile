@@ -1,5 +1,5 @@
 // src/types/store.ts
-import {AddressState, CartState, ListingState, RestaurantState, SearchState, UserState} from './states';
+import {AddressState, CartState, ListingState, PurchaseState, RestaurantState, SearchState, UserState} from './states';
 
 export type AppState = {
     user: UserState;
@@ -8,4 +8,5 @@ export type AppState = {
     restaurant: RestaurantState;
     listing: ListingState;
     search: SearchState;
+    purchase: PurchaseState;
 };

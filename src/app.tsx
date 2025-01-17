@@ -6,13 +6,16 @@ import {Provider} from 'react-redux';
 import {store} from '@/src/redux/store';
 import HomeScreen from './features/homeScreen/screens/Home';
 import Landing from './features/LoginRegister/screens/Landing';
-import AddressSelectionScreen from "@/src/features/homeScreen/screens/addressSelectionScreen"; // Renamed from _layout
+import AddressSelectionScreen from "@/src/features/homeScreen/screens/addressSelectionScreen";
 import {navigationRef, RootStackParamList} from '@/src/utils/navigation';
 import UpdateAddress from "@/src/features/homeScreen/screens/UpdateAddress";
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import RestaurantDetails from "@/src/features/RestaurantScreen/RestaurantDetails";
 import FavoritesScreen from "@/src/features/homeScreen/screens/FavoritesScreen";
 import CartScreen from "@/src/features/CartScreen/CartScreen";
+import Orders from "@/src/features/OrdersScreen/Orders"; // Add this import
+import OrderDetails from "@/src/features/OrdersScreen/OrderDetails"; // Add this import
+import AccountScreen from "@/src/features/homeScreen/components/accountScreen";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -25,10 +28,9 @@ const AppContent: React.FC = () => {
                         initialRouteName="Login"
                         screenOptions={{
                             headerShown: false,
-                            statusBarTranslucent: true, // Allows content to overlap the status bar (remove safe area in android)
+                            statusBarTranslucent: true,
                         }}
                     >
-
                         <Stack.Screen name="Login" component={Landing}/>
                         <Stack.Screen name="HomeScreen" component={HomeScreen}/>
                         <Stack.Screen
@@ -39,12 +41,28 @@ const AppContent: React.FC = () => {
                         <Stack.Screen
                             name="RestaurantDetails"
                             component={RestaurantDetails}
-
                         />
-                        <Stack.Screen name="FavoritesScreen" component={FavoritesScreen}
-                                      options={{title: 'Favorites'}}/>
-
+                        <Stack.Screen
+                            name="FavoritesScreen"
+                            component={FavoritesScreen}
+                            options={{title: 'Favorites'}}
+                        />
                         <Stack.Screen name="Cart" component={CartScreen}/>
+
+                        {/* Add these new screens */}
+                        <Stack.Screen name="Account" component={AccountScreen}/>
+                        <Stack.Screen
+                            name="Orders"
+                            component={Orders}
+                            options={({route}) => ({
+                                title: route.params?.status === 'active' ? 'Active Orders' : 'Previous Orders'
+                            })}
+                        />
+                        <Stack.Screen
+                            name="OrderDetails"
+                            component={OrderDetails}
+                            options={{title: 'Order Details'}}
+                        />
                     </Stack.Navigator>
                 </NavigationContainer>
             </Provider>

@@ -1,5 +1,5 @@
 // Add Address API Call
-import {Address} from "@/src/redux/slices/addressSlice";
+import {Address} from "@/src/types/api/address/model";
 import axios from "axios";
 import {API_BASE_URL} from "@/src/redux/api/API";
 import {logError, logRequest, logResponse} from "@/src/utils/logger";

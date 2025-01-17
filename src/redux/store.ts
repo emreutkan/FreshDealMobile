@@ -6,7 +6,9 @@ import cartReducer from '@/src/redux/slices/cartSlice';
 import restaurantReducer from '@/src/redux/slices/restaurantSlice';
 import listingReducer from '@/src/redux/slices/listingSlice';
 import searchReducer from '@/src/redux/slices/searchSlice';
+import purchaseReducer from '@/src/redux/slices/purchaseSlice';
 import {tokenMiddleware} from "@/src/middleware/tokenMiddleware";
+
 
 const store = configureStore({
     reducer: {
@@ -16,6 +18,7 @@ const store = configureStore({
         restaurant: restaurantReducer,
         listing: listingReducer,
         search: searchReducer,
+        purchase: purchaseReducer,
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware({

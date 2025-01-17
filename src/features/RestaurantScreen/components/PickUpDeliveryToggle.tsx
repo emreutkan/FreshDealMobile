@@ -22,18 +22,20 @@ export const PickupDeliveryToggle: React.FC<PickupDeliveryToggleProps> = ({
     if (pickupAvailable && deliveryAvailable) {
         return (
             <View style={{
-                flexDirection: "row",
+                flexDirection: "column",
                 justifyContent: "center",
-                marginVertical: 2,
+                // marginVertical: 2,
                 alignItems: "center",
                 alignSelf: "center",
 
                 // width: "60%",
-                width: "45%",
+                width: "25%",
                 gap: 6,
                 borderRadius: 25,
-                padding: 4,
-                backgroundColor: "#F5F5F5",
+                // padding: 4,
+                // backgroundColor: "#F5F5F5",
+                marginRight: 10,
+                paddingBottom: 10,
             }}>
                 <TouchableOpacity
                     style={{

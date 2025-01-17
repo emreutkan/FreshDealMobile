@@ -7,6 +7,7 @@ import {RootStackParamList} from "@/src/utils/navigation";
 import {useNavigation} from "@react-navigation/native";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
 import CartIcon from "@/src/features/RestaurantScreen/components/CartIcon";
+import {GoBackIcon} from "@/src/features/homeScreen/components/goBack";
 
 interface RestaurantHeaderProps {
     isScrolled: boolean;
@@ -49,7 +50,7 @@ const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({
             styles.header, {paddingTop: inset.top}
         ]}>
             <View style={styles.topRow}>
-                <GoBackButton/>
+                <GoBackIcon/>
                 <Text style={styles.restaurantName}>
                     {restaurantName}
                 </Text>

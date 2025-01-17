@@ -35,7 +35,7 @@ const RestaurantList: React.FC<RestaurantListProps> = ({restaurants}) => {
     );
 
     const handleFavoritePress = useCallback(
-        (id: string) => {
+        (id: number) => {
             const token = (store.getState() as RootState).user.token; // or use a selector if you prefer
             if (!token) {
                 console.error('Authentication token is missing.');
@@ -44,10 +44,10 @@ const RestaurantList: React.FC<RestaurantListProps> = ({restaurants}) => {
             // If it’s already a favorite, dispatch the remove thunk; otherwise, dispatch the add thunk.
             if (favoriteRestaurantsIDs.includes(id)) {
                 // cast to int before dispatch
-                dispatch(removeFavoriteThunk({restaurant_id: Number(id)}));
+                dispatch(removeFavoriteThunk({restaurant_id: id}));
             } else {
                 console.log('Adding favorite:', id);
-                dispatch(addFavoriteThunk({restaurant_id: Number(id)}));
+                dispatch(addFavoriteThunk({restaurant_id: id}));
             }
 
         },
@@ -55,13 +55,13 @@ const RestaurantList: React.FC<RestaurantListProps> = ({restaurants}) => {
     );
 
     const renderRestaurantItem = ({item}: { item: Restaurant }) => {
-        const isPressed = pressedId === item.id;
+        const isPressed = pressedId === item.id.toString();
         const isFavorite = favoriteRestaurantsIDs.includes(item.id);
 
         return (
             <TouchableOpacity
-                onPress={() => handleRestaurantPress(item.id)}
-                onPressIn={() => setPressedId(item.id)}
+                onPress={() => handleRestaurantPress(item.id.toString())}
+                onPressIn={() => setPressedId(item.id.toString())}
                 onPressOut={() => setPressedId(null)}
                 activeOpacity={0.97}
                 style={[styles.touchableContainer, isPressed && styles.touchablePressed]}
@@ -171,7 +171,7 @@ const RestaurantList: React.FC<RestaurantListProps> = ({restaurants}) => {
         <FlatList
             data={restaurants}
             renderItem={renderRestaurantItem}
-            keyExtractor={(item) => item.id}
+            // keyExtractor={(item) => item.id}
             contentContainerStyle={styles.listContainer}
             showsVerticalScrollIndicator={false}
         />

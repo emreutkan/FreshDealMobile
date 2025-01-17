@@ -1,8 +1,13 @@
 import * as Haptics from 'expo-haptics';
+import {Platform, Vibration} from "react-native";
 
 
 export const lightHaptic = async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (Platform.OS === 'ios') {
+        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    } else {
+        Vibration.vibrate(50);
+    }
 }
 
 export const mediumHaptic = async () => {

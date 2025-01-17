@@ -20,6 +20,7 @@ import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {RootStackParamList} from '@/src/utils/navigation';
 import {getRestaurantsByProximity} from "@/src/redux/thunks/restaurantThunks";
+import {lightHaptic} from "@/src/utils/Haptics";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'RestaurantDetails'>;
 
@@ -62,7 +63,10 @@ const HomeMapView: React.FC = () => {
     const renderRestaurantItem = useCallback(
         ({item}: { item: Restaurant }) => (
             <TouchableOpacity
-                onPress={() => navigation.navigate('RestaurantDetails', {restaurantId: item.id})}
+                onPress={async () => {
+                    lightHaptic();
+                    navigation.navigate('RestaurantDetails', {restaurantId: item.id.toString()});
+                }}
                 activeOpacity={0.8}
                 style={styles.restaurantCard}
             >

@@ -1,43 +1,25 @@
-export interface PurchaseItem {
+export interface Purchase {
     purchase_id: number;
-    listing_id: number;
-    quantity: number;
-    total_price: string;
-    status: "pending" | "accepted" | "rejected" | "completed";
-}
-
-
-export interface RestaurantPurchase {
-    id: number;
     user_id: number;
     listing_id: number;
     listing_title: string;
     quantity: number;
     total_price: string;
-    purchase_date: string; // ISO string date-time
-    status: "pending" | "accepted" | "rejected" | "completed";
+    purchase_date: string;
+    status: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'COMPLETED';
     is_delivery: boolean;
-    delivery_address: string;
-    delivery_notes: string;
-    completion_image_url?: string | null;
-}
-
-
-export interface Report {
-    report_id: number;
-    purchase_id: number;
-    listing_id: number;
+    delivery_address?: string;
+    delivery_notes?: string;
+    completion_image_url?: string;
     restaurant_id: number;
-    image_url: string;
-    description: string;
-    reported_at: string | null; // ISO date string or null
+    restaurant?: {
+        id: number;
+        name: string;
+        image_url?: string;
+    };
+    listing?: {
+        id: number;
+        title: string;
+        count: number;
+    };
 }
-
-export interface RestaurantComment {
-    id: number;
-    user_id: number;
-    comment: string;
-    rating: number;
-    timestamp: string; // ISO date string
-}
-

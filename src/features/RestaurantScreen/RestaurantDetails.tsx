@@ -6,15 +6,12 @@ import {AppDispatch, RootState} from '@/src/redux/store';
 import {RootStackParamList} from "@/src/utils/navigation";
 import {getListingsThunk} from "@/src/redux/thunks/listingThunks";
 import CartBar from "@/src/features/RestaurantScreen/components/cartBar";
-import {NativeStackNavigationProp} from "@react-navigation/native-stack";
 import RestaurantInfoSection from "@/src/features/RestaurantScreen/components/RestaurantInfoSection";
 import ListingsCard from "@/src/features/RestaurantScreen/components/listingsCard";
 
-type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const RestaurantDetails: React.FC = () => {
     const route = useRoute<RouteProp<RootStackParamList, 'RestaurantDetails'>>();
-    const [isMapActive, setIsMapActive] = useState(false); // Toggle map or details
     const [isPickup, setIsPickup] = useState(true); // Toggle Pickup/Delivery
 
     const cart = useSelector((state: RootState) => state.cart);
@@ -26,28 +23,11 @@ const RestaurantDetails: React.FC = () => {
             </View>
         );
     }
-    const [showInfoModal, setShowInfoModal] = useState(false);
 
 // helper functions for walking / driving times
-    function getWalkingTime(distance_km: number) {
-        // ~5 km/h => distance_km * 12 = minutes
-        return Math.round(distance_km * 12);
-    }
 
-    function getDrivingTime(distance_km: number) {
-        // ~30 km/h => distance_km * 2 = minutes
-        return Math.round(distance_km * 2);
-    }
-
-    // optional detail toggle from original code
-    const [viewDetails, setViewDetails] = React.useState(false);
-
-    const formatWorkingHours = (start: string, end: string) => {
-        return `${start} - ${end}`;
-    };
     // Only call the hook at the top level
     const dispatch = useDispatch<AppDispatch>();
-    const cartItems = useSelector((state: RootState) => state.cart.cartItems);
     const {restaurantId} = route.params;
     const listings = useSelector((state: RootState) => state.listing.listings);
     useEffect(() => {
@@ -81,29 +61,28 @@ const RestaurantDetails: React.FC = () => {
         const pickupAvailable = restaurant.pickup;
         const deliveryAvailable = restaurant.delivery;
         return (
-            <>
+            <View style={styles.container}>
 
+                <RestaurantInfoSection
+                    restaurant={restaurant}
+                    isPickup={isPickup}
+                    setIsPickup={setIsPickup}
+                    pickupAvailable={pickupAvailable}
+                    deliveryAvailable={deliveryAvailable}
+                > </RestaurantInfoSection>
 
-                <RestaurantInfoSection restaurant={restaurant} isPickup={isPickup} setIsPickup={setIsPickup}
-                                       pickupAvailable={pickupAvailable} deliveryAvailable={deliveryAvailable}
-                >
-
+                <View style={styles.listingsContainer}>
                     {listings.length > 0 ? (
                         <ListingsCard listingList={listings} isPickup={isPickup}/>
-
                     ) : (
                         <Text>No listings found.</Text>
-                    )
-
-                    }
-                </RestaurantInfoSection>
-
+                    )}
+                </View>
 
                 {cart.cartItems.length > 0 && (
-                    <CartBar
-
-                    />)}
-            </>
+                    <CartBar/>
+                )}
+            </View>
         );
     }
 
@@ -116,7 +95,10 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#FFFFFF',
-
+    },
+    listingsContainer: {
+        flex: 1 / 2,
+        marginTop: 16, // Add some spacing between restaurant info and listings
     },
     headerImage: {
         width: '100%',

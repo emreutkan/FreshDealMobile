@@ -4,10 +4,48 @@ import {Pagination} from "@/src/redux/slices/listingSlice";
 import {Listing} from "@/src/types/api/listing/model";
 import {CartItem} from "@/src/types/api/cart/model";
 import {Address} from "@/src/types/api/address/model";
+import {Purchase} from "@/src/types/api/purchase/model";
+
 
 export interface RestaurantSearchResults {
     results: RestaurantSearchResult[];
 
+}
+
+
+export interface PurchaseState {
+    // Active orders
+    activeOrders: Purchase[];
+    loadingActiveOrders: boolean;
+    activeOrdersError: string | null;
+
+    // Previous orders
+    previousOrders: Purchase[];
+    loadingPreviousOrders: boolean;
+    previousOrdersError: string | null;
+    previousOrdersPagination: {
+        currentPage: number;
+        totalPages: number;
+        perPage: number;
+        totalOrders: number;
+        hasNext: boolean;
+        hasPrev: boolean;
+    };
+
+    // Current order details
+    currentOrder: Purchase | null;
+    loadingCurrentOrder: boolean;
+    currentOrderError: string | null;
+
+    // Purchase creation
+    creatingPurchase: boolean;
+    createPurchaseError: string | null;
+    lastCreatedPurchases: Purchase[] | null;
+
+    // Restaurant purchases (if user is restaurant owner)
+    restaurantPurchases: Purchase[];
+    loadingRestaurantPurchases: boolean;
+    restaurantPurchasesError: string | null;
 }
 
 export interface SearchState {

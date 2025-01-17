@@ -1,28 +1,32 @@
-import React, {FC, useEffect} from 'react';
-import {Dimensions, FlatList, Image, StyleSheet, Text, TouchableOpacity, View,} from 'react-native';
+import React, {FC, useEffect, useRef, useState} from 'react';
+import {Animated, FlatList, Image, LayoutAnimation, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import {addItemToCart, fetchCart, removeItemFromCart, updateCartItem,} from '@/src/redux/thunks/cartThunks';
 import {useDispatch, useSelector} from 'react-redux';
 import {AppDispatch, RootState} from '@/src/redux/store';
 import {Listing} from "@/src/types/api/listing/model";
+import {lightHaptic} from "@/src/utils/Haptics";
 
 interface ListingCardProps {
     listingList: Listing[];
     isPickup: boolean;
 }
 
-const {width} = Dimensions.get('window');
 
-// Create reusable animation values
-const SPRING_CONFIG = {
-    damping: 15,
-    stiffness: 200,
-};
 export const ListingCard: FC<ListingCardProps> = ({listingList, isPickup}) => {
+    const [refreshing, setRefreshing] = useState(false);
+    const fadeAnim = useRef(new Animated.Value(0)).current;
+
     const dispatch = useDispatch<AppDispatch>();
 
     // Get the entire cart state from Redux
     const cart = useSelector((state: RootState) => state.cart);
-
+    useEffect(() => {
+        Animated.timing(fadeAnim, {
+            toValue: 1,
+            duration: 500,
+            useNativeDriver: true,
+        }).start();
+    }, []);
     useEffect(() => {
         dispatch(fetchCart());
     }, [dispatch]);
@@ -45,6 +49,7 @@ export const ListingCard: FC<ListingCardProps> = ({listingList, isPickup}) => {
         }
 
         const handleAddToCart = async () => {
+            lightHaptic();
             const existingCartItems = cart.cartItems;
 
             // If there are items in the cart, check if they belong to the same restaurant
@@ -76,9 +81,12 @@ export const ListingCard: FC<ListingCardProps> = ({listingList, isPickup}) => {
                     updateCartItem({payload: {listing_id: item.id, count: countInCart + 1}})
                 );
             }
+            LayoutAnimation.configureNext(LayoutAnimation.Presets.spring);
+
         };
 
         const handleRemoveOneFromCart = () => {
+            lightHaptic()
             if (countInCart === 1) {
                 dispatch(removeItemFromCart({listing_id: item.id}));
             } else {
@@ -86,6 +94,8 @@ export const ListingCard: FC<ListingCardProps> = ({listingList, isPickup}) => {
                     updateCartItem({payload: {listing_id: item.id, count: countInCart - 1}})
                 );
             }
+            LayoutAnimation.configureNext(LayoutAnimation.Presets.spring);
+
         };
 
         return (
@@ -179,10 +189,11 @@ export default ListingCard;
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F5F7FA', // Light gray background
+        backgroundColor: '#F5F7FA',
         paddingHorizontal: 16,
     },
     listingItem: {
+
         flexDirection: 'row',
         marginVertical: 10,
         padding: 16,
