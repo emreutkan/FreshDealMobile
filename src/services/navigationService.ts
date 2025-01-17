@@ -32,6 +32,11 @@ export const NavigationService = {
             });
         }
     },
+    navigateBack: () => {
+        if (navigationRef.isReady()) {
+            navigationRef.goBack();
+        }
+    },
     navigateToHome: () => {
         if (navigationRef.isReady()) {
             navigationRef.reset({

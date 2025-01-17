@@ -9,6 +9,11 @@ import {GoBackIcon} from "@/src/features/homeScreen/components/goBack";
 import ListingCard from "@/src/features/RestaurantScreen/components/listingsCard";
 import {setSelectedRestaurant} from "@/src/redux/slices/restaurantSlice";
 import {fetchCart} from "@/src/redux/thunks/cartThunks";
+import {Ionicons} from "@expo/vector-icons";
+import type {NativeStackNavigationProp} from "@react-navigation/native-stack";
+import {RootStackParamList} from "@/src/utils/navigation";
+import {useNavigation} from "@react-navigation/native";
+import PickUpDeliveryToggle from "@/src/features/RestaurantScreen/components/PickUpDeliveryToggle";
 
 const CartScreen: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
@@ -52,16 +57,52 @@ const CartScreen: React.FC = () => {
 
     const ListingsInCart = selectedRestaurantListings.filter(listing => cartItems.some(cartItem => cartItem.listing_id === listing.id));
     console.log(ListingsInCart);
-    const totalPickUpPrice = ListingsInCart.reduce((sum, item) => sum + (item.pick_up_price || 0), 0);
-    const totalDeliveryPrice = ListingsInCart.reduce((sum, item) => sum + (item.delivery_price || 0), 0);
+    const isPickup = useSelector((state: RootState) => state.restaurant.isPickup);
+
+    const totalPickUpPrice = ListingsInCart.reduce((sum, item) => {
+        const cartItem = cartItems.find(ci => ci.listing_id === item.id);
+        const quantity = cartItem?.count || 1; // Default to 1 if count is not found
+        return sum + (item.pick_up_price || 0) * quantity;
+    }, 0);
+    const totalDeliveryPrice = ListingsInCart.reduce((sum, item) => {
+        const cartItem = cartItems.find(ci => ci.listing_id === item.id);
+        const quantity = cartItem?.count || 1; // Default to 1 if count is not found
+        return sum + (item.delivery_price || 0) * quantity;
+    }, 0);
+
+    const currentTotal = isPickup ? totalPickUpPrice : totalDeliveryPrice;
+    const calculateItemSubtotal = (listing: any, isPickup: boolean) => {
+        const cartItem = cartItems.find(ci => ci.listing_id === listing.id);
+        const quantity = cartItem?.count || 1;
+        const price = isPickup ? listing.pick_up_price : listing.delivery_price;
+        return (price || 0) * quantity;
+    };
+    const restaurant = restaurantsProximity.find(r => r.id === (cartItems[0]?.restaurant_id));
+    type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+    const totalItemsCount = cartItems.reduce((sum, item) => sum + (item.count || 1), 0);
+
+    const navigation = useNavigation<NavigationProp>();
 
     return (
         <View style={[styles.container, {paddingTop: insets.top}]}>
             {/* Header Section */}
             <View style={styles.header}>
-                <GoBackIcon/>
-                <Text style={styles.headerTitle}>Your Cart</Text>
-                <Text style={styles.itemCount}>{ListingsInCart.length} items</Text>
+                <View style={styles.headerTop}>
+                    <GoBackIcon/>
+                    <Text style={styles.headerTitle}>Your Cart</Text>
+                    <View style={styles.badge}>
+                        <Text style={styles.badgeText}>{totalItemsCount}</Text>
+                    </View>
+                </View>
+                <View>
+                    {restaurant && (
+                        <View style={styles.restaurantInfo}>
+                            <Ionicons name="business" size={20} color="#666666"/>
+                            <Text style={styles.restaurantName}>{restaurant.restaurantName}</Text>
+                        </View>
+                    )}
+                    <PickUpDeliveryToggle></PickUpDeliveryToggle>
+                </View>
             </View>
 
             {/* Main Content */}
@@ -72,17 +113,47 @@ const CartScreen: React.FC = () => {
                         showsVerticalScrollIndicator={false}
                     >
                         <View style={styles.cardsContainer}>
-                            <ListingCard listingList={ListingsInCart}/>
-                        </View>
+                            <ListingCard
+                                listingList={ListingsInCart.map(listing => ({
+                                    ...listing,
+                                    quantity: cartItems.find(ci => ci.listing_id === listing.id)?.count || 1
+                                }))}
+                            /> </View>
                     </ScrollView>
 
                     {/* Bottom Section with Total and Checkout */}
                     <View style={styles.bottomSection}>
-                        <View style={styles.totalContainer}>
-                            <Text style={styles.totalLabel}>Total</Text>
-                            <Text style={styles.totalAmount}>${totalPickUpPrice.toFixed(2)}</Text>
+                        <View style={styles.summaryContainer}>
+                            {ListingsInCart.map(listing => (
+                                <View key={listing.id} style={styles.summaryRow}>
+                                    <Text style={styles.summaryLabel}>
+                                        {listing.title} (x{cartItems.find(ci => ci.listing_id === listing.id)?.count || 1})
+                                    </Text>
+                                    <Text style={styles.summaryValue}>
+                                        {calculateItemSubtotal(listing, isPickup).toFixed(2)} TL
+                                    </Text>
+                                </View>
+                            ))}
+                            {!isPickup && restaurant && restaurant.deliveryFee && (
+                                <View style={styles.summaryRow}>
+                                    <Text style={styles.summaryLabel}>Delivery Fee</Text>
+                                    <Text style={styles.summaryValue}>{restaurant.deliveryFee.toFixed(2)} TL</Text>
+                                </View>
+                            )}
+                            <View style={styles.divider}/>
+                            <View style={styles.totalContainer}>
+                                <Text style={styles.totalLabel}>Total</Text>
+                                <Text style={styles.totalAmount}>
+                                    {(currentTotal + (!isPickup ? restaurant?.deliveryFee || 0 : 0)).toFixed(2)} TL
+                                </Text>
+                            </View>
                         </View>
-                        <TouchableOpacity style={styles.checkoutButton}>
+                        <TouchableOpacity
+                            style={styles.checkoutButton}
+                            activeOpacity={0.8}
+                        >
+                            <Ionicons name="cart" size={24} color="#FFFFFF" style={styles.checkoutIcon}/>
+
                             <Text style={styles.checkoutButtonText}>Proceed to Checkout</Text>
                         </TouchableOpacity>
                     </View>
@@ -90,8 +161,18 @@ const CartScreen: React.FC = () => {
             ) : (
                 // Empty Cart State
                 <View style={styles.emptyCartContainer}>
+                    <Ionicons name="cart-outline" size={100} color="#CCCCCC"/>
                     <Text style={styles.emptyCartText}>Your cart is empty</Text>
-                    <TouchableOpacity style={styles.continueShopping}>
+                    <Text style={styles.emptyCartSubtext}>Add items to get started</Text>
+                    <TouchableOpacity
+                        style={styles.continueShopping}
+                        activeOpacity={0.8}
+                        onPress={() => {
+                            console.log("Navigating to Home");
+                            navigation.goBack()
+                        }}
+                    >
+                        <Ionicons name="business-outline" size={20} color="#FFFFFF" style={styles.shoppingIcon}/>
                         <Text style={styles.continueShoppingText}>Continue Shopping</Text>
                     </TouchableOpacity>
                 </View>
@@ -112,16 +193,42 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1,
         borderBottomColor: '#F0F0F0',
     },
+    headerTop: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: scaleFont(8),
+    },
     headerTitle: {
         fontSize: scaleFont(24),
         fontWeight: '700',
         color: '#333333',
+        flex: 1,
+        marginLeft: scaleFont(12),
+    },
+    badge: {
+        backgroundColor: '#059669',
+        borderRadius: 12,
+        minWidth: 24,
+        height: 24,
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingHorizontal: 8,
+    },
+    badgeText: {
+        color: '#FFFFFF',
+        fontSize: scaleFont(12),
+        fontWeight: '600',
+    },
+    restaurantInfo: {
+        flexDirection: 'row',
+        alignItems: 'center',
         marginTop: scaleFont(8),
     },
-    itemCount: {
+    restaurantName: {
         fontSize: scaleFont(14),
         color: '#666666',
-        marginTop: scaleFont(4),
+        marginLeft: scaleFont(8),
+        fontWeight: '500',
     },
     scrollView: {
         flex: 1,
@@ -145,27 +252,53 @@ const styles = StyleSheet.create({
         shadowRadius: 3,
         elevation: 5,
     },
+    summaryContainer: {
+        marginBottom: scaleFont(20),
+    },
+    summaryRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: scaleFont(8),
+    },
+    summaryLabel: {
+        fontSize: scaleFont(14),
+        color: '#666666',
+    },
+    summaryValue: {
+        fontSize: scaleFont(14),
+        color: '#333333',
+        fontWeight: '500',
+    },
+    divider: {
+        height: 1,
+        backgroundColor: '#F0F0F0',
+        marginVertical: scaleFont(12),
+    },
     totalContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: scaleFont(16),
     },
     totalLabel: {
-        fontSize: scaleFont(16),
+        fontSize: scaleFont(18),
         color: '#333333',
         fontWeight: '600',
     },
     totalAmount: {
         fontSize: scaleFont(24),
-        color: '#333333',
+        color: '#059669',
         fontWeight: '700',
     },
     checkoutButton: {
-        backgroundColor: '#007AFF',
+        backgroundColor: '#059669',
         borderRadius: scaleFont(12),
         paddingVertical: scaleFont(16),
+        flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'center',
+    },
+    checkoutIcon: {
+        marginRight: scaleFont(8),
     },
     checkoutButtonText: {
         color: '#FFFFFF',
@@ -177,17 +310,30 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         padding: scaleFont(20),
+        backgroundColor: '#F8F8F8',
     },
     emptyCartText: {
-        fontSize: scaleFont(18),
+        fontSize: scaleFont(20),
+        color: '#333333',
+        fontWeight: '600',
+        marginTop: scaleFont(20),
+        marginBottom: scaleFont(8),
+    },
+    emptyCartSubtext: {
+        fontSize: scaleFont(14),
         color: '#666666',
-        marginBottom: scaleFont(16),
+        marginBottom: scaleFont(24),
     },
     continueShopping: {
+        backgroundColor: '#059669',
         paddingVertical: scaleFont(12),
         paddingHorizontal: scaleFont(24),
-        borderRadius: scaleFont(8),
-        backgroundColor: '#007AFF',
+        borderRadius: scaleFont(12),
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    shoppingIcon: {
+        marginRight: scaleFont(8),
     },
     continueShoppingText: {
         color: '#FFFFFF',
