@@ -15,57 +15,63 @@ import FavoritesScreen from "@/src/features/homeScreen/screens/FavoritesScreen";
 import CartScreen from "@/src/features/CartScreen/CartScreen";
 import Orders from "@/src/features/OrdersScreen/Orders"; // Add this import
 import OrderDetails from "@/src/features/OrdersScreen/OrderDetails"; // Add this import
-import AccountScreen from "@/src/features/homeScreen/components/accountScreen";
+import AccountScreen from "@/src/features/accountScreen/accountScreen";
+import {BottomSheetModalProvider} from "@gorhom/bottom-sheet";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 const AppContent: React.FC = () => {
     return (
         <GestureHandlerRootView style={styles.container}>
-            <Provider store={store}>
-                <NavigationContainer ref={navigationRef}>
-                    <Stack.Navigator
-                        initialRouteName="Login"
-                        screenOptions={{
-                            headerShown: false,
-                            statusBarTranslucent: true,
-                        }}
-                    >
-                        <Stack.Screen name="Login" component={Landing}/>
-                        <Stack.Screen name="HomeScreen" component={HomeScreen}/>
-                        <Stack.Screen
-                            name="AddressSelectionScreen"
-                            component={AddressSelectionScreen}
-                        />
-                        <Stack.Screen name="UpdateAddress" component={UpdateAddress}/>
-                        <Stack.Screen
-                            name="RestaurantDetails"
-                            component={RestaurantDetails}
-                        />
-                        <Stack.Screen
-                            name="FavoritesScreen"
-                            component={FavoritesScreen}
-                            options={{title: 'Favorites'}}
-                        />
-                        <Stack.Screen name="Cart" component={CartScreen}/>
+            <BottomSheetModalProvider>
 
-                        {/* Add these new screens */}
-                        <Stack.Screen name="Account" component={AccountScreen}/>
-                        <Stack.Screen
-                            name="Orders"
-                            component={Orders}
-                            options={({route}) => ({
-                                title: route.params?.status === 'active' ? 'Active Orders' : 'Previous Orders'
-                            })}
-                        />
-                        <Stack.Screen
-                            name="OrderDetails"
-                            component={OrderDetails}
-                            options={{title: 'Order Details'}}
-                        />
-                    </Stack.Navigator>
-                </NavigationContainer>
-            </Provider>
+                <Provider store={store}>
+                    <NavigationContainer ref={navigationRef}>
+                        <Stack.Navigator
+                            initialRouteName="Login"
+                            screenOptions={{
+                                headerShown: false,
+                                statusBarTranslucent: true,
+                            }}
+                        >
+                            <Stack.Screen name="Login" component={Landing}/>
+                            <Stack.Screen name="HomeScreen" component={HomeScreen}/>
+                            <Stack.Screen
+                                name="AddressSelectionScreen"
+                                component={AddressSelectionScreen}
+                            />
+                            <Stack.Screen name="UpdateAddress" component={UpdateAddress}/>
+
+                            <Stack.Screen
+                                name="RestaurantDetails"
+                                component={RestaurantDetails}
+                            />
+                            <Stack.Screen
+                                name="FavoritesScreen"
+                                component={FavoritesScreen}
+                                options={{title: 'Favorites'}}
+                            />
+                            <Stack.Screen name="Cart" component={CartScreen}/>
+
+                            {/* Add these new screens */}
+                            <Stack.Screen name="Account" component={AccountScreen}/>
+                            <Stack.Screen
+                                name="Orders"
+                                component={Orders}
+                                options={({route}) => ({
+                                    title: route.params?.status === 'active' ? 'Active Orders' : 'Previous Orders'
+                                })}
+                            />
+                            <Stack.Screen
+                                name="OrderDetails"
+                                component={OrderDetails}
+                                options={{title: 'Order Details'}}
+                            />
+                        </Stack.Navigator>
+                    </NavigationContainer>
+                </Provider>
+            </BottomSheetModalProvider>
+
         </GestureHandlerRootView>
     );
 };

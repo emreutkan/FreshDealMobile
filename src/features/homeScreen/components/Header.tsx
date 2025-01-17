@@ -72,8 +72,8 @@ const styles = StyleSheet.create({
     header: {
         backgroundColor: "#fff",
         borderColor: '#b2f7a5',
-        borderBottomLeftRadius: scaleFont(20),
-        borderBottomRightRadius: scaleFont(20),
+        // borderBottomLeftRadius: scaleFont(20),
+        // borderBottomRightRadius: scaleFont(20),
         shadowOffset: {width: 0, height: 8},
         shadowOpacity: 0.08,
         shadowRadius: 4,

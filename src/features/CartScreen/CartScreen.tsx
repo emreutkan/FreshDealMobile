@@ -94,14 +94,20 @@ const CartScreen: React.FC = () => {
                         <Text style={styles.badgeText}>{totalItemsCount}</Text>
                     </View>
                 </View>
-                <View>
+                <View style={{
+                    flexDirection: 'row',
+                    justifyContent: 'space-between', // Add this
+                    alignItems: 'center',           // Add this
+                    width: '100%'                   // Add this
+                }}>
                     {restaurant && (
                         <View style={styles.restaurantInfo}>
                             <Ionicons name="business" size={20} color="#666666"/>
                             <Text style={styles.restaurantName}>{restaurant.restaurantName}</Text>
                         </View>
                     )}
-                    <PickUpDeliveryToggle></PickUpDeliveryToggle>
+
+                    <PickUpDeliveryToggle layout="row"/>
                 </View>
             </View>
 
@@ -117,7 +123,7 @@ const CartScreen: React.FC = () => {
                                 listingList={ListingsInCart.map(listing => ({
                                     ...listing,
                                     quantity: cartItems.find(ci => ci.listing_id === listing.id)?.count || 1
-                                }))}
+                                }))} viewType="rectangle"
                             /> </View>
                     </ScrollView>
 
