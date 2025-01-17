@@ -1,3 +1,5 @@
+import {StyleSheet, TextStyle, ViewStyle} from "react-native";
+
 export const THEME = {
     colors: {
         primary: 'rgba(76,175,80,0.75)',
@@ -85,8 +87,14 @@ export const DARK_THEME = {
     },
 };
 
+interface ButtonStylesType {
+    default: ViewStyle;
+    defaultGreenButton: ViewStyle;
+    ButtonIcon: ViewStyle;
+    ButtonText: TextStyle;
+}
 
-export const ButtonStyles = {
+export const ButtonStyles = StyleSheet.create<ButtonStylesType>({
     default: {
         height: 50,
         flexDirection: 'row',
@@ -100,12 +108,10 @@ export const ButtonStyles = {
         shadowOffset: {width: 0, height: 2},
         shadowOpacity: 0.2,
         shadowRadius: 5,
-        elevation: 5, // Android shadow
-        width: '100%', // Adjust width as needed
-        alignSelf: 'center', // Center the button itself
-        marginTop: 10, // Consistent spacing between buttons
-        fontFamily: 'Poppins-Regular',
-
+        elevation: 5,
+        width: '100%',
+        alignSelf: 'center',
+        marginTop: 10,
     },
     defaultGreenButton: {
         height: 50,
@@ -120,24 +126,20 @@ export const ButtonStyles = {
         shadowOffset: {width: 0, height: 2},
         shadowOpacity: 0.2,
         shadowRadius: 5,
-        elevation: 5, // Android shadow
-        width: '100%', // Adjust width as needed
-        alignSelf: 'center', // Center the button itself
-        marginTop: 10, // Consistent spacing between buttons
-        fontFamily: 'Poppins-Regular',
-
+        elevation: 5,
+        width: '100%',
+        alignSelf: 'center',
+        marginTop: 10,
     },
     ButtonIcon: {
-        marginRight: 8, // Space between icon and text
+        marginRight: 8,
     },
     ButtonText: {
         color: '#000',
         fontFamily: 'Poppins-Regular',
-        fontSize: 21
-
+        fontSize: 21,
     }
-}
-
+});
 export const InputStyles = {
     Default: {}
 }
