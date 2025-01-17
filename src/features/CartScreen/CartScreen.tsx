@@ -26,20 +26,32 @@ const CartScreen: React.FC = () => {
         if (cartItems.length > 0) {
             const firstCartItem = cartItems[0];
             const restaurantId = firstCartItem.restaurant_id;
-            const restaurant = restaurantsProximity.find(r => r.id === restaurantId);
+            console.log('Looking for restaurant with ID:', restaurantId);
+            console.log('Available restaurants:', restaurantsProximity);
 
+            const restaurant = restaurantsProximity.find(r => r.id === restaurantId);
+            console.log('Found restaurant:', restaurant);
+            const ListingsInCart = selectedRestaurantListings.filter(listing => {
+                const isInCart = cartItems.some(cartItem => {
+                    console.log(`Comparing listing ${listing.id} with cart item listing_id ${cartItem.listing_id}`);
+                    return cartItem.listing_id === listing.id;
+                });
+                console.log(`Listing ${listing.id} (${listing.title}) in cart: ${isInCart}`);
+                return isInCart;
+            });
+
+            // Log the final filtered listings
+            console.log('Final filtered listings:', ListingsInCart);
             if (restaurant) {
                 dispatch(setSelectedRestaurant(restaurant));
             } else {
-                // Alert native popup saying restaurant not found in proximity and clear cart
                 Alert.alert('Restaurant not found', 'The restaurant is not in proximity. Cart will be cleared.');
-                // dispatch(clearCart()); // Uncomment this line if you have a clearCart action
             }
         }
     }, [cartItems, restaurantsProximity, dispatch]);
 
     const ListingsInCart = selectedRestaurantListings.filter(listing => cartItems.some(cartItem => cartItem.listing_id === listing.id));
-
+    console.log(ListingsInCart);
     const totalPickUpPrice = ListingsInCart.reduce((sum, item) => sum + (item.pick_up_price || 0), 0);
     const totalDeliveryPrice = ListingsInCart.reduce((sum, item) => sum + (item.delivery_price || 0), 0);
 

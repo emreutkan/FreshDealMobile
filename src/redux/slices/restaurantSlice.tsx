@@ -83,7 +83,9 @@ const restaurantSlice = createSlice({
 
         },
         setDeliveryMethod(state, action: PayloadAction<boolean>) {
+            console.log("state.isPickup", state.isPickup);
             state.isPickup = action.payload;
+            console.log("state.isPickup", state.isPickup);
         },
         clearSelectedRestaurant(state) {
             state.selectedRestaurant = emptyRestaurant;

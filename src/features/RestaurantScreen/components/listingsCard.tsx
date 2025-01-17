@@ -8,14 +8,19 @@ import {RootState} from "@/src/types/store";
 import {Listing} from "@/src/types/api/listing/model";
 import {lightHaptic} from "@/src/utils/Haptics";
 
+interface ListingCardProps {
+    listingList?: Listing[]; // Make it optional
+}
 
-export const ListingCard: React.FC = () => {
+
+export const ListingCard: React.FC<ListingCardProps> = ({listingList}) => {
     const [refreshing, setRefreshing] = useState(false);
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const isPickup = useSelector((state: RootState) => state.restaurant.isPickup);
     const dispatch = useDispatch<AppDispatch>();
-    const listings: Listing[] = useSelector((state: RootState) => state.restaurant.selectedRestaurantListings);
-
+    const storeListings: Listing[] = useSelector((state: RootState) => state.restaurant.selectedRestaurantListings);
+    const listings = listingList || storeListings;
+    console.log(listings)
     const cart = useSelector((state: RootState) => state.cart);
     useEffect(() => {
         Animated.timing(fadeAnim, {
