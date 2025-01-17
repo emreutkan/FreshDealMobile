@@ -5,6 +5,7 @@ import {
     Keyboard,
     KeyboardAvoidingView,
     Platform,
+    RefreshControl,
     ScrollView,
     StyleSheet,
     Text,
@@ -35,6 +36,9 @@ const Search: React.FC = () => {
     const inputRef = React.useRef<TextInput>(null);
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
     const insets = useSafeAreaInsets();
+    const [recentSearches, setRecentSearches] = useState<string[]>([]);
+    const [inputFocused, setInputFocused] = useState(false);
+
 
     // Selectors
     const searchResults = useSelector((state: RootState) =>
@@ -70,12 +74,15 @@ const Search: React.FC = () => {
         []
     );
 
-    // Handle search input
     const handleSearch = (text: string) => {
         setSearchText(text);
         debouncedSearch(text);
 
-        // Animate the search bar
+        // Save to recent searches when user submits
+        if (text && !recentSearches.includes(text)) {
+            setRecentSearches(prev => [text, ...prev].slice(0, 5)); // Keep last 5 searches
+        }
+
         Animated.spring(searchAnimation, {
             toValue: text.length > 0 ? 1 : 0,
             useNativeDriver: true,
@@ -83,6 +90,13 @@ const Search: React.FC = () => {
             friction: 7
         }).start();
     };
+    const [refreshing, setRefreshing] = useState(false);
+
+    const onRefresh = React.useCallback(() => {
+        setRefreshing(true);
+        dispatch(getRestaurantsByProximity())
+            .finally(() => setRefreshing(false));
+    }, []);
 
     // Clear search
     const handleClearSearch = () => {
@@ -95,6 +109,14 @@ const Search: React.FC = () => {
         dispatch(getRestaurantsByProximity());
     }, []);
 
+    const NoResults = () => (
+        <View style={styles.noResultsContainer}>
+            <Icon name="search-outline" size={50} color="#666"/>
+            <Text style={styles.noResultsText}>
+                No restaurants found for "{searchText}"
+            </Text>
+        </View>
+    );
     return (
         <View style={styles.container}>
             <KeyboardAvoidingView
@@ -149,16 +171,24 @@ const Search: React.FC = () => {
                                 {filteredRestaurants.length} results found
                             </Text>
                         )}
-                        <ScrollView
-                            style={styles.scrollView}
-                            showsVerticalScrollIndicator={false}
-                            bounces={true}
-                            contentContainerStyle={styles.scrollViewContent}
-                        >
-                            <RestaurantList
-                                restaurants={filteredRestaurants}
-                            />
-                        </ScrollView>
+                            <ScrollView
+                                style={styles.scrollView}
+                                showsVerticalScrollIndicator={false}
+                                bounces={true}
+                                contentContainerStyle={styles.scrollViewContent}
+                                refreshControl={
+                                    <RefreshControl
+                                        refreshing={refreshing}
+                                        onRefresh={onRefresh}
+                                        tintColor="rgb(176,244,132)"
+                                        colors={["rgb(176,244,132)"]}
+                                    />
+                                }
+                            >
+                                <RestaurantList
+                                    restaurants={filteredRestaurants}
+                                />
+                            </ScrollView>
                     </>
                 )}
             </View>
@@ -170,6 +200,30 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#fff',
+    },
+    searchInputFocused: {
+        borderColor: 'rgb(176,244,132)', // Match your theme color
+        borderWidth: 2,
+    },
+    noResultsContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingTop: scaleFont(50),
+    },
+    noResultsText: {
+        fontSize: scaleFont(16),
+        color: '#666',
+        textAlign: 'center',
+        marginTop: scaleFont(10),
+    },
+    recentSearchesContainer: {
+        padding: scaleFont(15),
+    },
+    recentSearchTitle: {
+        fontSize: scaleFont(16),
+        fontWeight: '600',
+        marginBottom: scaleFont(10),
     },
     safeArea: {
         backgroundColor: "rgb(176,244,132)",
@@ -195,6 +249,11 @@ const styles = StyleSheet.create({
         height: scaleFont(50),
         borderWidth: 1,
         borderColor: '#e0e0e0',
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3, // for Android
     },
     searchIcon: {
         marginRight: scaleFont(10),

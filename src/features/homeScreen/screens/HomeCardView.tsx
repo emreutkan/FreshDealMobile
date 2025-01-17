@@ -23,6 +23,7 @@ import {setRadius} from "@/src/redux/slices/restaurantSlice";
 import {NativeStackNavigationProp} from "@react-navigation/native-stack";
 import {RootStackParamList} from "@/src/utils/navigation";
 import {useNavigation} from "@react-navigation/native";
+import {lightHaptic, strongHaptic} from "@/src/utils/Haptics";
 
 interface HomeCardViewProps {
     onScroll: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
@@ -64,14 +65,17 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll, onRestaurantPress}
     const [filterLoading, setFilterLoading] = useState(false);
     const reduxRadius = useSelector((state: RootState) => state.restaurant.radius);
     const [localRadius, setLocalRadius] = useState(reduxRadius);
+
+    useEffect(() => {
+        lightHaptic();
+    }, [localRadius]);
+
     const contentPadding = scrollY.interpolate({
         inputRange: [0, HEADER_SCROLL_DISTANCE],
         outputRange: [HEADER_MAX_HEIGHT, 0], // Animate from max height to 0
         extrapolate: 'clamp',
     });
-    useEffect(() => {
-        dispatch(getRestaurantsByProximity());
-    }, [dispatch, reduxRadius]);
+
     useEffect(() => {
         let timer: NodeJS.Timeout;
         if (restaurantsProximityLoading) {
@@ -86,12 +90,22 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll, onRestaurantPress}
             if (timer) clearTimeout(timer);
         };
     }, [restaurantsProximityLoading]);
+
     const onRefresh = useCallback(() => {
+        strongHaptic();
         setRefreshing(true);
         dispatch(getRestaurantsByProximity()).finally(() => {
             setRefreshing(false);
         });
     }, [dispatch]);
+
+
+    useEffect(() => {
+        strongHaptic();
+        dispatch(getRestaurantsByProximity());
+    }, [dispatch, reduxRadius]);
+
+
     // Combined overall loading state: either main loading or filter transition loading.
     const isLoading = showMainLoading || filterLoading;
 

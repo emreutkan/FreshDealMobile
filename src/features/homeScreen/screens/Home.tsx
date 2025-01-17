@@ -22,6 +22,7 @@ import Header from '@/src/features/homeScreen/components/Header';
 import Search from "@/src/features/search/Search";
 import {getRestaurantsByProximity} from "@/src/redux/thunks/restaurantThunks";
 import {getFavoritesThunk} from "@/src/redux/thunks/userThunks";
+import {lightHaptic} from "@/src/utils/Haptics";
 // Enable LayoutAnimation on Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
     UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -44,6 +45,11 @@ const HomeScreen: React.FC = () => {
     const [activeTab, setActiveTab] = useState('HomeCardView');
     const restaurantsProximity = useSelector((state: RootState) => state.restaurant.restaurantsProximity);
     const favoriteRestaurantsIDs = useSelector((state: RootState) => state.restaurant.favoriteRestaurantsIDs);
+
+    useEffect(() => {
+        lightHaptic();
+
+    }, [activeTab]);
     useEffect(() => {
         if (!primaryAddressData) {
             return;
