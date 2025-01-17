@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {Image, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
 import {AppDispatch} from '@/src/redux/store';
@@ -8,19 +8,25 @@ import {strongHaptic} from "@/src/utils/Haptics";
 import MapView, {Marker} from "react-native-maps";
 import {Address} from "@/src/types/api/address/model";
 import {Ionicons} from "@expo/vector-icons";
+import BottomSheet, {BottomSheetScrollView} from '@gorhom/bottom-sheet';
+import {setSelectedRestaurant} from "@/src/redux/slices/restaurantSlice";
+import {RestaurantMarker} from "@/src/features/RestaurantScreen/components/RestaurantMarker";
 
 const HomeMapView: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
     const mapRef = useRef<MapView>(null);
+    const bottomSheetRef = useRef<BottomSheet>(null);  // Reference for the bottom sheet
     const [isMapReady, setIsMapReady] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [selectedRestaurantId, setSelectedRestaurantId] = useState<string | null>(null);
+    const snapPoints = useMemo(() => [200], []);
 
     const restaurants = useSelector((state: RootState) => state.restaurant.restaurantsProximity);
     const addressState = useSelector((state: RootState) => state.address);
     const selectedAddress = addressState.addresses.find(
         (address) => address.id === addressState.selectedAddressId
     ) as Address;
+
 
     const userLatitude = selectedAddress.latitude;
     const userLongitude = selectedAddress.longitude;
@@ -50,9 +56,32 @@ const HomeMapView: React.FC = () => {
         }, 500);
     };
 
-    const handleMarkerPress = (restaurantId: string) => {
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            if (mapRef.current && selectedRestaurantId) {
+                const restaurant = restaurants.find(r => r.id.toString() === selectedRestaurantId);
+                if (restaurant) {
+                    mapRef.current.animateToRegion({
+                        latitude: restaurant.latitude,
+                        longitude: restaurant.longitude,
+                        latitudeDelta: 0.01,
+                        longitudeDelta: 0.01,
+                    }, 500);
+                }
+            }
+        }, 100);
+
+        return () => clearTimeout(timeoutId);
+    }, [selectedRestaurantId, restaurants]);
+    const handleMarkerPress = useCallback((restaurantId: string) => {
         setSelectedRestaurantId(restaurantId);
-    };
+        const restaurant = restaurants.find((r) => r.id.toString() === restaurantId);
+        if (!restaurant) return;
+        dispatch(setSelectedRestaurant(restaurant));
+        setTimeout(() => {
+            bottomSheetRef.current?.snapToIndex(0);
+        }, 100);
+    }, [restaurants, dispatch]);
 
     const customMapStyle = [
         {
@@ -69,8 +98,8 @@ const HomeMapView: React.FC = () => {
                 ref={mapRef}
                 // provider={PROVIDER_GOOGLE}
                 initialRegion={{
-                    latitude: userLatitude,
-                    longitude: userLongitude,
+                    latitude: userLatitude || 0,
+                    longitude: userLongitude || 0,
                     latitudeDelta: 0.01,
                     longitudeDelta: 0.01,
                 }}
@@ -83,6 +112,8 @@ const HomeMapView: React.FC = () => {
                     setIsMapReady(true);
                     setIsLoading(false);
                 }}
+                userInterfaceStyle="light"  // Add this line
+
             >
                 <Marker
                     coordinate={{
@@ -96,37 +127,12 @@ const HomeMapView: React.FC = () => {
                 </Marker>
 
                 {restaurants.map((restaurant) => (
-                    <Marker
+                    <RestaurantMarker
                         key={restaurant.id}
-                        coordinate={{
-                            latitude: restaurant.latitude,
-                            longitude: restaurant.longitude,
-                        }}
+                        restaurant={restaurant}
+                        isSelected={selectedRestaurantId === restaurant.id.toString()}
                         onPress={() => handleMarkerPress(restaurant.id.toString())}
-                        tracksViewChanges={false}
-                    >
-                        <View
-                            style={[
-                                styles.markerContainer,
-                                selectedRestaurantId === restaurant.id.toString() && styles.selectedMarker,
-                            ]}
-                        >
-                            {restaurant.image_url ? (
-                                <Image
-                                    source={{
-                                        uri: restaurant.image_url.replace('127.0.0.1', '192.168.1.3'),
-                                    }}
-                                    style={styles.markerImage}
-                                    resizeMode="cover"
-                                    onError={() => console.log(`Failed to load image for restaurant ${restaurant.id}`)}
-                                />
-                            ) : (
-                                <View style={styles.defaultMarkerContainer}>
-                                    <Ionicons name="restaurant-outline" size={30} color="#333"/>
-                                </View>
-                            )}
-                        </View>
-                    </Marker>
+                    />
                 ))}
             </MapView>
 
@@ -161,11 +167,136 @@ const HomeMapView: React.FC = () => {
             <View style={styles.mapContainer}>
                 {renderMapContent()}
             </View>
+            <BottomSheet
+                style={{
+                    zIndex: 5,
+                }}
+                ref={bottomSheetRef}
+                snapPoints={snapPoints}
+                index={-1}
+                enablePanDownToClose={true}
+                onChange={(index) => {
+                    console.log('bottomsheet index changed:', index);
+                }}>
+                <BottomSheetScrollView>
+                    {selectedRestaurantId && restaurants.find(r => r.id.toString() === selectedRestaurantId) && (
+                        <View style={styles.restaurantInfoContainer}>
+                            <View style={styles.headerContainer}>
+                                {/* Restaurant Image */}
+                                <Image
+                                    source={{
+                                        uri: restaurants.find(r => r.id.toString() === selectedRestaurantId)?.image_url?.replace('127.0.0.1', '192.168.1.3')
+                                            || 'https://via.placeholder.com/150'
+                                    }}
+                                    style={styles.restaurantImage}
+                                />
+
+                                {/* Basic Info */}
+                                <View style={styles.basicInfo}>
+                                    <Text style={styles.restaurantName}>
+                                        {restaurants.find(r => r.id.toString() === selectedRestaurantId)?.restaurantName}
+                                    </Text>
+
+                                    <View style={styles.infoRow}>
+                                        <View style={styles.ratingContainer}>
+                                            <Ionicons name="star" size={14} color="#FFD700"/>
+                                            <Text style={styles.ratingText}>
+                                                {restaurants.find(r => r.id.toString() === selectedRestaurantId)?.rating?.toFixed(1) || 'New'}
+                                            </Text>
+                                        </View>
+                                        <Text style={styles.distanceText}>
+                                            {restaurants.find(r => r.id.toString() === selectedRestaurantId)?.distance_km?.toFixed(1)} km
+                                        </Text>
+                                    </View>
+                                </View>
+
+                                {/* New Menu Button */}
+                                <TouchableOpacity
+                                    style={styles.menuButton}
+                                    onPress={() => {
+                                        // handle it here
+                                    }}
+                                >
+                                    <Text style={styles.menuButtonText}>View Menu</Text>
+                                    <Ionicons name="chevron-forward" size={20} color="#333"/>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    )}
+                </BottomSheetScrollView>
+            </BottomSheet>
         </View>
     );
 };
 
 const styles = StyleSheet.create({
+    headerContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+    },
+
+    menuButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginLeft: 'auto', // This pushes the button to the right
+        padding: 8,
+    },
+
+    menuButtonText: {
+        color: '#333',
+        fontSize: 14,
+        fontWeight: '600',
+        marginRight: 4,
+        fontFamily: 'Poppins-SemiBold',
+    },
+
+    restaurantInfoContainer: {
+        backgroundColor: '#fff',
+        borderRadius: 12,
+    },
+
+    bottomSheetContent: {
+        padding: 12,
+    },
+
+    restaurantImage: {
+        width: 80,
+        height: 80,
+        borderRadius: 8,
+        backgroundColor: '#f0f0f0',
+    },
+    basicInfo: {
+        flex: 1,
+        marginLeft: 12,
+        justifyContent: 'center',
+    },
+    restaurantName: {
+        fontSize: 16,
+        fontWeight: '600',
+        marginBottom: 4,
+        fontFamily: 'Poppins-SemiBold',
+    },
+    infoRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+    },
+    ratingContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    ratingText: {
+        marginLeft: 4,
+        fontSize: 12,
+        color: '#333',
+    },
+    distanceText: {
+        fontSize: 12,
+        color: '#666',
+    },
+
     container: {
         flex: 1,
         backgroundColor: '#fff',
@@ -181,7 +312,7 @@ const styles = StyleSheet.create({
     },
     relocateButton: {
         position: 'absolute',
-        bottom: 100,
+        bottom: 150,
         right: 20,
         width: 56,
         height: 56,
@@ -266,6 +397,40 @@ const styles = StyleSheet.create({
         lineHeight: 24,
         letterSpacing: 0.3,
     },
+
+
+    detailsContainer: {
+        padding: 16,
+    },
+
+    restaurantDescription: {
+        fontSize: 14,
+        color: '#666',
+        marginBottom: 12,
+        fontFamily: 'Poppins-Regular',
+    },
+
+    deliveryInfoContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 8,
+        marginBottom: 16,
+    },
+    deliveryInfo: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#f5f5f5',
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 12,
+    },
+    deliveryText: {
+        marginLeft: 4,
+        fontSize: 12,
+        color: '#333',
+        fontFamily: 'Poppins-Regular',
+    },
+
 });
 
 export default HomeMapView;

@@ -1,5 +1,5 @@
 import React, {useEffect} from 'react';
-import {Animated, StyleSheet, View} from 'react-native';
+import {Animated, Platform, StyleSheet, View} from 'react-native';
 import AddressBar from "@/src/features/homeScreen/components/AddressBar";
 import {scaleFont} from "@/src/utils/ResponsiveFont";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
@@ -7,17 +7,13 @@ import CartIcon from "@/src/features/RestaurantScreen/components/CartIcon";
 
 interface HeaderProps {
     activeTab: string;
-    scrollY?: Animated.Value; // Add this new prop
-
+    scrollY?: Animated.Value;
 }
 
 export const Header: React.FC<HeaderProps> = ({activeTab, scrollY}) => {
-
     useEffect(() => {
         if (scrollY) {
             console.log("ScrollY is present in Header");
-
-            // Add a listener to track scroll value changes
             const scrollListener = scrollY.addListener((state) => {
                 console.log("Scroll value:", state.value);
             });
@@ -29,37 +25,43 @@ export const Header: React.FC<HeaderProps> = ({activeTab, scrollY}) => {
             console.log("No scrollY provided to Header");
         }
     }, [scrollY]);
+
     const insets = useSafeAreaInsets();
     const headerBackgroundColor = scrollY?.interpolate({
-        inputRange: [200, 300], // Start changing at 50px of scroll
-        outputRange: ['#ffffff', '#b0f484'], // From white to dark green
+        inputRange: [200, 300],
+        outputRange: ['#ffffff', '#b0f484'],
         extrapolate: 'clamp'
     }) || '#ffffff';
 
     const contentColor = scrollY?.interpolate({
         inputRange: [0, 50],
-        outputRange: ['#000000', '#ffffff'], // From black to white
+        outputRange: ['#000000', '#ffffff'],
         extrapolate: 'clamp'
     }) || '#000000';
+
+    const isMapView = activeTab === 'HomeMapView';
+
     return (
         <Animated.View
             style={[
                 styles.header,
                 {
                     paddingTop: insets.top,
-                    backgroundColor: headerBackgroundColor || '#121212',
+                    backgroundColor: isMapView ? 'rgba(255, 255, 255, 0.65)' : headerBackgroundColor,
                 },
-                activeTab === 'HomeMapView' ? styles.transparentHeader : null,
+                isMapView && styles.icyHeader,
             ]}
         >
-            <View style={styles.container}>
+            <View style={[
+                styles.container,
+                isMapView && styles.icyContainer
+            ]}>
                 <View style={styles.topRow}>
                     <View style={styles.addressBarContainer}>
                         <AddressBar textColor={contentColor || '#000000'}/>
                     </View>
                     <View style={styles.iconContainer}>
-                        <CartIcon></CartIcon>
-
+                        <CartIcon/>
                     </View>
                 </View>
             </View>
@@ -67,13 +69,10 @@ export const Header: React.FC<HeaderProps> = ({activeTab, scrollY}) => {
     );
 };
 
-
 const styles = StyleSheet.create({
     header: {
         backgroundColor: "#fff",
         borderColor: '#b2f7a5',
-        // borderBottomLeftRadius: scaleFont(20),
-        // borderBottomRightRadius: scaleFont(20),
         shadowOffset: {width: 0, height: 8},
         shadowOpacity: 0.08,
         shadowRadius: 4,
@@ -83,6 +82,29 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderTopWidth: 0,
         height: scaleFont(110),
+    },
+    icyHeader: {
+        borderColor: 'rgba(255, 255, 255, 0.3)',
+        backgroundColor: Platform.select({
+            ios: 'rgba(255, 255, 255, 0.65)',
+            android: 'rgba(255, 255, 255, 0.75)',
+        }),
+        backdropFilter: 'blur(10px)',
+        shadowColor: '#fff',
+        shadowOffset: {width: 0, height: 4},
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 8,
+        borderWidth: Platform.select({
+            ios: 0.5,
+            android: 1,
+        }),
+    },
+    icyContainer: {
+        backgroundColor: Platform.select({
+            ios: 'rgba(255, 255, 255, 0.15)',
+            android: 'rgba(255, 255, 255, 0.2)',
+        }),
     },
     container: {
         flex: 1,
@@ -100,13 +122,6 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'flex-end',
-    },
-
-    transparentHeader: {
-        backgroundColor: "rgba(255,255,255,0.42)",
-        shadowRadius: 0,
-        borderColor: 'transparent',
-
     },
 });
 

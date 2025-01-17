@@ -23,9 +23,10 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 const AppContent: React.FC = () => {
     return (
         <GestureHandlerRootView style={styles.container}>
-            <BottomSheetModalProvider>
 
-                <Provider store={store}>
+            <Provider store={store}>
+                <BottomSheetModalProvider>
+
                     <NavigationContainer ref={navigationRef}>
                         <Stack.Navigator
                             initialRouteName="Login"
@@ -69,8 +70,9 @@ const AppContent: React.FC = () => {
                             />
                         </Stack.Navigator>
                     </NavigationContainer>
-                </Provider>
-            </BottomSheetModalProvider>
+                </BottomSheetModalProvider>
+
+            </Provider>
 
         </GestureHandlerRootView>
     );
@@ -81,7 +83,7 @@ export default AppContent;
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        margin: 0,
-        padding: 0,
+        // margin: 0,
+        // padding: 0,
     },
 });

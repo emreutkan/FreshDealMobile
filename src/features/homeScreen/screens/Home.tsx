@@ -25,6 +25,7 @@ import Search from "@/src/features/search/Search";
 import {getRestaurantsByProximity} from "@/src/redux/thunks/restaurantThunks";
 import {getFavoritesThunk} from "@/src/redux/thunks/userThunks";
 import {lightHaptic} from "@/src/utils/Haptics";
+import {BottomSheetModalProvider} from "@gorhom/bottom-sheet";
 
 // Enable LayoutAnimation on Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -103,60 +104,64 @@ const HomeScreen: React.FC = () => {
     }
 
     return (
-        <View style={styles.container}>
-            <StatusBar translucent backgroundColor="transparent" barStyle="dark-content"/>
+        <BottomSheetModalProvider>
 
-            {isHeaderVisible && (
-                <Header
-                    activeTab={activeTab}
-                    scrollY={scrollY}
-                />
-            )}
+            <View style={styles.container}>
+                <StatusBar translucent backgroundColor="transparent" barStyle="dark-content"/>
 
-            <View
-                style={[
-                    styles.contentContainer,
-                    activeTab === 'HomeMapView' ? styles.mapContentContainer : styles.contentContainer,
-                ]}
-            >
-                <Tab.Navigator
-                    screenListeners={{
-                        state: (e) => {
-                            const routeName = e.data.state?.routes[e.data.state.index]?.name;
-                            handleTabChange(routeName);
-                        },
-                    }}
-                    screenOptions={({route}) => ({
-                        headerShown: false,
-                        tabBarIcon: ({focused, color}) => {
-                            const iconMap = {
-                                HomeCardView: focused ? 'home' : 'home-outline',
-                                HomeMapView: focused ? 'map' : 'map-outline',
-                                Account: focused ? 'person' : 'person-outline',
-                                Search: focused ? 'search' : 'search-outline',
-                            };
-                            return <Ionicons name={iconMap[route.name as keyof typeof iconMap]} size={20}
-                                             color={color}/>;
-                        },
-                        tabBarActiveTintColor: 'rgba(76,175,80,0.75)',
-                        tabBarInactiveTintColor: '#8e8e8e',
-                        tabBarLabelStyle: styles.tabBarLabel,
-                        tabBarStyle: styles.tabBar,
-                    })}
+                {isHeaderVisible && (
+                    <Header
+                        activeTab={activeTab}
+                        scrollY={scrollY}
+                    />
+                )}
+
+                <View
+                    style={[
+                        styles.contentContainer,
+                        activeTab === 'HomeMapView' ? styles.mapContentContainer : styles.contentContainer,
+                    ]}
                 >
-                    <Tab.Screen name="HomeCardView" options={{tabBarLabel: 'Home'}}>
-                        {() => (
-                            <HomeCardView
-                                onScroll={handleScroll}
-                            />
-                        )}
-                    </Tab.Screen>
-                    <Tab.Screen name="HomeMapView" component={HomeMapView} options={{tabBarLabel: 'Map'}}/>
-                    <Tab.Screen name="Search" component={Search} options={{tabBarLabel: 'Search'}}/>
-                    <Tab.Screen name="Account" component={AccountScreen} options={{tabBarLabel: 'Account'}}/>
-                </Tab.Navigator>
+                    <Tab.Navigator
+                        screenListeners={{
+                            state: (e) => {
+                                const routeName = e.data.state?.routes[e.data.state.index]?.name;
+                                handleTabChange(routeName);
+                            },
+                        }}
+                        screenOptions={({route}) => ({
+                            headerShown: false,
+                            tabBarIcon: ({focused, color}) => {
+                                const iconMap = {
+                                    HomeCardView: focused ? 'home' : 'home-outline',
+                                    HomeMapView: focused ? 'map' : 'map-outline',
+                                    Account: focused ? 'person' : 'person-outline',
+                                    Search: focused ? 'search' : 'search-outline',
+                                };
+                                return <Ionicons name={iconMap[route.name as keyof typeof iconMap]} size={20}
+                                                 color={color}/>;
+                            },
+                            tabBarActiveTintColor: 'rgba(76,175,80,0.75)',
+                            tabBarInactiveTintColor: '#8e8e8e',
+                            tabBarLabelStyle: styles.tabBarLabel,
+                            tabBarStyle: styles.tabBar,
+                        })}
+                    >
+                        <Tab.Screen name="HomeCardView" options={{tabBarLabel: 'Home'}}>
+                            {() => (
+                                <HomeCardView
+                                    onScroll={handleScroll}
+                                />
+                            )}
+                        </Tab.Screen>
+                        <Tab.Screen name="HomeMapView" component={HomeMapView} options={{tabBarLabel: 'Map'}}/>
+                        <Tab.Screen name="Search" component={Search} options={{tabBarLabel: 'Search'}}/>
+                        <Tab.Screen name="Account" component={AccountScreen} options={{tabBarLabel: 'Account'}}/>
+                    </Tab.Navigator>
+                </View>
             </View>
-        </View>
+        </BottomSheetModalProvider>
+
     );
 };
 

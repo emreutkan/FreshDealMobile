@@ -238,9 +238,7 @@ const AddressSelectionScreen: React.FC = () => {
         };
 
         try {
-            if (!token) {
-                console.log('Authentication token is not available');
-            }
+            console.log('Sending address payload:', formattedPayload);
 
             const result = await dispatch(addAddressAsync(formattedPayload)).unwrap();
 

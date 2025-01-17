@@ -2,7 +2,7 @@
 
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 import {getUserDataThunk} from "@/src/redux/thunks/userThunks";
-import {addAddressAsync, setPrimaryAddress} from "@/src/redux/thunks/addressThunks";
+import {addAddressAsync, deleteAddressAsync, setPrimaryAddress} from "@/src/redux/thunks/addressThunks";
 import {AddressState} from "@/src/types/states";
 import {Address} from "@/src/types/api/address/model";
 
@@ -100,6 +100,20 @@ const addressSlice = createSlice({
             .addCase(setPrimaryAddress.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload || 'Failed to set primary address';
+            })
+            .addCase(deleteAddressAsync.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(deleteAddressAsync.fulfilled, (state) => {
+                state.loading = false;
+                state.error = null;
+                // state.selectedAddressId = state.addresses.find(addr => addr.is_primary)?.id || state.addresses[0]?.id || null;
+                (getUserDataThunk({token}));
+            })
+            .addCase(deleteAddressAsync.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload || 'Failed to delete address';
             });
 
     },
