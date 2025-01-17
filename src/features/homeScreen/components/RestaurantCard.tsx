@@ -1,11 +1,10 @@
 import React, {useCallback} from "react";
-import {Dimensions, FlatList, Image, Platform, StyleSheet, Text, TouchableOpacity, View,} from "react-native";
+import {FlatList, Image, Platform, StyleSheet, Text, TouchableOpacity, View,} from "react-native";
 import {Restaurant} from "@/src/types/api/restaurant/model";
 import {useDispatch, useSelector} from "react-redux";
 import {AppDispatch} from "@/src/redux/store";
 import {RootState} from "@/src/types/store";
-
-import {Ionicons, MaterialCommunityIcons} from "@expo/vector-icons";
+import {Ionicons} from "@expo/vector-icons";
 import {addFavoriteThunk, removeFavoriteThunk} from "@/src/redux/thunks/userThunks";
 import {useHandleRestaurantPress} from "@/src/hooks/handleRestaurantPress";
 import {tokenService} from "@/src/services/tokenService";
@@ -14,147 +13,98 @@ interface RestaurantListProps {
     restaurants: Restaurant[];
 }
 
-const {width} = Dimensions.get('window');
-const CARD_MARGIN = 12;
-const CARD_WIDTH = width - (CARD_MARGIN * 4);
+
 const RestaurantList: React.FC<RestaurantListProps> = ({restaurants}) => {
     const dispatch = useDispatch<AppDispatch>();
-
-    // Access current favorite restaurant IDs from the store
     const favoriteRestaurantsIDs = useSelector((state: RootState) => state.restaurant.favoriteRestaurantsIDs);
-
-    const [pressedId, setPressedId] = React.useState<string | null>(null);
-
     const handleRestaurantPress = useHandleRestaurantPress();
+    const selectedAddressID = useSelector((state: RootState) => state.address.selectedAddressId);
+    const selectedAddress = useSelector((state: RootState) => state.address.addresses.find((address) => address.id === selectedAddressID));
+    if (!selectedAddress) {
+        console.error('Selected address is missing.');
+        return null;
+    }
+    const selectedAddressCoordinates = selectedAddress.latitude && selectedAddress.longitude && {
+        latitude: selectedAddress.latitude,
+        longitude: selectedAddress.longitude,
+    }
 
-
-    const handleFavoritePress = useCallback(
-        (id: number) => {
-            const token = tokenService.getToken();
-            if (!token) {
-                console.error('Authentication token is missing.');
-                return;
-            }
-            // If it’s already a favorite, dispatch the remove thunk; otherwise, dispatch the add thunk.
-            if (favoriteRestaurantsIDs.includes(id)) {
-                // cast to int before dispatch
-                dispatch(removeFavoriteThunk({restaurant_id: id}));
-            } else {
-                console.log('Adding favorite:', id);
-                dispatch(addFavoriteThunk({restaurant_id: id}));
-            }
-
-        },
-        [dispatch, favoriteRestaurantsIDs]
-    );
+    const handleFavoritePress = useCallback((id: number) => {
+        const token = tokenService.getToken();
+        if (!token) {
+            console.error('Authentication token is missing.');
+            return;
+        }
+        if (favoriteRestaurantsIDs.includes(id)) {
+            dispatch(removeFavoriteThunk({restaurant_id: id}));
+        } else {
+            dispatch(addFavoriteThunk({restaurant_id: id}));
+        }
+    }, [dispatch, favoriteRestaurantsIDs]);
 
     const renderRestaurantItem = ({item}: { item: Restaurant }) => {
-        const isPressed = pressedId === item.id.toString();
         const isFavorite = favoriteRestaurantsIDs.includes(item.id);
 
         return (
             <TouchableOpacity
                 onPress={() => handleRestaurantPress(item.id)}
-                onPressIn={() => setPressedId(item.id.toString())}
-                onPressOut={() => setPressedId(null)}
-                activeOpacity={0.97}
-                style={[styles.touchableContainer, isPressed && styles.touchablePressed]}
+                activeOpacity={0.95}
+                style={styles.touchableContainer}
             >
-                <View style={[styles.restaurantCard, isPressed && styles.cardPressed]}>
-                    <View style={styles.imageContainer}>
-                        {item.image_url ? (
-                            <Image
-                                source={{
-                                    uri: item.image_url.replace('127.0.0.1', '192.168.1.3'),
-                                }}
-                                style={[styles.image, isPressed && styles.imagePressed]}
-                            />
-                        ) : (
-                            <View style={styles.noImageContainer}>
-                                <MaterialCommunityIcons name="food-fork-drink" size={40} color="#ccc"/>
-                                <Text style={styles.noImageText}>No image available</Text>
-                            </View>
-                        )}
+                <View style={styles.restaurantCard}>
+                    <Image
+                        source={{
+                            uri: item.image_url?.replace('127.0.0.1', '192.168.1.3') ||
+                                'https://via.placeholder.com/400x200',
+                        }}
+                        style={styles.image}
+                    />
 
-                        <TouchableOpacity
-                            style={styles.heartButton}
-                            onPress={(e) => {
-                                e.stopPropagation();
-                                handleFavoritePress(item.id);
-                            }}
-                        >
+                    {/* Favorite Button */}
+                    <TouchableOpacity
+                        style={styles.heartButton}
+                        onPress={() => handleFavoritePress(item.id)}
+                    >
+                        <View style={styles.heartBackground}>
                             <Ionicons
                                 name={isFavorite ? "heart" : "heart-outline"}
                                 size={24}
                                 color={isFavorite ? "#FF4081" : "#757575"}
                             />
-                        </TouchableOpacity>
-
-                        <View style={styles.badgeContainer}>
-                            {item.delivery && (
-                                <View style={styles.badge}>
-                                    <Ionicons name={"bicycle-outline"} size={16} color={"#ffffff"}/>
-                                    <Text style={styles.badgeText}>Delivery</Text>
-                                </View>
-                            )}
-                            {item.pickup && (
-                                <View style={[styles.badge, styles.pickupBadge]}>
-                                    <MaterialCommunityIcons name="shopping-outline" size={14} color="#fff"/>
-                                    <Text style={styles.badgeText}>Pickup</Text>
-                                </View>
-                            )}
                         </View>
-                    </View>
+                    </TouchableOpacity>
 
-                    <View style={styles.detailsContainer}>
-                        <View style={styles.titleRow}>
-                            <View style={styles.titleDistanceContainer}>
-                                <Text style={styles.title} numberOfLines={1}>
-                                    {item.restaurantName || 'Unnamed Restaurant'}
-                                </Text>
-                                <View style={styles.distanceContainer}>
-                                    <MaterialCommunityIcons name="map-marker" size={14} color="#757575"/>
-                                    <Text style={styles.distanceText}>
-                                        {(item.distance_km ?? 0).toFixed(1)} km
-                                    </Text>
-                                </View>
-                            </View>
+                    <View style={styles.contentContainer}>
+                        <View style={styles.headerRow}>
+                            <Text style={styles.title} numberOfLines={1}>
+                                {item.restaurantName || 'Unnamed Restaurant'}
+                            </Text>
                             <View style={styles.ratingContainer}>
-                                <MaterialCommunityIcons name="star" size={16} color="#FFC107"/>
+                                <Ionicons name="star" size={16} color="#4CAF50"/>
                                 <Text style={styles.rating}>{(item.rating ?? 0).toFixed(1)}</Text>
-                                <Text style={styles.voteCount}>({item.ratingCount ?? 0})</Text>
+                                <Text style={styles.reviewCount}>({item.ratingCount ?? 0}+)</Text>
                             </View>
                         </View>
 
-
-                        <View
-                            style={styles.infoRow}
-                        >
-                            {item.restaurantDescription && (
-                                <Text style={styles.description} numberOfLines={2}>
-                                    {item.restaurantDescription}
+                        <View style={styles.infoRow}>
+                            <View style={styles.locationContainer}>
+                                <Ionicons name="location-outline" size={16} color="#666"/>
+                                <Text style={styles.locationText}>
+                                    Within {(item.distance_km ?? 0).toFixed(0)} meters
                                 </Text>
-                            )}
-                            <View style={styles.footer}>
-
-
-                                {item.minOrderAmount != null && (
-                                    <View style={styles.minOrderContainer}>
-                                        <Text style={styles.minOrderText}>
-                                            Min. ${item.minOrderAmount.toFixed(2)}
-                                        </Text>
-                                    </View>
-                                )}
-                                {item.delivery && item.deliveryFee != null && (
-                                    <View style={styles.deliveryFeeContainer}>
-                                        <Text style={styles.deliveryFeeText}>
-                                            delivery ${item.deliveryFee.toFixed(2)}
-                                        </Text>
-                                    </View>
-                                )}
                             </View>
                         </View>
 
+                        <View style={styles.deliveryInfoContainer}>
+                            <View style={styles.timeAndPrice}>
+                                <Ionicons name="time-outline" size={16} color="#666"/>
+                                <Text style={styles.deliveryText}>35 min</Text>
+                                <Text style={styles.dot}>•</Text>
+                                <Text style={styles.priceText}>
+                                    {item.deliveryFee ? `${item.deliveryFee.toFixed(2)}TL` : 'Free Delivery'}
+                                </Text>
+                            </View>
+                        </View>
                     </View>
                 </View>
             </TouchableOpacity>
@@ -165,7 +115,7 @@ const RestaurantList: React.FC<RestaurantListProps> = ({restaurants}) => {
         <FlatList
             data={restaurants}
             renderItem={renderRestaurantItem}
-            // keyExtractor={(item) => item.id}
+            keyExtractor={(item) => item.id.toString()}
             contentContainerStyle={styles.listContainer}
             showsVerticalScrollIndicator={false}
         />
@@ -174,68 +124,13 @@ const RestaurantList: React.FC<RestaurantListProps> = ({restaurants}) => {
 
 const styles = StyleSheet.create({
     listContainer: {
-        padding: CARD_MARGIN,
-        backgroundColor: "#f5f5f5",
+        backgroundColor: "#fff",
     },
     touchableContainer: {
-        marginBottom: 16,
-        width: CARD_WIDTH,
-        alignSelf: 'center',
-    },
-    touchablePressed: {
-        transform: [{scale: 0.98}],
-    },
-    restaurantCard: {
-        backgroundColor: "#ffffff",
-        borderRadius: 16,
-        overflow: "hidden",
-        ...Platform.select({
-            ios: {
-                shadowColor: "#000",
-                shadowOffset: {width: 0, height: 2},
-                shadowOpacity: 0.1,
-                shadowRadius: 8,
-            },
-            android: {
-                elevation: 4,
-            },
-        }),
-    },
-    cardPressed: {
-        backgroundColor: "#fafafa",
-    },
-    imageContainer: {
-        position: "relative",
-        height: 200,
-    },
-    image: {
-        width: "100%",
-        height: "100%",
-    },
-    imagePressed: {
-        opacity: 0.9,
-    },
-    noImageContainer: {
-        width: "100%",
-        height: "100%",
-        backgroundColor: "#f5f5f5",
-        justifyContent: "center",
-        alignItems: "center",
-    },
-    noImageText: {
-        color: "#999",
-        marginTop: 8,
-        fontSize: 14,
-        fontFamily: "Poppins-Regular",
 
-    },
-    heartButton: {
-        position: "absolute",
-        top: 12,
-        right: 12,
-        backgroundColor: "rgba(255,255,255,0.9)",
-        padding: 8,
-        borderRadius: 20,
+        marginBottom: 16,
+        borderRadius: 12,
+        backgroundColor: '#fff',
         ...Platform.select({
             ios: {
                 shadowColor: "#000",
@@ -248,49 +143,56 @@ const styles = StyleSheet.create({
             },
         }),
     },
-    badgeContainer: {
-        position: 'absolute',
-        bottom: 12,
-        left: 12,
-        flexDirection: 'row',
-        gap: 8,
-    },
-    badge: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#4CAF50',
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        borderRadius: 12,
-        gap: 4,
-    },
-    pickupBadge: {
-        backgroundColor: '#2196F3',
-    },
-    badgeText: {
-        color: '#fff',
-        fontSize: 12,
-        fontWeight: '600',
-        fontFamily: "Poppins-Regular",
+    restaurantCard: {
 
+        overflow: "hidden",
+        borderRadius: 12,
     },
-    detailsContainer: {
+    image: {
+        position: "relative",
+        width: "100%",
+        height: 160,
+        resizeMode: "cover",
+    },
+    heartButton: {
+        position: "absolute",
+        top: 12,
+        right: 12,
+        zIndex: 1,
+    },
+    heartBackground: {
+        backgroundColor: "white",
+        borderRadius: 50,
+        padding: 8,
+        ...Platform.select({
+            ios: {
+                shadowColor: "#000",
+                shadowOffset: {width: 0, height: 2},
+                shadowOpacity: 0.1,
+                shadowRadius: 4,
+            },
+            android: {
+                elevation: 2,
+            },
+        }),
+    },
+    contentContainer: {
         padding: 16,
-        gap: 8,
+        backgroundColor: '#fff',
     },
-    titleRow: {
+    headerRow: {
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",
+        marginBottom: 8,
     },
     title: {
         flex: 1,
-        fontSize: 20,
-        fontWeight: '700',
-        color: '#111827',
-        marginBottom: 4,
-        fontFamily: 'Poppins-SemiBold',
-
+        fontSize: 18,
+        fontWeight: "600",
+        color: "#000",
+        marginRight: 8,
+        fontFamily: "Poppins-SemiBold",
     },
     ratingContainer: {
         flexDirection: "row",
@@ -300,79 +202,48 @@ const styles = StyleSheet.create({
     rating: {
         fontSize: 14,
         fontWeight: "600",
-        color: "#212121",
-        fontFamily: "Poppins-Regular",
+        color: "#000",
     },
-    voteCount: {
-        fontSize: 12,
-        color: "#757575",
-        fontFamily: "Poppins-Regular",
-
+    reviewCount: {
+        fontSize: 14,
+        color: "#666",
     },
     infoRow: {
-        flex: 1,
-        flexDirection: 'row',
-        alignItems: 'flex-end',
-        justifyContent: 'space-between',  // This will create maximum space between children
-
+        marginBottom: 8,
     },
-    distance: {
-        fontSize: 14,
-        color: "#757575",
-        fontFamily: "Poppins-Regular",
-
-    },
-    description: {
-        fontSize: 14,
-        color: "#616161",
-        lineHeight: 20,
-        fontFamily: "Poppins-Regular",
-        paddingLeft: 1.5,
-
-    },
-    footer: {
-        flexDirection: 'column',
-        alignItems: 'flex-end',
-    },
-    minOrderContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
+    locationContainer: {
+        flexDirection: "row",
+        alignItems: "center",
         gap: 4,
     },
-    minOrderText: {
-        fontSize: 13,
-        color: "#757575",
-        fontFamily: "Poppins-Regular",
-
+    locationText: {
+        fontSize: 14,
+        color: "#666",
     },
-    deliveryFeeContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
+    deliveryInfoContainer: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+    },
+    timeAndPrice: {
+        flexDirection: "row",
+        alignItems: "center",
         gap: 4,
     },
-    deliveryFeeText: {
-        fontSize: 13,
-        color: "#757575",
-        fontFamily: "Poppins-Regular",
+    deliveryText: {
+        fontSize: 14,
+        color: "#666",
+    },
+    dot: {
+        fontSize: 14,
+        color: "#666",
+        marginHorizontal: 4,
+    },
+    priceText: {
+        fontSize: 14,
+        color: "#666",
+    },
 
-    },
-    titleDistanceContainer: {
-        flex: 1,
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 8,
-        paddingRight: 8,
-    },
-    distanceContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 2,
-    },
-    distanceText: {
-        fontSize: 12,
-        color: "#757575",
-        fontFamily: "Poppins-Regular",
-    },
 });
 
 export default RestaurantList;
