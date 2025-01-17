@@ -13,28 +13,25 @@ import {
     View,
 } from 'react-native';
 import RestaurantList from "@/src/features/homeScreen/components/RestaurantCard";
-import {Feather, Ionicons} from '@expo/vector-icons';
-import {AppDispatch, RootState} from "@/src/redux/store";
+import {Feather} from '@expo/vector-icons';
+import {AppDispatch} from "@/src/redux/store";
+import {RootState} from "@/src/types/store";
+
 import {useDispatch, useSelector} from "react-redux";
 import {getRestaurantsByProximity} from "@/src/redux/thunks/restaurantThunks";
 import FavoriteRestaurantList from "@/src/features/homeScreen/components/FavoriteRestaurantCard";
 import Slider from '@react-native-community/slider';
 import {setRadius} from "@/src/redux/slices/restaurantSlice";
-import {NativeStackNavigationProp} from "@react-navigation/native-stack";
-import {RootStackParamList} from "@/src/utils/navigation";
-import {useNavigation} from "@react-navigation/native";
 import {lightHaptic, strongHaptic} from "@/src/utils/Haptics";
 
 interface HomeCardViewProps {
     onScroll: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
-    onRestaurantPress?: (restaurantId: string) => void;
 }
 
 const MIN_LOADING_DURATION = 200; // main loading duration (redux)
 const FILTER_LOADING_DURATION = 200; // duration for filter toggling/loading
-type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'FavoritesScreen'>;
 
-const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll, onRestaurantPress}) => {
+const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll}) => {
     const scrollY = useRef(new Animated.Value(0)).current;
     const HEADER_MAX_HEIGHT = 130; // Adjust based on your header's full height
     const HEADER_MIN_HEIGHT = 0; // Adjust based on your header's minimum height
@@ -44,7 +41,6 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll, onRestaurantPress}
         outputRange: [HEADER_MAX_HEIGHT, HEADER_MIN_HEIGHT],
         extrapolate: 'clamp',
     });
-    const navigation = useNavigation<NavigationProp>();
     const [refreshing, setRefreshing] = useState(false);
 
     const headerOpacity = scrollY.interpolate({
@@ -170,9 +166,9 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll, onRestaurantPress}
         return restaurantsProximity.filter((restaurant) => {
             if (filters.delivery && !filters.pickup && !restaurant.delivery) return false;
             if (filters.pickup && !filters.delivery && !restaurant.pickup) return false;
-            if (filters.under30 && restaurant.distance_km > 3) return false;
-            // Add debug logs for each step
-            console.log('Filtering restaurant:', restaurant.restaurantName);
+            if (restaurant.distance_km) {
+                if (filters.under30 && restaurant.distance_km > 3) return false;
+            }
             return true;
         });
 
@@ -384,21 +380,6 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll, onRestaurantPress}
                                 thumbTintColor="#50703C"
                             />
                         </View>
-                        <TouchableOpacity style={{
-                            padding: 16,
-                            backgroundColor: '#FFFFFF',
-
-                            flexDirection: 'row',
-
-                            justifyContent: 'space-between',
-                            borderBottomWidth: 1,
-                            borderBottomColor: '#E5E7EB',
-                        }}
-                                          onPress={() => navigation.navigate('FavoritesScreen')}
-                        >
-                            <Text style={styles.Subtitle}>Favorites </Text>
-                            <Ionicons name={"chevron-forward-outline"} size={18} color="#50703C"/>
-                        </TouchableOpacity>
 
                         <FavoriteRestaurantList
                             restaurants={filteredRestaurants}

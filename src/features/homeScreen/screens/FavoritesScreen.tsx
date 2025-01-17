@@ -22,9 +22,7 @@ const FavoritesScreen: React.FC = () => {
             {favoriteRestaurants && favoriteRestaurants.length > 0 ? (
                 <RestaurantList
                     restaurants={favoriteRestaurants}
-                    onRestaurantPress={(restaurantId) =>
-                        console.log('Selected favorite restaurant:', restaurantId)
-                    }
+
                 />
             ) : (
                 <View style={styles.emptyContainer}>

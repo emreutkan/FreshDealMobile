@@ -1,7 +1,7 @@
 import React, {useState} from 'react';
 import {ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View,} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
-import {AppDispatch, RootState} from '@/src/redux/store';
+import {AppDispatch} from '@/src/redux/store';
 import {Feather, MaterialCommunityIcons, MaterialIcons} from '@expo/vector-icons';
 import {useNavigation} from '@react-navigation/native';
 import {updateEmailThunk, updatePasswordThunk, updateUsernameThunk} from '@/src/redux/thunks/userThunks';
@@ -10,6 +10,7 @@ import {useSafeAreaInsets} from "react-native-safe-area-context";
 import {GoBackIcon} from "@/src/features/homeScreen/components/goBack";
 import type {NativeStackNavigationProp} from "@react-navigation/native-stack";
 import {RootStackParamList} from "@/src/utils/navigation";
+import {RootState} from "@/src/types/store";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 

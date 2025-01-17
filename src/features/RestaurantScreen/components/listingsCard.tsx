@@ -1,24 +1,21 @@
-import React, {FC, useEffect, useRef, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {Animated, FlatList, Image, LayoutAnimation, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import {addItemToCart, fetchCart, removeItemFromCart, updateCartItem,} from '@/src/redux/thunks/cartThunks';
 import {useDispatch, useSelector} from 'react-redux';
-import {AppDispatch, RootState} from '@/src/redux/store';
+import {AppDispatch} from '@/src/redux/store';
+import {RootState} from "@/src/types/store";
+
 import {Listing} from "@/src/types/api/listing/model";
 import {lightHaptic} from "@/src/utils/Haptics";
 
-interface ListingCardProps {
-    listingList: Listing[];
-    isPickup: boolean;
-}
 
-
-export const ListingCard: FC<ListingCardProps> = ({listingList, isPickup}) => {
+export const ListingCard: React.FC = () => {
     const [refreshing, setRefreshing] = useState(false);
     const fadeAnim = useRef(new Animated.Value(0)).current;
-
+    const isPickup = useSelector((state: RootState) => state.restaurant.isPickup);
     const dispatch = useDispatch<AppDispatch>();
+    const listings: Listing[] = useSelector((state: RootState) => state.restaurant.selectedRestaurantListings);
 
-    // Get the entire cart state from Redux
     const cart = useSelector((state: RootState) => state.cart);
     useEffect(() => {
         Animated.timing(fadeAnim, {
@@ -27,10 +24,10 @@ export const ListingCard: FC<ListingCardProps> = ({listingList, isPickup}) => {
             useNativeDriver: true,
         }).start();
     }, []);
+
     useEffect(() => {
         dispatch(fetchCart());
     }, [dispatch]);
-
     const renderListingItem = ({item}: { item: Listing }) => {
         const displayPrice = isPickup
             ? item.pick_up_price ?? 0
@@ -170,9 +167,9 @@ export const ListingCard: FC<ListingCardProps> = ({listingList, isPickup}) => {
 
     return (
         <View style={styles.container}>
-            {listingList.length > 0 ? (
+            {listings.length > 0 ? (
                 <FlatList
-                    data={listingList}
+                    data={listings}
                     renderItem={renderListingItem}
                     keyExtractor={(item) => item.id.toString()}
                 />

@@ -1,13 +1,15 @@
-import React, {useCallback} from "react";
+import React from "react";
 import {Animated, Dimensions, Image, Platform, StyleSheet, Text, TouchableOpacity, View} from "react-native";
 import {Restaurant} from "@/src/types/api/restaurant/model";
-import {useSelector} from "react-redux";
-import {RootState} from "@/src/redux/store";
-import {MaterialCommunityIcons} from "@expo/vector-icons";
+import {useDispatch, useSelector} from "react-redux";
+import {RootState} from "@/src/types/store";
+import {Ionicons, MaterialCommunityIcons} from "@expo/vector-icons";
 import {LinearGradient} from 'expo-linear-gradient';
 import {useNavigation} from "@react-navigation/native";
 import {NativeStackNavigationProp} from "@react-navigation/native-stack";
-import {RootStackParamList} from "@/src/utils/navigation"; // You'll need to install expo-linear-gradient
+import {RootStackParamList} from "@/src/utils/navigation";
+import {AppDispatch} from "@/src/redux/store";
+import {useHandleRestaurantPress} from "@/src/hooks/handleRestaurantPress";
 
 const {width} = Dimensions.get('window');
 const FAVORITE_CARD_WIDTH = width * 0.50; // Increased for better visibility
@@ -29,13 +31,9 @@ const FavoriteRestaurantList: React.FC<FavoriteRestaurantListProps> = ({
         favoriteRestaurantsIDs.includes(restaurant.id)
     );
     const navigation = useNavigation<NavigationProp>();
+    const dispatch = useDispatch<AppDispatch>();
 
-    const handleRestaurantPress = useCallback(
-        (restaurantId: string) => {
-            navigation.navigate('RestaurantDetails', {restaurantId});
-        },
-        [navigation]
-    );
+    const handleRestaurantPress = useHandleRestaurantPress();
 
     const renderFavoriteItem = ({item, index}: { item: Restaurant; index: number }) => {
         const inputRange = [
@@ -110,6 +108,30 @@ const FavoriteRestaurantList: React.FC<FavoriteRestaurantListProps> = ({
 
     return (
         <View style={styles.favoritesContainer}>
+            <TouchableOpacity style={{
+                padding: 16,
+                backgroundColor: '#FFFFFF',
+
+                flexDirection: 'row',
+
+                justifyContent: 'space-between',
+                borderBottomWidth: 1,
+                borderBottomColor: '#E5E7EB',
+            }}
+                              onPress={() => navigation.navigate('FavoritesScreen')}
+            >
+                <Text style={{
+                    fontSize: 20,
+                    fontWeight: '700',
+                    color: '#111827',
+                    marginBottom: 4,
+                    fontFamily: 'Poppins-Regular',
+
+                }}>Favorites </Text>
+                <Ionicons name={"chevron-forward-outline"} size={18} color="#50703C"/>
+            </TouchableOpacity>
+
+
             <Animated.FlatList
                 data={favoriteRestaurants}
                 renderItem={renderFavoriteItem}

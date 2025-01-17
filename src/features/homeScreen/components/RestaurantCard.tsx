@@ -1,38 +1,32 @@
 import React, {useCallback} from "react";
 import {Dimensions, FlatList, Image, Platform, StyleSheet, Text, TouchableOpacity, View,} from "react-native";
 import {Restaurant} from "@/src/types/api/restaurant/model";
-import {NativeStackNavigationProp} from "@react-navigation/native-stack";
-import {RootStackParamList} from "@/src/utils/navigation";
-import {useNavigation} from "@react-navigation/native";
 import {useDispatch, useSelector} from "react-redux";
-import {AppDispatch, RootState, store} from "@/src/redux/store";
+import {AppDispatch, store} from "@/src/redux/store";
+import {RootState} from "@/src/types/store";
+
 import {Ionicons, MaterialCommunityIcons} from "@expo/vector-icons";
 // Import the thunk actions
 import {addFavoriteThunk, removeFavoriteThunk} from "@/src/redux/thunks/userThunks";
+import {useHandleRestaurantPress} from "@/src/hooks/handleRestaurantPress";
 
 interface RestaurantListProps {
     restaurants: Restaurant[];
 }
 
-type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'RestaurantDetails'>;
 const {width} = Dimensions.get('window');
 const CARD_MARGIN = 12;
 const CARD_WIDTH = width - (CARD_MARGIN * 4);
 const RestaurantList: React.FC<RestaurantListProps> = ({restaurants}) => {
     const dispatch = useDispatch<AppDispatch>();
-    const navigation = useNavigation<NavigationProp>();
 
     // Access current favorite restaurant IDs from the store
     const favoriteRestaurantsIDs = useSelector((state: RootState) => state.restaurant.favoriteRestaurantsIDs);
 
     const [pressedId, setPressedId] = React.useState<string | null>(null);
 
-    const handleRestaurantPress = useCallback(
-        (restaurantId: string) => {
-            navigation.navigate('RestaurantDetails', {restaurantId});
-        },
-        [navigation]
-    );
+    const handleRestaurantPress = useHandleRestaurantPress();
+
 
     const handleFavoritePress = useCallback(
         (id: number) => {
@@ -60,7 +54,7 @@ const RestaurantList: React.FC<RestaurantListProps> = ({restaurants}) => {
 
         return (
             <TouchableOpacity
-                onPress={() => handleRestaurantPress(item.id.toString())}
+                onPress={() => handleRestaurantPress(item.id)}
                 onPressIn={() => setPressedId(item.id.toString())}
                 onPressOut={() => setPressedId(null)}
                 activeOpacity={0.97}
@@ -217,6 +211,9 @@ const styles = StyleSheet.create({
     image: {
         width: "100%",
         height: "100%",
+    },
+    imagePressed: {
+        opacity: 0.9,
     },
     noImageContainer: {
         width: "100%",

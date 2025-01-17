@@ -2,7 +2,6 @@
 
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 import {addItemToCart, fetchCart, removeItemFromCart, resetCart, updateCartItem} from "@/src/redux/thunks/cartThunks";
-import {logout} from "@/src/redux/slices/userSlice";
 import {CartState} from "@/src/types/states";
 import {CartItem} from "@/src/types/api/cart/model";
 
@@ -28,8 +27,9 @@ const cartSlice = createSlice({
     extraReducers: (builder) => {
         builder
             // When logging out, reset the cart state to its initial state
-            .addCase(logout, () => initialState)
-
+            .addCase('user/logout', (state) => {
+                return initialState;
+            })
             // ----------------------------
             // Fetch Cart Thunk
             // ----------------------------

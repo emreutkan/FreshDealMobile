@@ -1,30 +1,53 @@
-import React from 'react';
-import {ScrollView, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import React, {useEffect} from 'react';
+import {Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
-import {AppDispatch, RootState} from '@/src/redux/store';
-import {RouteProp, useRoute} from "@react-navigation/native";
-import {RootStackParamList} from "@/src/utils/navigation";
+import {AppDispatch} from '@/src/redux/store';
+import {RootState} from '@/src/types/store';
 import {useSafeAreaInsets} from "react-native-safe-area-context";
-import GoBack from "@/src/features/homeScreen/components/goBack";
 import {scaleFont} from "@/src/utils/ResponsiveFont";
+import {GoBackIcon} from "@/src/features/homeScreen/components/goBack";
+import ListingCard from "@/src/features/RestaurantScreen/components/listingsCard";
+import {setSelectedRestaurant} from "@/src/redux/slices/restaurantSlice";
+import {fetchCart} from "@/src/redux/thunks/cartThunks";
 
 const CartScreen: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
-    const route = useRoute<RouteProp<RootStackParamList, 'Cart'>>();
     const insets = useSafeAreaInsets();
 
-    const cart = useSelector((state: RootState) => state.cart.cartItems);
-    const listings = useSelector((state: RootState) => state.listing.listings);
-    const ListingsInCart = listings.filter(listing => cart.some(cartItem => cartItem.listing_id));
+    const {cartItems, restaurantsProximity, selectedRestaurantListings} = useSelector((state: RootState) => ({
+        cartItems: state.cart.cartItems,
+        restaurantsProximity: state.restaurant.restaurantsProximity,
+        selectedRestaurantListings: state.restaurant.selectedRestaurantListings,
+    }));
+    useEffect(() => {
+        dispatch(fetchCart());
+    }, [dispatch]);
+    useEffect(() => {
+        if (cartItems.length > 0) {
+            const firstCartItem = cartItems[0];
+            const restaurantId = firstCartItem.restaurant_id;
+            const restaurant = restaurantsProximity.find(r => r.id === restaurantId);
 
-    // Calculate total price (assuming you have a price field)
-    const totalPrice = ListingsInCart.reduce((sum, item) => sum + (item.price || 0), 0);
+            if (restaurant) {
+                dispatch(setSelectedRestaurant(restaurant));
+            } else {
+                // Alert native popup saying restaurant not found in proximity and clear cart
+                Alert.alert('Restaurant not found', 'The restaurant is not in proximity. Cart will be cleared.');
+                // dispatch(clearCart()); // Uncomment this line if you have a clearCart action
+            }
+        }
+    }, [cartItems, restaurantsProximity, dispatch]);
+
+    const ListingsInCart = selectedRestaurantListings.filter(listing => cartItems.some(cartItem => cartItem.listing_id === listing.id));
+
+    const totalPickUpPrice = ListingsInCart.reduce((sum, item) => sum + (item.pick_up_price || 0), 0);
+    const totalDeliveryPrice = ListingsInCart.reduce((sum, item) => sum + (item.delivery_price || 0), 0);
 
     return (
         <View style={[styles.container, {paddingTop: insets.top}]}>
             {/* Header Section */}
             <View style={styles.header}>
-                <GoBack/>
+                <GoBackIcon/>
                 <Text style={styles.headerTitle}>Your Cart</Text>
                 <Text style={styles.itemCount}>{ListingsInCart.length} items</Text>
             </View>
@@ -36,16 +59,16 @@ const CartScreen: React.FC = () => {
                         style={styles.scrollView}
                         showsVerticalScrollIndicator={false}
                     >
-                        {/*<View style={styles.cardsContainer}>*/}
-                        {/*    <ListingCard listingList={ListingsInCart}/>*/}
-                        {/*</View>*/}
+                        <View style={styles.cardsContainer}>
+                            <ListingCard listingList={ListingsInCart}/>
+                        </View>
                     </ScrollView>
 
                     {/* Bottom Section with Total and Checkout */}
                     <View style={styles.bottomSection}>
                         <View style={styles.totalContainer}>
                             <Text style={styles.totalLabel}>Total</Text>
-                            <Text style={styles.totalAmount}>${totalPrice.toFixed(2)}</Text>
+                            <Text style={styles.totalAmount}>${totalPickUpPrice.toFixed(2)}</Text>
                         </View>
                         <TouchableOpacity style={styles.checkoutButton}>
                             <Text style={styles.checkoutButtonText}>Proceed to Checkout</Text>

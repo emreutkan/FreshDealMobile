@@ -7,7 +7,9 @@ import {Ionicons, MaterialIcons} from '@expo/vector-icons';
 import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 
-import {AppDispatch, RootState} from '@/src/redux/store';
+import {AppDispatch} from '@/src/redux/store';
+import {RootState} from "@/src/types/store";
+
 import {scaleFont} from '@/src/utils/ResponsiveFont';
 import {removeAddress} from '@/src/redux/slices/addressSlice';
 import {setPrimaryAddress} from "@/src/redux/thunks/addressThunks";

@@ -1,25 +1,22 @@
 import React from 'react';
 import {Text, TouchableOpacity, View,} from 'react-native';
 import {Ionicons} from "@expo/vector-icons";
+import {useDispatch, useSelector} from "react-redux";
+import {AppDispatch} from "@/src/redux/store";
+import {RootState} from "@/src/types/store";
+
+import {selectDeliveryMethod, setDeliveryMethod} from "@/src/redux/slices/restaurantSlice";
 
 
-interface PickupDeliveryToggleProps {
+export const PickupDeliveryToggle: React.FC = () => {
+    const dispatch = useDispatch<AppDispatch>();
+    const {isPickup} = useSelector(selectDeliveryMethod);
+    const restaurant = useSelector((state: RootState) => state.restaurant.selectedRestaurant);
+    const handleMethodChange = (newIsPickup: boolean) => {
+        dispatch(setDeliveryMethod(newIsPickup));
+    };
 
-    isPickup: boolean;
-    setIsPickup: (isPickup: boolean) => void;
-    pickupAvailable: boolean;
-    deliveryAvailable: boolean;
-}
-
-
-export const PickupDeliveryToggle: React.FC<PickupDeliveryToggleProps> = ({
-                                                                              isPickup,
-                                                                              setIsPickup,
-                                                                              pickupAvailable,
-                                                                              deliveryAvailable
-                                                                          }) => {
-
-    if (pickupAvailable && deliveryAvailable) {
+    if (restaurant.pickup && restaurant.delivery) {
         return (
             <View style={{
                 flexDirection: "column",
@@ -46,9 +43,10 @@ export const PickupDeliveryToggle: React.FC<PickupDeliveryToggleProps> = ({
                         padding: 8,
                         backgroundColor: isPickup ? "#333" : "#F5F5F5",
                         borderRadius: 20,
-                    }} onPress={() => setIsPickup(true)}>
-                    {/*<Ionicons name={"walk-outline"} size={20} color={"#333"}*/}
-                    {/*          style={{color: isPickup ? "#F5F5F5" : "#333",}}/>*/}
+                    }}
+                    onPress={() => handleMethodChange(true)}
+                >
+
                     <Text style={{fontSize: 16, color: isPickup ? "#F5F5F5" : "#333",}}> Pick Up </Text>
                 </TouchableOpacity>
 
@@ -61,14 +59,17 @@ export const PickupDeliveryToggle: React.FC<PickupDeliveryToggleProps> = ({
                         padding: 8,
                         backgroundColor: isPickup ? "#F5F5F5" : "#333",
                         borderRadius: 20,
-                    }} onPress={() => setIsPickup(false)}>
-                    {/*<Ionicons name={"bicycle-outline"} size={20} color={"#F5F5F5"}*/}
-                    {/*          style={{color: isPickup ? "#333" : "#FFF",}}/>*/}
+                    }}
+                    onPress={() => handleMethodChange(false)}
+
+
+                >
+
                     <Text style={{fontSize: 16, color: isPickup ? "#333" : "#FFF",}}> Delivery </Text>
                 </TouchableOpacity>
             </View>
         );
-    } else if (pickupAvailable) {
+    } else if (restaurant.pickup) {
         return (
             <TouchableOpacity
                 style={{
@@ -80,7 +81,7 @@ export const PickupDeliveryToggle: React.FC<PickupDeliveryToggleProps> = ({
                     borderRadius: 20,
                     width: "20%",
                     justifyContent: "center",
-                }} onPress={() => setIsPickup(true)}>
+                }} onPress={() => handleMethodChange(true)}>
                 {/*<Ionicons name={"walk-outline"} size={scaleFont(20)} color={"#FFF"}/>*/}
                 <Text style={{
                     fontSize: 16,
@@ -90,7 +91,7 @@ export const PickupDeliveryToggle: React.FC<PickupDeliveryToggleProps> = ({
                 }}> Pick Up </Text>
             </TouchableOpacity>
         );
-    } else if (deliveryAvailable) {
+    } else if (restaurant.delivery) {
         return (
             <TouchableOpacity
                 style={{
@@ -102,7 +103,7 @@ export const PickupDeliveryToggle: React.FC<PickupDeliveryToggleProps> = ({
                     borderRadius: 20,
                     width: "60%",
                     justifyContent: "center",
-                }} onPress={() => setIsPickup(false)}>
+                }} onPress={() => handleMethodChange(false)}>
                 <Ionicons name={"bicycle-outline"} size={20} color={"#FFF"}/>
                 <Text style={{
                     fontSize: 16, color: "#FFF", fontFamily: "Poppins-Regular",

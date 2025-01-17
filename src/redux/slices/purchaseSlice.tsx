@@ -1,6 +1,5 @@
 import {createSlice} from '@reduxjs/toolkit';
 import {PurchaseState} from '@/src/types/states';
-import {logout} from "@/src/redux/slices/userSlice";
 import {
     createPurchaseAsync,
     fetchActiveOrdersAsync,
@@ -45,8 +44,9 @@ const purchaseSlice = createSlice({
     reducers: {},
     extraReducers: (builder) => {
         builder
-            .addCase(logout, () => initialState)
-            // Create Purchase
+            .addCase('user/logout', (state) => {
+                return initialState;
+            })
             .addCase(createPurchaseAsync.pending, (state) => {
                 state.creatingPurchase = true;
                 state.createPurchaseError = null;

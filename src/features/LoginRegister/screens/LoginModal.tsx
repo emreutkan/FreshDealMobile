@@ -9,18 +9,20 @@ import {
     View,
 } from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
-import {AppDispatch, RootState} from '@/src/redux/store';
+import {AppDispatch} from '@/src/redux/store';
+import {RootState} from "@/src/types/store";
+
 import {scaleFont} from '@/src/utils/ResponsiveFont';
 import AppleOTP from '@/src/features/LoginRegister/components/AppleOTPLogin';
-import EmailLoginField from '@/src/features/LoginRegister/components/EmailInput';
+import EmailInput from '@/src/features/LoginRegister/components/emailInput';
 import PhoneInput from '@/src/features/LoginRegister/components/PhoneInput';
-import {GoogleSignInButton,} from '@/src/features/LoginRegister/components/GoogleSignInButton';
 import PasswordInput from '@/src/features/LoginRegister/components/PasswordInput';
 import {setLoginType, setPasswordLogin} from '@/src/redux/slices/userSlice';
 import {loginUserThunk} from '@/src/redux/thunks/userThunks';
 import {EmailSignInButton} from "@/src/features/LoginRegister/components/EmailSignInButton";
 import {PhoneSignInButton} from "@/src/features/LoginRegister/components/PhoneSignInButton";
 import {ButtonStyles} from "@/src/styles/ButtonStyles";
+import GoogleOTP from "@/src/features/LoginRegister/components/GoogleOTP";
 
 interface LoginModalProps {
     switchToRegister: () => void; // Callback to switch to RegisterModal
@@ -103,7 +105,7 @@ const LoginModal: React.FC<LoginModalProps> = ({switchToRegister}) => {
                 <Text style={styles.welcomeText}>Last Call,</Text>
                 <Text style={styles.welcomeText2}>Tasty Deals Await!</Text>
 
-                {login_type === 'phone_number' ? <PhoneInput/> : <EmailLoginField/>}
+                {login_type === 'phone_number' ? <PhoneInput/> : <EmailInput/>}
 
                 {(phoneNumber || email) &&
                     <View style={{marginTop: scaleFont(10)}}>
@@ -189,7 +191,7 @@ const LoginModal: React.FC<LoginModalProps> = ({switchToRegister}) => {
                 </View>
 
                 <AppleOTP/>
-                <GoogleSignInButton/>
+                <GoogleOTP/>
 
                 {login_type === 'phone_number' ? (
                     <TouchableOpacity onPress={() => handleLoginTypeChange('email')}>

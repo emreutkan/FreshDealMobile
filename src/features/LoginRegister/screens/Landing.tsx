@@ -5,7 +5,7 @@ import LoginModal from "@/src/features/LoginRegister/screens/LoginModal";
 import RegisterModal from "@/src/features/LoginRegister/screens/RegisterModal";
 import {useNavigation} from "@react-navigation/native";
 import {useSelector} from "react-redux";
-import {RootState} from "@/src/redux/store";
+import {RootState} from "@/src/types/store";
 import {NativeStackNavigationProp} from "@react-navigation/native-stack";
 import {RootStackParamList} from "@/src/utils/navigation";
 

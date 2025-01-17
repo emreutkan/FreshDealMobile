@@ -1,32 +1,18 @@
 import React, {useState} from "react";
-import {Dimensions, Image, Modal, StatusBar, StyleSheet, Text, TouchableOpacity, View,} from "react-native";
+import {Image, Modal, StatusBar, StyleSheet, Text, TouchableOpacity, View,} from "react-native";
 import {Ionicons} from "@expo/vector-icons";
 import LocateToRestaurant from "@/src/features/RestaurantScreen/components/locateToRestaurant";
 import {LinearGradient} from "expo-linear-gradient";
 import {GoBackIcon} from "@/src/features/homeScreen/components/goBack";
 import PickUpDeliveryToggle from "@/src/features/RestaurantScreen/components/PickUpDeliveryToggle";
-
-interface RestaurantInfoSectionParams {
-    restaurant: any;
-    isPickup: boolean;
-    setIsPickup: (pickup: boolean) => void;
-    pickupAvailable: boolean;
-    deliveryAvailable: boolean;
-    children?: React.ReactNode;
-}
+import {useSelector} from "react-redux";
+import {RootState} from "@/src/types/store";
 
 
-const RestaurantInfoSection: React.FC<RestaurantInfoSectionParams> = ({
-                                                                          restaurant,
-                                                                          isPickup,
-                                                                          setIsPickup,
-                                                                          pickupAvailable,
-                                                                          deliveryAvailable,
-                                                                          children
-                                                                      }) => {
+const RestaurantInfoSection: React.FC = () => {
     const [showInfoModal, setShowInfoModal] = useState(false);
-    const {height: screenHeight} = Dimensions.get("window");
-
+    const restaurant = useSelector((state: RootState) => state.restaurant.selectedRestaurant);
+    console.log("the restaurant that restaurantinfo sees", restaurant);
     const InformationMapModal = () => {
         return (
             <Modal
@@ -70,9 +56,9 @@ const RestaurantInfoSection: React.FC<RestaurantInfoSectionParams> = ({
                                     restaurant?.workingHoursEnd || ""
                                 )}
                             </Text>
-                            {deliveryAvailable && (
+                            {restaurant.delivery && (
                                 <Text style={styles.modalInfoText}>
-                                    <Text style={{fontFamily: "Poppins-SemiBold"}}>Delivry Fee: </Text>
+                                    <Text style={{fontFamily: "Poppins-SemiBold"}}>Delivery Fee: </Text>
                                     {`${restaurant?.deliveryFee || 0}${'\u20BA'}`}
                                 </Text>
                             )}
@@ -81,7 +67,7 @@ const RestaurantInfoSection: React.FC<RestaurantInfoSectionParams> = ({
                         </View>
 
                         <View style={styles.mapContainer}>
-                            <LocateToRestaurant restaurantId={restaurant.id}/>
+                            <LocateToRestaurant/>
                         </View>
                     </View>
                 </View>
@@ -218,10 +204,7 @@ const RestaurantInfoSection: React.FC<RestaurantInfoSectionParams> = ({
                         </View>
 
                         <PickUpDeliveryToggle
-                            isPickup={isPickup}
-                            setIsPickup={setIsPickup}
-                            pickupAvailable={pickupAvailable}
-                            deliveryAvailable={deliveryAvailable}
+
                         />
                     </View>
                     {/* Pickup/Delivery Toggle */}
@@ -229,7 +212,6 @@ const RestaurantInfoSection: React.FC<RestaurantInfoSectionParams> = ({
                 </View>
 
             </View>
-            {children}
             <InformationMapModal/>
 
         </View>

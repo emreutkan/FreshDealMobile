@@ -15,17 +15,19 @@ import {
 } from "react-native";
 import {scaleFont} from "@/src/utils/ResponsiveFont";
 import {useDispatch, useSelector} from "react-redux";
-import {AppDispatch, RootState, store} from "@/src/redux/store";
+import {AppDispatch, store} from "@/src/redux/store";
+import {RootState} from "@/src/types/store";
+
 import {getUserDataThunk, loginUserThunk, registerUserThunk,} from "@/src/redux/thunks/userThunks";
 import NameSurnameInputField from "@/src/features/LoginRegister/components/NameSurnameInputField";
 import PhoneInput from "@/src/features/LoginRegister/components/PhoneInput";
-import EmailLoginField from "@/src/features/LoginRegister/components/EmailInput";
 import PasswordInput from "@/src/features/LoginRegister/components/PasswordInput";
 import VerificationCodeInputField from "@/src/features/LoginRegister/components/VerificationCodeInputField"; // Assume this component exists
 import {setToken} from "@/src/redux/slices/userSlice";
 import {Ionicons} from "@expo/vector-icons";
 import {verifyCode} from "@/src/redux/api/authAPI";
 import {ButtonStyles} from "@/src/styles/ButtonStyles";
+import EmailInput from "@/src/features/LoginRegister/components/emailInput";
 
 interface RegisterModalProps {
     switchToLogin: () => void; // Callback to switch to LoginModal
@@ -184,7 +186,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({switchToLogin}) => {
                                     <PhoneInput/>
                                 </View>
                                 <View style={styles.inputArea}>
-                                    <EmailLoginField/>
+                                    <EmailInput/>
                                 </View>
 
                                 <View style={styles.inputArea}>

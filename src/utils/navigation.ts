@@ -9,9 +9,7 @@ export type RootStackParamList = {
     UpdateAddress: {
         addressId?: string;
     };
-    RestaurantDetails: {
-        restaurantId: number;
-    };
+    RestaurantDetails: undefined;
     FavoritesScreen: undefined;
     Cart: undefined;
     Account: undefined;
@@ -20,7 +18,7 @@ export type RootStackParamList = {
 };
 
 // If you're using useNavigation hook, you might want to add this type:
-export type StackNavigationProp = NativeStackNavigationProp<RootStackParamList>;
+// export type StackNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 // export const navigationRef = createNavigationContainerRef<BottomTabNavigationProp<RootStackParamList>>();
 export const navigationRef = createNavigationContainerRef<NativeStackNavigationProp<RootStackParamList>>();

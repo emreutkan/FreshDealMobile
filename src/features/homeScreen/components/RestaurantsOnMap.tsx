@@ -2,10 +2,9 @@
 import React, {useRef, useState} from 'react';
 import {Image, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import MapView, {Callout, Marker} from 'react-native-maps';
-import {RootState} from '@/src/redux/store';
+import {RootState} from "@/src/types/store";
 import {useSelector} from 'react-redux';
 import {Ionicons} from '@expo/vector-icons';
-import {scaleFont} from '@/src/utils/ResponsiveFont';
 import {Restaurant} from "@/src/types/api/restaurant/model";
 import {Address} from "@/src/types/api/address/model";
 
@@ -50,8 +49,7 @@ const RestaurantsOnMap: React.FC<MapProps> = ({
         setSelectedRestaurantId(restaurantId);
     };
 
-
-// Add map style customization
+    // Add map style customization
     const customMapStyle = [
         {
             "featureType": "poi",
@@ -77,7 +75,6 @@ const RestaurantsOnMap: React.FC<MapProps> = ({
                         bottom: 0,
                     },
                 ]}
-
                 ref={mapRef}
                 initialRegion={{
                     latitude: userLatitude,
@@ -88,7 +85,6 @@ const RestaurantsOnMap: React.FC<MapProps> = ({
                 showsUserLocation={true}
                 showsPointsOfInterest={false} // Hides unnecessary POIs
                 customMapStyle={customMapStyle}
-                // onMapReady={mapReadyAnimation}
                 showsCompass={true}
                 showsScale={true}
             >
@@ -99,8 +95,7 @@ const RestaurantsOnMap: React.FC<MapProps> = ({
                         longitude: userLongitude,
                     }}
                     title="My Location"
-                    tracksViewChanges={false}  // try adding this prop
-
+                    tracksViewChanges={false}
                 >
                     <Ionicons name="location-sharp" size={30} color="#B2F7A5FF"/>
                 </Marker>
@@ -142,7 +137,7 @@ const RestaurantsOnMap: React.FC<MapProps> = ({
                         )}
 
                         {/** Show callout with restaurant name when selected */}
-                        {selectedRestaurantId === restaurant.id && (
+                        {selectedRestaurantId === restaurant.id.toString() && (
                             <Callout tooltip>
                                 <View style={styles.calloutContainer}>
                                     <Text style={styles.calloutText}>{restaurant.restaurantName}</Text>
@@ -158,13 +153,11 @@ const RestaurantsOnMap: React.FC<MapProps> = ({
                 style={[styles.relocateButton, {zIndex: 2}]}
                 onPress={relocateToUserLocation}
             >
-                <Ionicons name="navigate" size={scaleFont(30)} color="#B2F7A5FF"/>
+                <Ionicons name="navigate" size={30} color="#B2F7A5FF"/>
             </TouchableOpacity>
         </>
     );
 };
-
-export default RestaurantsOnMap;
 
 const styles = StyleSheet.create({
     relocateButton: {
@@ -223,3 +216,5 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
 });
+
+export default RestaurantsOnMap;

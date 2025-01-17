@@ -11,8 +11,10 @@ import {
     View,
 } from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
-import {AppDispatch, RootState} from '@/src/redux/store';
+import {AppDispatch} from '@/src/redux/store';
+import {RootState} from "@/src/types/store";
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
+import {useFocusEffect} from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import AddressSelectorScreen from '@/src/features/homeScreen/screens/addressSelectionScreen';
 import HomeCardView from '@/src/features/homeScreen/screens/HomeCardView';
@@ -23,6 +25,7 @@ import Search from "@/src/features/search/Search";
 import {getRestaurantsByProximity} from "@/src/redux/thunks/restaurantThunks";
 import {getFavoritesThunk} from "@/src/redux/thunks/userThunks";
 import {lightHaptic} from "@/src/utils/Haptics";
+
 // Enable LayoutAnimation on Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
     UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -48,27 +51,22 @@ const HomeScreen: React.FC = () => {
 
     useEffect(() => {
         lightHaptic();
-
     }, [activeTab]);
-    useEffect(() => {
-        if (!primaryAddressData) {
-            return;
-        }
 
-        console.log('Primary Address Data:', primaryAddressData);
-
-        dispatch(getRestaurantsByProximity());
-
-        dispatch(getFavoritesThunk());
-    }, [dispatch, primaryAddressData]);
-
+    useFocusEffect(
+        React.useCallback(() => {
+            if (primaryAddressData) {
+                console.log('Primary Address Data:', primaryAddressData);
+                dispatch(getRestaurantsByProximity());
+                dispatch(getFavoritesThunk());
+            }
+        }, [dispatch, primaryAddressData])
+    );
 
     useEffect(() => {
         console.log('restaurantsProximity:', restaurantsProximity);
         console.log('favoriteRestaurantsIDs:', favoriteRestaurantsIDs);
-
     }, [restaurantsProximity, favoriteRestaurantsIDs]);
-
 
     const handleTabChange = (routeName: string) => {
         setIsHeaderVisible(routeName !== 'Account' && routeName !== 'Search'); // Hide header for Account and Search
@@ -100,23 +98,18 @@ const HomeScreen: React.FC = () => {
         }
     );
 
-
-    // Render AddressSelectorScreen if no addresses exist
     if (!addresses || addresses.length === 0) {
         return <AddressSelectorScreen/>;
     }
 
-    // Render the main home screen with tabs
     return (
-        <View style={[styles.container]}>
+        <View style={styles.container}>
             <StatusBar translucent backgroundColor="transparent" barStyle="dark-content"/>
 
             {isHeaderVisible && (
                 <Header
-                    // isScrolled={isHeaderCollapsed}
                     activeTab={activeTab}
                     scrollY={scrollY}
-                    // setIsScrolled={setIsHeaderCollapsed}
                 />
             )}
 
@@ -135,7 +128,6 @@ const HomeScreen: React.FC = () => {
                     }}
                     screenOptions={({route}) => ({
                         headerShown: false,
-
                         tabBarIcon: ({focused, color}) => {
                             const iconMap = {
                                 HomeCardView: focused ? 'home' : 'home-outline',
@@ -148,16 +140,19 @@ const HomeScreen: React.FC = () => {
                         },
                         tabBarActiveTintColor: 'rgba(76,175,80,0.75)',
                         tabBarInactiveTintColor: '#8e8e8e',
+                        tabBarLabelStyle: styles.tabBarLabel,
+                        tabBarStyle: styles.tabBar,
                     })}
                 >
                     <Tab.Screen name="HomeCardView" options={{tabBarLabel: 'Home'}}>
-                        {() => <HomeCardView onScroll={handleScroll}/>}
+                        {() => (
+                            <HomeCardView
+                                onScroll={handleScroll}
+                            />
+                        )}
                     </Tab.Screen>
-
-
                     <Tab.Screen name="HomeMapView" component={HomeMapView} options={{tabBarLabel: 'Map'}}/>
-                    <Tab.Screen name={"Search"} component={Search} options={{tabBarLabel: 'Search'}}/>
-
+                    <Tab.Screen name="Search" component={Search} options={{tabBarLabel: 'Search'}}/>
                     <Tab.Screen name="Account" component={AccountScreen} options={{tabBarLabel: 'Account'}}/>
                 </Tab.Navigator>
             </View>
@@ -169,18 +164,25 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#ffffff',
-
     },
     contentContainer: {
-
         flex: 1,
         zIndex: 0,
-
     },
     mapContentContainer: {
         flex: 1,
         zIndex: 0,
         marginTop: -150,
+    },
+    tabBar: {
+        backgroundColor: '#ffffff',
+        borderTopWidth: 0,
+        elevation: 5,
+        borderTopColor: '#1c1b1b',
+    },
+    tabBarLabel: {
+        fontFamily: 'Poppins-Medium',
+        fontSize: 11,
 
     },
 });

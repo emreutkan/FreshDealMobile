@@ -3,7 +3,9 @@ import {ActivityIndicator, Image, ScrollView, StyleSheet, Text, View} from 'reac
 import {RouteProp, useRoute} from '@react-navigation/native';
 import {RootStackParamList} from '@/src/utils/navigation';
 import {useDispatch, useSelector} from 'react-redux';
-import {AppDispatch, RootState} from '@/src/redux/store';
+import {AppDispatch} from '@/src/redux/store';
+import {RootState} from "@/src/types/store";
+
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {GoBackIcon} from "@/src/features/homeScreen/components/goBack";
 import {MaterialIcons} from "@expo/vector-icons";

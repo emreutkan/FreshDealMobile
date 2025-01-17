@@ -1,5 +1,3 @@
-import {RestaurantComment} from "@/src/types/api/purchase/model";
-
 export interface Restaurant {
     id: number;
     owner_id: number;

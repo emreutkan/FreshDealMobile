@@ -3,6 +3,9 @@ import {createAsyncThunk} from '@reduxjs/toolkit';
 import {getRestaurantsInProximity} from "@/src/redux/api/restaurantAPI";
 import {RootState} from '@/src/redux/store';
 import {Restaurant} from "@/src/types/api/restaurant/model";
+import {Listing} from "@/src/types/api/listing/model";
+import {getListingsAPI} from "@/src/redux/api/listingsAPI";
+import {Pagination} from "@/src/types/states";
 
 // Get restaurants by proximity
 // Get restaurants by proximity
@@ -42,3 +45,22 @@ export const getRestaurantsByProximity = createAsyncThunk<
     }
 );
 
+
+// Fetch Listings with optional filters and pagination
+export const getListingsThunk = createAsyncThunk<
+    { listings: Listing[]; pagination: Pagination },
+    { restaurantId: number; page?: number; perPage?: number }
+>(
+    'listings/getListingsThunk',
+    async (params, {rejectWithValue}) => {
+        try {
+            const data = await getListingsAPI(params);
+            return {
+                listings: data.data,
+                pagination: data.pagination,
+            };
+        } catch (error: any) {
+            return rejectWithValue(error.response?.data?.message || error.message);
+        }
+    }
+);

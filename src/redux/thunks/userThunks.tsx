@@ -24,6 +24,7 @@ import {
     UpdateUsernameResponse
 } from "@/src/types/api/user/responses";
 import {setToken, UserDataResponse} from "@/src/redux/slices/userSlice"; // Example import, adjust as needed
+import {logout as userLogout} from "../slices/userSlice";
 
 // Login
 export const loginUserThunk = createAsyncThunk<
@@ -199,5 +200,21 @@ export const getFavoritesThunk = createAsyncThunk<
                 error.response?.data?.message || "Failed to fetch favorites"
             );
         }
+    }
+);
+
+export const logoutThunk = createAsyncThunk(
+    "user/logout",
+    async (_, {dispatch, getState}) => {
+        // Dispatch logout action for each slice that needs to be reset
+        dispatch(userLogout());
+        // Add other slice logout actions here
+
+        // Clear any stored tokens or session data
+        localStorage.removeItem('token'); // If you're storing token in localStorage
+        sessionStorage.removeItem('token'); // If you're storing token in sessionStorage
+
+        // Note: Navigation should be handled in the component that dispatches this thunk
+        return true;
     }
 );

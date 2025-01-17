@@ -1,5 +1,5 @@
 // screens/HomeMapView.tsx
-import React, {useCallback, useMemo, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {
     ActivityIndicator,
     FlatList,
@@ -11,7 +11,9 @@ import {
     View,
 } from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
-import {AppDispatch, RootState} from '@/src/redux/store';
+import {AppDispatch} from '@/src/redux/store';
+import {RootState} from "@/src/types/store";
+
 import {Restaurant} from '@/src/types/api/restaurant/model';
 import BottomSheet, {BottomSheetScrollView} from '@gorhom/bottom-sheet';
 import RestaurantsOnMap from '@/src/features/homeScreen/components/RestaurantsOnMap';
@@ -20,7 +22,7 @@ import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {RootStackParamList} from '@/src/utils/navigation';
 import {getRestaurantsByProximity} from "@/src/redux/thunks/restaurantThunks";
-import {lightHaptic} from "@/src/utils/Haptics";
+import {lightHaptic, strongHaptic} from "@/src/utils/Haptics";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'RestaurantDetails'>;
 
@@ -30,9 +32,12 @@ const HomeMapView: React.FC = () => {
     const snapPoints = useMemo(() => ['5%', '50%', '80%'], []);
     const {restaurantsProximity} = useSelector((state: RootState) => state.restaurant);
     const [isImageLoading, setIsImageLoading] = useState(true);
-    const [isPullingBeyondMax, setIsPullingBeyondMax] = useState(false);
-    const isAtMaxHeight = useRef(false);
+
     const dispatch = useDispatch<AppDispatch>();
+    useEffect(() => {
+        strongHaptic();
+        dispatch(getRestaurantsByProximity());
+    }, [dispatch]);
 
     const [refreshing, setRefreshing] = useState(false);
     const [currentSheetIndex, setCurrentSheetIndex] = useState(1);

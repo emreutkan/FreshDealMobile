@@ -1,6 +1,5 @@
 import {RestaurantSearchResult} from "@/src/types/api/search/responses";
 import {Restaurant} from "@/src/types/api/restaurant/model";
-import {Pagination} from "@/src/redux/slices/listingSlice";
 import {Listing} from "@/src/types/api/listing/model";
 import {CartItem} from "@/src/types/api/cart/model";
 import {Address} from "@/src/types/api/address/model";
@@ -61,6 +60,16 @@ export interface AddressState {
     error: string | null;
 }
 
+
+export interface Pagination {
+    total: number;
+    pages: number;
+    current_page: number;
+    per_page: number;
+    has_next: boolean;
+    has_prev: boolean;
+}
+
 export interface CartState {
     cartItems: CartItem[];
     loading: boolean;
@@ -86,6 +95,14 @@ export interface RestaurantState {
     favoritesLoading: boolean;
     radius: number;
     error: string | null;
+    selectedRestaurant: Restaurant;
+    selectedRestaurantListings: Listing[],
+    selectedRestaurantListing: Listing | null;
+    listingsLoading: boolean,
+    listingsError: string | null;
+    isPickup: boolean; // Current delivery method
+    pagination: Pagination | null;
+
 }
 
 export interface UserState {
@@ -104,18 +121,9 @@ export interface UserState {
     role: 'customer';
     email_verified: boolean
     isInitialized: boolean;
-
+    shouldNavigateToLanding: boolean;
 }
 
-export interface RootState {
-    user: UserState;
-    address: AddressState;
-    cart: CartState;
-    restaurant: RestaurantState;
-    listing: ListingState;
-    search: SearchState;
-    auth: AuthState; // This was missing and causing the error
-}
 
 export interface AuthState {
     token: string | null;

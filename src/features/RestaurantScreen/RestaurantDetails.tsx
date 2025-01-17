@@ -1,91 +1,36 @@
-import React, {useEffect, useState} from 'react';
+import React from 'react';
 import {StyleSheet, Text, View,} from 'react-native';
-import {RouteProp, useRoute} from '@react-navigation/native';
-import {useDispatch, useSelector} from 'react-redux';
-import {AppDispatch, RootState} from '@/src/redux/store';
-import {RootStackParamList} from "@/src/utils/navigation";
-import {getListingsThunk} from "@/src/redux/thunks/listingThunks";
+import {useSelector} from 'react-redux';
+import {RootState} from '@/src/redux/store';
 import CartBar from "@/src/features/RestaurantScreen/components/cartBar";
 import RestaurantInfoSection from "@/src/features/RestaurantScreen/components/RestaurantInfoSection";
 import ListingsCard from "@/src/features/RestaurantScreen/components/listingsCard";
 
 
 const RestaurantDetails: React.FC = () => {
-    const route = useRoute<RouteProp<RootStackParamList, 'RestaurantDetails'>>();
-    const [isPickup, setIsPickup] = useState(true); // Toggle Pickup/Delivery
 
+    // Move all useSelector calls to the top level
     const cart = useSelector((state: RootState) => state.cart);
-
-    if (!route.params || !route.params.restaurantId) {
-        return (
-            <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-                <Text style={{color: 'red'}}>Error: Missing restaurantId.</Text>
-            </View>
-        );
-    }
-
-// helper functions for walking / driving times
-
-    // Only call the hook at the top level
-    const dispatch = useDispatch<AppDispatch>();
-    const {restaurantId} = route.params;
-    const listings = useSelector((state: RootState) => state.listing.listings);
-    useEffect(() => {
-        const payload = {
-            restaurantId: Number(restaurantId),
-            page: 1,
-            limit: 10,
-        };
-        dispatch(getListingsThunk(payload));
-        // dispatch(fetchCart());
-    }, [restaurantId, dispatch, isPickup,
-        // cartItems
-    ]);
+    const listings = useSelector((state: RootState) => state.restaurant.selectedRestaurantListings);
 
 
-    // GET RESTAURANT DATA
-    const restaurant = useSelector((state: RootState) =>
-        state.restaurant.restaurantsProximity.find(r => r.id === Number(restaurantId))
-    );
+    return (
+        <View style={styles.container}>
+            <RestaurantInfoSection/>
 
-
-    if (!restaurant) {
-        return (
-            <View style={styles.container}>
-                <Text style={{color: 'red', textAlign: 'center', marginTop: 20}}>
-                    Restaurant not found.
-                </Text>
-            </View>
-        );
-    } else {
-        const pickupAvailable = restaurant.pickup;
-        const deliveryAvailable = restaurant.delivery;
-        return (
-            <View style={styles.container}>
-
-                <RestaurantInfoSection
-                    restaurant={restaurant}
-                    isPickup={isPickup}
-                    setIsPickup={setIsPickup}
-                    pickupAvailable={pickupAvailable}
-                    deliveryAvailable={deliveryAvailable}
-                > </RestaurantInfoSection>
-
-                <View style={styles.listingsContainer}>
-                    {listings.length > 0 ? (
-                        <ListingsCard listingList={listings} isPickup={isPickup}/>
-                    ) : (
-                        <Text>No listings found.</Text>
-                    )}
-                </View>
-
-                {cart.cartItems.length > 0 && (
-                    <CartBar/>
+            <View style={styles.listingsContainer}>
+                {listings.length > 0 ? (
+                    <ListingsCard/>
+                ) : (
+                    <Text>No listings found.</Text>
                 )}
             </View>
-        );
-    }
 
+            {cart.cartItems.length > 0 && (
+                <CartBar/>
+            )}
+        </View>
+    );
 
 };
 

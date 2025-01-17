@@ -3,7 +3,6 @@
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 import {getUserDataThunk} from "@/src/redux/thunks/userThunks";
 import {addAddressAsync, setPrimaryAddress} from "@/src/redux/thunks/addressThunks";
-import {logout} from "@/src/redux/slices/userSlice";
 import {AddressState} from "@/src/types/states";
 import {Address} from "@/src/types/api/address/model";
 
@@ -42,8 +41,9 @@ const addressSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
-            .addCase(logout, () => initialState) // Reset state on global action
-
+            .addCase('user/logout', (state) => {
+                return initialState;
+            })
             .addCase(addAddressAsync.pending, (state) => {
                 state.loading = true;
                 state.error = null;

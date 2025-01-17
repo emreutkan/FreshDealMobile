@@ -1,7 +1,9 @@
 import React, {useEffect, useState} from 'react';
 import {ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View,} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
-import {AppDispatch, RootState} from '@/src/redux/store';
+import {AppDispatch} from '@/src/redux/store';
+import {RootState} from "@/src/types/store";
+
 import {fetchActiveOrdersAsync, fetchPreviousOrdersAsync} from '@/src/redux/thunks/purchaseThunks';
 import {RouteProp, useNavigation, useRoute} from '@react-navigation/native';
 import {RootStackParamList} from "@/src/utils/navigation";
