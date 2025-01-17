@@ -1,7 +1,8 @@
 // src/store/thunks/restaurantThunks.ts
 import {createAsyncThunk} from '@reduxjs/toolkit';
 import {getRestaurantsInProximity} from "@/src/redux/api/restaurantAPI";
-import {RootState} from '@/src/redux/store';
+import {RootState} from "@/src/types/store";
+import {tokenService} from "@/src/services/tokenService";
 import {Restaurant} from "@/src/types/api/restaurant/model";
 import {Listing} from "@/src/types/api/listing/model";
 import {getListingsAPI} from "@/src/redux/api/listingsAPI";
@@ -25,7 +26,7 @@ export const getRestaurantsByProximity = createAsyncThunk<
                 return rejectWithValue('Primary address is missing.');
             }
 
-            const token = getState().user.token;
+            const token = await tokenService.getToken();
             if (!token) {
                 console.error('Authentication token is missing.');
                 return rejectWithValue('Authentication token is missing.');

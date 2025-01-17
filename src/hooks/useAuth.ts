@@ -8,7 +8,7 @@ import {AppDispatch, RootState, store} from "@/src/redux/store";
 
 export const useAuth = () => {
     const dispatch = useDispatch<AppDispatch>();
-    const token = (store.getState() as RootState).user.token;
+    const token = tokenService.getToken();
     const isInitialized = (store.getState() as RootState).user.isInitialized;
     useEffect(() => {
         const checkAuth = async () => {

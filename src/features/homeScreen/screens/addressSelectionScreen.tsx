@@ -18,11 +18,12 @@ import {MaterialIcons} from '@expo/vector-icons';
 import debounce from 'lodash.debounce';
 import {addAddressAsync} from '@/src/redux/thunks/addressThunks';
 import {scaleFont} from '@/src/utils/ResponsiveFont';
-import {AppDispatch, store} from '@/src/redux/store';
+import {AppDispatch} from '@/src/redux/store';
 import {useNavigation} from '@react-navigation/native';
 import InputField from '@/src/features/DefaultInput';
 import {Address} from "@/src/types/api/address/model"
 import {ButtonStyles, THEME} from "@/src/styles/ButtonStyles";
+import {tokenService} from "@/src/services/tokenService";
 
 
 class TempAddress {
@@ -77,7 +78,7 @@ const AddressSelectionScreen: React.FC = () => {
         longitudeDelta: 0.01,
     });
 
-    const token = store.getState().user.token;
+    const token = tokenService.getToken();
     const [errors, setErrors] = useState({
         title: '',
         apartmentNo: '',

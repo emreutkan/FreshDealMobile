@@ -2,6 +2,7 @@ import {createAsyncThunk} from '@reduxjs/toolkit';
 import {purchaseAPI} from '@/src/redux/api/purchaseAPI';
 import {RootState} from '../store';
 import {Address} from "@/src/types/api/address/model";
+import {tokenService} from "@/src/services/tokenService";
 // import {DeliveryInfo} from "@/src/types/api/purchase/responses";
 
 // Helper function to serialize address for delivery info
@@ -33,7 +34,7 @@ export const createPurchaseAsync = createAsyncThunk<
     async ({addressId, notes}, {getState, rejectWithValue}) => {
         try {
             const state = getState();
-            const token = state.user.token;
+            const token = await tokenService.getToken();
 
             if (!token) {
                 return rejectWithValue('Authentication token is missing');
@@ -70,7 +71,7 @@ export const fetchActiveOrdersAsync = createAsyncThunk<
     'purchase/fetchActiveOrders',
     async (_, {getState, rejectWithValue}) => {
         try {
-            const token = getState().user.token;
+            const token = await tokenService.getToken();
             if (!token) {
                 return rejectWithValue('Authentication token is missing');
             }
@@ -89,7 +90,7 @@ export const fetchPreviousOrdersAsync = createAsyncThunk<
     'purchase/fetchPreviousOrders',
     async ({page = 1, perPage = 10}, {getState, rejectWithValue}) => {
         try {
-            const token = getState().user.token;
+            const token = await tokenService.getToken();
             if (!token) {
                 return rejectWithValue('Authentication token is missing');
             }
@@ -108,7 +109,7 @@ export const fetchOrderDetailsAsync = createAsyncThunk<
     'purchase/fetchOrderDetails',
     async (purchaseId, {getState, rejectWithValue}) => {
         try {
-            const token = getState().user.token;
+            const token = await tokenService.getToken();
             if (!token) {
                 return rejectWithValue('Authentication token is missing');
             }
@@ -127,7 +128,7 @@ export const handlePurchaseResponseAsync = createAsyncThunk<
     'purchase/handleResponse',
     async ({purchaseId, action}, {getState, rejectWithValue, dispatch}) => {
         try {
-            const token = getState().user.token;
+            const token = tokenService.getToken();
             if (!token) {
                 return rejectWithValue('Authentication token is missing');
             }
@@ -155,7 +156,7 @@ export const fetchRestaurantPurchasesAsync = createAsyncThunk<
     'purchase/fetchRestaurantPurchases',
     async (restaurantId, {getState, rejectWithValue}) => {
         try {
-            const token = getState().user.token;
+            const token = await tokenService.getToken();
             if (!token) {
                 return rejectWithValue('Authentication token is missing');
             }

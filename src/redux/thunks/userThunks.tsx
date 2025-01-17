@@ -1,9 +1,8 @@
 // userThunks.ts
 
 import {createAsyncThunk} from "@reduxjs/toolkit";
-import {RootState} from "@/src/redux/store";
-
-import {validateToken} from "@/src/services/tokenService";
+import {RootState} from "@/src/types/store";
+import {tokenService} from "@/src/services/tokenService";
 import {userApi} from "@/src/redux/api/userAPI";
 import {authApi} from "@/src/redux/api/authAPI";
 import {LoginResponse, RegisterResponse} from "@/src/types/api/auth/responses";
@@ -81,7 +80,7 @@ export const updateUsernameThunk = createAsyncThunk<
     "user/updateUsername",
     async ({username}, {dispatch, getState, rejectWithValue}) => {
         try {
-            const token = validateToken(getState().user.token);
+            const token = await tokenService.getToken();
             const response = await userApi.updateUsername(username, token);
             await dispatch(getUserDataThunk({token}));
             return response;
@@ -100,7 +99,7 @@ export const updateEmailThunk = createAsyncThunk<
     "user/updateEmail",
     async ({old_email, new_email}, {dispatch, getState, rejectWithValue}) => {
         try {
-            const token = validateToken(getState().user.token);
+            const token = await tokenService.getToken();
             const response = await userApi.updateEmail(old_email, new_email, token);
             await dispatch(getUserDataThunk({token}));
             return response;
@@ -119,7 +118,7 @@ export const updatePasswordThunk = createAsyncThunk<
     "user/updatePassword",
     async ({old_password, new_password}, {dispatch, getState, rejectWithValue}) => {
         try {
-            const token = validateToken(getState().user.token);
+            const token = await tokenService.getToken();
             const response = await userApi.updatePassword(old_password, new_password, token);
             await dispatch(getUserDataThunk({token}));
             return response;
@@ -154,7 +153,7 @@ export const addFavoriteThunk = createAsyncThunk<
     "favorites/addFavorite",
     async ({restaurant_id}, {dispatch, getState, rejectWithValue}) => {
         try {
-            const token = validateToken(getState().user.token);
+            const token = await tokenService.getToken();
             const response = await userApi.addToFavorites(restaurant_id, token);
             await dispatch(getFavoritesThunk()); // Refresh favorites
             return response;
@@ -173,7 +172,7 @@ export const removeFavoriteThunk = createAsyncThunk<
     "favorites/removeFavorite",
     async ({restaurant_id}, {dispatch, getState, rejectWithValue}) => {
         try {
-            const token = validateToken(getState().user.token);
+            const token = await tokenService.getToken();
             const response = await userApi.removeFromFavorites(restaurant_id, token);
             await dispatch(getFavoritesThunk()); // Refresh favorites
             return response;
@@ -191,7 +190,7 @@ export const getFavoritesThunk = createAsyncThunk<
     "favorites/getFavorites",
     async (_, {getState, rejectWithValue}) => {
         try {
-            const token = validateToken(getState().user.token);
+            const token = await tokenService.getToken();
             const response = await userApi.getFavorites(token);
             // Ensure that we wrap the favorites array inside an object with a favorites property.
             return {favorites: response.favorites};

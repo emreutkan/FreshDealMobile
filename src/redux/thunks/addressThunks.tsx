@@ -5,6 +5,7 @@ import {addAddress, removeAddress} from "@/src/redux/slices/addressSlice";
 import {getUserDataThunk} from "@/src/redux/thunks/userThunks";
 import {addAddressAPI, updateAddressAPI} from "@/src/redux/api/addressAPI";
 import {Address} from "@/src/types/api/address/model";
+import {tokenService} from "@/src/services/tokenService";
 
 export const addAddressAsync = createAsyncThunk<
     Address,
@@ -20,7 +21,7 @@ export const addAddressAsync = createAsyncThunk<
         const tempAddress = {...address, id: tempId, is_primary: shouldBePrimary};
 
         dispatch(addAddress(tempAddress));
-        const token = getState().user.token;
+        const token = await tokenService.getToken();
         if (!token) {
             console.error('Authentication token is missing.');
             return rejectWithValue('Authentication token is missing.');
@@ -51,7 +52,7 @@ export const updateAddress = createAsyncThunk<
     'address/updateAddress',
     async ({id, updates}, {getState, rejectWithValue}) => {
         try {
-            const token = getState().user.token;
+            const token = await tokenService.getToken();
             if (!token) {
                 console.error('Authentication token is missing.');
                 return rejectWithValue('Authentication token is missing.');
@@ -71,7 +72,7 @@ export const setPrimaryAddress = createAsyncThunk<
     async (addressId, {getState, dispatch, rejectWithValue}) => {
         try {
             const state = getState();
-            const token = state.user.token;
+            const token = await tokenService.getToken();
             if (!token) {
                 return rejectWithValue('Authentication token is missing.');
             }

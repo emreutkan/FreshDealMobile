@@ -2,13 +2,14 @@ import React, {useCallback} from "react";
 import {Dimensions, FlatList, Image, Platform, StyleSheet, Text, TouchableOpacity, View,} from "react-native";
 import {Restaurant} from "@/src/types/api/restaurant/model";
 import {useDispatch, useSelector} from "react-redux";
-import {AppDispatch, store} from "@/src/redux/store";
+import {AppDispatch} from "@/src/redux/store";
 import {RootState} from "@/src/types/store";
 
 import {Ionicons, MaterialCommunityIcons} from "@expo/vector-icons";
 // Import the thunk actions
 import {addFavoriteThunk, removeFavoriteThunk} from "@/src/redux/thunks/userThunks";
 import {useHandleRestaurantPress} from "@/src/hooks/handleRestaurantPress";
+import {tokenService} from "@/src/services/tokenService";
 
 interface RestaurantListProps {
     restaurants: Restaurant[];
@@ -30,7 +31,7 @@ const RestaurantList: React.FC<RestaurantListProps> = ({restaurants}) => {
 
     const handleFavoritePress = useCallback(
         (id: number) => {
-            const token = (store.getState() as RootState).user.token; // or use a selector if you prefer
+            const token = tokenService.getToken();
             if (!token) {
                 console.error('Authentication token is missing.');
                 return;
