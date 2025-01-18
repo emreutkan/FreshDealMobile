@@ -52,8 +52,8 @@ class TempAddress {
         this.province = '';
         this.country = '';
         this.postalCode = '';
-        this.apartmentNo = '0';
-        this.doorNo = '0';
+        this.apartmentNo = '';
+        this.doorNo = '';
         this.is_primary = true;
     }
 }

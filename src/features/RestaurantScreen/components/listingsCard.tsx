@@ -26,7 +26,6 @@ export const ListingCard: React.FC<ListingCardProps> = ({
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const snapPoints = useMemo(() => ['50%', '90%'], []);
 
-    const isPickup = useSelector((state: RootState) => state.restaurant.isPickup);
     const dispatch = useDispatch<AppDispatch>();
     const storeListings = useSelector((state: RootState) => state.restaurant.selectedRestaurantListings);
     const listings = listingList || storeListings;
@@ -40,6 +39,7 @@ export const ListingCard: React.FC<ListingCardProps> = ({
         }).start();
         dispatch(fetchCart());
     }, []);
+    const isPickup = useSelector((state: RootState) => state.restaurant.isPickup);
 
     const getDisplayPrice = useCallback((item: Listing) => {
         return isPickup ? item.pick_up_price : item.delivery_price;
