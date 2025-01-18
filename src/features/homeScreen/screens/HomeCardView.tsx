@@ -23,13 +23,15 @@ import FavoriteRestaurantList from "@/src/features/homeScreen/components/Favorit
 import Slider from '@react-native-community/slider';
 import {setRadius} from "@/src/redux/slices/restaurantSlice";
 import {lightHaptic, strongHaptic} from "@/src/utils/Haptics";
+import {Purchase} from "@/src/types/api/purchase/model";
+import RecentOrderToast from "@/src/features/OrdersScreen/RenderOrdersToast";
 
 interface HomeCardViewProps {
     onScroll: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
 }
 
-const MIN_LOADING_DURATION = 200; // main loading duration (redux)
-const FILTER_LOADING_DURATION = 200; // duration for filter toggling/loading
+const MIN_LOADING_DURATION = 0; // main loading duration (redux)
+const FILTER_LOADING_DURATION = 0; // duration for filter toggling/loading
 
 const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll}) => {
     const scrollY = useRef(new Animated.Value(0)).current;
@@ -61,6 +63,34 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll}) => {
     const [filterLoading, setFilterLoading] = useState(false);
     const reduxRadius = useSelector((state: RootState) => state.restaurant.radius);
     const [localRadius, setLocalRadius] = useState(reduxRadius);
+
+    const [shownPurchaseIds, setShownPurchaseIds] = useState<number[]>([]);
+    const lastCreatedPurchases = useSelector((state: RootState) => state.purchase.lastCreatedPurchases);
+    const [latestOrder, setLatestOrder] = useState<Purchase | null>(null);
+    useEffect(() => {
+        if (lastCreatedPurchases && lastCreatedPurchases.length > 0) {
+            // Filter out purchases we've already shown
+            const newPurchases = lastCreatedPurchases.filter(
+                purchase => !shownPurchaseIds.includes(purchase.purchase_id)
+            );
+
+            if (newPurchases.length > 0) {
+                // Show toast for the first new purchase
+                const latestPurchase = newPurchases[0];
+                setLatestOrder(latestPurchase);
+
+                // Add this purchase ID to shown purchases
+                setShownPurchaseIds(prev => [...prev, latestPurchase.purchase_id]);
+
+                // Clean up old shown purchase IDs after some time
+                setTimeout(() => {
+                    setShownPurchaseIds(prev =>
+                        prev.filter(id => id !== latestPurchase.purchase_id)
+                    );
+                }, 6000); // 6 seconds (1 second after toast disappears)
+            }
+        }
+    }, [lastCreatedPurchases]);
 
     useEffect(() => {
         lightHaptic();
@@ -157,6 +187,7 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll}) => {
         setIsPriceExpanded(false); // Collapse the dropdown after selection
     };
 
+
     // Filter restaurant data based on filters.
     // For the "Under 30 min" filter, we assume that 3km or less is reachable in 30 minutes.
     const filteredRestaurants = useMemo(() => {
@@ -196,6 +227,7 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll}) => {
                     }
                 ]}
             >
+
                 <View style={styles.topBar}>
                     <Text style={styles.title}>Restaurants Near You</Text>
                 </View>
@@ -361,6 +393,15 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll}) => {
                             />
                         }
                     >
+
+                        <View>
+                            {latestOrder && (
+                                <RecentOrderToast
+                                    order={latestOrder}
+                                    onDismiss={() => setLatestOrder(null)}
+                                />
+                            )}
+                        </View>
                         <View style={styles.radiusContainer}>
                             <Text style={styles.radiusText}>Search Radius: {localRadius}km</Text>
                             <Slider
@@ -379,19 +420,27 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll}) => {
                                 maximumTrackTintColor="#E5E7EB"
                                 thumbTintColor="#50703C"
                             />
+
                         </View>
+
 
                         <FavoriteRestaurantList
                             restaurants={filteredRestaurants}
                         />
+
+
                         <View style={styles.topBar}>
                             <Text style={styles.Subtitle}>Explore</Text>
                         </View>
+
                         <RestaurantList
                             restaurants={filteredRestaurants}
                         />
+
                     </Animated.ScrollView>
+
                 )}
+
             </View>
         </View>
     );

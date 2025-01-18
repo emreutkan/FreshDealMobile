@@ -127,7 +127,7 @@ const CheckoutScreen: React.FC = () => {
         try {
             await dispatch(createPurchaseOrderAsync({
                 isDelivery: !isPickup,
-                notes: deliveryNotes,
+                notes: deliveryNotes ? deliveryNotes : " ",
             }));
 
             complexHaptic();
