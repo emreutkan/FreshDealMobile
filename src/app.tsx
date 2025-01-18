@@ -11,12 +11,13 @@ import {navigationRef, RootStackParamList} from '@/src/utils/navigation';
 import UpdateAddress from "@/src/features/homeScreen/screens/UpdateAddress";
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import RestaurantDetails from "@/src/features/RestaurantScreen/RestaurantDetails";
-import FavoritesScreen from "@/src/features/homeScreen/screens/FavoritesScreen";
+import FavoritesScreen from "@/src/features/favoritesScreen/FavoritesScreen";
 import CartScreen from "@/src/features/CartScreen/CartScreen";
 import Orders from "@/src/features/OrdersScreen/Orders"; // Add this import
 import OrderDetails from "@/src/features/OrdersScreen/OrderDetails"; // Add this import
 import AccountScreen from "@/src/features/accountScreen/accountScreen";
 import {BottomSheetModalProvider} from "@gorhom/bottom-sheet";
+import CheckoutScreen from "@/src/features/CheckoutScreen/CheckoutScreen";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -68,6 +69,7 @@ const AppContent: React.FC = () => {
                                 component={OrderDetails}
                                 options={{title: 'Order Details'}}
                             />
+                            <Stack.Screen name="Checkout" component={CheckoutScreen}/>
                         </Stack.Navigator>
                     </NavigationContainer>
                 </BottomSheetModalProvider>

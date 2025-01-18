@@ -22,7 +22,10 @@ export const GoBackIcon: React.FC = () => {
 
 const styles = StyleSheet.create({
 
-    iconButton: {padding: 8},
+    iconButton: {
+        padding: 8,
+        zIndex: 9999,
+    },
 
 });
 

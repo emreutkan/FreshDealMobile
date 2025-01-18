@@ -1,7 +1,7 @@
 import {createSlice} from '@reduxjs/toolkit';
 import {PurchaseState} from '@/src/types/states';
 import {
-    createPurchaseAsync,
+    createPurchaseOrderAsync,
     fetchActiveOrdersAsync,
     fetchOrderDetailsAsync,
     fetchPreviousOrdersAsync,
@@ -47,15 +47,16 @@ const purchaseSlice = createSlice({
             .addCase('user/logout', (state) => {
                 return initialState;
             })
-            .addCase(createPurchaseAsync.pending, (state) => {
+            .addCase(createPurchaseOrderAsync.pending, (state) => {
                 state.creatingPurchase = true;
                 state.createPurchaseError = null;
             })
-            .addCase(createPurchaseAsync.fulfilled, (state, action) => {
+            .addCase(createPurchaseOrderAsync.fulfilled, (state, action) => {
                 state.creatingPurchase = false;
                 state.lastCreatedPurchases = action.payload.purchases;
+                state.createPurchaseError = null;
             })
-            .addCase(createPurchaseAsync.rejected, (state, action) => {
+            .addCase(createPurchaseOrderAsync.rejected, (state, action) => {
                 state.creatingPurchase = false;
                 state.createPurchaseError = action.payload || 'Failed to create purchase';
             })

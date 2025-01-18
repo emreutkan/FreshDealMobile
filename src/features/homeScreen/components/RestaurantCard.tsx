@@ -4,7 +4,7 @@ import {Restaurant} from "@/src/types/api/restaurant/model";
 import {useDispatch, useSelector} from "react-redux";
 import {AppDispatch} from "@/src/redux/store";
 import {RootState} from "@/src/types/store";
-import {Ionicons} from "@expo/vector-icons";
+import {Ionicons, MaterialCommunityIcons, MaterialIcons} from "@expo/vector-icons";
 import {addFavoriteThunk, removeFavoriteThunk} from "@/src/redux/thunks/userThunks";
 import {useHandleRestaurantPress} from "@/src/hooks/handleRestaurantPress";
 import {tokenService} from "@/src/services/tokenService";
@@ -13,21 +13,72 @@ interface RestaurantListProps {
     restaurants: Restaurant[];
 }
 
+// Helper function to calculate distance between two coordinates
+const calculateDistance = (
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number
+): number => {
+    const R = 6371; // Earth's radius in kilometers
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c; // Distance in kilometers
+};
+
+// Helper function to check if restaurant is open
+const isRestaurantOpen = (
+    workingDays: string[],
+    workingHoursStart?: string,
+    workingHoursEnd?: string
+): boolean => {
+    const now = new Date();
+    const currentDay = now.toLocaleDateString('en-US', {weekday: 'long'});
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+
+    console.log('Current day:', currentDay);
+    console.log('Current time:', currentHour, currentMinute);
+    console.log('Working days:', workingDays);
+    console.log('Working hours:', workingHoursStart, workingHoursEnd);
+    if (!workingDays.includes(currentDay)) return false;
+
+    if (workingHoursStart && workingHoursEnd) {
+        const [startHour, startMinute] = workingHoursStart.split(':').map(Number);
+        const [endHour, endMinute] = workingHoursEnd.split(':').map(Number);
+
+        const currentTime = currentHour * 60 + currentMinute;
+        const startTime = startHour * 60 + startMinute;
+        const endTime = endHour * 60 + endMinute;
+
+        return currentTime >= startTime && currentTime <= endTime;
+    }
+
+
+    return true;
+};
+
+// Calculate estimated delivery time based on distance
+const calculateDeliveryTime = (distanceKm: number): number => {
+    const baseTime = 15; // Base preparation time in minutes
+    const timePerKm = 5; // Additional minutes per kilometer
+    return Math.round(baseTime + (distanceKm * timePerKm));
+};
 
 const RestaurantList: React.FC<RestaurantListProps> = ({restaurants}) => {
     const dispatch = useDispatch<AppDispatch>();
     const favoriteRestaurantsIDs = useSelector((state: RootState) => state.restaurant.favoriteRestaurantsIDs);
     const handleRestaurantPress = useHandleRestaurantPress();
+
     const selectedAddressID = useSelector((state: RootState) => state.address.selectedAddressId);
-    const selectedAddress = useSelector((state: RootState) => state.address.addresses.find((address) => address.id === selectedAddressID));
-    if (!selectedAddress) {
-        console.error('Selected address is missing.');
-        return null;
-    }
-    const selectedAddressCoordinates = selectedAddress.latitude && selectedAddress.longitude && {
-        latitude: selectedAddress.latitude,
-        longitude: selectedAddress.longitude,
-    }
+    const selectedAddress = useSelector((state: RootState) =>
+        state.address.addresses.find((address) => address.id === selectedAddressID)
+    );
 
     const handleFavoritePress = useCallback((id: number) => {
         const token = tokenService.getToken();
@@ -44,23 +95,53 @@ const RestaurantList: React.FC<RestaurantListProps> = ({restaurants}) => {
 
     const renderRestaurantItem = ({item}: { item: Restaurant }) => {
         const isFavorite = favoriteRestaurantsIDs.includes(item.id);
+        const isOpen = isRestaurantOpen(item.workingDays, item.workingHoursStart, item.workingHoursEnd);
+        const hasStock = item.listings > 0;
+
+        // Calculate distance if we have coordinates
+        const distance = selectedAddress?.latitude && selectedAddress?.longitude && item.latitude && item.longitude
+            ? calculateDistance(
+                selectedAddress.latitude,
+                selectedAddress.longitude,
+                item.latitude,
+                item.longitude
+            )
+            : null;
+
+        const deliveryTime = distance ? calculateDeliveryTime(distance) : 35;
+        const distanceDisplay = distance
+            ? distance < 1
+                ? `Within ${Math.round(distance * 1000)}m`
+                : `Within ${distance.toFixed(1)} km`
+            : 'Distance unavailable';
+
+        const isDisabled = !isOpen || !hasStock;
+        const overlayMessage = !isOpen
+            ? 'Currently Closed'
+            : !hasStock
+                ? 'Out of Stock (Come back later!)'
+                : '';
 
         return (
             <TouchableOpacity
-                onPress={() => handleRestaurantPress(item.id)}
-                activeOpacity={0.95}
+                onPress={() => !isDisabled && handleRestaurantPress(item.id)}
+                activeOpacity={isDisabled ? 1 : 0.95}
                 style={styles.touchableContainer}
             >
                 <View style={styles.restaurantCard}>
                     <Image
                         source={{
-                            uri: item.image_url?.replace('127.0.0.1', '192.168.1.3') ||
-                                'https://via.placeholder.com/400x200',
+                            uri: item.image_url?.replace('127.0.0.1', '192.168.1.3')
                         }}
                         style={styles.image}
                     />
 
-                    {/* Favorite Button */}
+                    {isDisabled && (
+                        <View style={styles.overlay}>
+                            <Text style={styles.overlayText}>{overlayMessage}</Text>
+                        </View>
+                    )}
+
                     <TouchableOpacity
                         style={styles.heartButton}
                         onPress={() => handleFavoritePress(item.id)}
@@ -88,23 +169,24 @@ const RestaurantList: React.FC<RestaurantListProps> = ({restaurants}) => {
 
                         <View style={styles.infoRow}>
                             <View style={styles.locationContainer}>
-                                <Ionicons name="location-outline" size={16} color="#666"/>
-                                <Text style={styles.locationText}>
-                                    Within {(item.distance_km ?? 0).toFixed(0)} meters
-                                </Text>
+                                <MaterialCommunityIcons name="run-fast" size={20} color="#50703C"/>
+                                <Text
+                                    style={styles.locationText}>{distanceDisplay}</Text>
                             </View>
                         </View>
 
-                        <View style={styles.deliveryInfoContainer}>
-                            <View style={styles.timeAndPrice}>
-                                <Ionicons name="time-outline" size={16} color="#666"/>
-                                <Text style={styles.deliveryText}>35 min</Text>
-                                <Text style={styles.dot}>•</Text>
-                                <Text style={styles.priceText}>
-                                    {item.deliveryFee ? `${item.deliveryFee.toFixed(2)}TL` : 'Free Delivery'}
-                                </Text>
+                        {item.delivery && (
+                            <View style={styles.deliveryInfoContainer}>
+                                <View style={styles.timeAndPrice}>
+                                    <MaterialIcons name="delivery-dining" size={24} color="#50703C"/>
+                                    <Text style={styles.deliveryText}>{deliveryTime} min</Text>
+                                    <Text style={styles.dot}>•</Text>
+                                    <Text style={styles.priceText}>
+                                        {item.deliveryFee ? `${item.deliveryFee.toFixed(2)}TL` : 'Free Delivery'}
+                                    </Text>
+                                </View>
                             </View>
-                        </View>
+                        )}
                     </View>
                 </View>
             </TouchableOpacity>
@@ -121,8 +203,33 @@ const RestaurantList: React.FC<RestaurantListProps> = ({restaurants}) => {
         />
     );
 };
-
 const styles = StyleSheet.create({
+    // ... existing styles ...
+    overlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    overlayText: {
+        color: '#fff',
+        fontSize: 18,
+        fontWeight: '600',
+        textAlign: 'center',
+        padding: 16,
+        fontFamily: "Poppins-SemiBold",
+    },
+    minOrderText: {
+        fontSize: 12,
+        color: '#666',
+        marginTop: 4,
+        fontFamily: "Poppins-Regular",
+
+    },
     listContainer: {
         backgroundColor: "#fff",
     },
@@ -192,7 +299,8 @@ const styles = StyleSheet.create({
         fontWeight: "600",
         color: "#000",
         marginRight: 8,
-        fontFamily: "Poppins-SemiBold",
+        fontFamily: "Poppins-Regular",
+        paddingBottom: 4,
     },
     ratingContainer: {
         flexDirection: "row",
@@ -200,11 +308,15 @@ const styles = StyleSheet.create({
         gap: 4,
     },
     rating: {
+        fontFamily: "Poppins-Regular",
+
         fontSize: 14,
         fontWeight: "600",
         color: "#000",
     },
     reviewCount: {
+        fontFamily: "Poppins-Regular",
+
         fontSize: 14,
         color: "#666",
     },
@@ -217,6 +329,8 @@ const styles = StyleSheet.create({
         gap: 4,
     },
     locationText: {
+        fontFamily: "Poppins-Regular",
+
         fontSize: 14,
         color: "#666",
     },
@@ -231,15 +345,21 @@ const styles = StyleSheet.create({
         gap: 4,
     },
     deliveryText: {
+        fontFamily: "Poppins-Regular",
+
         fontSize: 14,
         color: "#666",
     },
     dot: {
+        fontFamily: "Poppins-Regular",
+
         fontSize: 14,
         color: "#666",
-        marginHorizontal: 4,
+        marginHorizontal: 1,
     },
     priceText: {
+        fontFamily: "Poppins-Regular",
+
         fontSize: 14,
         color: "#666",
     },

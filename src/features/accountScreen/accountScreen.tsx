@@ -1,5 +1,15 @@
 import React, {useState} from 'react';
-import {ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View,} from 'react-native';
+import {
+    ActivityIndicator,
+    Alert,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
+} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
 import {AppDispatch} from '@/src/redux/store';
 import {Feather, MaterialCommunityIcons, MaterialIcons} from '@expo/vector-icons';
@@ -130,6 +140,8 @@ const AccountScreen: React.FC = () => {
     const inset = useSafeAreaInsets()
     return (
         <>
+            <StatusBar translucent backgroundColor="transparent" barStyle="dark-content"/>
+
             <View style={[styles.topBar, {paddingTop: inset.top}]}>
                 <GoBackIcon/>
                 <Text style={styles.title}>Profile</Text>

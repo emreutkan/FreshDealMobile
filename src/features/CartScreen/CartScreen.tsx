@@ -7,7 +7,7 @@ import {useSafeAreaInsets} from "react-native-safe-area-context";
 import {scaleFont} from "@/src/utils/ResponsiveFont";
 import {GoBackIcon} from "@/src/features/homeScreen/components/goBack";
 import ListingCard from "@/src/features/RestaurantScreen/components/listingsCard";
-import {setSelectedRestaurant} from "@/src/redux/slices/restaurantSlice";
+import {setDeliveryMethod, setSelectedRestaurant} from "@/src/redux/slices/restaurantSlice";
 import {fetchCart} from "@/src/redux/thunks/cartThunks";
 import {Ionicons} from "@expo/vector-icons";
 import type {NativeStackNavigationProp} from "@react-navigation/native-stack";
@@ -49,6 +49,11 @@ const CartScreen: React.FC = () => {
             console.log('Final filtered listings:', ListingsInCart);
             if (restaurant) {
                 dispatch(setSelectedRestaurant(restaurant));
+                if (restaurant.delivery && !restaurant.pickup) {
+                    dispatch(setDeliveryMethod(false));
+                } else if (!restaurant.delivery && restaurant.pickup) {
+                    dispatch(setDeliveryMethod(true));
+                }
             } else {
                 Alert.alert('Restaurant not found', 'The restaurant is not in proximity. Cart will be cleared.');
             }
@@ -78,8 +83,8 @@ const CartScreen: React.FC = () => {
         return (price || 0) * quantity;
     };
     const restaurant = restaurantsProximity.find(r => r.id === (cartItems[0]?.restaurant_id));
-    type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
     const totalItemsCount = cartItems.reduce((sum, item) => sum + (item.count || 1), 0);
+    type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
     const navigation = useNavigation<NavigationProp>();
 
@@ -157,6 +162,10 @@ const CartScreen: React.FC = () => {
                         <TouchableOpacity
                             style={styles.checkoutButton}
                             activeOpacity={0.8}
+                            onPress={() => {
+                                console.log("Navigating to Checkout");
+                                navigation.navigate('Checkout');
+                            }}
                         >
                             <Ionicons name="cart" size={24} color="#FFFFFF" style={styles.checkoutIcon}/>
 
@@ -190,14 +199,14 @@ const CartScreen: React.FC = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#FFFFFF',
+        backgroundColor: '#f8f9fa',
     },
     header: {
         paddingHorizontal: scaleFont(16),
         paddingBottom: scaleFont(16),
         backgroundColor: '#FFFFFF',
         borderBottomWidth: 1,
-        borderBottomColor: '#F0F0F0',
+        borderBottomColor: '#f0f0f0',
     },
     headerTop: {
         flexDirection: 'row',
@@ -205,14 +214,15 @@ const styles = StyleSheet.create({
         marginBottom: scaleFont(8),
     },
     headerTitle: {
-        fontSize: scaleFont(24),
-        fontWeight: '700',
-        color: '#333333',
+        fontSize: scaleFont(20),
+        fontWeight: '600',
+        color: '#333',
         flex: 1,
         marginLeft: scaleFont(12),
+        fontFamily: 'Poppins-Regular',
     },
     badge: {
-        backgroundColor: '#059669',
+        backgroundColor: '#50703C',
         borderRadius: 12,
         minWidth: 24,
         height: 24,
@@ -224,6 +234,7 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
         fontSize: scaleFont(12),
         fontWeight: '600',
+        fontFamily: 'Poppins-Regular',
     },
     restaurantInfo: {
         flexDirection: 'row',
@@ -235,10 +246,11 @@ const styles = StyleSheet.create({
         color: '#666666',
         marginLeft: scaleFont(8),
         fontWeight: '500',
+        fontFamily: 'Poppins-Regular',
     },
     scrollView: {
         flex: 1,
-        backgroundColor: '#F8F8F8',
+        backgroundColor: '#f8f9fa',
     },
     cardsContainer: {
         padding: scaleFont(16),
@@ -248,7 +260,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: scaleFont(16),
         paddingVertical: scaleFont(20),
         borderTopWidth: 1,
-        borderTopColor: '#F0F0F0',
+        borderTopColor: '#f0f0f0',
         shadowColor: '#000',
         shadowOffset: {
             width: 0,
@@ -269,15 +281,17 @@ const styles = StyleSheet.create({
     summaryLabel: {
         fontSize: scaleFont(14),
         color: '#666666',
+        fontFamily: 'Poppins-Regular',
     },
     summaryValue: {
         fontSize: scaleFont(14),
         color: '#333333',
         fontWeight: '500',
+        fontFamily: 'Poppins-Regular',
     },
     divider: {
         height: 1,
-        backgroundColor: '#F0F0F0',
+        backgroundColor: '#f0f0f0',
         marginVertical: scaleFont(12),
     },
     totalContainer: {
@@ -289,14 +303,16 @@ const styles = StyleSheet.create({
         fontSize: scaleFont(18),
         color: '#333333',
         fontWeight: '600',
+        fontFamily: 'Poppins-Regular',
     },
     totalAmount: {
         fontSize: scaleFont(24),
-        color: '#059669',
+        color: '#50703C',
         fontWeight: '700',
+        fontFamily: 'Poppins-Regular',
     },
     checkoutButton: {
-        backgroundColor: '#059669',
+        backgroundColor: '#50703C',
         borderRadius: scaleFont(12),
         paddingVertical: scaleFont(16),
         flexDirection: 'row',
@@ -310,13 +326,14 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
         fontSize: scaleFont(16),
         fontWeight: '600',
+        fontFamily: 'Poppins-Regular',
     },
     emptyCartContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
         padding: scaleFont(20),
-        backgroundColor: '#F8F8F8',
+        backgroundColor: '#f8f9fa',
     },
     emptyCartText: {
         fontSize: scaleFont(20),
@@ -324,14 +341,16 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         marginTop: scaleFont(20),
         marginBottom: scaleFont(8),
+        fontFamily: 'Poppins-Regular',
     },
     emptyCartSubtext: {
         fontSize: scaleFont(14),
         color: '#666666',
         marginBottom: scaleFont(24),
+        fontFamily: 'Poppins-Regular',
     },
     continueShopping: {
-        backgroundColor: '#059669',
+        backgroundColor: '#50703C',
         paddingVertical: scaleFont(12),
         paddingHorizontal: scaleFont(24),
         borderRadius: scaleFont(12),
@@ -345,7 +364,7 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
         fontSize: scaleFont(16),
         fontWeight: '600',
+        fontFamily: 'Poppins-Regular',
     },
 });
-
 export default CartScreen;

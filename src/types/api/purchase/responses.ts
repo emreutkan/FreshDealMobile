@@ -2,22 +2,29 @@
 
 import {Purchase} from "@/src/types/api/purchase/model";
 
-export interface CreatePurchaseResponse {
+export interface PurchaseOrder {
+    completion_image_url?: string;
+    delivery_address?: string;
+    delivery_notes?: string;
+    formatted_total_price: string;
+    is_active: boolean;
+    is_delivery: boolean;
+    listing_id: number;
+    listing_title: string;
+    purchase_date: string;
+    purchase_id: number;
+    quantity: number;
+    status: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'COMPLETED';
+    total_price: string;
+    user_id: number;
+    restaurant_id: number;
+
+}
+
+
+export interface CreatePurchaseOrderResponse {
     message: string;
-    purchases: {
-        id: number;
-        user_id: number;
-        listing_id: number;
-        quantity: number;
-        restaurant_id: number;
-        total_price: string;
-        status: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'COMPLETED';
-        is_delivery: boolean;
-        delivery_address?: string;
-        delivery_notes?: string;
-        purchase_date: string;
-        completion_image_url?: string;
-    }[];
+    purchases: PurchaseOrder[];
 }
 
 export interface PurchaseResponseResponse {

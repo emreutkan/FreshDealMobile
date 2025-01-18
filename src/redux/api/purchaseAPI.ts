@@ -2,20 +2,22 @@ import {API_BASE_URL} from "@/src/redux/api/API";
 import {apiClient} from '@/src/services/apiClient';
 import {
     AddCompletionImageResponse,
-    CreatePurchaseResponse,
+    CreatePurchaseOrderResponse,
     GetOrderDetailsResponse,
     GetRestaurantPurchasesResponse,
     GetUserActiveOrdersResponse,
     GetUserPreviousOrdersResponse,
     PurchaseResponseResponse,
 } from "@/src/types/api/purchase/responses";
+import {CreatePurchaseOrderData} from "@/src/types/api/purchase/requests";
 
 const PURCHASE_ENDPOINT = `${API_BASE_URL}/purchase`;
 
 // First, let's define the types for the delivery info and pagination
 interface DeliveryInfo {
-    notes?: string;
-    address?: string;
+    delivery_notes?: string;
+    delivery_address?: string;
+    is_delivery: boolean;
 }
 
 interface PaginationParams {
@@ -23,16 +25,17 @@ interface PaginationParams {
     per_page?: number;
 }
 
+
 export const purchaseAPI = {
     // Create a purchase order
     async createPurchaseOrder(
         token: string,
-        delivery_info?: DeliveryInfo
-    ): Promise<CreatePurchaseResponse> {
+        requestData: CreatePurchaseOrderData  // Use the proper type directly
+    ): Promise<CreatePurchaseOrderResponse> {
         return apiClient.request({
             method: 'POST',
             url: PURCHASE_ENDPOINT,
-            data: delivery_info ? {delivery_info} : {},
+            data: requestData,  // Send the data directly
             token,
         });
     },
@@ -141,4 +144,5 @@ export const purchaseAPI = {
             token,
         });
     },
+
 };

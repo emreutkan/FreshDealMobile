@@ -15,6 +15,7 @@ export type RootStackParamList = {
     Account: undefined;
     Orders: { status?: 'active' | 'previous' };
     OrderDetails: { orderId: number };
+    Checkout: undefined;
 };
 
 // If you're using useNavigation hook, you might want to add this type:

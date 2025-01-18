@@ -104,7 +104,7 @@ export const ListingCard: React.FC<ListingCardProps> = ({
             (item) => item.listing_id === selectedListing.id
         );
         const countInCart = cartItem ? cartItem.count : 0;
-        const expiryDate = addDays(new Date(), selectedListing.consume_within);
+        const expiryDate = addDays(new Date(), selectedListing.consume_within || 1);
 
         return (
             <BottomSheetModal
@@ -198,9 +198,9 @@ export const ListingCard: React.FC<ListingCardProps> = ({
             (cartItem) => cartItem.listing_id === item.id
         );
         const countInCart = cartItem ? cartItem.count : 0;
-        const discountPercentage = Math.round(
-            ((item.original_price - displayPrice) / item.original_price) * 100
-        );
+        const discountPercentage = item.original_price
+            ? Math.round(((item.original_price - displayPrice) / item.original_price) * 100)
+            : 0;
 
         return (
             <TouchableOpacity
@@ -286,7 +286,7 @@ export const ListingCard: React.FC<ListingCardProps> = ({
                 data={listings}
                 renderItem={renderListingItem}
                 keyExtractor={(item) => item.id.toString()}
-                numColumns={2}
+                numColumns={viewType === 'cube' ? 2 : 1} // Only use columns in cube view
                 columnWrapperStyle={viewType === 'cube' ? styles.columnWrapper : undefined}
                 showsVerticalScrollIndicator={false}
             />
@@ -572,7 +572,7 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         color: '#059669',
     },
- 
+
 
     cartControls: {
         flexDirection: 'row',

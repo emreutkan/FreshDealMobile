@@ -8,6 +8,8 @@ export interface Purchase {
     purchase_date: string;
     status: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'COMPLETED';
     is_delivery: boolean;
+    is_active: boolean;
+
     delivery_address?: string;
     delivery_notes?: string;
     completion_image_url?: string;

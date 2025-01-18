@@ -1,19 +1,22 @@
 import {createAsyncThunk} from '@reduxjs/toolkit';
 import {purchaseAPI} from '@/src/redux/api/purchaseAPI';
-import {RootState} from '../store';
+import {RootState} from "@/src/types/store";
 import {Address} from "@/src/types/api/address/model";
 import {tokenService} from "@/src/services/tokenService";
+import {CreatePurchaseOrderResponse} from "@/src/types/api/purchase/responses";
+import {CreatePurchaseOrderData} from "@/src/types/api/purchase/requests";
 // import {DeliveryInfo} from "@/src/types/api/purchase/responses";
 
 // Helper function to serialize address for delivery info
-const serializeAddressForDelivery = (address: Address): string => {
+export const serializeAddressForDelivery = (address: Address): string => {
     const parts = [
         address.street,
         address.neighborhood,
-        address.district,
-        address.province,
+        // address.district,
+        // address.province,
         address.country,
     ].filter(Boolean);
+    console.log("Apartment No: " + address.apartmentNo);
 
     if (address.apartmentNo) {
         parts.push(`Apt: ${address.apartmentNo}`);
@@ -22,16 +25,21 @@ const serializeAddressForDelivery = (address: Address): string => {
         parts.push(`Door: ${address.doorNo}`);
     }
 
-    return parts.join(', ');
+    return parts.join(' ');
 };
 
-export const createPurchaseAsync = createAsyncThunk<
-    any, // Replace with proper type from your API response
-    { addressId?: string; notes?: string },
+interface CreatePurchaseOrderParams {
+    isDelivery: boolean;
+    notes?: string;              // Will be used as delivery_notes for both cases
+}
+
+export const createPurchaseOrderAsync = createAsyncThunk<
+    CreatePurchaseOrderResponse,
+    CreatePurchaseOrderParams,
     { state: RootState; rejectValue: string }
 >(
-    'purchase/createPurchase',
-    async ({addressId, notes}, {getState, rejectWithValue}) => {
+    'purchase/createOrder',
+    async ({isDelivery, notes}, {getState, rejectWithValue}) => {
         try {
             const state = getState();
             const token = await tokenService.getToken();
@@ -40,29 +48,30 @@ export const createPurchaseAsync = createAsyncThunk<
                 return rejectWithValue('Authentication token is missing');
             }
 
-            let deliveryInfo = {
-                address: 'Unknown',
-                notes: notes
+            const selectedAddressId = state.address.selectedAddressId;
+            const selectedAddress = state.address.addresses.find(address => address.id === selectedAddressId);
+            if (!selectedAddress) {
+                return rejectWithValue('Delivery address is required for delivery orders');
             }
 
-            if (addressId) {
-                const address = state.address.addresses.find(addr => addr.id === addressId);
-                if (address) {
-                    deliveryInfo = {
-                        address: serializeAddressForDelivery(address),
-                        notes: notes
-                    };
-                }
+            const requestData: CreatePurchaseOrderData = {
+                is_delivery: isDelivery,
+                delivery_notes: notes,
+                ...(isDelivery ? {
+                    delivery_address: serializeAddressForDelivery(selectedAddress)
+                } : {})
+            };
+            if (isDelivery && !requestData.delivery_address) {
+                throw new Error('Delivery address is required for delivery orders');
             }
 
-            const response = await purchaseAPI.createPurchaseOrder(token, deliveryInfo);
-            return response;
+
+            return await purchaseAPI.createPurchaseOrder(token, requestData);
         } catch (error: any) {
-            return rejectWithValue(error.response?.data?.message || 'Failed to create purchase');
+            return rejectWithValue(error.response?.data?.message || 'Failed to create purchase order');
         }
     }
 );
-
 export const fetchActiveOrdersAsync = createAsyncThunk<
     any,
     void,
