@@ -1,9 +1,9 @@
 import React from 'react';
-import {Alert, Text, TouchableOpacity} from 'react-native';
+import {Alert} from 'react-native';
 import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
-import {ButtonStyles} from "@/src/styles/ButtonStyles";
 import {Ionicons} from "@expo/vector-icons";
+import {CustomButton} from "@/src/features/LoginRegister/components/CustomButton";
 
 // Register for Web Browser Result
 WebBrowser.maybeCompleteAuthSession();
@@ -42,14 +42,9 @@ const GoogleOTP: React.FC<GoogleOTPProps> = ({onSuccess}) => {
     };
 
     return (
-        <TouchableOpacity
-            style={ButtonStyles.default}
-            onPress={handleSignIn}
-            disabled={!request} // Add disabled state when request is not ready
-        >
-            <Ionicons name="logo-google" size={20} color="#000" style={ButtonStyles.ButtonIcon}/>
-            <Text style={ButtonStyles.ButtonText}>Sign in with Google</Text>
-        </TouchableOpacity>
+ 
+        <CustomButton onPress={handleSignIn} title={"Sign in with Google"}
+                      icon={<Ionicons name="logo-google" size={20} color="#000"/>}/>
     );
 };
 

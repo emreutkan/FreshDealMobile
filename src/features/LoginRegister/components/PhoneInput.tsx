@@ -1,128 +1,113 @@
-// components/LoginScreenComponents/PhoneInput.tsx
-
+// PhoneInput.tsx
 import React, {useState} from 'react';
-import {Dimensions, Modal, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View,} from 'react-native';
+import {Dimensions, Modal, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import {Picker} from '@react-native-picker/picker';
 import {countryCodes} from '@/src/utils/countryCodes';
-import {scaleFont} from "@/src/utils/ResponsiveFont";
 import {useDispatch, useSelector} from 'react-redux';
-import {setPhoneNumber, setSelectedCode,} from '@/src/redux/slices/userSlice'; // Adjust the path as needed // Adjust the path as needed
+import {setPhoneNumber, setSelectedCode} from '@/src/redux/slices/userSlice';
 import {RootState} from "@/src/types/store";
+import BaseInput from './BaseInput';
+import {scaleFont} from "@/src/utils/ResponsiveFont";
 
 const PhoneInput: React.FC = () => {
     const dispatch = useDispatch();
-
-    // Access phoneNumber and selectedCode from Redux store
     const phoneNumber = useSelector((state: RootState) => state.user.phoneNumber);
     const selectedCode = useSelector((state: RootState) => state.user.selectedCode);
 
-    // Local state for temporary country code selection and picker visibility
-    const [tempCode, setTempCode] = useState<string>(selectedCode);
     const [isPickerVisible, setIsPickerVisible] = useState<boolean>(false);
-    const [isTyping, setIsTyping] = useState<boolean>(phoneNumber.length > 0);
+    const [tempCode, setTempCode] = useState<string>(selectedCode);
 
-    // Handle changes in phone number input
     const handleChangeText = (text: string) => {
         const cleanedText = text.replace(/[^0-9]/g, '');
-        if (cleanedText.length <= 15) { // Enforce maximum of 15 characters
+        if (cleanedText.length <= 15) {
             dispatch(setPhoneNumber(cleanedText));
-            setIsTyping(cleanedText.length > 0);
         }
     };
 
-    // Handle clearing of phone number input
-    const handleClearText = () => {
-        dispatch(setPhoneNumber(''));
-        setIsTyping(false);
-    };
-
-    // Handle confirmation of country code selection
     const handleConfirmSelection = () => {
         dispatch(setSelectedCode(tempCode));
         setIsPickerVisible(false);
     };
 
-    // Render the country code selector button
-    const renderCountryCodeSelector = () => (
-        <TouchableOpacity onPress={() => setIsPickerVisible(true)} style={styles.countryCodeContainer}>
+    // Custom component for the left icon (country code selector)
+    const CountryCodeSelector = () => (
+        <TouchableOpacity
+            onPress={() => setIsPickerVisible(true)}
+            style={styles.countryCodeContainer}
+        >
             <Text style={styles.countryCodeText}>{selectedCode}</Text>
         </TouchableOpacity>
     );
 
-// Modify renderPicker
-    const renderPicker = () => (
-        <Picker
-            selectedValue={tempCode}
-            onValueChange={(itemValue) => setTempCode(itemValue)}
-            style={[styles.picker]} // Add iOS-specific style
-            itemStyle={{color: '#000', fontSize: 18}} // Set text color for iOS picker items
-        >
-            {countryCodes.map((item) => (
-                <Picker.Item
-                    key={item.code}
-                    label={`${item.country} (${item.code})`}
-                    value={item.code}
-                    color="#000" // Ensure color is set for each item
-                />
-            ))}
-        </Picker>
-    );
-
     return (
-        <View style={[
-            styles.inputContainer,
-            isTyping && {borderColor: 'gray'} // Change border color when typing
-        ]}>
-            {renderCountryCodeSelector()}
-            <TextInput
-                style={styles.phoneInput}
-                placeholder="Phone number"
-                placeholderTextColor="#999"
-                autoComplete="off"
-                textContentType="oneTimeCode"
-                autoCorrect={false}
-                autoCapitalize="none"
-                spellCheck={false}
-                // For Android
-                importantForAutofill="no"
-
-                onChangeText={handleChangeText}
+        <>
+            <BaseInput
                 value={phoneNumber}
+                onChangeText={handleChangeText}
+                placeholder="Phone number"
                 keyboardType="phone-pad"
-                maxLength={15} // Enforce maximum of 15 characters
+                leftIcon={<CountryCodeSelector/>}
             />
-            {isTyping && (
-                <TouchableOpacity onPress={handleClearText} style={styles.clearButton}>
-                    <Text style={styles.clearButtonText}>X</Text>
-                </TouchableOpacity>
-            )}
 
-            {isPickerVisible && (
-                <Modal visible={isPickerVisible} transparent animationType="slide">
-                    <View style={styles.modalOverlay}>
-                        <View style={styles.modalContainer}>
-                            {renderPicker()}
-                            <TouchableOpacity onPress={handleConfirmSelection} style={styles.confirmButton}>
-                                <Text style={styles.confirmButtonText}>OK</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity onPress={() => setIsPickerVisible(false)} style={styles.cancelButton}>
-                                <Text style={styles.cancelButtonText}>Cancel</Text>
-                            </TouchableOpacity>
-                        </View>
+            <Modal
+                visible={isPickerVisible}
+                transparent
+                animationType="slide"
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContainer}>
+                        <Picker
+                            selectedValue={tempCode}
+                            onValueChange={(itemValue) => setTempCode(itemValue)}
+                            style={styles.picker}
+                            itemStyle={{color: '#000', fontSize: 18}}
+                        >
+                            {countryCodes.map((item) => (
+                                <Picker.Item
+                                    key={item.code}
+                                    label={`${item.country} (${item.code})`}
+                                    value={item.code}
+                                    color="#000"
+                                />
+                            ))}
+                        </Picker>
+
+                        <TouchableOpacity
+                            onPress={handleConfirmSelection}
+                            style={styles.confirmButton}
+                        >
+                            <Text style={styles.confirmButtonText}>Confirm</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            onPress={() => setIsPickerVisible(false)}
+                            style={styles.cancelButton}
+                        >
+                            <Text style={styles.cancelButtonText}>Cancel</Text>
+                        </TouchableOpacity>
                     </View>
-                </Modal>
-            )}
-        </View>
+                </View>
+            </Modal>
+        </>
     );
 };
 
 const styles = StyleSheet.create({
+    countryCodeContainer: {
+        paddingVertical: scaleFont(8),
+        paddingHorizontal: scaleFont(4),
+    },
+    countryCodeText: {
+        fontSize: scaleFont(16),
+        color: '#333',
+        fontWeight: '500',
+        fontFamily: 'Poppins-Regular',
+    },
     modalOverlay: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
-
     },
     modalContainer: {
         width: Dimensions.get('window').width * 0.85,
@@ -130,7 +115,7 @@ const styles = StyleSheet.create({
         borderRadius: scaleFont(16),
         paddingVertical: scaleFont(20),
         paddingHorizontal: scaleFont(15),
-        elevation: 5, // Android shadow
+        elevation: 5,
         shadowColor: '#000',
         shadowOffset: {width: 0, height: 4},
         shadowOpacity: 0.2,
@@ -139,14 +124,12 @@ const styles = StyleSheet.create({
     picker: {
         width: '100%',
         height: scaleFont(180),
-        borderRadius: scaleFont(10),
         backgroundColor: '#F9F9F9',
         marginVertical: scaleFont(10),
     },
-
     confirmButton: {
         marginTop: scaleFont(10),
-        backgroundColor: 'rgba(76,175,80,0.75)',
+        backgroundColor: '#50703C',
         paddingVertical: scaleFont(12),
         paddingHorizontal: scaleFont(20),
         borderRadius: scaleFont(8),
@@ -157,6 +140,7 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: scaleFont(18),
         fontWeight: '600',
+        fontFamily: 'Poppins-Regular',
     },
     cancelButton: {
         marginTop: scaleFont(10),
@@ -168,50 +152,10 @@ const styles = StyleSheet.create({
         borderRadius: scaleFont(8),
     },
     cancelButtonText: {
-        color: 'rgba(0,0,0,0.82)',
+        color: '#333',
         fontSize: scaleFont(18),
         fontWeight: '600',
-    },
-    inputContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        borderColor: '#ddd',
-        borderWidth: 1,
-        borderRadius: scaleFont(16),
-        paddingHorizontal: scaleFont(15),
-        backgroundColor: '#fff',
-        width: '100%',
-        height: scaleFont(50),
-    },
-    countryCodeContainer: {
-        paddingRight: scaleFont(10),
-        paddingVertical: scaleFont(10),
-        backgroundColor: 'transparent',
-    },
-
-    phoneInput: {
-
-        flex: 1,
-        fontSize: scaleFont(16),
-        color: '#333',
-        textAlignVertical: 'center',
-        fontFamily: Platform.OS === 'android' ? 'Poppins' : 'Poppins-Regular',
-        paddingVertical: scaleFont(10),
-    },
-    clearButton: {
-        paddingHorizontal: scaleFont(10),
-        paddingVertical: scaleFont(5),
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    countryCodeText: {
-        fontSize: scaleFont(16),
-        color: '#333',
-        fontWeight: '500',
-    },
-    clearButtonText: {
-        color: '#999',
-        fontSize: scaleFont(16),
+        fontFamily: 'Poppins-Regular',
     },
 });
 

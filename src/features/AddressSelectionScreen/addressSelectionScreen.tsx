@@ -14,16 +14,18 @@ import {
 import {useDispatch} from 'react-redux';
 import MapView, {Region} from 'react-native-maps';
 import * as Location from 'expo-location';
-import {MaterialIcons} from '@expo/vector-icons';
+import {FontAwesome6, MaterialCommunityIcons, MaterialIcons} from '@expo/vector-icons';
 import debounce from 'lodash.debounce';
 import {addAddressAsync} from '@/src/redux/thunks/addressThunks';
 import {scaleFont} from '@/src/utils/ResponsiveFont';
 import {AppDispatch} from '@/src/redux/store';
 import {useNavigation} from '@react-navigation/native';
-import InputField from '@/src/features/DefaultInput';
 import {Address} from "@/src/types/api/address/model"
-import {ButtonStyles, THEME} from "@/src/styles/ButtonStyles";
+import {THEME} from "@/src/styles/Theme";
 import {tokenService} from "@/src/services/tokenService";
+import {CustomButton} from "@/src/features/LoginRegister/components/CustomButton";
+import BaseInput from "@/src/features/LoginRegister/components/BaseInput";
+import {useSafeAreaInsets} from "react-native-safe-area-context";
 
 
 class TempAddress {
@@ -296,118 +298,6 @@ const AddressSelectionScreen: React.FC = () => {
     }, []);
 
 
-    const styles = StyleSheet.create({
-        container: {
-            flex: 1,
-            backgroundColor: THEME.colors.background,
-        },
-        mapContainer: {
-            flex: 1,
-            borderBottomLeftRadius: THEME.radius.xl,
-            borderBottomRightRadius: THEME.radius.xl,
-            overflow: 'hidden',
-            shadowColor: THEME.colors.shadow,
-            shadowOffset: {width: 0, height: 2},
-            shadowOpacity: 0.25,
-            shadowRadius: 3.84,
-            elevation: 5,
-        },
-        map: {
-            ...StyleSheet.absoluteFillObject,
-        },
-        centerMarker: {
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            marginLeft: scaleFont(-23.5),
-            marginTop: scaleFont(-13),
-            // Add bounce animation when dropping pin
-            transform: [{scale: 1.1}],
-        },
-        myLocationButton: {
-            position: 'absolute',
-            bottom: THEME.spacing.lg,
-            right: THEME.spacing.lg,
-            padding: THEME.spacing.md,
-            borderRadius: 30,
-            backgroundColor: THEME.colors.background,
-            shadowColor: THEME.colors.shadow,
-            shadowOffset: {width: 0, height: 2},
-            shadowOpacity: 0.25,
-            shadowRadius: 3.84,
-            elevation: 5,
-        },
-        formWrapper: {
-            marginTop: THEME.spacing.sm,
-            paddingTop: THEME.spacing.xl,
-            backgroundColor: THEME.colors.background,
-            borderTopLeftRadius: THEME.radius.xl,
-            borderTopRightRadius: THEME.radius.xl,
-            paddingHorizontal: THEME.spacing.lg,
-            shadowColor: THEME.colors.shadow,
-            shadowOffset: {width: 0, height: -2},
-            shadowOpacity: 0.1,
-            shadowRadius: 3.84,
-            elevation: 5,
-        },
-        addressPreviewContainer: {
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            paddingHorizontal: THEME.spacing.lg,
-            paddingVertical: THEME.spacing.md,
-            backgroundColor: '#f8fafc',
-            borderRadius: THEME.radius.lg,
-            marginBottom: THEME.spacing.lg,
-        },
-        addressText: {
-            fontSize: scaleFont(16),
-            fontFamily: 'Poppins-SemiBold',
-            color: THEME.colors.text.primary,
-            marginBottom: THEME.spacing.xs,
-        },
-        addressSubText: {
-            fontSize: scaleFont(14),
-            fontFamily: 'Poppins-Regular',
-            color: THEME.colors.text.secondary,
-        },
-        addressLoadingOverlay: {
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(255, 255, 255, 0.8)',
-            justifyContent: 'center',
-            alignItems: 'center',
-            borderRadius: THEME.radius.lg,
-        },
-        loadingContainer: {
-            flex: 1,
-            justifyContent: 'center',
-            alignItems: 'center',
-            backgroundColor: THEME.colors.background,
-        },
-        loadingText: {
-            marginTop: THEME.spacing.sm,
-            fontSize: scaleFont(14),
-            fontFamily: 'Poppins-Regular',
-            color: THEME.colors.text.secondary,
-        },
-        inputContainer: {
-            marginBottom: THEME.spacing.md,
-        },
-        additionalFields: {
-            flexDirection: 'row',
-            gap: THEME.spacing.md,
-            marginBottom: THEME.spacing.lg,
-        },
-        selectButton: {
-            minWidth: 60,
-            maxWidth: 160,
-        }
-    });
-
     const toggleAddressDetails = () => {
         setActivateAddressDetails(prevState => !prevState);
     };
@@ -425,8 +315,9 @@ const AddressSelectionScreen: React.FC = () => {
         );
     }
 
+    const insets = useSafeAreaInsets();
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, {bottom: insets.bottom}]}>
             <Animated.View
                 style={[
                     styles.mapContainer,
@@ -496,18 +387,11 @@ const AddressSelectionScreen: React.FC = () => {
                             <Text style={styles.loadingText}>Fetching address...</Text>
                         </View>
                     )}
-                    <View style={styles.selectButton}>
-                        <TouchableOpacity
-                            onPress={toggleAddressDetails}
 
-                            style={ButtonStyles.defaultGreenButton}
+                    <CustomButton onPress={toggleAddressDetails} title={"Select"} variant={"green"} style={{
+                        width: '30%',
+                    }}/>
 
-                        >
-                            <Text style={ButtonStyles.ButtonText}>
-                                Select </Text>
-                        </TouchableOpacity>
-
-                    </View>
                 </View>
             )}
 
@@ -536,40 +420,23 @@ const AddressSelectionScreen: React.FC = () => {
                             </View>
 
                         </View>
-                        <View style={styles.inputContainer}>
-                            <InputField
-                                placeholder="Title *"
-                                value={selectedAddress.title}
-                                borderColor={errors.title ? '#ff0000' : '#b0f484'}
-                                onChange={(text) => handleAddressChange('title', text)}
-                            />
-                        </View>
 
-                        <View style={styles.additionalFields}>
-                            <InputField
-                                placeholder="Apt No"
-                                value={selectedAddress.apartmentNo.toString()}
-                                borderColor={errors.apartmentNo ? '#ff0000' : '#b0f484'}
-                                onChange={(text) => handleAddressChange('apartmentNo', text)}
-                                keyboardType="numeric"
-                            />
+                        <BaseInput value={selectedAddress.title}
+                                   onChangeText={(text) => handleAddressChange('title', text)}
+                                   placeholder="Title"
+                                   leftIcon={<FontAwesome6 name="address-card" size={20} color="#50703C"/>}/>
+                        <BaseInput value={selectedAddress.apartmentNo.toString()}
+                                   onChangeText={(text) => handleAddressChange('apartmentNo', text)}
+                                   placeholder="Apt No"
+                                   keyboardType={"numeric"}
+                                   leftIcon={<MaterialIcons name="apartment" size={20} color="#50703C"/>}/>
+                        <BaseInput value={selectedAddress.doorNo}
+                                   onChangeText={(text) => handleAddressChange('doorNo', text)}
+                                   placeholder="Door No"
+                                   leftIcon={<MaterialCommunityIcons name="door" size={20} color="#50703C"/>}/>
+                        <CustomButton onPress={handleAddressConfirm} title={"Confirm Address"} variant={"green"}/>
 
-                            <InputField
-                                placeholder="Door No"
-                                value={selectedAddress.doorNo}
-                                borderColor={errors.doorNo ? '#ff0000' : '#b0f484'}
-                                onChange={(text) => handleAddressChange('doorNo', text)}
-                            />
-                        </View>
 
-                        <TouchableOpacity
-                            style={ButtonStyles.defaultGreenButton}
-                            onPress={handleAddressConfirm}
-                        >
-                            <Text style={ButtonStyles.ButtonText}>
-                                Confirm Address
-                            </Text>
-                        </TouchableOpacity>
                     </ScrollView>
                 </Animated.View>
             )}
@@ -579,3 +446,114 @@ const AddressSelectionScreen: React.FC = () => {
 };
 
 export default AddressSelectionScreen;
+// The code remains the same until the styles section
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: '#ffffff', // THEME.colors.background
+    },
+    mapContainer: {
+        flex: 1,
+        borderBottomLeftRadius: 24, // THEME.radius.xl
+        borderBottomRightRadius: 24,
+        overflow: 'hidden',
+        shadowColor: 'rgba(0, 0, 0, 0.1)', // THEME.colors.shadow
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5,
+    },
+    map: {
+        ...StyleSheet.absoluteFillObject,
+    },
+    centerMarker: {
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        marginLeft: scaleFont(-23.5),
+        marginTop: scaleFont(-13),
+        transform: [{scale: 1.1}],
+    },
+    myLocationButton: {
+        position: 'absolute',
+        bottom: 24, // THEME.spacing.lg
+        right: 24,  // THEME.spacing.lg
+        padding: 16, // THEME.spacing.md
+        borderRadius: 30,
+        backgroundColor: '#ffffff', // THEME.colors.background
+        shadowColor: 'rgba(0, 0, 0, 0.1)', // THEME.colors.shadow
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5,
+    },
+    formWrapper: {
+        marginTop: 8, // THEME.spacing.sm
+        paddingTop: 32, // THEME.spacing.xl
+        backgroundColor: '#ffffff', // THEME.colors.background
+        borderTopLeftRadius: 24, // THEME.radius.xl
+        borderTopRightRadius: 24,
+        paddingHorizontal: 24, // THEME.spacing.lg
+        shadowColor: 'rgba(0, 0, 0, 0.1)', // THEME.colors.shadow
+        shadowOffset: {width: 0, height: -2},
+        shadowOpacity: 0.1,
+        shadowRadius: 3.84,
+        elevation: 5,
+    },
+    addressPreviewContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 24, // THEME.spacing.lg
+        paddingVertical: 16, // THEME.spacing.md
+        backgroundColor: 'rgba(136,136,136,0.16)',
+        borderRadius: 16, // THEME.radius.lg
+    },
+    addressText: {
+        fontSize: scaleFont(16),
+        fontFamily: 'Poppins-SemiBold',
+        color: '#1e293b', // THEME.colors.text.primary
+        marginBottom: 4, // THEME.spacing.xs
+    },
+    addressSubText: {
+        fontSize: scaleFont(14),
+        fontFamily: 'Poppins-Regular',
+        color: '#64748b', // THEME.colors.text.secondary
+    },
+    addressLoadingOverlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(255, 255, 255, 0.8)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderRadius: 16, // THEME.radius.lg
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#ffffff', // THEME.colors.background
+    },
+    loadingText: {
+        marginTop: 8, // THEME.spacing.sm
+        fontSize: scaleFont(14),
+        fontFamily: 'Poppins-Regular',
+        color: '#64748b', // THEME.colors.text.secondary
+    },
+    inputContainer: {
+        marginBottom: 16, // THEME.spacing.md
+    },
+    additionalFields: {
+        flexDirection: 'row',
+        gap: 16, // THEME.spacing.md
+        marginBottom: 24, // THEME.spacing.lg
+    },
+    selectButton: {
+        minWidth: 60,
+        maxWidth: 160,
+    }
+});

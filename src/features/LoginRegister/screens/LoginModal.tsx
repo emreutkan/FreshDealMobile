@@ -1,38 +1,29 @@
-import React from 'react';
-import {
-    ActivityIndicator,
-    Alert,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    TouchableWithoutFeedback,
-    View,
-} from 'react-native';
+import React, {useState} from 'react';
+import {Alert, Keyboard, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View,} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
 import {AppDispatch} from '@/src/redux/store';
 import {RootState} from "@/src/types/store";
 
 import {scaleFont} from '@/src/utils/ResponsiveFont';
 import AppleOTP from '@/src/features/LoginRegister/components/AppleOTPLogin';
-import EmailInput from '@/src/features/LoginRegister/components/emailInput';
 import PhoneInput from '@/src/features/LoginRegister/components/PhoneInput';
-import PasswordInput from '@/src/features/LoginRegister/components/PasswordInput';
-import {setLoginType, setPasswordLogin} from '@/src/redux/slices/userSlice';
+import {setEmail, setLoginType, setPassword, setPasswordLogin} from '@/src/redux/slices/userSlice';
 import {loginUserThunk} from '@/src/redux/thunks/userThunks';
-import {EmailSignInButton} from "@/src/features/LoginRegister/components/EmailSignInButton";
-import {PhoneSignInButton} from "@/src/features/LoginRegister/components/PhoneSignInButton";
-import {ButtonStyles} from "@/src/styles/ButtonStyles";
 import GoogleOTP from "@/src/features/LoginRegister/components/GoogleOTP";
+import {Ionicons, MaterialIcons} from "@expo/vector-icons";
+import BaseInput from "@/src/features/LoginRegister/components/BaseInput";
+import {CustomButton} from "@/src/features/LoginRegister/components/CustomButton";
 
 interface LoginModalProps {
     switchToRegister: () => void; // Callback to switch to RegisterModal
 }
 
+
 const LoginModal: React.FC<LoginModalProps> = ({switchToRegister}) => {
     const dispatch = useDispatch<AppDispatch>();
     const {loading, token, error} = useSelector((state: RootState) => state.user);
+    const [showPassword, setShowPassword] = useState(false);
 
-    // Import all user fields from the userSlice
     const {
         phoneNumber,
         password,
@@ -52,7 +43,6 @@ const LoginModal: React.FC<LoginModalProps> = ({switchToRegister}) => {
 
 
     const handleLoginButton = async () => {
-        console.log('login button pressed');
         if (login_type === 'phone_number' && !phoneNumber) {
             Alert.alert('Error', 'Phone number is required.');
             return;
@@ -67,7 +57,6 @@ const LoginModal: React.FC<LoginModalProps> = ({switchToRegister}) => {
                 return;
             }
             try {
-                console.log(selectedCode + phoneNumber);
                 const result = await dispatch(
                     loginUserThunk({
                         email: email,
@@ -77,11 +66,8 @@ const LoginModal: React.FC<LoginModalProps> = ({switchToRegister}) => {
                         password_login: passwordLogin,
                     })
                 ).unwrap();
-                console.log('Login request successful', result);
 
             } catch (error: any) {
-                console.error('Login failed', error);
-                // Display the specific error message from the server
                 Alert.alert('Error', error.message || 'Failed to login. Please try again.');
             }
         }
@@ -93,93 +79,79 @@ const LoginModal: React.FC<LoginModalProps> = ({switchToRegister}) => {
         dispatch(setLoginType(type));
     };
 
-    React.useEffect(() => {
-        console.log('Login type updated:', login_type);
-    }, [login_type]);
 
     return (
         <TouchableWithoutFeedback
-            // onPress={() => Keyboard.dismiss()}
+            onPress={() => Keyboard.dismiss()}
         >
             <View style={styles.bottomContainer}>
                 <Text style={styles.welcomeText}>Last Call,</Text>
                 <Text style={styles.welcomeText2}>Tasty Deals Await!</Text>
 
-                {login_type === 'phone_number' ? <PhoneInput/> : <EmailInput/>}
+                {login_type === 'phone_number' ?
+                    <PhoneInput/> :
+                    <BaseInput
+                        value={email}
+                        onChangeText={(text) => dispatch(setEmail(text))}
+                        placeholder="Enter your email"
+                        keyboardType="email-address"
+                        leftIcon={<MaterialIcons name="email" size={24} color="#50703C"/>}
+                    />}
 
                 {(phoneNumber || email) &&
-                    <View style={{marginTop: scaleFont(10)}}>
-                        <PasswordInput password={password}/>
+                    <BaseInput
+                        value={password}
+                        onChangeText={(text) => dispatch(setPassword(text))}
+                        placeholder="Enter your password"
+                        secureTextEntry={!showPassword}
+                        leftIcon={<MaterialIcons name="lock" size={24} color="#50703C"/>}
+                        rightIcon={
+                            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                                <MaterialIcons
+                                    name={showPassword ? "visibility" : "visibility-off"}
+                                    size={24}
+                                    color="#50703C"
+                                />
+                            </TouchableOpacity>
+                        }
+                    />
 
-
-                    </View>
 
                 }
 
-                <View style={styles.buttonRow}>
+                <View>
                     {!phoneNumber && !email && (
-                        <>
-                            <View style={styles.buttonContainer}>
-
-                                <TouchableOpacity
-                                    style={ButtonStyles.defaultGreenButton}
-                                    onPress={switchToRegister}
-                                >
-                                    <Text style={ButtonStyles.ButtonText}>
-                                        Sign up
-                                    </Text>
-                                </TouchableOpacity>
-                            </View>
-                            {loading ? (
-                                <View style={styles.loaderContainer}>
-                                    <ActivityIndicator size="small" color="#50703C"/>
-                                </View>
-                            ) : token ? (
-                                <Text style={styles.loggedInText}>
-                                    Welcome, you are logged in!
-                                </Text>
-                            ) : (
-                                <View style={styles.buttonContainer}>
-
-                                    <TouchableOpacity
-                                        style={ButtonStyles.defaultGreenButton}
-                                        onPress={handleLoginButton}
-                                    >
-                                        <Text style={ButtonStyles.ButtonText}>
-                                            Login
-                                        </Text>
-                                    </TouchableOpacity>
-                                </View>
-                            )}
-                        </>
+                        <View style={{
+                            flexDirection: 'row',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            width: '100%',
+                        }}>
+                            <CustomButton onPress={switchToRegister} title="Sign up" loading={loading}
+                                          variant={'green'} style={{
+                                width: '48%',
+                            }}/>
+                            <CustomButton onPress={handleLoginButton} title="Login" loading={loading}
+                                          variant={'green'}
+                                          style={{
+                                              width: '48%',
+                                          }}/>
+                        </View>
                     )}
 
                     {(phoneNumber || email) && (
                         <View style={styles.loginContainer}>
 
-                            <TouchableOpacity
-                                style={ButtonStyles.defaultGreenButton}
-                                onPress={() => {
-                                    dispatch(setPasswordLogin(true));
-                                }}
-                            >
-                                <Text style={ButtonStyles.ButtonText}>
-                                    Login
-                                </Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={styles.passwordlessLoginContainer}
-                                onPress={() => {
-                                    dispatch(setPasswordLogin(false));
-                                }}
-                            >
-                                {login_type === 'email' &&
-                                    <Text style={styles.passwordlessLoginText}>
-                                        Passwordless Login
-                                    </Text>
-                                }
 
-                            </TouchableOpacity>
+                            <CustomButton onPress={() => {
+                                dispatch(setPasswordLogin(true));
+                            }} title="Login" loading={loading}
+                                          variant={'green'}/>
+
+
+                            <CustomButton onPress={() => {
+                                dispatch(setPasswordLogin(false));
+                            }} title="Passwordless Login" loading={loading} variant={'green'}/>
                         </View>
                     )}
                 </View>
@@ -190,19 +162,27 @@ const LoginModal: React.FC<LoginModalProps> = ({switchToRegister}) => {
                     <View style={styles.line}/>
                 </View>
 
-                <AppleOTP/>
+                <AppleOTP useCustomButton={true}/>
                 <GoogleOTP/>
 
                 {login_type === 'phone_number' ? (
-                    <TouchableOpacity onPress={() => handleLoginTypeChange('email')}>
-                        <EmailSignInButton/>
-                    </TouchableOpacity>
+
+
+                    <CustomButton onPress={() => handleLoginTypeChange('email')} title="Sign in with Email"
+                                  loading={loading}
+                                  variant={'default'}
+                                  icon={<Ionicons name="mail-outline" size={20} color="#000"
+                                                  style={{right: 4}}/>}/>
+
+
                 ) : (
-                    <TouchableOpacity
-                        onPress={() => handleLoginTypeChange('phone_number')}
-                    >
-                        <PhoneSignInButton/>
-                    </TouchableOpacity>
+
+
+                    <CustomButton onPress={() => handleLoginTypeChange('phone_number')} title="Sign in with Phone"
+                                  loading={loading}
+                                  variant={'default'}
+                                  icon={<Ionicons name="call-outline" size={20} color="#000" style={{}}/>}/>
+
                 )}
             </View>
         </TouchableWithoutFeedback>
@@ -228,19 +208,10 @@ const styles = StyleSheet.create({
         marginBottom: scaleFont(20),
         color: '#50703C',
     },
-    buttonRow: {
-        flexDirection: 'row',
-        // marginTop: scaleFont(10),
-        justifyContent: 'space-between',
-        paddingTop: scaleFont(14),
 
-    },
-    buttonContainer: {
-        flex: 0.5,
-        marginHorizontal: scaleFont(5),
-    },
+
     loginContainer: {
-        flex: 1,
+        // flex: 1,
         flexDirection: 'column',
         justifyContent: 'space-between',
         alignItems: 'center',

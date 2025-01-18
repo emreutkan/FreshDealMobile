@@ -137,7 +137,7 @@ export const handlePurchaseResponseAsync = createAsyncThunk<
     'purchase/handleResponse',
     async ({purchaseId, action}, {getState, rejectWithValue, dispatch}) => {
         try {
-            const token = tokenService.getToken();
+            const token = await tokenService.getToken();
             if (!token) {
                 return rejectWithValue('Authentication token is missing');
             }

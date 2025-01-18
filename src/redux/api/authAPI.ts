@@ -3,7 +3,6 @@
 import {apiClient} from "@/src/services/apiClient";
 import {API_BASE_URL} from "@/src/redux/api/API";
 import {LoginPayload, RegisterPayload} from "@/src/types/api/auth/requests";
-import {ApiResponse} from "@/src/types/api/common";
 import {createAsyncThunk} from "@reduxjs/toolkit";
 import axios from "axios";
 
@@ -53,7 +52,7 @@ export const authApi = {
       payload type such as VerifyCodePayload that includes fields like email
       and verification_code. Adjust accordingly to match your API’s structure.
     */
-    async verifyEmail(payload: { verification_code: string; email: string }): Promise<ApiResponse<{
+    async verifyEmail(payload: { verification_code: string; email: string }): Promise<Response<{
         success: boolean;
         message: string
     }>> {

@@ -19,15 +19,13 @@ import {AppDispatch, store} from "@/src/redux/store";
 import {RootState} from "@/src/types/store";
 
 import {getUserDataThunk, loginUserThunk, registerUserThunk,} from "@/src/redux/thunks/userThunks";
-import NameSurnameInputField from "@/src/features/LoginRegister/components/NameSurnameInputField";
 import PhoneInput from "@/src/features/LoginRegister/components/PhoneInput";
-import PasswordInput from "@/src/features/LoginRegister/components/PasswordInput";
 import VerificationCodeInputField from "@/src/features/LoginRegister/components/VerificationCodeInputField"; // Assume this component exists
-import {setToken} from "@/src/redux/slices/userSlice";
-import {Ionicons} from "@expo/vector-icons";
+import {setEmail, setName, setPassword, setToken} from "@/src/redux/slices/userSlice"; // Adjust the path as needed
+import {MaterialIcons} from "@expo/vector-icons";
 import {verifyCode} from "@/src/redux/api/authAPI";
-import {ButtonStyles} from "@/src/styles/ButtonStyles";
-import EmailInput from "@/src/features/LoginRegister/components/emailInput";
+import BaseInput from "@/src/features/LoginRegister/components/BaseInput";
+import {CustomButton} from "@/src/features/LoginRegister/components/CustomButton";
 
 interface RegisterModalProps {
     switchToLogin: () => void; // Callback to switch to LoginModal
@@ -35,6 +33,7 @@ interface RegisterModalProps {
 
 const RegisterModal: React.FC<RegisterModalProps> = ({switchToLogin}) => {
     const dispatch = useDispatch<AppDispatch>();
+    const [showPassword, setShowPassword] = useState(false);
 
     const {
         password,
@@ -49,6 +48,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({switchToLogin}) => {
     // Local state to track if verification code has been sent
     const [isCodeSent, setIsCodeSent] = useState<boolean>(false);
     const [verificationCode, setVerificationCode] = useState<string>(""); // To store user input for verification code
+    const name = useSelector((state: RootState) => state.user.name_surname);
 
     // Display error alerts when 'error' state changes
 
@@ -178,31 +178,44 @@ const RegisterModal: React.FC<RegisterModalProps> = ({switchToLogin}) => {
 
                         {!isCodeSent ? (
                             <View style={styles.formContainer}>
-                                <View style={styles.inputArea}>
-                                    <NameSurnameInputField/>
-                                </View>
+                                <BaseInput
+                                    value={name}
+                                    onChangeText={(text) => {
+                                        const cleanedText = text.replace(/[^a-zA-Z\s]/g, '');
+                                        dispatch(setName(cleanedText));
+                                    }}
+                                    placeholder="Enter your name"
+                                    autoCapitalize="words"
+                                    leftIcon={<MaterialIcons name="person" size={24} color="#50703C"/>}
+                                />
+                                <PhoneInput/>
+                                <BaseInput
+                                    value={email}
+                                    onChangeText={(text) => dispatch(setEmail(text))}
+                                    placeholder="Enter your email"
+                                    keyboardType="email-address"
+                                    leftIcon={<MaterialIcons name="email" size={24} color="#50703C"/>}
+                                />
+                                <BaseInput
+                                    value={password}
+                                    onChangeText={(text) => dispatch(setPassword(text))}
+                                    placeholder="Enter your password"
+                                    secureTextEntry={!showPassword}
+                                    leftIcon={<MaterialIcons name="lock" size={24} color="#50703C"/>}
+                                    rightIcon={
+                                        <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                                            <MaterialIcons
+                                                name={showPassword ? "visibility" : "visibility-off"}
+                                                size={24}
+                                                color="#50703C"
+                                            />
+                                        </TouchableOpacity>
+                                    }
+                                />
 
-                                <View style={styles.inputArea}>
-                                    <PhoneInput/>
-                                </View>
-                                <View style={styles.inputArea}>
-                                    <EmailInput/>
-                                </View>
-
-                                <View style={styles.inputArea}>
-                                    <PasswordInput password={password}/>
-                                </View>
-
-                                <View style={styles.buttonContainer}>
-                                    <TouchableOpacity
-                                        style={ButtonStyles.defaultGreenButton}
-                                        onPress={handleRegister}
-                                    >
-                                        <Text style={ButtonStyles.ButtonText}>
-                                            Create Account
-                                        </Text>
-                                    </TouchableOpacity>
-                                </View>
+                                <CustomButton onPress={handleRegister} title="Register"
+                                              variant={'green'}
+                                />
 
                                 <View style={styles.switchContainer}>
                                     <Text style={styles.switchText}>
@@ -227,16 +240,8 @@ const RegisterModal: React.FC<RegisterModalProps> = ({switchToLogin}) => {
                                     />
                                 </View>
 
-                                <View style={styles.buttonContainer}>
-                                    <TouchableOpacity
-                                        style={ButtonStyles.default}
-                                        onPress={handleVerifyCode}
-                                    >
-                                        <Text style={ButtonStyles.ButtonText}>
-                                            Verify Email
-                                        </Text>
-                                    </TouchableOpacity>
-                                </View>
+
+                                <CustomButton onPress={handleVerifyCode} title={"Verify Email"} variant={'green'}/>
 
                                 <TouchableOpacity
                                     onPress={skipLoginUser}
@@ -245,11 +250,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({switchToLogin}) => {
                                     <Text style={styles.skipText}>
                                         Skip Verification
                                     </Text>
-                                    <Ionicons
-                                        name="arrow-forward-outline"
-                                        size={20}
-                                        color="#007AFF"
-                                    />
+
                                 </TouchableOpacity>
                             </View>
                         )}
@@ -338,18 +339,19 @@ const styles = StyleSheet.create({
     },
     codeInputArea: {
         width: '100%',
-        marginBottom: scaleFont(32),
+        marginBottom: 16,
     },
     skipButton: {
         flexDirection: 'row',
-        alignItems: 'center',
-        padding: scaleFont(12),
+        alignSelf: 'center',
         marginTop: scaleFont(16),
+
+
     },
     skipText: {
-        fontSize: scaleFont(16),
+        fontSize: 16,
         color: '#007AFF',
-        marginRight: scaleFont(8),
+        fontFamily: "Poppins-Regular",
     },
     loadingContainer: {
         ...StyleSheet.absoluteFillObject,

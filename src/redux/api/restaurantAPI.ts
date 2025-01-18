@@ -1,9 +1,9 @@
 // Get Restaurants by Proximity API Call
-import {Restaurant} from "@/src/redux/slices/restaurantSlice";
 import axios from "axios";
 
 import {logError, logRequest, logResponse} from "@/src/utils/logger";
 import {API_BASE_URL} from "@/src/redux/api/API";
+import {Restaurant} from "@/src/types/api/restaurant/model";
 
 const RESTAURANTS_ENDPOINT = `${API_BASE_URL}/restaurants`;
 const GET_RESTAURANTS_IN_PROXIMITY_API_ENDPOINT = `${RESTAURANTS_ENDPOINT}/proximity`;

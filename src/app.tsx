@@ -6,7 +6,7 @@ import {Provider} from 'react-redux';
 import {store} from '@/src/redux/store';
 import HomeScreen from './features/homeScreen/screens/Home';
 import Landing from './features/LoginRegister/screens/Landing';
-import AddressSelectionScreen from "@/src/features/homeScreen/screens/addressSelectionScreen";
+import AddressSelectionScreen from "@/src/features/AddressSelectionScreen/addressSelectionScreen";
 import {navigationRef, RootStackParamList} from '@/src/utils/navigation';
 import UpdateAddress from "@/src/features/homeScreen/screens/UpdateAddress";
 import {GestureHandlerRootView} from 'react-native-gesture-handler';

@@ -1,6 +1,6 @@
 import {createAsyncThunk} from '@reduxjs/toolkit';
 
-import {RootState} from "@/src/redux/store";
+import {RootState} from "@/src/types/store";
 import {addAddress, removeAddress} from "@/src/redux/slices/addressSlice";
 import {getUserDataThunk} from "@/src/redux/thunks/userThunks";
 import {addAddressAPI, deleteAddressAPI, updateAddressAPI} from "@/src/redux/api/addressAPI";

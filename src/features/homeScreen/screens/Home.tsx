@@ -16,7 +16,7 @@ import {RootState} from "@/src/types/store";
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {useFocusEffect} from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import AddressSelectorScreen from '@/src/features/homeScreen/screens/addressSelectionScreen';
+import AddressSelectorScreen from '@/src/features/AddressSelectionScreen/addressSelectionScreen';
 import HomeCardView from '@/src/features/homeScreen/screens/HomeCardView';
 import HomeMapView from '@/src/features/homeScreen/screens/HomeMapView';
 import AccountScreen from '@/src/features/accountScreen/accountScreen';

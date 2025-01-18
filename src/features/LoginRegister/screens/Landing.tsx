@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState} from 'react';
-import {Animated, Dimensions, Platform, StatusBar, StyleSheet} from 'react-native';
+import {Animated, Dimensions, Keyboard, Platform, StatusBar, StyleSheet, TouchableWithoutFeedback} from 'react-native';
 import {LinearGradient} from 'expo-linear-gradient';
 import LoginModal from "@/src/features/LoginRegister/screens/LoginModal";
 import RegisterModal from "@/src/features/LoginRegister/screens/RegisterModal";
@@ -86,50 +86,54 @@ const Landing: React.FC = () => {
     });
 
     return (
-        <LinearGradient
-            colors={['#B2F7A5', '#ecffe8']}
-            start={{x: 0.5, y: 0}}
-            end={{x: 0.5, y: 1}}
-            style={styles.container}
-        >
-            <StatusBar translucent backgroundColor="transparent" barStyle="dark-content"/>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
 
-            {/* Modified logo container to be absolutely positioned */}
-            <Animated.View style={[
-                styles.logoContainer,
-                {
-                    transform: [
-                        {translateY: logoPosition},
-                        {scale: imageScale}
-                    ]
-                }
-            ]}>
-                <Animated.Image
-                    source={require('@/src/assets/images/logo.png')}
-                    style={styles.logo}
-                    resizeMode="contain"
-                />
-            </Animated.View>
-
-
-            <Animated.View
-                style={[
-                    styles.main,
-                    {
-                        height: animatedHeight,
-                        opacity: formOpacity
-                    }
-                ]}
+            <LinearGradient
+                colors={['#f0f7ed', '#ffffff']} // More subtle green to white
+                start={{x: 0.5, y: 0}}
+                end={{x: 0.5, y: 1}}
+                style={styles.container}
             >
+                <StatusBar translucent backgroundColor="transparent" barStyle="dark-content"/>
 
-                {activeModal === 'login' ? (
-                    <LoginModal switchToRegister={() => setActiveModal('register')}/>
-                ) : (
-                    <RegisterModal switchToLogin={() => setActiveModal('login')}/>
-                )}
-            </Animated.View>
+                {/* Modified logo container to be absolutely positioned */}
+                <Animated.View style={[
+                    styles.logoContainer,
+                    {
+                        transform: [
+                            {translateY: logoPosition},
+                            {scale: imageScale}
+                        ]
+                    }
+                ]}>
+                    <Animated.Image
+                        source={require('@/src/assets/images/logo.png')}
+                        style={styles.logo}
+                        resizeMode="contain"
+                    />
+                </Animated.View>
 
-        </LinearGradient>
+
+                <Animated.View
+                    style={[
+                        styles.main,
+                        {
+                            height: animatedHeight,
+                            opacity: formOpacity
+                        }
+                    ]}
+                >
+
+                    {activeModal === 'login' ? (
+                        <LoginModal switchToRegister={() => setActiveModal('register')}/>
+                    ) : (
+                        <RegisterModal switchToLogin={() => setActiveModal('login')}/>
+                    )}
+                </Animated.View>
+
+            </LinearGradient>
+        </TouchableWithoutFeedback>
+
     );
 };
 
