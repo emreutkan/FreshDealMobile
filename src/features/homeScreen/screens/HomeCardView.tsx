@@ -376,7 +376,7 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll}) => {
                             [{nativeEvent: {contentOffset: {y: scrollY}}}],
                             {
                                 useNativeDriver: false,
-                                listener: (event) => {
+                                listener: (event: NativeSyntheticEvent<NativeScrollEvent>) => {
                                     onScroll(event);
                                 }
                             }

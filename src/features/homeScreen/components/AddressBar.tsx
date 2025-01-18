@@ -60,12 +60,13 @@ const AddressBar: React.FC<AddressBarProps> = ({textColor}) => {
 
     const handleConfigureAddress = (addressId: string) => {
         handleDismissModal();
-        navigation.navigate('UpdateAddress', {addressId});
+        const address = addresses.find((addr) => addr.id === addressId);
+        navigation.navigate('AddressSelectionScreen', {addressToEdit: address});
     };
 
     const handleAddNewAddress = () => {
         handleDismissModal();
-        navigation.navigate('AddressSelectionScreen');
+        navigation.navigate('AddressSelectionScreen', {addressToEdit: undefined});
     };
     const handleRemoveAddress = (addressId: string) => {
         dispatch(deleteAddressAsync(addressId));

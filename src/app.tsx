@@ -8,7 +8,6 @@ import HomeScreen from './features/homeScreen/screens/Home';
 import Landing from './features/LoginRegister/screens/Landing';
 import AddressSelectionScreen from "@/src/features/AddressSelectionScreen/addressSelectionScreen";
 import {navigationRef, RootStackParamList} from '@/src/utils/navigation';
-import UpdateAddress from "@/src/features/homeScreen/screens/UpdateAddress";
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import RestaurantDetails from "@/src/features/RestaurantScreen/RestaurantDetails";
 import FavoritesScreen from "@/src/features/favoritesScreen/FavoritesScreen";
@@ -42,7 +41,6 @@ const AppContent: React.FC = () => {
                                 name="AddressSelectionScreen"
                                 component={AddressSelectionScreen}
                             />
-                            <Stack.Screen name="UpdateAddress" component={UpdateAddress}/>
 
                             <Stack.Screen
                                 name="RestaurantDetails"

@@ -1,5 +1,5 @@
 // BaseInput.tsx
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useRef, useState} from 'react';
 import {Animated, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View} from 'react-native';
 import {scaleFont} from "@/src/utils/ResponsiveFont";
 
@@ -30,13 +30,25 @@ const BaseInput: React.FC<BaseInputProps> = ({
     const animatedLabel = useRef(new Animated.Value(value ? 1 : 0)).current;
     const inputRef = useRef<TextInput>(null);
 
-    useEffect(() => {
+    const handleFocus = () => {
+        setIsFocused(true);
         Animated.timing(animatedLabel, {
-            toValue: isFocused || value ? 1 : 0,
+            toValue: 1,
             duration: 200,
             useNativeDriver: false,
         }).start();
-    }, [isFocused, value]);
+    };
+
+    const handleBlur = () => {
+        setIsFocused(false);
+        if (!value) {
+            Animated.timing(animatedLabel, {
+                toValue: 0,
+                duration: 200,
+                useNativeDriver: false,
+            }).start();
+        }
+    };
 
     const labelStyle = {
         transform: [{
@@ -70,29 +82,25 @@ const BaseInput: React.FC<BaseInputProps> = ({
 
                     <TextInput
                         ref={inputRef}
-                        style={styles.input}
+                        style={[styles.input, {zIndex: 1}]} // Added zIndex
                         value={value}
                         onChangeText={onChangeText}
-                        onFocus={() => setIsFocused(true)}
-                        onBlur={() => setIsFocused(false)}
+                        onFocus={handleFocus}
+                        onBlur={handleBlur}
                         secureTextEntry={secureTextEntry}
                         keyboardType={keyboardType}
                         autoCapitalize={autoCapitalize}
-                        textContentType="oneTimeCode"
                         autoComplete="off"
                         autoCorrect={false}
-                        spellCheck={false}
-                        importantForAutofill="no"
+                        pointerEvents="auto" // Added this
                     />
                 </View>
 
                 {value && showClearButton && (
                     <TouchableOpacity
                         style={styles.clearButton}
-                        onPress={(e) => {
-                            e.stopPropagation(); // Prevent the parent TouchableWithoutFeedback from handling the event
-                            onChangeText('');
-                        }}
+                        onPress={() => onChangeText('')}
+                        hitSlop={{top: 10, bottom: 10, left: 10, right: 10}} // Added hitSlop
                     >
                         <Text style={styles.clearButtonText}>×</Text>
                     </TouchableOpacity>
@@ -115,7 +123,7 @@ const styles = StyleSheet.create({
         height: scaleFont(56),
         paddingHorizontal: scaleFont(16),
         marginTop: 16,
-        // marginBottom: scaleFont(16),
+        zIndex: 1, // Added zIndex
     },
     containerFocused: {
         borderColor: '#50703C',
@@ -128,14 +136,17 @@ const styles = StyleSheet.create({
     inputWrapper: {
         flex: 1,
         justifyContent: 'center',
-        height: '100%', // Add this
+        height: '100%',
+        zIndex: 2, // Added zIndex
     },
     input: {
-        flex: 1, // Add this
+        flex: 1,
         fontSize: scaleFont(16),
         color: '#1F2937',
         fontFamily: 'Poppins-Regular',
         padding: 0,
+        zIndex: 3, // Added zIndex
+        position: 'relative', // Added position
     },
     label: {
         position: 'absolute',
@@ -147,10 +158,11 @@ const styles = StyleSheet.create({
     },
     iconContainer: {
         marginHorizontal: scaleFont(8),
+        zIndex: 2, // Added zIndex
     },
     clearButton: {
         padding: scaleFont(8),
-        zIndex: 2,
+        zIndex: 4, // Added zIndex
     },
     clearButtonText: {
         color: '#9CA3AF',

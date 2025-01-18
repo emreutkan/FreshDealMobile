@@ -4,113 +4,149 @@ import {
     Alert,
     Animated,
     Dimensions,
-    Easing,
+    Keyboard,
+    Linking,
     ScrollView,
     StyleSheet,
     Text,
     TouchableOpacity,
+    TouchableWithoutFeedback,
     View,
 } from 'react-native';
 import {useDispatch} from 'react-redux';
-import MapView, {Region} from 'react-native-maps';
+import MapView, {MapStyleElement, Marker, Region} from 'react-native-maps';
 import * as Location from 'expo-location';
-import {FontAwesome6, MaterialCommunityIcons, MaterialIcons} from '@expo/vector-icons';
+import {FontAwesome6, Ionicons, MaterialCommunityIcons, MaterialIcons,} from '@expo/vector-icons';
 import debounce from 'lodash.debounce';
-import {addAddressAsync} from '@/src/redux/thunks/addressThunks';
-import {scaleFont} from '@/src/utils/ResponsiveFont';
+import {BlurView} from 'expo-blur';
+import {addAddressAsync, updateAddress} from '@/src/redux/thunks/addressThunks';
 import {AppDispatch} from '@/src/redux/store';
-import {useNavigation} from '@react-navigation/native';
-import {Address} from "@/src/types/api/address/model"
-import {THEME} from "@/src/styles/Theme";
-import {tokenService} from "@/src/services/tokenService";
-import {CustomButton} from "@/src/features/LoginRegister/components/CustomButton";
-import BaseInput from "@/src/features/LoginRegister/components/BaseInput";
-import {useSafeAreaInsets} from "react-native-safe-area-context";
+import {RouteProp, useNavigation, useRoute} from '@react-navigation/native';
+import {THEME} from '@/src/styles/Theme';
+import {CustomButton} from '@/src/features/LoginRegister/components/CustomButton';
+import BaseInput from '@/src/features/LoginRegister/components/BaseInput';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import {Address} from '@/src/types/api/address/model';
 
+// ------------------------------------------------------------------------
+// Detailed map style configuration
+const customMapStyle: MapStyleElement[] = [
+    {featureType: 'administrative', elementType: 'geometry.stroke', stylers: [{color: '#7f8c8d'}]},
+    {featureType: 'road', elementType: 'geometry', stylers: [{color: '#ffffff'}]},
+    {featureType: 'road', elementType: 'labels.text.fill', stylers: [{color: '#2c3e50'}]},
+    {featureType: 'poi', elementType: 'labels', stylers: [{visibility: 'off'}]},
+    {featureType: 'landscape', elementType: 'geometry.fill', stylers: [{color: '#ecf0f1'}]},
+    {featureType: 'water', elementType: 'geometry.fill', stylers: [{color: '#3498db'}]},
+    {featureType: 'transit', stylers: [{visibility: 'off'}]},
+];
 
-class TempAddress {
-    id: string;
-    title: string;
-    latitude: number;
-    longitude: number;
-    street: string;
-    neighborhood: string;
-    district: string;
-    province: string;
-    country: string;
-    postalCode: string;
-    apartmentNo: string;
-    doorNo: string;
-    is_primary: boolean;
-
-    constructor() {
-        this.id = '';
-        this.title = '';
-        this.latitude = 0;
-        this.longitude = 0;
-        this.street = '';
-        this.neighborhood = '';
-        this.district = '';
-        this.province = '';
-        this.country = '';
-        this.postalCode = '';
-        this.apartmentNo = '';
-        this.doorNo = '';
-        this.is_primary = true;
-    }
+// ------------------------------------------------------------------------
+// Local temporary address class for new address creation/updating.
+class TempAddress implements Address {
+    id: string = '';
+    title: string = '';
+    latitude: number = 0;
+    longitude: number = 0;
+    street: string = '';
+    neighborhood: string = '';
+    district: string = '';
+    province: string = '';
+    country: string = '';
+    postalCode: string = '';
+    apartmentNo: string = '';
+    doorNo: string = '';
+    is_primary: boolean = true;
 }
 
+type RouteParams = {
+    AddressScreen: {
+        addressToEdit?: Address; // optional address for editing
+    };
+};
 
-const AddressSelectionScreen: React.FC = () => {
+const AddressScreen: React.FC = () => {
     const navigation = useNavigation();
+    const route = useRoute<RouteProp<RouteParams, 'AddressScreen'>>();
     const dispatch = useDispatch<AppDispatch>();
     const mapRef = useRef<MapView>(null);
-    const [isMapInteracted, setIsMapInteracted] = useState<boolean>(false);
+    const insets = useSafeAreaInsets();
+    const {height} = Dimensions.get('window');
+
+    // Check if we are editing or adding a new address.
+    const isEditing = Boolean(route.params?.addressToEdit);
+
+    // Animation states – We overlay the form over a full-screen map rather than animating the map container.
+    const [contentOpacity] = useState(new Animated.Value(isEditing ? 1 : 0));
+    const [mapAnimation] = useState(new Animated.Value(0));
+
+    // UI States
+    const [activateAddressDetails, setActivateAddressDetails] = useState<boolean>(isEditing);
+
+    // Loading states
     const [initialLoading, setInitialLoading] = useState<boolean>(true);
     const [locationLoading, setLocationLoading] = useState<boolean>(false);
-    const [activateAddressDetails, setActivateAddressDetails] = useState<boolean>(false);
+    const [isReverseGeocoding, setIsReverseGeocoding] = useState<boolean>(false);
 
-    const [selectedAddress, setSelectedAddress] = useState<TempAddress>(new TempAddress());
-
-
-    const [region, setRegion] = useState<Region>({
-        latitude: 38.454985,
-        longitude: 27.100052,
-        latitudeDelta: 0.01,
-        longitudeDelta: 0.01,
+    // Data States
+    const [selectedAddress, setSelectedAddress] = useState<TempAddress>(() => {
+        // If editing, initialize with the address we receive via route params.
+        if (isEditing && route.params?.addressToEdit) {
+            console.log('Editing address:', route.params.addressToEdit);
+            return {...new TempAddress(), ...route.params.addressToEdit};
+        }
+        console.log('Creating new address');
+        return new TempAddress();
     });
+    const [region, setRegion] = useState<Region>(() => {
+        // Default to Turkey’s center
+        return {
+            latitude: isEditing && route.params?.addressToEdit ? route.params.addressToEdit.latitude : 38.454985,
+            longitude: isEditing && route.params?.addressToEdit ? route.params.addressToEdit.longitude : 27.100052,
+            latitudeDelta: 0.01,
+            longitudeDelta: 0.01,
+        };
+    });
+    const [isMapInteracted, setIsMapInteracted] = useState<boolean>(false);
 
-    const token = tokenService.getToken();
+    // Form Errors
     const [errors, setErrors] = useState({
         title: '',
         apartmentNo: '',
-        doorNo: ''
+        doorNo: '',
     });
 
-
-    const [isReverseGeocoding, setIsReverseGeocoding] = useState<boolean>(false);
-    const {height, width} = Dimensions.get('window');
-    const [mapAnimation] = useState(new Animated.Value(0));
-
-    const animatedMapTranslateY = mapAnimation.interpolate({
-        inputRange: [0, 1],
-        outputRange: [0, -height * 0.25],
-    });
-
-    const animatedFormTranslateY = mapAnimation.interpolate({
-        inputRange: [0, 1],
-        outputRange: [0, -height * 0.25],
-    });
+    // ------------------------------------------------------------------------
+    // Animation for overlaying the form.
+    const animateForm = (show: boolean) => {
+        Animated.parallel([
+            Animated.timing(contentOpacity, {
+                toValue: show ? 1 : 0,
+                duration: 300,
+                useNativeDriver: true,
+            }),
+            Animated.timing(mapAnimation, {
+                toValue: show ? 1 : 0,
+                duration: 300,
+                useNativeDriver: true,
+            }),
+        ]).start();
+    };
 
     useEffect(() => {
-        Animated.timing(mapAnimation, {
-            toValue: activateAddressDetails ? 1 : 0,
-            duration: 300,
-            easing: Easing.bezier(0.25, 0.1, 0.25, 1),
-            useNativeDriver: true,
-        }).start();
+        // If editing, form should be visible on mount.
+        animateForm(activateAddressDetails);
     }, [activateAddressDetails]);
 
+    // Clean up debounced function on unmount.
+    useEffect(() => {
+        return () => {
+            debouncedHandleAddressUpdate.cancel();
+            debouncedValidateField.cancel();
+        };
+    }, []);
+
+    // ------------------------------------------------------------------------
+    // Location permission and initial location fetch.
     const fetchLocation = async () => {
         try {
             const {status: existingStatus} = await Location.getForegroundPermissionsAsync();
@@ -122,18 +158,30 @@ const AddressSelectionScreen: React.FC = () => {
             }
 
             if (finalStatus !== 'granted') {
-                Alert.alert('Permission Denied', 'Location permission is required to use this feature.');
+                Alert.alert(
+                    'Location Permission Required',
+                    'Please enable location services to use the address selection feature.',
+                    [
+                        {text: 'Cancel', style: 'cancel'},
+                        {
+                            text: 'Open Settings',
+                            onPress: async () => {
+                                await Linking.openSettings();
+                            },
+                        },
+                    ]
+                );
                 setInitialLoading(false);
                 setLocationLoading(false);
                 return;
             }
 
             const location = await Location.getCurrentPositionAsync({
-                accuracy: Location.Accuracy.Highest,
+                accuracy: Location.Accuracy.Balanced,
+                timeInterval: 5000,
             });
 
             const {latitude, longitude} = location.coords;
-
             const newRegion: Region = {
                 latitude,
                 longitude,
@@ -143,19 +191,20 @@ const AddressSelectionScreen: React.FC = () => {
 
             setRegion(newRegion);
             mapRef.current?.animateToRegion(newRegion, 1000);
-
             await handleAddressUpdate(latitude, longitude);
-
-            setInitialLoading(false);
-            setLocationLoading(false);
         } catch (error) {
-            console.error('Error fetching location:', error);
-            Alert.alert('Error', 'An error occurred while fetching the location.');
+            console.error('Location fetch error:', error);
+            Alert.alert(
+                'Location Error',
+                'Unable to fetch your location. Please try again or select manually.'
+            );
+        } finally {
             setInitialLoading(false);
             setLocationLoading(false);
         }
     };
 
+    // Handler to get user's current location.
     const getUserLocation = async () => {
         if (locationLoading) return;
         setLocationLoading(true);
@@ -163,397 +212,647 @@ const AddressSelectionScreen: React.FC = () => {
     };
 
     useEffect(() => {
-        (async () => {
-            await fetchLocation();
-        })();
-    }, []);
-
-
-    const handleAddressChange = (field: keyof Address, value: string) => {
-        if (['title', 'street', 'district', 'province', 'country'].includes(field) && !value.trim()) {
-            setErrors(prev => ({
-                ...prev,
-                [field]: `${field} is required`
-            }));
-            return;
+        // If we are adding a new address, fetch current location on mount.
+        if (!isEditing) {
+            (async () => {
+                await fetchLocation();
+            })();
+        } else {
+            // For editing, we assume the region is already set from the address passed in.
+            setInitialLoading(false);
         }
+    }, [isEditing]);
 
-        // Validate apartment number
-        if (field === 'apartmentNo' && value) {
-            if (!/^\d+$/.test(value)) {
-                setErrors(prev => ({
-                    ...prev,
-                    apartmentNo: 'Apartment number must contain only digits'
-                }));
-                return;
-            }
-        }
-
-        setErrors(prev => ({
-            ...prev,
-            [field]: ''
-        }));
-
-        setSelectedAddress(prev => ({
-            ...prev,
-            [field]: value
-        }));
-    };
-
-    const handleAddressConfirm = async () => {
-        const {id, ...addressPayload} = selectedAddress;
-
-        // Validate required fields first
-        const requiredFields = {
-            title: addressPayload.title,
-            street: addressPayload.street,
-            district: addressPayload.district,
-            province: addressPayload.province,
-            country: addressPayload.country,
-            postalCode: addressPayload.postalCode
-        };
-
-        const emptyFields = Object.entries(requiredFields)
-            .filter(([_, value]) => !value || value.toString().trim() === '')
-            .map(([key]) => key);
-
-        if (emptyFields.length > 0) {
-            Alert.alert(
-                'Missing Information',
-                `Please fill in the following fields: ${emptyFields.join(', ')}`
-            );
-            return;
-        }
-
-        if (addressPayload.apartmentNo && !(/^\d+$/.test(addressPayload.apartmentNo.toString()))) {
-            Alert.alert('Invalid Input', 'Apartment number must contain only digits');
-            return;
-        }
-
-        const formattedPayload = {
-            ...addressPayload,
-            apartmentNo: addressPayload.apartmentNo.toString(),
-
-            latitude: Number(addressPayload.latitude),
-            longitude: Number(addressPayload.longitude),
-            is_primary: true
-        };
-
-        try {
-            console.log('Sending address payload:', formattedPayload);
-
-            const result = await dispatch(addAddressAsync(formattedPayload)).unwrap();
-
-            if (result) {
-                console.log('Address added successfully:', result);
-                navigation.goBack();
-            } else {
-                console.log(result + 'Failed to add address');
-            }
-        } catch (error: any) {
-            console.error('Failed to add address:', error);
-            Alert.alert(
-                'Error',
-                error?.message || 'An unexpected error occurred while adding the address'
-            );
-        }
-    };
+    // ------------------------------------------------------------------------
+    // Reverse Geocode to update selectedAddress based on latitude/longitude.
     const handleAddressUpdate = async (latitude: number, longitude: number) => {
         try {
             setIsReverseGeocoding(true);
+            console.log('Fetching address for:', latitude, longitude);
+
             const [addressData] = await Location.reverseGeocodeAsync({latitude, longitude});
-            if (addressData) {
-                setSelectedAddress((prev) => ({
-                    ...prev,
-                    street: addressData.street || '',
-                    neighborhood: addressData.subregion || '',
-                    district: addressData.city || '',
-                    province: addressData.region || '',
-                    country: addressData.country || '',
-                    postalCode: addressData.postalCode || '',
-                    latitude: latitude,
-                    longitude: longitude,
-                }));
-            } else {
-                Alert.alert('No Address Found', 'Unable to retrieve address for the selected location.');
+            console.log('Received address data:', addressData);
+
+            if (!addressData) {
+                throw new Error('No address data found');
             }
+
+            // To avoid duplicate street info, we choose one based on preference:
+            const streetName = addressData.street || addressData.name || '';
+
+            const formattedAddress = {
+                ...selectedAddress,
+                street: streetName,
+                neighborhood: addressData.subregion || '',
+                district: addressData.city || addressData.district || '',
+                province: addressData.region || '',
+                country: addressData.country || '',
+                postalCode: addressData.postalCode || '',
+                latitude: Number(latitude.toFixed(6)),
+                longitude: Number(longitude.toFixed(6)),
+            };
+
+            setSelectedAddress(formattedAddress);
         } catch (error) {
-            console.error('Error fetching address:', error);
-            Alert.alert('Error', 'An error occurred while fetching the address.');
+            console.error('Geocoding error:', error);
+            Alert.alert(
+                'Address Lookup Failed',
+                'Unable to get address details. Please try again or enter manually.'
+            );
         } finally {
             setIsReverseGeocoding(false);
         }
     };
 
+    // ------------------------------------------------------------------------
+    // Debounced address update when the map is moved
     const debouncedHandleAddressUpdate = useRef(
         debounce(async (latitude: number, longitude: number) => {
             await handleAddressUpdate(latitude, longitude);
+        }, 800)
+    ).current;
+
+    // ------------------------------------------------------------------------
+    // VALIDATIONS
+    // We separate data update from validations.
+    const handleInputChange = (field: keyof TempAddress, value: string) => {
+        setSelectedAddress((prev) => ({
+            ...prev,
+            [field]: value,
+        }));
+        // Clear the error immediately for better UX
+        setErrors((prev) => ({...prev, [field]: ''}));
+        // Use debounced validation to avoid blocking fast typing
+        debouncedValidateField(field, value);
+    };
+
+    // Debounce validator so that it runs after user stops typing.
+    const debouncedValidateField = useRef(
+        debounce((field: keyof TempAddress, value: string) => {
+            const validationRules: Record<string, any> = {
+                title: {
+                    required: true,
+                    minLength: 3,
+                    maxLength: 50,
+                    pattern: /^[a-zA-Z0-9\s-]+$/,
+                    message:
+                        'Title must be 3-50 characters long and contain only letters, numbers, spaces, and hyphens',
+                },
+                apartmentNo: {
+                    pattern: /^\d{1,4}$/,
+                    message: 'Apartment number must be 1-4 digits',
+                },
+                doorNo: {
+                    pattern: /^[a-zA-Z0-9-]{1,10}$/,
+                    message: 'Door number must be 1-10 characters (letters, numbers, or hyphens)',
+                },
+            };
+
+            const rule = validationRules[field];
+            if (rule) {
+                // If required and empty, set error.
+                if (rule.required && !value.trim()) {
+                    setErrors((prev) => ({
+                        ...prev,
+                        [field]:
+                        field.charAt(0).toUpperCase() + field.slice(1) + ' is required',
+                    }));
+                    return;
+                }
+                // Pattern check
+                if (rule.pattern && !rule.pattern.test(value)) {
+                    setErrors((prev) => ({
+                        ...prev,
+                        [field]: rule.message,
+                    }));
+                    return;
+                }
+                // Check minLength
+                if (rule.minLength && value.length < rule.minLength) {
+                    setErrors((prev) => ({
+                        ...prev,
+                        [field]: `Minimum length is ${rule.minLength} characters`,
+                    }));
+                    return;
+                }
+                // Check maxLength
+                if (rule.maxLength && value.length > rule.maxLength) {
+                    setErrors((prev) => ({
+                        ...prev,
+                        [field]: `Maximum length is ${rule.maxLength} characters`,
+                    }));
+                    return;
+                }
+            }
         }, 500)
     ).current;
 
-    useEffect(() => {
-        return () => {
-            debouncedHandleAddressUpdate.cancel();
+    // ------------------------------------------------------------------------
+    // Confirm handler – dispatches the correct thunk
+    const handleAddressConfirm = async () => {
+        // Check required fields
+        const requiredFields = {
+            title: selectedAddress.title,
+            street: selectedAddress.street,
+            district: selectedAddress.district,
+            province: selectedAddress.province,
+            country: selectedAddress.country,
         };
-    }, []);
 
+        const missingFields = Object.entries(requiredFields)
+            .filter(([_, value]) => !value || value.trim() === '')
+            .map(([key]) => key);
 
-    const toggleAddressDetails = () => {
-        setActivateAddressDetails(prevState => !prevState);
+        if (missingFields.length > 0) {
+            Alert.alert(
+                'Missing Information',
+                `Please fill in the following fields:\n${missingFields
+                    .map((field) => `• ${field.charAt(0).toUpperCase() + field.slice(1)}`)
+                    .join('\n')}`
+            );
+            return;
+        }
+
+        // Validate coordinates
+        if (!selectedAddress.latitude || !selectedAddress.longitude) {
+            Alert.alert('Invalid Location', 'Please select a valid location on the map.');
+            return;
+        }
+
+        try {
+            if (isEditing && route.params?.addressToEdit) {
+                // If editing, send only the updates.
+                const updates = {
+                    ...selectedAddress,
+                    apartmentNo: selectedAddress.apartmentNo.toString(),
+                    latitude: Number(selectedAddress.latitude),
+                    longitude: Number(selectedAddress.longitude),
+                    is_primary: true,
+                };
+                // Dispatch updateAddress with the existing address id.
+                await dispatch(
+                    updateAddress({id: route.params.addressToEdit.id, updates})
+                ).unwrap();
+            } else {
+                // Otherwise, dispatch addAddressAsync to create a new address.
+                const addressPayload = {
+                    ...selectedAddress,
+                    apartmentNo: selectedAddress.apartmentNo.toString(),
+                    latitude: Number(selectedAddress.latitude),
+                    longitude: Number(selectedAddress.longitude),
+                    is_primary: true,
+                };
+
+                await dispatch(addAddressAsync(addressPayload)).unwrap();
+            }
+            navigation.goBack();
+        } catch (error: any) {
+            Alert.alert(
+                'Error',
+                error?.message || 'Failed to save address. Please try again.'
+            );
+        }
     };
 
-    const mapOnTouchEvent = () => {
-        setIsMapInteracted(true);
-        setActivateAddressDetails(false);
-    };
+    // ------------------------------------------------------------------------
+    // Render loading screen if initial location is still loading.
     if (initialLoading) {
         return (
             <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#0000ff"/>
-                <Text>Loading...</Text>
+                <ActivityIndicator size="large" color={THEME.colors.primary}/>
+                <Text style={styles.loadingText}>Initializing map...</Text>
             </View>
         );
     }
 
-    const insets = useSafeAreaInsets();
     return (
-        <View style={[styles.container, {bottom: insets.bottom}]}>
-            <Animated.View
-                style={[
-                    styles.mapContainer,
-                    {
-                        width: width,
-                        transform: [{translateY: animatedMapTranslateY}],
-                    },
-                ]}
+        <View style={[styles.container, {paddingBottom: insets.bottom}]}>
+            <MapView
+                ref={mapRef}
+                style={StyleSheet.absoluteFillObject}
+                region={region}
+                customMapStyle={customMapStyle}
+                onRegionChangeComplete={async (newRegion: Region) => {
+                    // Only update if the form is not active.
+                    if (!activateAddressDetails && isMapInteracted) {
+                        setRegion(newRegion);
+                        await debouncedHandleAddressUpdate(newRegion.latitude, newRegion.longitude);
+                    }
+                }}
+                onTouchStart={() => {
+                    setIsMapInteracted(true);
+                    if (activateAddressDetails) {
+                        setActivateAddressDetails(false);
+                        animateForm(false);
+                    }
+                }}
+                showsUserLocation={true}
+                showsMyLocationButton={false}
+                showsCompass={true}
+                rotateEnabled={false}
             >
-                <MapView
-                    ref={mapRef}
-                    style={styles.map}
-                    region={region}
-                    onRegionChangeComplete={async (newRegion: Region) => {
-                        if (isMapInteracted) {
-                            setRegion(newRegion);
-                            const {latitude, longitude} = newRegion;
-                            const result = await debouncedHandleAddressUpdate(latitude, longitude);
-                            if (result) {
-                                console.log('Debounced address update completed.');
-                            }
-                        }
-                    }}
+                <Marker coordinate={{latitude: region.latitude, longitude: region.longitude}} opacity={0}/>
+            </MapView>
 
-                    onTouchStart={mapOnTouchEvent}
-                    mapType="terrain"
-                    showsUserLocation={true}
-                    followsUserLocation={false}
-                />
-                <View style={styles.centerMarker}>
-                    <MaterialIcons name="place" size={48} color={THEME.colors.primary}/>
-                </View>
-
-                <TouchableOpacity
-                    style={[
-                        styles.myLocationButton,
-                        locationLoading && {opacity: 0.7}
-                    ]}
-                    onPress={getUserLocation}
-                    disabled={locationLoading}
-                >
-                    {locationLoading ? (
-                        <ActivityIndicator size="small" color={THEME.colors.primary}/>
-                    ) : (
-                        <MaterialIcons
-                            name="my-location"
-                            size={24}
-                            color={THEME.colors.primary}
-                        />
-                    )}
-                </TouchableOpacity>
-            </Animated.View>
-
-            {!activateAddressDetails && (
-                <View style={styles.addressPreviewContainer}>
-                    <View style={{flex: 1}}>
-                        <Text style={styles.addressText}>
-                            {`${selectedAddress.street} ${selectedAddress.district} ${selectedAddress.postalCode}`}
-                        </Text>
-                        <Text style={styles.addressSubText}>
-                            {`${selectedAddress.province} ${selectedAddress.country}`}
-                        </Text>
-                    </View>
-                    {isReverseGeocoding && (
-                        <View style={styles.addressLoadingOverlay}>
-                            <ActivityIndicator size="small" color="#0000ff"/>
-                            <Text style={styles.loadingText}>Fetching address...</Text>
-                        </View>
-                    )}
-
-                    <CustomButton onPress={toggleAddressDetails} title={"Select"} variant={"green"} style={{
-                        width: '30%',
-                    }}/>
-
-                </View>
-            )}
-
-            {activateAddressDetails && (
+            {/* Center marker */}
+            <View style={styles.centerMarkerContainer}>
                 <Animated.View
                     style={[
-                        styles.formWrapper,
+                        styles.centerMarker,
                         {
-                            flex: 1,
-                            transform: [{translateY: animatedFormTranslateY}],
+                            transform: [
+                                {
+                                    translateY: mapAnimation.interpolate({
+                                        inputRange: [0, 1],
+                                        outputRange: [0, -20],
+                                    }),
+                                },
+                            ],
                         },
                     ]}
                 >
+                    <MaterialIcons name="place" size={48} color={THEME.colors.primary}/>
+                </Animated.View>
+                <Animated.View
+                    style={[
+                        styles.markerShadow,
+                        {
+                            transform: [
+                                {
+                                    scale: mapAnimation.interpolate({
+                                        inputRange: [0, 1],
+                                        outputRange: [1, 0.5],
+                                    }),
+                                },
+                            ],
+                        },
+                    ]}
+                />
+            </View>
 
-                    <ScrollView
-                        scrollEnabled={false}>
+            {/* Location button */}
+            <TouchableOpacity
+                style={[styles.locationButton, locationLoading && styles.locationButtonLoading]}
+                onPress={getUserLocation}
+                disabled={locationLoading}
+            >
+                {locationLoading ? (
+                    <ActivityIndicator size="small" color={THEME.colors.primary}/>
+                ) : (
+                    <MaterialIcons name="my-location" size={24} color={THEME.colors.primary}/>
+                )}
+            </TouchableOpacity>
 
-                        <View style={styles.addressPreviewContainer}>
-                            <View style={{flex: 1}}>
-                                <Text style={styles.addressText}>
-                                    {`${selectedAddress.street} ${selectedAddress.district} ${selectedAddress.postalCode}`}
-                                </Text>
-                                <Text style={styles.addressSubText}>
-                                    {`${selectedAddress.province} ${selectedAddress.country}`}
+            {/* Optionally overlay a BlurView if you wish */}
+            {activateAddressDetails && (
+                <BlurView
+                    intensity={20}
+                    style={StyleSheet.absoluteFill}
+                    pointerEvents="none" // Allow touches to fall through the BlurView
+                />
+            )}
+
+            {/* Address preview container – visible when form is hidden */}
+            {!activateAddressDetails && (
+                <View style={[styles.addressPreviewContainer]}>
+                    <View style={styles.addressPreviewContent}>
+                        {isReverseGeocoding ? (
+                            <View style={styles.loadingContainer}>
+                                <ActivityIndicator size="small" color="#50703C"/>
+                                <Text style={styles.loadingText}>Getting address...</Text>
+                            </View>
+                        ) : (
+                            <>
+                                <View style={styles.addressTextContainer}>
+                                    <Text style={styles.addressMainText}>
+                                        {selectedAddress.street || 'Move the map to select location'}
+                                    </Text>
+                                    <Text style={styles.addressSubText}>
+                                        {[
+                                            selectedAddress.district,
+                                            selectedAddress.province,
+                                            selectedAddress.postalCode,
+                                        ]
+                                            .filter(Boolean)
+                                            // Remove duplicates in case similar values are set
+                                            .filter((value, index, self) => self.indexOf(value) === index)
+                                            .join(', ') || 'Address details will appear here'}
+                                    </Text>
+                                </View>
+                                <CustomButton
+                                    onPress={() => {
+                                        setActivateAddressDetails(true);
+                                        animateForm(true);
+                                    }}
+                                    title="Select"
+                                    variant="green"
+                                    style={styles.selectButton}
+                                    disabled={!selectedAddress.street}
+                                />
+                            </>
+                        )}
+                    </View>
+                </View>
+            )}
+
+            {/* Address Form – overlays the map */}
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                <Animated.View
+                    style={[
+                        styles.formContainer,
+                        {
+                            opacity: contentOpacity,
+                            transform: [
+                                {
+                                    translateY: contentOpacity.interpolate({
+                                        inputRange: [0, 1],
+                                        outputRange: [height, 0],
+                                    }),
+                                },
+                            ],
+                        },
+                    ]}
+                >
+                    <ScrollView style={styles.formScroll} showsVerticalScrollIndicator={false}>
+                        <View style={styles.formHeader}>
+                            <TouchableOpacity
+                                style={styles.backButton}
+                                onPress={() => {
+                                    setActivateAddressDetails(false);
+                                    animateForm(false);
+                                }}
+                            >
+                                <Ionicons name="chevron-back" size={24} color={THEME.colors.primary}/>
+                                <Text style={styles.backButtonText}>Back to Map</Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        <View style={styles.formContent}>
+                            {/* Title Input */}
+                            <BaseInput
+                                value={selectedAddress.title}
+                                onChangeText={(text) => handleInputChange('title', text)}
+                                placeholder="Address Title (e.g., Home, Work)"
+                                leftIcon={<FontAwesome6 name="address-card" size={20} color={THEME.colors.primary}/>}
+                            />
+                            {errors.title ? (
+                                <Text style={styles.errorText}>{errors.title}</Text>
+                            ) : null}
+
+                            {/* Address Details */}
+                            <View style={styles.addressDetailsContainer}>
+                                <Text style={styles.addressDetailsTitle}>Selected Location</Text>
+                                <Text style={styles.addressDetailsText}>{selectedAddress.street}</Text>
+                                <Text style={styles.addressDetailsSubText}>
+                                    {[
+                                        selectedAddress.district,
+                                        selectedAddress.province,
+                                        selectedAddress.postalCode,
+                                    ]
+                                        .filter(Boolean)
+                                        .filter((value, index, self) => self.indexOf(value) === index)
+                                        .join(', ')}
                                 </Text>
                             </View>
 
+                            {/* Apartment and Door Number Inputs */}
+                            <View style={styles.rowInputs}>
+                                <View style={styles.inputHalf}>
+                                    <BaseInput
+                                        value={selectedAddress.apartmentNo}
+                                        onChangeText={(text) => handleInputChange('apartmentNo', text)}
+                                        placeholder="Apt No"
+                                        keyboardType="numeric"
+                                        leftIcon={<MaterialIcons name="apartment" size={20}
+                                                                 color={THEME.colors.primary}/>}
+                                    />
+                                    {errors.apartmentNo ? (
+                                        <Text style={styles.errorText}>{errors.apartmentNo}</Text>
+                                    ) : null}
+                                </View>
+                                <View style={styles.inputHalf}>
+                                    <BaseInput
+                                        value={selectedAddress.doorNo}
+                                        onChangeText={(text) => handleInputChange('doorNo', text)}
+                                        placeholder="Door No"
+                                        leftIcon={<MaterialCommunityIcons name="door" size={20}
+                                                                          color={THEME.colors.primary}/>}
+                                    />
+                                    {errors.doorNo ? (
+                                        <Text style={styles.errorText}>{errors.doorNo}</Text>
+                                    ) : null}
+                                </View>
+                            </View>
+
+                            {/* Additional Info */}
+                            <View style={styles.additionalInfoContainer}>
+                                <Text style={styles.additionalInfoText}>
+                                    Coordinates: {selectedAddress.latitude.toFixed(6)}, {selectedAddress.longitude.toFixed(6)}
+                                </Text>
+                                <Text style={styles.lastUpdatedText}>
+                                    Last updated: {new Date().toLocaleTimeString()}
+                                </Text>
+                            </View>
+
+                            <CustomButton
+                                onPress={handleAddressConfirm}
+                                title={isEditing ? 'Update Address' : 'Confirm Address'}
+                                variant="green"
+                                style={styles.confirmButton}
+                            />
                         </View>
-
-                        <BaseInput value={selectedAddress.title}
-                                   onChangeText={(text) => handleAddressChange('title', text)}
-                                   placeholder="Title"
-                                   leftIcon={<FontAwesome6 name="address-card" size={20} color="#50703C"/>}/>
-                        <BaseInput value={selectedAddress.apartmentNo.toString()}
-                                   onChangeText={(text) => handleAddressChange('apartmentNo', text)}
-                                   placeholder="Apt No"
-                                   keyboardType={"numeric"}
-                                   leftIcon={<MaterialIcons name="apartment" size={20} color="#50703C"/>}/>
-                        <BaseInput value={selectedAddress.doorNo}
-                                   onChangeText={(text) => handleAddressChange('doorNo', text)}
-                                   placeholder="Door No"
-                                   leftIcon={<MaterialCommunityIcons name="door" size={20} color="#50703C"/>}/>
-                        <CustomButton onPress={handleAddressConfirm} title={"Confirm Address"} variant={"green"}/>
-
-
                     </ScrollView>
                 </Animated.View>
-            )}
-
+            </TouchableWithoutFeedback>
         </View>
     );
 };
 
-export default AddressSelectionScreen;
-// The code remains the same until the styles section
+export default AddressScreen;
 
+// ------------------------------------------------------------------------
+// Styles
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#ffffff', // THEME.colors.background
-    },
-    mapContainer: {
-        flex: 1,
-        borderBottomLeftRadius: 24, // THEME.radius.xl
-        borderBottomRightRadius: 24,
-        overflow: 'hidden',
-        shadowColor: 'rgba(0, 0, 0, 0.1)', // THEME.colors.shadow
-        shadowOffset: {width: 0, height: 2},
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-        elevation: 5,
-    },
-    map: {
-        ...StyleSheet.absoluteFillObject,
-    },
-    centerMarker: {
-        position: 'absolute',
-        top: '50%',
-        left: '50%',
-        marginLeft: scaleFont(-23.5),
-        marginTop: scaleFont(-13),
-        transform: [{scale: 1.1}],
-    },
-    myLocationButton: {
-        position: 'absolute',
-        bottom: 24, // THEME.spacing.lg
-        right: 24,  // THEME.spacing.lg
-        padding: 16, // THEME.spacing.md
-        borderRadius: 30,
-        backgroundColor: '#ffffff', // THEME.colors.background
-        shadowColor: 'rgba(0, 0, 0, 0.1)', // THEME.colors.shadow
-        shadowOffset: {width: 0, height: 2},
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-        elevation: 5,
-    },
-    formWrapper: {
-        marginTop: 8, // THEME.spacing.sm
-        paddingTop: 32, // THEME.spacing.xl
-        backgroundColor: '#ffffff', // THEME.colors.background
-        borderTopLeftRadius: 24, // THEME.radius.xl
-        borderTopRightRadius: 24,
-        paddingHorizontal: 24, // THEME.spacing.lg
-        shadowColor: 'rgba(0, 0, 0, 0.1)', // THEME.colors.shadow
-        shadowOffset: {width: 0, height: -2},
-        shadowOpacity: 0.1,
-        shadowRadius: 3.84,
-        elevation: 5,
+        backgroundColor: '#FFFFFF',
     },
     addressPreviewContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingHorizontal: 24, // THEME.spacing.lg
-        paddingVertical: 16, // THEME.spacing.md
-        backgroundColor: 'rgba(136,136,136,0.16)',
-        borderRadius: 16, // THEME.radius.lg
-    },
-    addressText: {
-        fontSize: scaleFont(16),
-        fontFamily: 'Poppins-SemiBold',
-        color: '#1e293b', // THEME.colors.text.primary
-        marginBottom: 4, // THEME.spacing.xs
-    },
-    addressSubText: {
-        fontSize: scaleFont(14),
-        fontFamily: 'Poppins-Regular',
-        color: '#64748b', // THEME.colors.text.secondary
-    },
-    addressLoadingOverlay: {
         position: 'absolute',
-        top: 0,
+        bottom: 0,
         left: 0,
         right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(255, 255, 255, 0.8)',
-        justifyContent: 'center',
+        backgroundColor: '#FFFFFF',
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
+        padding: 16,
+        shadowColor: 'rgba(0, 0, 0, 0.1)',
+        shadowOffset: {width: 0, height: -2},
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5,
+        minHeight: 100,
+    },
+    addressPreviewContent: {},
+    addressTextContainer: {
+        flex: 1,
+        marginRight: 16,
+    },
+    addressMainText: {
+        fontSize: 16,
+        fontFamily: 'Poppins-Medium',
+        color: '#1A1A1A',
+    },
+    addressSubText: {
+        fontSize: 14,
+        fontFamily: 'Poppins-Regular',
+        color: '#666666',
+        marginTop: 4,
+    },
+    locationButton: {
+        position: 'absolute',
+        bottom: 120,
+        right: 24,
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        backgroundColor: '#FFFFFF',
         alignItems: 'center',
-        borderRadius: 16, // THEME.radius.lg
+        justifyContent: 'center',
+        shadowColor: 'rgba(0, 0, 0, 0.1)',
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5,
+    },
+    locationButtonLoading: {
+        opacity: 0.7,
+    },
+    centerMarkerContainer: {
+        position: 'absolute',
+        top: '53%',
+        left: '50%',
+        bottom: 'auto',
+        alignItems: 'center',
+        justifyContent: 'center',
+        transform: [{translateX: -24}, {translateY: -48}],
+    },
+    centerMarker: {
+        zIndex: 2,
+    },
+    markerShadow: {
+        position: 'absolute',
+        bottom: -5,
+        width: 20,
+        height: 20,
+        backgroundColor: 'rgba(0, 0, 0, 0.1)',
+        borderRadius: 10,
+        opacity: 0.3,
+    },
+    formContainer: {
+        flex: 1,
+        backgroundColor: '#FFFFFF',
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
+        paddingTop: 16,
+        overflow: 'hidden',
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+    },
+    formScroll: {
+        flex: 1,
+    },
+    formHeader: {
+        paddingHorizontal: 16,
+        paddingBottom: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: '#E5E5E5',
+    },
+    backButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    backButtonText: {
+        marginLeft: 8,
+        fontSize: 16,
+        color: '#50703C',
+        fontFamily: 'Poppins-Medium',
+    },
+    formContent: {
+        padding: 16,
+    },
+    addressDetailsContainer: {
+        marginVertical: 16,
+        padding: 16,
+        backgroundColor: '#F8F9FA',
+        borderRadius: 12,
+    },
+    addressDetailsTitle: {
+        fontSize: 14,
+        color: '#666666',
+        marginBottom: 8,
+        fontFamily: 'Poppins-Regular',
+    },
+    addressDetailsText: {
+        fontSize: 16,
+        color: '#1A1A1A',
+        fontFamily: 'Poppins-Medium',
+    },
+    addressDetailsSubText: {
+        fontSize: 14,
+        color: '#666666',
+        marginTop: 4,
+        fontFamily: 'Poppins-Regular',
+    },
+    rowInputs: {
+        flexDirection: 'row',
+        gap: 16,
+        marginBottom: 16,
+    },
+    inputHalf: {
+        flex: 1,
+    },
+    additionalInfoContainer: {
+        marginVertical: 16,
+        padding: 12,
+        backgroundColor: '#F8F9FA',
+        borderRadius: 8,
+    },
+    additionalInfoText: {
+        fontSize: 12,
+        color: '#666666',
+        fontFamily: 'Poppins-Regular',
+    },
+    lastUpdatedText: {
+        fontSize: 12,
+        color: '#999999',
+        marginTop: 4,
+        fontFamily: 'Poppins-Regular',
+    },
+    confirmButton: {
+        marginTop: 24,
     },
     loadingContainer: {
-        flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#ffffff', // THEME.colors.background
     },
     loadingText: {
-        marginTop: 8, // THEME.spacing.sm
-        fontSize: scaleFont(14),
+        marginTop: 16,
+        fontSize: 16,
+        color: '#1A1A1A',
         fontFamily: 'Poppins-Regular',
-        color: '#64748b', // THEME.colors.text.secondary
-    },
-    inputContainer: {
-        marginBottom: 16, // THEME.spacing.md
-    },
-    additionalFields: {
-        flexDirection: 'row',
-        gap: 16, // THEME.spacing.md
-        marginBottom: 24, // THEME.spacing.lg
     },
     selectButton: {
-        minWidth: 60,
-        maxWidth: 160,
-    }
+        left: 0,
+        right: 0,
+        marginBottom: 16,
+    },
+    errorText: {
+        color: 'red',
+        fontSize: 12,
+        marginTop: 4,
+        fontFamily: 'Poppins-Regular',
+    },
 });
