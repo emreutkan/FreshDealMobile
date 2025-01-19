@@ -108,8 +108,7 @@ const addressSlice = createSlice({
             .addCase(deleteAddressAsync.fulfilled, (state) => {
                 state.loading = false;
                 state.error = null;
-                // state.selectedAddressId = state.addresses.find(addr => addr.is_primary)?.id || state.addresses[0]?.id || null;
-                (getUserDataThunk({token}));
+
             })
             .addCase(deleteAddressAsync.rejected, (state, action) => {
                 state.loading = false;

@@ -1,11 +1,12 @@
 import {createNavigationContainerRef} from '@react-navigation/native';
 // import {BottomTabNavigationProp} from '@react-navigation/bottom-tabs';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import {Address} from '@/src/types/api/address/model';
 
 export type RootStackParamList = {
     Login: undefined;
     HomeScreen: undefined;
-    AddressSelectionScreen: undefined;
+    AddressSelectionScreen: { addressToEdit?: Address };
     UpdateAddress: {
         addressId?: string;
     };

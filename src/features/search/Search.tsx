@@ -14,7 +14,9 @@ import {
     View
 } from 'react-native';
 import {useDispatch, useSelector} from "react-redux";
-import {AppDispatch, RootState} from "@/src/redux/store";
+import {AppDispatch} from "@/src/redux/store";
+import {RootState} from "@/src/types/store";
+
 import {useSafeAreaInsets} from "react-native-safe-area-context";
 import type {NativeStackNavigationProp} from "@react-navigation/native-stack";
 import {RootStackParamList} from "@/src/utils/navigation";
@@ -171,24 +173,24 @@ const Search: React.FC = () => {
                                 {filteredRestaurants.length} results found
                             </Text>
                         )}
-                            <ScrollView
-                                style={styles.scrollView}
-                                showsVerticalScrollIndicator={false}
-                                bounces={true}
-                                contentContainerStyle={styles.scrollViewContent}
-                                refreshControl={
-                                    <RefreshControl
-                                        refreshing={refreshing}
-                                        onRefresh={onRefresh}
-                                        tintColor="rgb(176,244,132)"
-                                        colors={["rgb(176,244,132)"]}
-                                    />
-                                }
-                            >
-                                <RestaurantList
-                                    restaurants={filteredRestaurants}
+                        <ScrollView
+                            style={styles.scrollView}
+                            showsVerticalScrollIndicator={false}
+                            bounces={true}
+                            contentContainerStyle={styles.scrollViewContent}
+                            refreshControl={
+                                <RefreshControl
+                                    refreshing={refreshing}
+                                    onRefresh={onRefresh}
+                                    tintColor="rgb(176,244,132)"
+                                    colors={["rgb(176,244,132)"]}
                                 />
-                            </ScrollView>
+                            }
+                        >
+                            <RestaurantList
+                                restaurants={filteredRestaurants}
+                            />
+                        </ScrollView>
                     </>
                 )}
             </View>

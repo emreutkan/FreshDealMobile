@@ -1,7 +1,7 @@
-import {Listing} from "@/src/redux/slices/listingSlice";
 import axios from "axios";
 import {logError, logRequest, logResponse} from "@/src/utils/logger";
 import {API_BASE_URL} from "@/src/redux/api/API";
+import {Listing} from "@/src/types/api/listing/model";
 
 const LISTINGS_ENDPOINT = `${API_BASE_URL}/listings`;
 
