@@ -2,7 +2,6 @@ import React from 'react';
 import {
     ActivityIndicator,
     Alert,
-    Keyboard,
     StyleSheet,
     Text,
     TouchableOpacity,
@@ -10,20 +9,20 @@ import {
     View,
 } from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
-import {AppDispatch, RootState} from '@/src/redux/store';
+import {AppDispatch} from '@/src/redux/store';
+import {RootState} from "@/src/types/store";
+
 import {scaleFont} from '@/src/utils/ResponsiveFont';
-import DefaultButton from '@/src/features/DefaultButton';
 import AppleOTP from '@/src/features/LoginRegister/components/AppleOTPLogin';
-import EmailLoginField from '@/src/features/LoginRegister/components/EmailInput';
+import EmailInput from '@/src/features/LoginRegister/components/emailInput';
 import PhoneInput from '@/src/features/LoginRegister/components/PhoneInput';
-import {
-    EmailSignInButton,
-    GoogleSignInButton,
-    PhoneSignInButton,
-} from '@/src/features/LoginRegister/components/LoginRegisterScreenButtons';
 import PasswordInput from '@/src/features/LoginRegister/components/PasswordInput';
 import {setLoginType, setPasswordLogin} from '@/src/redux/slices/userSlice';
 import {loginUserThunk} from '@/src/redux/thunks/userThunks';
+import {EmailSignInButton} from "@/src/features/LoginRegister/components/EmailSignInButton";
+import {PhoneSignInButton} from "@/src/features/LoginRegister/components/PhoneSignInButton";
+import {ButtonStyles} from "@/src/styles/ButtonStyles";
+import GoogleOTP from "@/src/features/LoginRegister/components/GoogleOTP";
 
 interface LoginModalProps {
     switchToRegister: () => void; // Callback to switch to RegisterModal
@@ -51,18 +50,7 @@ const LoginModal: React.FC<LoginModalProps> = ({switchToRegister}) => {
         }
     }, [passwordLogin]);
 
-    // // Display error alerts when 'error' state changes
-    // React.useEffect(() => {
-    //     if (error) {
-    //         Alert.alert('Error', error);
-    //     }
-    // }, [error]);
 
-    /**
-     * Handles the login button click.
-     * Performs validation checks and dispatches the login request.
-     * Resets passwordLogin state to false after the login attempt.
-     */
     const handleLoginButton = async () => {
         console.log('login button pressed');
         if (login_type === 'phone_number' && !phoneNumber) {
@@ -110,12 +98,14 @@ const LoginModal: React.FC<LoginModalProps> = ({switchToRegister}) => {
     }, [login_type]);
 
     return (
-        <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+        <TouchableWithoutFeedback
+            // onPress={() => Keyboard.dismiss()}
+        >
             <View style={styles.bottomContainer}>
                 <Text style={styles.welcomeText}>Last Call,</Text>
                 <Text style={styles.welcomeText2}>Tasty Deals Await!</Text>
 
-                {login_type === 'phone_number' ? <PhoneInput/> : <EmailLoginField/>}
+                {login_type === 'phone_number' ? <PhoneInput/> : <EmailInput/>}
 
                 {(phoneNumber || email) &&
                     <View style={{marginTop: scaleFont(10)}}>
@@ -130,10 +120,15 @@ const LoginModal: React.FC<LoginModalProps> = ({switchToRegister}) => {
                     {!phoneNumber && !email && (
                         <>
                             <View style={styles.buttonContainer}>
-                                <DefaultButton
-                                    onPress={switchToRegister} // Switch to RegisterModal
-                                    title="Sign up"
-                                />
+
+                                <TouchableOpacity
+                                    style={ButtonStyles.defaultGreenButton}
+                                    onPress={switchToRegister}
+                                >
+                                    <Text style={ButtonStyles.ButtonText}>
+                                        Sign up
+                                    </Text>
+                                </TouchableOpacity>
                             </View>
                             {loading ? (
                                 <View style={styles.loaderContainer}>
@@ -145,7 +140,15 @@ const LoginModal: React.FC<LoginModalProps> = ({switchToRegister}) => {
                                 </Text>
                             ) : (
                                 <View style={styles.buttonContainer}>
-                                    <DefaultButton onPress={handleLoginButton} title="Login"/>
+
+                                    <TouchableOpacity
+                                        style={ButtonStyles.defaultGreenButton}
+                                        onPress={handleLoginButton}
+                                    >
+                                        <Text style={ButtonStyles.ButtonText}>
+                                            Login
+                                        </Text>
+                                    </TouchableOpacity>
                                 </View>
                             )}
                         </>
@@ -153,12 +156,17 @@ const LoginModal: React.FC<LoginModalProps> = ({switchToRegister}) => {
 
                     {(phoneNumber || email) && (
                         <View style={styles.loginContainer}>
-                            <DefaultButton
+
+                            <TouchableOpacity
+                                style={ButtonStyles.defaultGreenButton}
                                 onPress={() => {
                                     dispatch(setPasswordLogin(true));
                                 }}
-                                title="Login"
-                            />
+                            >
+                                <Text style={ButtonStyles.ButtonText}>
+                                    Login
+                                </Text>
+                            </TouchableOpacity>
                             <TouchableOpacity
                                 style={styles.passwordlessLoginContainer}
                                 onPress={() => {
@@ -183,7 +191,7 @@ const LoginModal: React.FC<LoginModalProps> = ({switchToRegister}) => {
                 </View>
 
                 <AppleOTP/>
-                <GoogleSignInButton/>
+                <GoogleOTP/>
 
                 {login_type === 'phone_number' ? (
                     <TouchableOpacity onPress={() => handleLoginTypeChange('email')}>

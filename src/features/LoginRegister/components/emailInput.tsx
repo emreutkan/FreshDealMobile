@@ -5,7 +5,7 @@ import {useDispatch, useSelector} from 'react-redux';
 import {setEmail} from '@/src/redux/slices/userSlice'; // Adjust the path as needed
 import {RootState} from '@/src/redux/store'; // Adjust the path as needed
 
-const EmailLoginField: React.FC = () => {
+const EmailInput: React.FC = () => {
     const dispatch = useDispatch();
     const email = useSelector((state: RootState) => state.user.email);
     const [isFocused, setIsFocused] = useState(false);
@@ -58,12 +58,19 @@ const EmailLoginField: React.FC = () => {
                     ref={inputRef}
                     style={styles.inputText}
                     keyboardType="email-address"
-                    autoCapitalize="none"
-                    autoCorrect={false}
+
                     value={email}
                     onChangeText={handleEmailChange}
                     onFocus={handleFocus}
                     onBlur={handleBlur}
+                    textContentType="oneTimeCode"
+                    // Additional security measures
+                    autoComplete="off"
+                    autoCorrect={false}
+                    autoCapitalize="none"
+                    spellCheck={false}
+                    // For Android
+                    importantForAutofill="no"
                 />
                 {email && (
                     <TouchableOpacity
@@ -118,4 +125,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default EmailLoginField;
+export default EmailInput;

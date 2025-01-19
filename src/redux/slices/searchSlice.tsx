@@ -1,5 +1,4 @@
 import {createSlice} from "@reduxjs/toolkit";
-import {logout} from "@/src/redux/slices/userSlice";
 import {SearchforRestaurantsThunk} from "@/src/redux/thunks/searchThunks";
 import {SearchState} from "@/src/types/states";
 
@@ -19,11 +18,12 @@ const searchSlice = createSlice({
     reducers: {},
     extraReducers: (builder) => {
         builder
-            .addCase(logout, () => initialState)
-            .addCase(SearchforRestaurantsThunk.pending, (state) => {
-                state.loading = true;
-                state.error = null;
-            })
+            .addCase('user/logout', (state) => {
+                return initialState;
+            }).addCase(SearchforRestaurantsThunk.pending, (state) => {
+            state.loading = true;
+            state.error = null;
+        })
             .addCase(SearchforRestaurantsThunk.fulfilled, (state, action) => {
                 state.loading = false;
                 state.searchResults.results = action.payload.results;

@@ -6,11 +6,11 @@ export default {
         slug: "freshdeal-siarqbmuhjlnnxqkbsqk",
         version: "1.0.0",
         orientation: "portrait",
-        icon: "./assets/images/icon.png",
+        icon: "./src/assets/images/icon.png",
         scheme: "myapp",
         userInterfaceStyle: "automatic",
         splash: {
-            image: "./assets/images/splash.png",
+            image: "./src/assets/images/splash.png",
             resizeMode: "contain",
             backgroundColor: "#ffffff"
         },
@@ -22,10 +22,12 @@ export default {
         },
         android: {
             adaptiveIcon: {
-                foregroundImage: "./assets/images/adaptive-icon.png",
+                foregroundImage: "./src/assets/images/adaptive-icon.png",
                 backgroundColor: "#ffffff"
             },
             package: "com.emreutkan.freshdeal",
+            googleServicesFile: "./google-services.json",
+
             config: {
                 googleMaps: {
                     apiKey: process.env.GOOGLE_MAPS_API_KEY,

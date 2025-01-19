@@ -4,6 +4,9 @@ import {
     Alert,
     Keyboard,
     KeyboardAvoidingView,
+    Platform,
+    SafeAreaView,
+    StatusBar,
     StyleSheet,
     Text,
     TouchableOpacity,
@@ -12,17 +15,19 @@ import {
 } from "react-native";
 import {scaleFont} from "@/src/utils/ResponsiveFont";
 import {useDispatch, useSelector} from "react-redux";
-import {AppDispatch, RootState, store} from "@/src/redux/store";
+import {AppDispatch, store} from "@/src/redux/store";
+import {RootState} from "@/src/types/store";
+
 import {getUserDataThunk, loginUserThunk, registerUserThunk,} from "@/src/redux/thunks/userThunks";
-import DefaultButton from "@/src/features/DefaultButton";
 import NameSurnameInputField from "@/src/features/LoginRegister/components/NameSurnameInputField";
 import PhoneInput from "@/src/features/LoginRegister/components/PhoneInput";
-import EmailLoginField from "@/src/features/LoginRegister/components/EmailInput";
 import PasswordInput from "@/src/features/LoginRegister/components/PasswordInput";
 import VerificationCodeInputField from "@/src/features/LoginRegister/components/VerificationCodeInputField"; // Assume this component exists
 import {setToken} from "@/src/redux/slices/userSlice";
 import {Ionicons} from "@expo/vector-icons";
 import {verifyCode} from "@/src/redux/api/authAPI";
+import {ButtonStyles} from "@/src/styles/ButtonStyles";
+import EmailInput from "@/src/features/LoginRegister/components/emailInput";
 
 interface RegisterModalProps {
     switchToLogin: () => void; // Callback to switch to LoginModal
@@ -147,115 +152,211 @@ const RegisterModal: React.FC<RegisterModalProps> = ({switchToLogin}) => {
 
     };
 
+
     return (
-        <KeyboardAvoidingView
-            style={{
-                flex: 1,
-                backgroundColor: "#f5f5f5",
-            }}
-        >
-            <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
-                <View style={styles.scrollContainer}>
+        <SafeAreaView style={styles.container}>
+            <StatusBar barStyle="dark-content"/>
+            <KeyboardAvoidingView
+                behavior={Platform.OS === "ios" ? "padding" : "height"}
+                style={styles.keyboardAvoidingView}
+            >
+                <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+                    <View style={styles.scrollContainer}
 
-                    {!isCodeSent ? (
-                        <>
-                            <View style={styles.inputArea}>
-                                <NameSurnameInputField/>
+                    >
+                        <View style={styles.headerContainer}>
+                            <Text style={styles.headerText}>
+                                {!isCodeSent ? "Create Account" : "Verify Email"}
+                            </Text>
+                            <Text style={styles.subHeaderText}>
+                                {!isCodeSent
+                                    ? "Please fill in the details to get started"
+                                    : "Enter the 6-digit code sent to your email"
+                                }
+                            </Text>
+                        </View>
+
+                        {!isCodeSent ? (
+                            <View style={styles.formContainer}>
+                                <View style={styles.inputArea}>
+                                    <NameSurnameInputField/>
+                                </View>
+
+                                <View style={styles.inputArea}>
+                                    <PhoneInput/>
+                                </View>
+                                <View style={styles.inputArea}>
+                                    <EmailInput/>
+                                </View>
+
+                                <View style={styles.inputArea}>
+                                    <PasswordInput password={password}/>
+                                </View>
+
+                                <View style={styles.buttonContainer}>
+                                    <TouchableOpacity
+                                        style={ButtonStyles.defaultGreenButton}
+                                        onPress={handleRegister}
+                                    >
+                                        <Text style={ButtonStyles.ButtonText}>
+                                            Create Account
+                                        </Text>
+                                    </TouchableOpacity>
+                                </View>
+
+                                <View style={styles.switchContainer}>
+                                    <Text style={styles.switchText}>
+                                        Already have an account?
+                                    </Text>
+                                    <TouchableOpacity
+                                        onPress={switchToLogin}
+                                        style={styles.switchButton}
+                                    >
+                                        <Text style={styles.switchButtonText}>
+                                            Log in
+                                        </Text>
+                                    </TouchableOpacity>
+                                </View>
                             </View>
-                            <View style={styles.inputArea}>
-                                <PhoneInput/>
-                            </View>
-                            <View style={styles.inputArea}>
-                                <EmailLoginField/>
-                            </View>
-                            <View style={styles.inputArea}>
-                                <PasswordInput password={password}/>
-                            </View>
+                        ) : (
+                            <View style={styles.verificationContainer}>
+                                <View style={styles.codeInputArea}>
+                                    <VerificationCodeInputField
+                                        value={verificationCode}
+                                        onChangeText={setVerificationCode}
+                                    />
+                                </View>
 
+                                <View style={styles.buttonContainer}>
+                                    <TouchableOpacity
+                                        style={ButtonStyles.default}
+                                        onPress={handleVerifyCode}
+                                    >
+                                        <Text style={ButtonStyles.ButtonText}>
+                                            Verify Email
+                                        </Text>
+                                    </TouchableOpacity>
+                                </View>
 
-                            <View style={{marginBottom: scaleFont(12)}}>
-                                <DefaultButton onPress={handleRegister} title="Sign up"/>
-
-                            </View>
-
-                            <TouchableOpacity onPress={switchToLogin} style={styles.skipButton}>
-                                <Ionicons name="arrow-back-outline" size={20} color="#000"/>
-                                <Text style={styles.skipText}>Login instead </Text>
-                            </TouchableOpacity>
-                        </>
-                    ) : (
-                        // Verification Code Input Field and Skip Button
-                        <>
-                            <Text style={{
-                                fontSize: scaleFont(22),
-                                textAlign: 'center',
-                                color: '#000000',
-                                marginTop: scaleFont(20),
-                            }}>Enter 6-digit code</Text>
-                            <View style={styles.inputArea}>
-                                <VerificationCodeInputField
-                                    value={verificationCode}
-                                    onChangeText={setVerificationCode}
-                                />
-                            </View>
-
-                            <View style={{marginTop: scaleFont(8)}}>
-                                <DefaultButton onPress={handleVerifyCode} title="Verify"/>
-
-                            </View>
-
-                            <View style={styles.skipContainer}>
-                                <TouchableOpacity onPress={skipLoginUser} style={styles.skipButton}>
-                                    <Ionicons name="arrow-forward-outline" size={20} color="#000"/>
-                                    <Text style={styles.skipText}>Skip</Text>
+                                <TouchableOpacity
+                                    onPress={skipLoginUser}
+                                    style={styles.skipButton}
+                                >
+                                    <Text style={styles.skipText}>
+                                        Skip Verification
+                                    </Text>
+                                    <Ionicons
+                                        name="arrow-forward-outline"
+                                        size={20}
+                                        color="#007AFF"
+                                    />
                                 </TouchableOpacity>
                             </View>
-                        </>
-                    )}
+                        )}
 
-                    {loading && <ActivityIndicator size="large" color="#0000ff"/>}
-                </View>
-            </TouchableWithoutFeedback>
-        </KeyboardAvoidingView>
+                        {loading && (
+                            <View style={styles.loadingContainer}>
+                                <ActivityIndicator size="large" color="#007AFF"/>
+                            </View>
+                        )}
+                    </View>
+                </TouchableWithoutFeedback>
+            </KeyboardAvoidingView>
+        </SafeAreaView>
     );
 };
 
 const styles = StyleSheet.create({
-
+    container: {
+        flex: 1,
+        backgroundColor: '#FFFFFF',
+    },
+    keyboardAvoidingView: {
+        flex: 1,
+    },
     scrollContainer: {
         flexGrow: 1,
-        justifyContent: "flex-start",
-        paddingHorizontal: scaleFont(35),
-        paddingTop: scaleFont(35),
+        paddingHorizontal: 24,
+        paddingTop: 15,
     },
+    headerContainer: {
+        marginBottom: 20,
+        alignItems: 'center',
+    },
+    headerText: {
+        fontFamily: "Poppins-Regular",
+        fontSize: 24,
+        fontWeight: '600',
+        color: '#000000',
+        marginBottom: 8,
+    },
+    subHeaderText: {
+        fontFamily: "Poppins-Regular",
+
+        fontSize: 16,
+        color: '#666666',
+        textAlign: 'center',
+    },
+    formContainer: {
+        flex: 1,
+    },
+
     inputArea: {
-        marginBottom: scaleFont(15),
+
+        marginBottom: 12,
     },
+    buttonContainer: {
+        marginTop: 6,
+    },
+    switchContainer: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: 16,
+    },
+    switchText: {
+        fontFamily: "Poppins-Regular",
 
+        fontSize: 16,
+        color: '#666666',
+    },
+    switchButton: {
+        marginLeft: 2,
+        padding: 4,
+    },
+    switchButtonText: {
+        fontFamily: "Poppins-Regular",
 
-    skipContainer: {
-        flexDirection: "row",
-        justifyContent: "flex-end",
-        alignItems: "center",
-        marginTop: scaleFont(15),
+        fontSize: 16,
+        color: '#007AFF',
+        fontWeight: '600',
+    },
+    verificationContainer: {
+        flex: 1,
+        alignItems: 'center',
+        paddingTop: 32,
+    },
+    codeInputArea: {
+        width: '100%',
+        marginBottom: scaleFont(32),
     },
     skipButton: {
-        flexDirection: "row",
-        alignItems: "center",
-        padding: scaleFont(5),
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: scaleFont(12),
+        marginTop: scaleFont(16),
     },
     skipText: {
         fontSize: scaleFont(16),
-        color: "#000",
-        marginLeft: scaleFont(5),
+        color: '#007AFF',
+        marginRight: scaleFont(8),
     },
-
-    errorText: {
-        color: "red",
-        textAlign: "center",
-        marginTop: scaleFont(10),
+    loadingContainer: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(255, 255, 255, 0.8)',
+        justifyContent: 'center',
+        alignItems: 'center',
     },
-
 });
 
 export default RegisterModal;

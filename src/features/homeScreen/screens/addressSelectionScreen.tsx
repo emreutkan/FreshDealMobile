@@ -16,13 +16,15 @@ import MapView, {Region} from 'react-native-maps';
 import * as Location from 'expo-location';
 import {MaterialIcons} from '@expo/vector-icons';
 import debounce from 'lodash.debounce';
-import {Address} from '@/src/redux/slices/addressSlice';
 import {addAddressAsync} from '@/src/redux/thunks/addressThunks';
 import {scaleFont} from '@/src/utils/ResponsiveFont';
-import {AppDispatch, store} from '@/src/redux/store';
+import {AppDispatch} from '@/src/redux/store';
 import {useNavigation} from '@react-navigation/native';
-import DefaultButton from '@/src/features/DefaultButton';
 import InputField from '@/src/features/DefaultInput';
+import {Address} from "@/src/types/api/address/model"
+import {ButtonStyles, THEME} from "@/src/styles/ButtonStyles";
+import {tokenService} from "@/src/services/tokenService";
+
 
 class TempAddress {
     id: string;
@@ -76,7 +78,7 @@ const AddressSelectionScreen: React.FC = () => {
         longitudeDelta: 0.01,
     });
 
-    const token = store.getState().user.token;
+    const token = tokenService.getToken();
     const [errors, setErrors] = useState({
         title: '',
         apartmentNo: '',
@@ -236,9 +238,7 @@ const AddressSelectionScreen: React.FC = () => {
         };
 
         try {
-            if (!token) {
-                console.log('Authentication token is not available');
-            }
+            console.log('Sending address payload:', formattedPayload);
 
             const result = await dispatch(addAddressAsync(formattedPayload)).unwrap();
 
@@ -299,24 +299,18 @@ const AddressSelectionScreen: React.FC = () => {
     const styles = StyleSheet.create({
         container: {
             flex: 1,
-            backgroundColor: '#fff',
+            backgroundColor: THEME.colors.background,
         },
         mapContainer: {
             flex: 1,
-            borderBottomLeftRadius: 20,
-            borderBottomRightRadius: 20,
+            borderBottomLeftRadius: THEME.radius.xl,
+            borderBottomRightRadius: THEME.radius.xl,
             overflow: 'hidden',
-        },
-        formWrapper: {
-            marginTop: scaleFont(12),
-            paddingTop: scaleFont(40),
-
-            // padding: scaleFont(10),
-            backgroundColor: '#fff',
-            borderRadius: 10,
-            // overflow: 'visible', // Ensure contents are not clipped
-            paddingHorizontal: scaleFont(12),
-
+            shadowColor: THEME.colors.shadow,
+            shadowOffset: {width: 0, height: 2},
+            shadowOpacity: 0.25,
+            shadowRadius: 3.84,
+            elevation: 5,
         },
         map: {
             ...StyleSheet.absoluteFillObject,
@@ -327,34 +321,55 @@ const AddressSelectionScreen: React.FC = () => {
             left: '50%',
             marginLeft: scaleFont(-23.5),
             marginTop: scaleFont(-13),
+            // Add bounce animation when dropping pin
+            transform: [{scale: 1.1}],
         },
         myLocationButton: {
             position: 'absolute',
-            bottom: 15,
-            right: 15,
-            padding: 12,
+            bottom: THEME.spacing.lg,
+            right: THEME.spacing.lg,
+            padding: THEME.spacing.md,
             borderRadius: 30,
-            justifyContent: 'center',
-            alignItems: 'center',
+            backgroundColor: THEME.colors.background,
+            shadowColor: THEME.colors.shadow,
             shadowOffset: {width: 0, height: 2},
-            shadowOpacity: 0.3,
-            shadowRadius: 2,
+            shadowOpacity: 0.25,
+            shadowRadius: 3.84,
             elevation: 5,
-            backgroundColor: '#000', // Ensure button is visible
+        },
+        formWrapper: {
+            marginTop: THEME.spacing.sm,
+            paddingTop: THEME.spacing.xl,
+            backgroundColor: THEME.colors.background,
+            borderTopLeftRadius: THEME.radius.xl,
+            borderTopRightRadius: THEME.radius.xl,
+            paddingHorizontal: THEME.spacing.lg,
+            shadowColor: THEME.colors.shadow,
+            shadowOffset: {width: 0, height: -2},
+            shadowOpacity: 0.1,
+            shadowRadius: 3.84,
+            elevation: 5,
         },
         addressPreviewContainer: {
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'space-between',
-            paddingHorizontal: scaleFont(20),
-            marginTop: scaleFont(10),
-            marginBottom: scaleFont(40),
+            paddingHorizontal: THEME.spacing.lg,
+            paddingVertical: THEME.spacing.md,
+            backgroundColor: '#f8fafc',
+            borderRadius: THEME.radius.lg,
+            marginBottom: THEME.spacing.lg,
+        },
+        addressText: {
+            fontSize: scaleFont(16),
+            fontFamily: 'Poppins-SemiBold',
+            color: THEME.colors.text.primary,
+            marginBottom: THEME.spacing.xs,
         },
         addressSubText: {
-            paddingTop: scaleFont(2),
-            color: 'gray',
-            fontWeight: '500',
             fontSize: scaleFont(14),
+            fontFamily: 'Poppins-Regular',
+            color: THEME.colors.text.secondary,
         },
         addressLoadingOverlay: {
             position: 'absolute',
@@ -362,42 +377,35 @@ const AddressSelectionScreen: React.FC = () => {
             left: 0,
             right: 0,
             bottom: 0,
-            backgroundColor: 'rgba(136,136,136,0.4)',
+            backgroundColor: 'rgba(255, 255, 255, 0.8)',
             justifyContent: 'center',
             alignItems: 'center',
-            borderRadius: 8,
-            marginLeft: 8,
-        },
-        loadingText: {
-            marginTop: 5,
-            fontSize: 14,
+            borderRadius: THEME.radius.lg,
         },
         loadingContainer: {
             flex: 1,
             justifyContent: 'center',
             alignItems: 'center',
-            backgroundColor: '#fff',
+            backgroundColor: THEME.colors.background,
         },
-        textContainer: {
-            flex: 0.5,
-            marginRight: scaleFont(8),
-        },
-        addressText: {
-            fontSize: scaleFont(16),
-            fontWeight: 'bold',
-        },
-        selectButton: {
-            flex: 0.5,
-        },
-        additionalFields: {
-            maxWidth: '100%',
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            marginBottom: scaleFont(10),
+        loadingText: {
+            marginTop: THEME.spacing.sm,
+            fontSize: scaleFont(14),
+            fontFamily: 'Poppins-Regular',
+            color: THEME.colors.text.secondary,
         },
         inputContainer: {
-            marginBottom: scaleFont(10),
+            marginBottom: THEME.spacing.md,
         },
+        additionalFields: {
+            flexDirection: 'row',
+            gap: THEME.spacing.md,
+            marginBottom: THEME.spacing.lg,
+        },
+        selectButton: {
+            minWidth: 60,
+            maxWidth: 160,
+        }
     });
 
     const toggleAddressDetails = () => {
@@ -449,20 +457,25 @@ const AddressSelectionScreen: React.FC = () => {
                     followsUserLocation={false}
                 />
                 <View style={styles.centerMarker}>
-                    <MaterialIcons name="place" size={48} color="#FF0000"/>
+                    <MaterialIcons name="place" size={48} color={THEME.colors.primary}/>
                 </View>
 
                 <TouchableOpacity
-                    style={styles.myLocationButton}
+                    style={[
+                        styles.myLocationButton,
+                        locationLoading && {opacity: 0.7}
+                    ]}
                     onPress={getUserLocation}
-                    accessibilityLabel="Use My Location"
-                    accessibilityHint="Centers the map on your current location and fills in your address"
                     disabled={locationLoading}
                 >
                     {locationLoading ? (
-                        <ActivityIndicator size="small" color="#0000ff"/>
+                        <ActivityIndicator size="small" color={THEME.colors.primary}/>
                     ) : (
-                        <MaterialIcons name="my-location" size={24} color="#fff"/>
+                        <MaterialIcons
+                            name="my-location"
+                            size={24}
+                            color={THEME.colors.primary}
+                        />
                     )}
                 </TouchableOpacity>
             </Animated.View>
@@ -484,10 +497,16 @@ const AddressSelectionScreen: React.FC = () => {
                         </View>
                     )}
                     <View style={styles.selectButton}>
-                        <DefaultButton
+                        <TouchableOpacity
                             onPress={toggleAddressDetails}
-                            title={'Select'}
-                        />
+
+                            style={ButtonStyles.defaultGreenButton}
+
+                        >
+                            <Text style={ButtonStyles.ButtonText}>
+                                Select </Text>
+                        </TouchableOpacity>
+
                     </View>
                 </View>
             )}
@@ -543,7 +562,14 @@ const AddressSelectionScreen: React.FC = () => {
                             />
                         </View>
 
-                        <DefaultButton onPress={handleAddressConfirm} title={'Confirm Address'}/>
+                        <TouchableOpacity
+                            style={ButtonStyles.defaultGreenButton}
+                            onPress={handleAddressConfirm}
+                        >
+                            <Text style={ButtonStyles.ButtonText}>
+                                Confirm Address
+                            </Text>
+                        </TouchableOpacity>
                     </ScrollView>
                 </Animated.View>
             )}

@@ -1,5 +1,7 @@
 // src/middleware/tokenMiddleware.ts
 import {Middleware} from '@reduxjs/toolkit';
+import {NavigationService} from "@/src/services/navigationService";
+import {tokenService} from "@/src/services/tokenService";
 
 const PUBLIC_ACTIONS = [
     // User input actions
@@ -13,7 +15,11 @@ const PUBLIC_ACTIONS = [
     'user/setVerificationCode',
     'user/setStep',
     'user/setLoginType',
-
+    'user/loginUser',
+    'user/logout',
+    'user/logoutThunk/pending',
+    'user/logoutThunk/fulfilled',
+    'user/logoutThunk/rejected',
     // Login/Register flow actions
     'user/loginUserThunk/pending',
     'user/loginUserThunk/fulfilled',
@@ -30,6 +36,7 @@ const PUBLIC_ACTIONS = [
     'PRESS',
     'CLICK',
     'TOUCH'
+
 ];
 
 export const tokenMiddleware: Middleware = (store) => (next) => (action) => {
@@ -43,13 +50,13 @@ export const tokenMiddleware: Middleware = (store) => (next) => (action) => {
     }
 
     // For protected actions, check token
-    const state = store.getState();
-    const token = state.user.token;
+    const token = tokenService.getToken();
 
     if (!token) {
         // Only dispatch logout if we're not already logging out
         if (action.type !== 'user/logout') {
             store.dispatch({type: 'user/logout'});
+            NavigationService.navigateToLogin(); // Changed from navigateToLanding
         }
         return;
     }

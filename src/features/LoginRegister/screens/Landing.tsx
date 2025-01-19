@@ -5,21 +5,19 @@ import LoginModal from "@/src/features/LoginRegister/screens/LoginModal";
 import RegisterModal from "@/src/features/LoginRegister/screens/RegisterModal";
 import {useNavigation} from "@react-navigation/native";
 import {useSelector} from "react-redux";
-import {RootState} from "@/src/redux/store";
+import {RootState} from "@/src/types/store";
 import {NativeStackNavigationProp} from "@react-navigation/native-stack";
 import {RootStackParamList} from "@/src/utils/navigation";
 
 const Landing: React.FC = () => {
     const {height: screenHeight} = Dimensions.get('window');
     const isSmallScreen = screenHeight < 700;
-    const [showImage, setShowImage] = useState(!isSmallScreen);
-    const [activeModal, setActiveModal] = useState<'login' | 'register'>('login'); // State for switching views
+    const [activeModal, setActiveModal] = useState<'login' | 'register'>('login');
 
-    const imagePosition = useRef(new Animated.Value(isSmallScreen ? screenHeight : screenHeight / 2 - 125)).current;
-    const formPosition = useRef(new Animated.Value(screenHeight)).current;
-    const imageOpacity = useRef(new Animated.Value(1)).current;
-    const scrollViewOpacity = useRef(new Animated.Value(0)).current;
     const imageScale = useRef(new Animated.Value(1.5)).current;
+    const formHeight = useRef(new Animated.Value(0)).current;
+    const formOpacity = useRef(new Animated.Value(0)).current;
+    const logoPosition = useRef(new Animated.Value(0)).current; // New animated value for logo position
 
     type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -30,43 +28,62 @@ const Landing: React.FC = () => {
         if (token) {
             navigation.reset({
                 index: 0,
-                routes: [{name: 'HomeScreen'}], // Replace 'HomeScreen' with your actual screen name
+                routes: [{name: 'HomeScreen'}],
             });
         }
     }, [token]);
 
     useEffect(() => {
-        const formFinalPosition = isSmallScreen ? screenHeight * 0.1 : screenHeight * 0.025;
+        const initialDelay = 200; // 0.2 seconds delay
         const animationDuration = 1500;
+        const initialScaleDuration = 500; // Duration for initial scale up
 
-        const animations = Animated.parallel([
-            Animated.timing(imageOpacity, {toValue: 1, duration: 500, useNativeDriver: true}),
-            Animated.timing(imagePosition, {
-                toValue: isSmallScreen ? screenHeight * 0.1 : 0,
-                duration: animationDuration,
+        // Calculate the distance to move up
+        const moveUpDistance = -screenHeight * 0.33;
+
+        // First animation: Scale up
+        Animated.sequence([
+            // Initial scale up animation
+            Animated.timing(imageScale, {
+                toValue: 1.8, // Scale up slightly bigger than starting value
+                duration: initialScaleDuration,
                 useNativeDriver: true
             }),
-            Animated.timing(imageScale, {toValue: 1, duration: animationDuration, useNativeDriver: true}),
-            Animated.timing(formPosition, {
-                toValue: formFinalPosition,
-                duration: animationDuration,
-                useNativeDriver: true
-            }),
-            Animated.timing(scrollViewOpacity, {toValue: 1, duration: animationDuration, useNativeDriver: true}),
-        ]);
 
-        const fadeOut = Animated.timing(imageOpacity, {toValue: 0, duration: animationDuration, useNativeDriver: true});
+            // Add a small delay
+            Animated.delay(initialDelay),
 
-        const sequence = isSmallScreen ? Animated.sequence([animations, fadeOut]) : animations;
+            // Main animation sequence
+            Animated.parallel([
+                Animated.timing(imageScale, {
+                    toValue: 1,
+                    duration: animationDuration,
+                    useNativeDriver: true
+                }),
+                Animated.timing(logoPosition, {
+                    toValue: moveUpDistance,
+                    duration: animationDuration,
+                    useNativeDriver: true
+                }),
+                Animated.timing(formHeight, {
+                    toValue: 73,
+                    duration: animationDuration,
+                    useNativeDriver: false
+                }),
+                Animated.timing(formOpacity, {
+                    toValue: 1,
+                    duration: animationDuration,
+                    useNativeDriver: false
+                })
+            ])
+        ]).start();
+    }, [screenHeight]);
 
-        const timer = setTimeout(() => {
-            sequence.start(() => {
-                if (isSmallScreen) setShowImage(false);
-            });
-        }, 500);
 
-        return () => clearTimeout(timer);
-    }, [isSmallScreen, screenHeight]);
+    const animatedHeight = formHeight.interpolate({
+        inputRange: [0, 100],
+        outputRange: ['0%', '100%']
+    });
 
     return (
         <LinearGradient
@@ -77,43 +94,84 @@ const Landing: React.FC = () => {
         >
             <StatusBar translucent backgroundColor="transparent" barStyle="dark-content"/>
 
-            {showImage && (
+            {/* Modified logo container to be absolutely positioned */}
+            <Animated.View style={[
+                styles.logoContainer,
+                {
+                    transform: [
+                        {translateY: logoPosition},
+                        {scale: imageScale}
+                    ]
+                }
+            ]}>
                 <Animated.Image
                     source={require('@/src/assets/images/logo.png')}
-                    style={[styles.logo, {
-                        transform: [{translateY: imagePosition}, {scale: imageScale}],
-                        opacity: imageOpacity
-                    }]}
+                    style={styles.logo}
                     resizeMode="contain"
                 />
-            )}
-            <Animated.View style={[styles.main, {transform: [{translateY: formPosition}], opacity: scrollViewOpacity}]}>
+            </Animated.View>
+
+
+            <Animated.View
+                style={[
+                    styles.main,
+                    {
+                        height: animatedHeight,
+                        opacity: formOpacity
+                    }
+                ]}
+            >
+
                 {activeModal === 'login' ? (
                     <LoginModal switchToRegister={() => setActiveModal('register')}/>
                 ) : (
                     <RegisterModal switchToLogin={() => setActiveModal('login')}/>
                 )}
             </Animated.View>
+
         </LinearGradient>
     );
 };
 
 const styles = StyleSheet.create({
-    container: {flex: 1, alignItems: 'center'},
-    logo: {width: 150, height: 150, marginTop: 60},
-    main: {
+    container: {
         flex: 1,
+    },
+    logoContainer: {
+        position: 'absolute',
+        top: '40%', // Start from vertical center
+        left: 0,
+        right: 0,
+        alignItems: 'center',
+        zIndex: 1,
+    },
+    logo: {
+        width: 150,
+        height: 150,
+    },
+    main: {
         width: '100%',
-        backgroundColor: '#f5f5f5',
+        flex: 1,
+        backgroundColor: '#FFFFFF',
         borderTopLeftRadius: 25,
         borderTopRightRadius: 25,
         overflow: 'hidden',
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
         ...Platform.select({
-            ios: {shadowColor: '#000', shadowOffset: {width: 0, height: -3}, shadowOpacity: 0.1, shadowRadius: 5},
-            android: {elevation: 10},
+            ios: {
+                shadowColor: '#000',
+                shadowOffset: {width: 0, height: -3},
+                shadowOpacity: 0.1,
+                shadowRadius: 5
+            },
+            android: {
+                elevation: 10
+            },
         }),
     },
 });
 
 export default Landing;
-

@@ -7,7 +7,7 @@ import {countryCodes} from '@/src/utils/countryCodes';
 import {scaleFont} from "@/src/utils/ResponsiveFont";
 import {useDispatch, useSelector} from 'react-redux';
 import {setPhoneNumber, setSelectedCode,} from '@/src/redux/slices/userSlice'; // Adjust the path as needed // Adjust the path as needed
-import {RootState} from '@/src/redux/store'; // Adjust the path as needed
+import {RootState} from "@/src/types/store";
 
 const PhoneInput: React.FC = () => {
     const dispatch = useDispatch();
@@ -78,6 +78,13 @@ const PhoneInput: React.FC = () => {
                 style={styles.phoneInput}
                 placeholder="Phone number"
                 placeholderTextColor="#999"
+                autoComplete="off"
+                textContentType="oneTimeCode"
+                autoCorrect={false}
+                autoCapitalize="none"
+                spellCheck={false}
+                // For Android
+                importantForAutofill="no"
 
                 onChangeText={handleChangeText}
                 value={phoneNumber}

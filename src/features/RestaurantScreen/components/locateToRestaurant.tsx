@@ -3,18 +3,14 @@ import {Image, Linking, Platform, StyleSheet, Text, TouchableOpacity, View} from
 import MapView, {Marker} from 'react-native-maps';
 import MapViewDirections from 'react-native-maps-directions';
 import {useSelector} from 'react-redux';
-import {RootState} from '@/src/redux/store';
+import {RootState} from "@/src/types/store";
 import Constants from 'expo-constants';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import {scaleFont} from '@/src/utils/ResponsiveFont';
 import {Address} from "@/src/types/api/address/model";
-import {Restaurant} from "@/src/types/api/restaurant/model";
 
-interface MapProps {
-    restaurantId: string;
-}
 
-const LocateToRestaurant = ({restaurantId}: MapProps) => {
+const LocateToRestaurant = () => {
     const mapRef = useRef<MapView>(null);
     const [travelMode, setTravelMode] = useState<'WALKING' | 'DRIVING'>('WALKING');
     const [selected, setSelected] = useState<boolean>(false);
@@ -28,13 +24,8 @@ const LocateToRestaurant = ({restaurantId}: MapProps) => {
     const latitude = selectedAddress?.latitude;
     const longitude = selectedAddress?.longitude;
 
-    // Grab the restaurant info from Redux
-    const restaurants = useSelector(
-        (state: RootState) => state.restaurant.restaurantsProximity
-    );
-    const restaurant = restaurants.find(
-        (rest: Restaurant) => rest.id === Number(restaurantId)
-    );
+
+    const restaurant = useSelector((state: RootState) => state.restaurant.selectedRestaurant);
 
     // If data is missing, return null
     if (!restaurant || latitude == null || longitude == null) {

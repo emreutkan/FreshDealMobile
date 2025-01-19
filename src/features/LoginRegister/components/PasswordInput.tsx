@@ -81,9 +81,15 @@ const PasswordInput: React.FC<{ password: string }> = ({password}) => {
                 secureTextEntry
                 value={password}
                 onChangeText={handlePasswordChange} // Update input on text change
-                autoCapitalize="none"
                 onFocus={handleFocus}
                 onBlur={handleBlur}
+                autoComplete="off"
+                textContentType="oneTimeCode"
+                autoCorrect={false}
+                autoCapitalize="none"
+                spellCheck={false}
+                // For Android
+                importantForAutofill="no"
             />
             {isTyping && (
                 <TouchableOpacity onPress={handleClearPassword} style={styles.clearButton}>

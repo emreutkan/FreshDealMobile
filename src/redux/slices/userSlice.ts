@@ -53,7 +53,7 @@ const initialState: UserState = {
     role: 'customer',
     email_verified: false,
     isInitialized: false,
-
+    shouldNavigateToLanding: true,
 };
 
 const userSlice = createSlice({
@@ -96,11 +96,17 @@ const userSlice = createSlice({
         setToken(state, action: PayloadAction<string>) {
             state.token = action.payload;
         },
-        logout: () => initialState,
-
+        logout: (state) => {
+            state.shouldNavigateToLanding = true;
+            return initialState;
+        },
+        resetNavigation: (state) => {
+            state.shouldNavigateToLanding = false;
+        }
     },
     extraReducers: (builder) => {
         builder
+
             .addCase(loginUserThunk.pending, (state) => {
                 state.loading = true;
                 state.error = null;
@@ -108,26 +114,7 @@ const userSlice = createSlice({
             .addCase(loginUserThunk.fulfilled, (state, action) => {
                 state.loading = false;
                 state.token = action.payload.token;
-                console.log("Token: ", state.token);
-                console.log("Token: ", state.token);
-                console.log("Token: ", state.token);
-                console.log("Token: ", state.token);
-                console.log("Token: ", state.token);
-                console.log("Token: ", state.token);
-                console.log("Token: ", state.token);
-                console.log("Token: ", state.token);
-                console.log("Token: ", state.token);
-                console.log("Token: ", state.token);
-                console.log("Token: ", state.token);
-                console.log("Token: ", state.token);
-                console.log("Token: ", state.token);
-                console.log("Token: ", state.token);
-                console.log("Token: ", state.token);
-                console.log("Token: ", state.token);
-                console.log("Token: ", state.token);
-                console.log("Token: ", state.token);
-                console.log("Token: ", state.token);
-                console.log("Token: ", state.token);
+
 
             })
             .addCase(loginUserThunk.rejected, (state, action) => {

@@ -1,20 +1,26 @@
 // components/LoginScreenComponents/AddressBar.tsx
 
-import React, {useState} from 'react';
-import {FlatList, Modal, StyleSheet, Text, TouchableOpacity, View,} from 'react-native';
+import React, {useMemo, useRef, useState} from 'react';
+import {Animated, FlatList, StyleSheet, Text, TouchableOpacity, View,} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
-import {Ionicons} from '@expo/vector-icons';
+import {Ionicons, MaterialIcons} from '@expo/vector-icons';
 import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 
-import {AppDispatch, RootState} from '@/src/redux/store';
-import {scaleFont} from '@/src/utils/ResponsiveFont';
-import DefaultButton from '@/src/features/DefaultButton';
-import {Address, removeAddress} from '@/src/redux/slices/addressSlice';
-import {setPrimaryAddress} from "@/src/redux/thunks/addressThunks";
-import {RootStackParamList} from '@/src/utils/navigation';
+import {AppDispatch} from '@/src/redux/store';
+import {RootState} from "@/src/types/store";
 
-const AddressBar: React.FC = () => {
+import {deleteAddressAsync, setPrimaryAddress} from "@/src/redux/thunks/addressThunks";
+import {RootStackParamList} from '@/src/utils/navigation';
+import {Address} from "@/src/types/api/address/model"
+import {useSafeAreaInsets} from "react-native-safe-area-context";
+import {BottomSheetModal, BottomSheetScrollView} from '@gorhom/bottom-sheet';
+
+interface AddressBarProps {
+    textColor: Animated.AnimatedInterpolation<string> | string;
+}
+
+const AddressBar: React.FC<AddressBarProps> = ({textColor}) => {
     const dispatch = useDispatch<AppDispatch>();
     type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'UpdateAddress'>;
 
@@ -29,47 +35,55 @@ const AddressBar: React.FC = () => {
         (state: RootState) => state.address.selectedAddressId
     );
 
+    const bottomSheetRef = useRef<BottomSheetModal>(null);
+    const snapPoints = useMemo(() => ['50%', '50%', "50%"], []);
 
-    const [modalVisible, setModalVisible] = useState<boolean>(false);
     const [textWidth, setTextWidth] = useState<number>(0);
 
+    const handlePresentModal = () => {
+        bottomSheetRef.current?.present();
+    };
+
+    const handleDismissModal = () => {
+        bottomSheetRef.current?.dismiss();
+    };
     // ===== Handlers =====
     const handleAddressSelect = async (address: Address) => {
         try {
             await dispatch(setPrimaryAddress(address.id)).unwrap();
             console.log('Primary address set:', address);
-            setModalVisible(false);
+            handleDismissModal();
         } catch (error) {
             console.error('Failed to set primary address:', error);
         }
     };
 
-
-    const handleRemoveAddress = (addressId: string) => {
-        dispatch(removeAddress(addressId));
-    };
-
     const handleConfigureAddress = (addressId: string) => {
-        setModalVisible(false);
+        handleDismissModal();
         navigation.navigate('UpdateAddress', {addressId});
     };
 
     const handleAddNewAddress = () => {
-        setModalVisible(false);
+        handleDismissModal();
         navigation.navigate('AddressSelectionScreen');
     };
+    const handleRemoveAddress = (addressId: string) => {
+        dispatch(deleteAddressAsync(addressId));
+    };
 
-    const renderAddressContent = () => {
+
+    const renderAddressStreet = () => {
         let selectedAddress = addresses.find((addr) => addr.id === selectedAddressID);
         if (!selectedAddress) return 'Select an address';
+        return `${selectedAddress.street}`;
 
-        if (textWidth <= scaleFont(100)) {
-            return selectedAddress.street;
-        } else if (textWidth <= scaleFont(200)) {
-            return `${selectedAddress.street}`;
-        } else {
-            return `${selectedAddress.street}, ${selectedAddress.district}`;
-        }
+    };
+
+    const renderAddressDistrict = () => {
+        let selectedAddress = addresses.find((addr) => addr.id === selectedAddressID);
+        if (!selectedAddress) return 'Select an address';
+        return `${selectedAddress.district}`;
+
     };
 
     const renderAddressItem = ({item}: { item: Address }) => {
@@ -89,8 +103,9 @@ const AddressBar: React.FC = () => {
                     accessibilityHint={`Select the address at ${item.street}, ${item.district}`}
                 >
                     <Text style={styles.addressOptionText}>
+
                         {`${item.street}, ${item.district}, ${item.province}`}
-                        {item.is_primary ? ' (Primary)' : ''}
+
                     </Text>
                 </TouchableOpacity>
 
@@ -100,11 +115,7 @@ const AddressBar: React.FC = () => {
                         style={styles.configureIconContainer}
                         accessibilityLabel={`Configure address at ${item.street}`}
                     >
-                        <Ionicons
-                            name="create-outline"
-                            size={scaleFont(20)}
-                            color="#007AFF"
-                        />
+                        <Ionicons name="create-outline" size={20} color="#50703C"/>
                     </TouchableOpacity>
 
                     <TouchableOpacity
@@ -113,40 +124,54 @@ const AddressBar: React.FC = () => {
                         accessibilityLabel={`Remove address at ${item.street}`}
                         accessibilityHint="Removes this address from the list"
                     >
-                        <Ionicons name="trash" size={scaleFont(20)} color="#FF0000"/>
+                        <Ionicons name="trash" size={20} color="#FF0000"/>
                     </TouchableOpacity>
                 </View>
             </View>
         );
     };
 
+    const insets = useSafeAreaInsets()
     return (
         <View style={styles.container}>
-
-            <View
-                style={[
-                    styles.addressBar,
-                    {minWidth: textWidth + scaleFont(40)},
-                ]}
-            >
-                <Ionicons
-                    name="location-sharp"
-                    size={scaleFont(20)}
-                    color="#666"
-                    style={styles.icon}
-                />
+            <View style={[styles.addressBar, {minWidth: textWidth + 160}]}>
+                <MaterialIcons name="gps-fixed" size={18} color="#4CAF50BE"/>
                 <Text
-                    style={styles.addressText}
+                    style={{
+                        fontFamily: "Poppins-Regular",
+                        fontSize: 16,
+                        color: '#2D3748',
+                        flexShrink: 1,
+                        paddingLeft: 8,
+                    }}
                     onLayout={(event) => setTextWidth(event.nativeEvent.layout.width)}
                     numberOfLines={1}
                     ellipsizeMode="tail"
                 >
-                    {renderAddressContent()}
+                    {renderAddressStreet()}
                 </Text>
-
+                <Text
+                    style={{
+                        fontFamily: "Poppins-Regular",
+                        fontSize: 16,
+                        color: '#718096',
+                        flexShrink: 1,
+                        paddingLeft: 4,
+                    }}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                >
+                    {renderAddressDistrict()}
+                </Text>
+                <Ionicons
+                    name="chevron-down-outline"
+                    size={20}
+                    style={{marginLeft: 5}}
+                    color="#88888867"
+                />
 
                 <TouchableOpacity
-                    onPress={() => setModalVisible(true)}
+                    onPress={handlePresentModal}
                     style={styles.touchableOverlay}
                     activeOpacity={1}
                     accessibilityLabel="Open Address Selector"
@@ -154,95 +179,186 @@ const AddressBar: React.FC = () => {
                 />
             </View>
 
+            <BottomSheetModal
+                ref={bottomSheetRef}
+                snapPoints={snapPoints}
+                enablePanDownToClose
+                index={1}
+                enableHandlePanningGesture={true}
+                backgroundStyle={styles.bottomSheetBackground}
+                handleIndicatorStyle={styles.bottomSheetIndicator}
+                android_keyboardInputMode="adjustResize"
+                keyboardBehavior="extend"
+                enableOverDrag={false}
+                enableContentPanningGesture={true}
+                style={{paddingBottom: 100}}
+            >
+                <BottomSheetScrollView contentContainerStyle={
+                    [styles.modalContent, {paddingBottom: insets.bottom}]
+                }>
+                    <View style={styles.modalHeader}>
+                        <Text style={styles.modalTitle}>Select Address</Text>
+                    </View>
 
-            {modalVisible && (
-                <Modal
-                    transparent
-                    animationType="slide"
-                    visible={modalVisible}
-                    onRequestClose={() => setModalVisible(false)}
-                >
+                    {addresses.length > 0 ? (
+                        <FlatList
+                            data={addresses}
+                            keyExtractor={(item) => item.id}
+                            renderItem={renderAddressItem}
+                            contentContainerStyle={styles.flatListContent}
+                        />
+                    ) : (
+                        <Text style={styles.noAddressesText}>
+                            No addresses available.
+                        </Text>
+                    )}
+
                     <TouchableOpacity
-                        style={styles.modalOverlay}
-                        activeOpacity={1}
-                        onPressOut={() => setModalVisible(true)
-                        }
+                        onPress={handleAddNewAddress}
+                        style={styles.addAddressButton}
+                        accessibilityLabel="Add New Address"
                     >
-                        <View style={styles.modalContainer}>
-                            <Text style={styles.modalTitle}>Select Address</Text>
-                            {addresses.length > 0 ? (
-                                <FlatList
-                                    data={addresses}
-                                    keyExtractor={(item) => item.id}
-                                    renderItem={renderAddressItem}
-                                    contentContainerStyle={styles.flatListContent}
-                                />
-                            ) : (
-                                <Text style={styles.noAddressesText}>
-                                    No addresses available.
-                                </Text>
-                            )}
-
-
-                            <TouchableOpacity
-                                onPress={handleAddNewAddress}
-                                style={styles.addAddressButton}
-                                accessibilityLabel="Add New Address"
-                                accessibilityHint="Navigate to add a new address screen"
-                            >
-                                <Ionicons
-                                    name="add-circle-outline"
-                                    size={scaleFont(20)}
-                                    color="#007AFF"
-                                />
-                                <Text style={styles.addAddressText}>Add New Address</Text>
-                            </TouchableOpacity>
-
-
-                            <DefaultButton
-                                onPress={() => setModalVisible(false)}
-                                style={styles.closeButton}
-                                title="Close"
-                            />
-                        </View>
+                        <Ionicons
+                            name="add-circle-outline"
+                            size={20}
+                            color="#ffffff"
+                        />
+                        <Text style={styles.addAddressText}>Add New Address</Text>
                     </TouchableOpacity>
-                </Modal>
-            )}
+                </BottomSheetScrollView>
+            </BottomSheetModal>
         </View>
     );
 };
 
 export default AddressBar;
 
-// ===== Styles =====
 const styles = StyleSheet.create({
-    container: {
-        paddingHorizontal: scaleFont(10),
+    container: {}, // Keep this as it's used in the root component
+    bottomSheetBackground: {
+        backgroundColor: '#f8f9fa',
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: -3},
+        shadowOpacity: 0.1,
+        shadowRadius: 5,
+        elevation: 5,
     },
+
+    bottomSheetIndicator: {
+        backgroundColor: '#50703C',
+        width: 40,
+        height: 4,
+        borderRadius: 2,
+    },
+
+    modalContent: {
+        paddingHorizontal: 16,
+        backgroundColor: '#f8f9fa',
+
+    },
+
+    modalHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: '#E2E8F0',
+        marginBottom: 16,
+    },
+
+    modalTitle: {
+        fontSize: 20,
+        fontFamily: 'Poppins-Regular',
+        color: '#333',
+        textAlign: 'center',
+        fontWeight: '600',
+    },
+
+    addressItemContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        backgroundColor: '#FFFFFF',
+        padding: 16,
+        borderRadius: 12,
+        marginBottom: 12,
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.05,
+        shadowRadius: 3.84,
+        elevation: 2,
+    },
+
+    selectedAddressItem: {
+        backgroundColor: '#e8f5e9',
+        borderColor: '#50703C',
+        borderWidth: 1,
+    },
+
+    addressOptionText: {
+        fontFamily: "Poppins-Regular",
+        fontSize: 16,
+        color: '#333',
+        flex: 1,
+    },
+
+    actionIcons: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#f8f9fa',
+        borderRadius: 8,
+        padding: 6,
+    },
+
+    addAddressButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#50703C',
+        paddingVertical: 16,
+        borderRadius: 12,
+        marginTop: 8,
+        // marginHorizontal: 16,
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.1,
+        shadowRadius: 3,
+        elevation: 5,
+    },
+
+    addAddressText: {
+        fontFamily: "Poppins-Regular",
+        fontSize: 16,
+        color: '#FFFFFF',
+        fontWeight: '600',
+        marginLeft: 8,
+    },
+
+    configureIconContainer: {
+        paddingHorizontal: 8,
+        marginRight: 8,
+    },
+
+    trashIconContainer: {
+        paddingHorizontal: 8,
+    },
+
     addressBar: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: scaleFont(10),
-        paddingHorizontal: scaleFont(15),
-        borderRadius: scaleFont(20),
-        backgroundColor: '#f9f9f9',
-        borderColor: '#e0e0e0',
-        borderWidth: 1,
+        paddingHorizontal: 16,
+        borderRadius: 12,
         shadowColor: '#000',
-        shadowOffset: {width: 0, height: 1},
+        shadowOffset: {width: 0, height: 2},
         shadowOpacity: 0.1,
-        shadowRadius: 2,
-        elevation: 1,
-        maxHeight: scaleFont(60),
-        minWidth: scaleFont(120),
-    },
-    icon: {
-        marginRight: scaleFont(8),
-    },
-    addressText: {
-        fontSize: scaleFont(16),
-        color: '#333',
-        flexShrink: 1,
+        shadowRadius: 4,
+        elevation: 3,
+        maxHeight: 60,
+        minWidth: 120,
+        marginVertical: 8,
     },
     touchableOverlay: {
         position: 'absolute',
@@ -251,91 +367,20 @@ const styles = StyleSheet.create({
         left: 0,
         right: 0,
     },
-    modalOverlay: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    },
-    modalContainer: {
-        width: '85%',
-        maxHeight: '80%',
-        backgroundColor: '#fff',
-        borderRadius: scaleFont(10),
-        padding: scaleFont(20),
-    },
-    modalTitle: {
-        fontSize: scaleFont(20),
-        fontWeight: '600',
-        marginBottom: scaleFont(15),
-        textAlign: 'center',
-        color: '#333',
-    },
+
     flatListContent: {
-        paddingBottom: scaleFont(10),
+        paddingTop: 6,
     },
     noAddressesText: {
-        fontSize: scaleFont(16),
-        color: '#666',
-        textAlign: 'center',
-        marginVertical: scaleFont(10),
+        fontFamily: 'Poppins-Medium',
+        fontSize: 16,
+        color: '#64748b',
+        marginTop: 12,
     },
 
-    // Each row showing an address
-    addressItemContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingVertical: scaleFont(12),
-        borderBottomWidth: 1,
-        borderColor: '#e0e0e0',
-    },
-    selectedAddressItem: {
-        borderWidth: 1,
-        borderColor: '#007AFF',
-        borderRadius: scaleFont(5),
-        marginBottom: scaleFont(5),
-    },
     addressOption: {
         flex: 1,
-        marginRight: scaleFont(10),
-    },
-    addressOptionText: {
-        fontSize: scaleFont(16),
-        color: '#444',
-    },
-    actionIcons: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    configureIconContainer: {
-        paddingHorizontal: scaleFont(5),
-        marginRight: scaleFont(10),
-    },
-    trashIconContainer: {
-        paddingHorizontal: scaleFont(5),
-        paddingVertical: scaleFont(5),
+        marginRight: 10,
     },
 
-    // Button to add a new address at the bottom
-    addAddressButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingVertical: scaleFont(12),
-        marginTop: scaleFont(15),
-        justifyContent: 'center',
-    },
-    addAddressText: {
-        fontSize: scaleFont(16),
-        color: '#007AFF',
-        marginLeft: scaleFont(8),
-    },
-
-    closeButton: {
-        marginTop: scaleFont(20),
-        alignItems: 'center',
-        paddingVertical: scaleFont(10),
-        backgroundColor: '#f0f0f0',
-        borderRadius: scaleFont(5),
-    },
 });

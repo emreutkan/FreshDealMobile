@@ -1,39 +1,76 @@
-import React, {useEffect, useMemo, useState} from 'react';
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {
     ActivityIndicator,
+    Animated,
     NativeScrollEvent,
     NativeSyntheticEvent,
+    Platform,
+    RefreshControl,
     ScrollView,
     StyleSheet,
     Text,
     TouchableOpacity,
     View,
 } from 'react-native';
-
 import RestaurantList from "@/src/features/homeScreen/components/RestaurantCard";
 import {Feather} from '@expo/vector-icons';
-import {scaleFont} from "@/src/utils/ResponsiveFont";
-import {RootState} from "@/src/redux/store";
-import {useSelector} from "react-redux";
+import {AppDispatch} from "@/src/redux/store";
+import {RootState} from "@/src/types/store";
+
+import {useDispatch, useSelector} from "react-redux";
+import {getRestaurantsByProximity} from "@/src/redux/thunks/restaurantThunks";
+import FavoriteRestaurantList from "@/src/features/homeScreen/components/FavoriteRestaurantCard";
+import Slider from '@react-native-community/slider';
+import {setRadius} from "@/src/redux/slices/restaurantSlice";
+import {lightHaptic, strongHaptic} from "@/src/utils/Haptics";
 
 interface HomeCardViewProps {
     onScroll: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
-    onRestaurantPress?: (restaurantId: string) => void;
 }
 
-const MIN_LOADING_DURATION = 1000; // main loading duration (redux)
+const MIN_LOADING_DURATION = 200; // main loading duration (redux)
 const FILTER_LOADING_DURATION = 200; // duration for filter toggling/loading
 
-const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll, onRestaurantPress}) => {
+const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll}) => {
+    const scrollY = useRef(new Animated.Value(0)).current;
+    const HEADER_MAX_HEIGHT = 130; // Adjust based on your header's full height
+    const HEADER_MIN_HEIGHT = 0; // Adjust based on your header's minimum height
+    const HEADER_SCROLL_DISTANCE = HEADER_MAX_HEIGHT - HEADER_MIN_HEIGHT;
+    const headerHeight = scrollY.interpolate({
+        inputRange: [0, HEADER_SCROLL_DISTANCE],
+        outputRange: [HEADER_MAX_HEIGHT, HEADER_MIN_HEIGHT],
+        extrapolate: 'clamp',
+    });
+    const [refreshing, setRefreshing] = useState(false);
+
+    const headerOpacity = scrollY.interpolate({
+        inputRange: [0, HEADER_SCROLL_DISTANCE / 2, HEADER_SCROLL_DISTANCE],
+        outputRange: [1, 1, 0.9],
+        extrapolate: 'clamp',
+    });
     const {restaurantsProximity, restaurantsProximityLoading, restaurantsProximityStatus} = useSelector(
         (state: RootState) => state.restaurant
     );
 
+
     // For the main loading animation from redux's `loading`
     const [showMainLoading, setShowMainLoading] = useState(restaurantsProximityLoading);
 
+    const dispatch = useDispatch<AppDispatch>();
     // For filtering transition loading animation
     const [filterLoading, setFilterLoading] = useState(false);
+    const reduxRadius = useSelector((state: RootState) => state.restaurant.radius);
+    const [localRadius, setLocalRadius] = useState(reduxRadius);
+
+    useEffect(() => {
+        lightHaptic();
+    }, [localRadius]);
+
+    const contentPadding = scrollY.interpolate({
+        inputRange: [0, HEADER_SCROLL_DISTANCE],
+        outputRange: [HEADER_MAX_HEIGHT, 0], // Animate from max height to 0
+        extrapolate: 'clamp',
+    });
 
     useEffect(() => {
         let timer: NodeJS.Timeout;
@@ -49,6 +86,21 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll, onRestaurantPress}
             if (timer) clearTimeout(timer);
         };
     }, [restaurantsProximityLoading]);
+
+    const onRefresh = useCallback(() => {
+        strongHaptic();
+        setRefreshing(true);
+        dispatch(getRestaurantsByProximity()).finally(() => {
+            setRefreshing(false);
+        });
+    }, [dispatch]);
+
+
+    useEffect(() => {
+        strongHaptic();
+        dispatch(getRestaurantsByProximity());
+    }, [dispatch, reduxRadius]);
+
 
     // Combined overall loading state: either main loading or filter transition loading.
     const isLoading = showMainLoading || filterLoading;
@@ -114,109 +166,128 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll, onRestaurantPress}
         return restaurantsProximity.filter((restaurant) => {
             if (filters.delivery && !filters.pickup && !restaurant.delivery) return false;
             if (filters.pickup && !filters.delivery && !restaurant.pickup) return false;
-            if (filters.under30 && restaurant.distance_km > 3) return false;
-            // Add debug logs for each step
-            console.log('Filtering restaurant:', restaurant.restaurantName);
+            if (restaurant.distance_km) {
+                if (filters.under30 && restaurant.distance_km > 3) return false;
+            }
             return true;
         });
 
     }, [restaurantsProximity, filters]);
 
 
+    const handleScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
+        const y = event.nativeEvent.contentOffset.y;
+        scrollY.setValue(y);
+    }, [scrollY]);
+
     return (
         <View style={styles.safeArea}>
-            {/* Top Bar */}
-            <View style={styles.topBar}>
-                <Text style={styles.title}>Restaurants in Area</Text>
-            </View>
-
-            {/* Filter Bar */}
-            <ScrollView
-                horizontal
-                style={styles.filterBar}
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.filterContentContainer}
+            <Animated.View
+                style={[
+                    styles.headerContainer,
+                    {
+                        height: headerHeight,
+                        opacity: headerOpacity,
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        zIndex: 1000,
+                    }
+                ]}
             >
-                {/* Icon Button */}
-                <TouchableOpacity style={styles.iconButton}>
-                    <Feather name="sliders" size={16} color="#333"/>
-                </TouchableOpacity>
+                <View style={styles.topBar}>
+                    <Text style={styles.title}>Restaurants Near You</Text>
+                </View>
 
-                {/* Pick Up Button */}
-                <TouchableOpacity
-                    style={[
-                        styles.filterButton,
-                        filters.pickup && styles.filterButtonSelected,
-                    ]}
-                    onPress={() => handleToggleFilter('pickup')}
+                <ScrollView
+                    horizontal
+                    style={styles.filterBar}
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.filterContentContainer}
                 >
-                    <Text
-                        style={[
-                            styles.filterText,
-                            filters.pickup && styles.filterTextSelected,
-                        ]}
-                    >
-                        Pick Up
-                    </Text>
-                </TouchableOpacity>
+                    {/* Icon Button */}
+                    <TouchableOpacity style={styles.iconButton}>
+                        <Feather name="sliders" size={16} color="#333"/>
+                    </TouchableOpacity>
 
-                {/* Delivery Button */}
-                <TouchableOpacity
-                    style={[
-                        styles.filterButton,
-                        filters.delivery && styles.filterButtonSelected,
-                    ]}
-                    onPress={() => handleToggleFilter('delivery')}
-                >
-                    <Text
-                        style={[
-                            styles.filterText,
-                            filters.delivery && styles.filterTextSelected,
-                        ]}
-                    >
-                        Delivery
-                    </Text>
-                </TouchableOpacity>
 
-                {/* Price Button */}
-                <TouchableOpacity
-                    style={[styles.filterButton, isPriceExpanded && styles.filterButtonSelected]}
-                    onPress={togglePriceDropdown}
-                >
-                    <Text
+                    {/* Pick Up Button */}
+                    <TouchableOpacity
                         style={[
-                            styles.filterText,
-                            isPriceExpanded && styles.filterTextSelected,
+                            styles.filterButton,
+                            filters.pickup && styles.filterButtonSelected,
                         ]}
+                        onPress={() => handleToggleFilter('pickup')}
                     >
-                        Price
-                    </Text>
-                    <Feather
-                        name={isPriceExpanded ? 'chevron-up' : 'chevron-down'}
-                        size={14}
-                        color={isPriceExpanded ? '#FFF' : '#333'}
-                        style={styles.dropdownIcon}
-                    />
-                </TouchableOpacity>
+                        <Text
+                            style={[
+                                styles.filterText,
+                                filters.pickup && styles.filterTextSelected,
+                            ]}
+                        >
+                            Pick Up
+                        </Text>
+                    </TouchableOpacity>
 
-                {/* Under 30 min Button */}
-                <TouchableOpacity
-                    style={[
-                        styles.filterButton,
-                        filters.under30 && styles.filterButtonSelected,
-                    ]}
-                    onPress={() => handleToggleFilter('under30')}
-                >
-                    <Text
+                    {/* Delivery Button */}
+                    <TouchableOpacity
                         style={[
-                            styles.filterText,
-                            filters.under30 && styles.filterTextSelected,
+                            styles.filterButton,
+                            filters.delivery && styles.filterButtonSelected,
                         ]}
+                        onPress={() => handleToggleFilter('delivery')}
                     >
-                        Under 30 min
-                    </Text>
-                </TouchableOpacity>
-            </ScrollView>
+                        <Text
+                            style={[
+                                styles.filterText,
+                                filters.delivery && styles.filterTextSelected,
+                            ]}
+                        >
+                            Delivery
+                        </Text>
+                    </TouchableOpacity>
+
+                    {/* Price Button */}
+                    <TouchableOpacity
+                        style={[styles.filterButton, isPriceExpanded && styles.filterButtonSelected]}
+                        onPress={togglePriceDropdown}
+                    >
+                        <Text
+                            style={[
+                                styles.filterText,
+                                isPriceExpanded && styles.filterTextSelected,
+                            ]}
+                        >
+                            Price
+                        </Text>
+                        <Feather
+                            name={isPriceExpanded ? 'chevron-up' : 'chevron-down'}
+                            size={14}
+                            color={isPriceExpanded ? '#FFF' : '#333'}
+                            style={styles.dropdownIcon}
+                        />
+                    </TouchableOpacity>
+
+                    {/* Under 30 min Button */}
+                    <TouchableOpacity
+                        style={[
+                            styles.filterButton,
+                            filters.under30 && styles.filterButtonSelected,
+                        ]}
+                        onPress={() => handleToggleFilter('under30')}
+                    >
+                        <Text
+                            style={[
+                                styles.filterText,
+                                filters.under30 && styles.filterTextSelected,
+                            ]}
+                        >
+                            Under 30 min
+                        </Text>
+                    </TouchableOpacity>
+                </ScrollView>
+            </Animated.View>
 
             {/* Expandable Price Section */}
             {isPriceExpanded && (
@@ -248,160 +319,337 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll, onRestaurantPress}
                 {isLoading ? (
                     <View style={styles.loadingContainer}>
                         <ActivityIndicator size="large" color="#50703C"/>
-                        <Text style={styles.loadingText}>Loading restaurants...</Text>
+                        <Text style={styles.loadingText}>Finding the best restaurants...</Text>
                     </View>
                 ) : restaurantsProximityStatus !== 'succeeded' || filteredRestaurants.length === 0 ? (
-                    // 2) If NOT succeeded, or length=0 => No restaurants found
                     <View style={styles.noDataContainer}>
-                        <Feather name="frown" size={48} color="#555"/>
+                        <View style={styles.noDataIconContainer}>
+                            <Feather name="coffee" size={48} color="#50703C"/>
+                        </View>
                         <Text style={styles.noDataTitle}>No Restaurants Found</Text>
                         <Text style={styles.noDataMessage}>
-                            There are no restaurants available in your area currently.
+                            Try adjusting your filters or expanding your search area
                         </Text>
                     </View>
                 ) : (
-                    <ScrollView
-                        onScroll={onScroll}
-                        style={styles.scrollContainer}
-                        showsVerticalScrollIndicator={false}
-                        removeClippedSubviews={true}
-                        decelerationRate="normal"
+
+                    <Animated.ScrollView
+                        style={[styles.scrollContainer]}
+                        contentContainerStyle={{
+                            paddingTop: HEADER_MAX_HEIGHT,
+                            paddingBottom: 20, // Add some bottom padding
+                            flexGrow: 1,
+                        }}
+                        onScroll={Animated.event(
+                            [{nativeEvent: {contentOffset: {y: scrollY}}}],
+                            {
+                                useNativeDriver: false,
+                                listener: (event) => {
+                                    onScroll(event);
+                                }
+                            }
+                        )}
                         scrollEventThrottle={16}
-                        renderToHardwareTextureAndroid
-                        overScrollMode="never"
-                        bounces={false}
+                        showsVerticalScrollIndicator={false}
+                        refreshControl={
+                            <RefreshControl
+                                refreshing={refreshing}
+                                onRefresh={onRefresh}
+                                tintColor="#50703C"
+                                colors={['#50703C']}
+                                progressViewOffset={HEADER_MAX_HEIGHT}
+                            />
+                        }
                     >
+                        <View style={styles.radiusContainer}>
+                            <Text style={styles.radiusText}>Search Radius: {localRadius}km</Text>
+                            <Slider
+                                style={styles.slider}
+                                minimumValue={1}
+                                maximumValue={100}
+                                step={1} // Add step prop for whole numbers
+                                value={localRadius}
+                                onValueChange={(value) => setLocalRadius(Math.round(value))} // Update local state while sliding
+                                onSlidingComplete={(value) => {
+                                    const roundedValue = Math.round(value);
+                                    setLocalRadius(roundedValue);
+                                    dispatch(setRadius(roundedValue)); // Update Redux only when sliding ends
+                                }}
+                                minimumTrackTintColor="#50703C"
+                                maximumTrackTintColor="#E5E7EB"
+                                thumbTintColor="#50703C"
+                            />
+                        </View>
+
+                        <FavoriteRestaurantList
+                            restaurants={filteredRestaurants}
+                        />
+                        <View style={styles.topBar}>
+                            <Text style={styles.Subtitle}>Explore</Text>
+                        </View>
                         <RestaurantList
                             restaurants={filteredRestaurants}
-                            onRestaurantPress={(id) => {
-                                console.log('Selected restaurant:', id);
-                                if (onRestaurantPress) onRestaurantPress(id);
-                            }}
                         />
-                    </ScrollView>
+                    </Animated.ScrollView>
                 )}
             </View>
         </View>
     );
 };
 
+
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
         backgroundColor: '#F9FAFB',
     },
-    topBar: {
+    container: {
+        flex: 1,
         paddingHorizontal: 16,
-        paddingVertical: 12,
-        backgroundColor: '#FFFFFF',
-        alignItems: 'center',
-        borderBottomWidth: 1,
-        borderBottomColor: '#e0e0e0',
     },
+    scrollContainer: {
+        flex: 1,
+        backgroundColor: '#F9FAFB',
+    },
+
+    headerContainer: {
+        backgroundColor: '#FFFFFF',
+        borderBottomWidth: 1,
+        borderBottomColor: '#E5E7EB',
+        overflow: 'hidden', // Ensure content doesn't overflow during animation
+        ...Platform.select({
+            ios: {
+                shadowColor: '#000',
+                shadowOffset: {width: 0, height: 2},
+                shadowOpacity: 0.1,
+                shadowRadius: 4,
+            },
+            android: {
+                elevation: 4,
+            },
+        }),
+    },
+
+
     title: {
-        fontSize: 20,
-        fontWeight: '600',
-        color: '#333',
+        fontSize: 24,
+        fontWeight: '700',
+        color: '#111827',
+        marginBottom: 4,
+        fontFamily: 'Poppins-SemiBold',
     },
     filterBar: {
         backgroundColor: '#FFFFFF',
-        paddingVertical: scaleFont(12),
-        maxHeight: scaleFont(45),
+        paddingVertical: 12,
+        maxHeight: 60,
     },
+    filterContainer: {
+        backgroundColor: '#FFFFFF',
+        paddingBottom: 8,
+        borderBottomWidth: 1,
+        borderBottomColor: '#E5E7EB',
+    },
+
     filterContentContainer: {
-        paddingHorizontal: 8,
+        paddingTop: 6,
+
+        paddingHorizontal: 16,
         flexDirection: 'row',
         alignItems: 'center',
+        gap: 8,
     },
     iconButton: {
-        width: 36,
-        height: 36,
-        borderRadius: 18,
-        backgroundColor: '#F1F1F1',
+
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: '#F3F4F6',
         justifyContent: 'center',
         alignItems: 'center',
-        marginRight: 8,
+        ...Platform.select({
+            ios: {
+                shadowColor: '#000',
+                shadowOffset: {width: 0, height: 1},
+                shadowOpacity: 0.1,
+                shadowRadius: 2,
+            },
+            android: {
+                elevation: 2,
+            },
+        }),
     },
     filterButton: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
         paddingHorizontal: 16,
-        height: 36,
-        backgroundColor: '#F1F1F1',
-        borderRadius: 18,
-        marginHorizontal: 4,
+        height: 40,
+        backgroundColor: '#F3F4F6',
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: '#E5E7EB',
     },
     filterButtonSelected: {
         backgroundColor: '#50703C',
+        borderColor: '#50703C',
+    },
+    filterIcon: {
+        marginRight: 6,
     },
     filterText: {
         fontSize: 14,
-        fontWeight: '500',
-        color: '#333',
+        fontWeight: '600',
+        color: '#50703C',
+        fontFamily: 'Poppins-Regular',
+
     },
     filterTextSelected: {
-        color: '#FFF',
+        color: '#FFFFFF',
     },
     dropdownIcon: {
-        marginLeft: 6,
+        marginLeft: 4,
     },
-    container: {
-        flex: 1,
+    priceDropdown: {
+        margin: 16,
+        padding: 8,
+        backgroundColor: '#FFFFFF',
+        borderRadius: 12,
+        ...Platform.select({
+            ios: {
+                shadowColor: '#000',
+                shadowOffset: {width: 0, height: 2},
+                shadowOpacity: 0.1,
+                shadowRadius: 4,
+            },
+            android: {
+                elevation: 4,
+            },
+        }),
+    },
+    priceOption: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingVertical: 12,
         paddingHorizontal: 16,
-        paddingVertical: 20,
+        marginVertical: 2,
+        borderRadius: 8,
     },
-    scrollContainer: {
-        flex: 1,
+    priceOptionSelected: {
+        backgroundColor: '#50703C',
     },
+    priceOptionText: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#374151',
+        fontFamily: 'Poppins-Regular',
+
+    },
+    priceDescription: {
+        fontSize: 14,
+        color: '#6B7280',
+        fontFamily: 'Poppins-Regular',
+
+    },
+    priceOptionTextSelected: {
+        color: '#FFFFFF',
+    },
+
     loadingContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+        paddingBottom: 40,
+    },
+    topBar: {
+        paddingHorizontal: 16,
+        paddingTop: 16,
+        paddingBottom: 10,
+        backgroundColor: '#FFFFFF',
+        flexDirection: 'column',
+        alignItems: 'flex-start',
+        overflow: 'hidden', // Ensure content doesn't overflow during animation
+        borderBottomWidth: 1,
+        borderBottomColor: '#E5E7EB',
     },
     loadingText: {
-        marginTop: 10,
+        marginTop: 16,
         fontSize: 16,
-        color: '#555',
+        color: '#374151',
+        fontWeight: '500',
+        fontFamily: 'Poppins-Regular',
     },
     noDataContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        paddingHorizontal: 20,
+        paddingHorizontal: 24,
+    },
+    noDataIconContainer: {
+        width: 80,
+        height: 80,
+        borderRadius: 40,
+        backgroundColor: '#F3F4F6',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 16,
     },
     noDataTitle: {
-        fontSize: 22,
-        fontWeight: 'bold',
-        color: '#555',
-        marginTop: 10,
+        fontSize: 20,
+        fontWeight: '700',
+        color: '#111827',
+        marginBottom: 8,
         textAlign: 'center',
+        fontFamily: 'Poppins-Regular',
+
     },
     noDataMessage: {
         fontSize: 16,
-        color: '#555',
+        color: '#6B7280',
         textAlign: 'center',
-        marginVertical: 10,
+        lineHeight: 24,
+        fontFamily: 'Poppins-Regular',
+
     },
-    priceDropdown: {
-        padding: 10,
+    radiusContainer: {
+        marginTop: 10,
         backgroundColor: '#FFFFFF',
-        borderRadius: 8,
-        marginHorizontal: 16,
+        padding: 16,
+        borderRadius: 12,
+        marginBottom: 16,
+        ...Platform.select({
+            ios: {
+                shadowColor: '#000',
+                shadowOffset: {width: 0, height: 2},
+                shadowOpacity: 0.1,
+                shadowRadius: 4,
+            },
+            android: {
+                elevation: 4,
+            },
+        }),
+    },
+    radiusText: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#374151',
         marginBottom: 8,
-        shadowColor: '#000',
-        shadowOpacity: 0.1,
-        shadowOffset: {width: 0, height: 2},
-        shadowRadius: 4,
-        elevation: 3,
+        fontFamily: 'Poppins-Regular',
     },
-    priceOption: {
-        paddingVertical: 8,
-        paddingHorizontal: 12,
-        marginVertical: 4,
-        borderRadius: 8,
-        backgroundColor: '#F1F1F1',
+    slider: {
+        height: 40,
+        width: '100%',
     },
+    Subtitle: {
+        fontSize: 20,
+        fontWeight: '700',
+        color: '#111827',
+        marginBottom: 4,
+        fontFamily: 'Poppins-Regular',
+
+    }
+
+
 });
 
 export default HomeCardView;

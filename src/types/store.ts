@@ -1,11 +1,13 @@
-// src/types/store.ts
-import {AddressState, CartState, ListingState, RestaurantState, SearchState, UserState} from './states';
+// src/types/store.ts - NEW FILE
+import {AddressState, CartState, PurchaseState, RestaurantState, SearchState, UserState} from './states';
 
-export type AppState = {
+export interface RootState {
     user: UserState;
     address: AddressState;
     cart: CartState;
     restaurant: RestaurantState;
-    listing: ListingState;
     search: SearchState;
-};
+    purchase: PurchaseState;
+}
+
+export type AppDispatch = any; // We'll type this properly after store is created

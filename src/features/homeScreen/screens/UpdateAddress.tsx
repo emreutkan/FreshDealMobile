@@ -4,7 +4,9 @@ import {useDispatch, useSelector} from 'react-redux';
 import {useNavigation, useRoute} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {RootStackParamList} from '@/src/utils/navigation';
-import {AppDispatch, RootState} from '@/src/redux/store';
+import {AppDispatch} from '@/src/redux/store';
+import {RootState} from "@/src/types/store";
+
 import {updateAddress} from "@/src/redux/thunks/addressThunks";
 import {scaleFont} from '@/src/utils/ResponsiveFont';
 
