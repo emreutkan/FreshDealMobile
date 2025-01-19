@@ -1,5 +1,5 @@
 // screens/CheckoutScreen.tsx
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {Alert, Animated, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
 import {RootState} from '@/src/types/store';
@@ -8,11 +8,14 @@ import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {MaterialIcons} from '@expo/vector-icons';
 import {differenceInMinutes, format, isAfter, isBefore, setHours, setMinutes} from 'date-fns';
 import {GoBackIcon} from "@/src/features/homeScreen/components/goBack";
-import {lightHaptic} from "@/src/utils/Haptics";
+import {complexHaptic, lightHaptic} from "@/src/utils/Haptics";
 import type {NativeStackNavigationProp} from "@react-navigation/native-stack";
 import {RootStackParamList} from "@/src/utils/navigation";
 import {useNavigation} from "@react-navigation/native";
 import {createPurchaseOrderAsync, serializeAddressForDelivery} from "@/src/redux/thunks/purchaseThunks";
+import {fetchCart} from "@/src/redux/thunks/cartThunks";
+import {getRestaurantsByProximity} from "@/src/redux/thunks/restaurantThunks";
+import CheckoutSuccess from "@/src/features/CheckoutScreen/components/CheckoutSuccess";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -23,12 +26,8 @@ const CheckoutScreen: React.FC = () => {
 
     const {
         selectedRestaurant: restaurant,
-        isPickup,
-        cartItems,
     } = useSelector((state: RootState) => ({
         selectedRestaurant: state.restaurant.selectedRestaurant,
-        isPickup: state.restaurant.isPickup,
-        cartItems: state.cart.cartItems,
     }));
 
     const [paymentMethod, setPaymentMethod] = useState<'card' | 'cash' | null>(null);
@@ -66,6 +65,33 @@ const CheckoutScreen: React.FC = () => {
         daysOfWeek.indexOf(day) > currentDayIndex
     ) || restaurant.workingDays[0];
 
+    const {cartItems, selectedRestaurantListings} = useSelector((state: RootState) => ({
+        cartItems: state.cart.cartItems,
+        selectedRestaurantListings: state.restaurant.selectedRestaurantListings,
+    }));
+    useEffect(() => {
+        dispatch(fetchCart());
+        dispatch(getRestaurantsByProximity());
+    }, [dispatch]);
+    const ListingsInCart = selectedRestaurantListings.filter(listing => cartItems.some(cartItem => cartItem.listing_id === listing.id));
+    console.log(ListingsInCart);
+    const isPickup = useSelector((state: RootState) => state.restaurant.isPickup);
+    const [showSuccess, setShowSuccess] = useState(false);
+
+    const totalPickUpPrice = ListingsInCart.reduce((sum, item) => {
+        const cartItem = cartItems.find(ci => ci.listing_id === item.id);
+        const quantity = cartItem?.count || 1; // Default to 1 if count is not found
+        return sum + (item.pick_up_price || 0) * quantity;
+    }, 0);
+    const totalDeliveryPrice = ListingsInCart.reduce((sum, item) => {
+        const cartItem = cartItems.find(ci => ci.listing_id === item.id);
+        const quantity = cartItem?.count || 1; // Default to 1 if count is not found
+        return sum + (item.delivery_price || 0) * quantity;
+    }, 0);
+
+    const currentTotal = isPickup ? totalPickUpPrice : totalDeliveryPrice;
+
+
     const handlePaymentMethodSelect = (method: 'card' | 'cash') => {
         lightHaptic();
         setPaymentMethod(method);
@@ -87,7 +113,7 @@ const CheckoutScreen: React.FC = () => {
         }
     };
 
-    const handleCompletePurchase = () => {
+    const handleCompletePurchase = async () => {
         if (!paymentMethod) {
             Alert.alert('Error', 'Please select a payment method');
             return;
@@ -97,19 +123,33 @@ const CheckoutScreen: React.FC = () => {
             Alert.alert('Error', 'Restaurant is currently closed');
             return;
         }
-        const createPurchaseError = useSelector((state: RootState) => state.purchase.createPurchaseError);
 
-        dispatch(createPurchaseOrderAsync({
-            isDelivery: !isPickup,
-            notes: deliveryNotes,
-        }));
-        if (createPurchaseError) {
-            Alert.alert('Error', createPurchaseError);
-            return;
+        try {
+            await dispatch(createPurchaseOrderAsync({
+                isDelivery: !isPickup,
+                notes: deliveryNotes ? deliveryNotes : " ",
+            }));
+
+            complexHaptic();
+            setShowSuccess(true); // Show success animation
+        } catch (error: any) {
+            Alert.alert('Error', error.message);
         }
+        complexHaptic();
         // show checkout complete
         // navigate to active orders screen and set the previous screen to homescreen
 
+    }
+
+    const handleAnimationComplete = () => {
+        navigation.reset({
+            index: 0,
+            routes: [{name: 'HomeScreen'}],
+        })
+    };
+
+    if (showSuccess) {
+        return <CheckoutSuccess onAnimationComplete={handleAnimationComplete}/>;
     }
 
     const renderRestaurantStatus = () => {
@@ -177,7 +217,7 @@ const CheckoutScreen: React.FC = () => {
         );
     };
 
-    let currentTotal = 0;
+
     return (
         <View style={[styles.container, {paddingTop: insets.top}]}>
             <View style={styles.header}>
@@ -191,8 +231,25 @@ const CheckoutScreen: React.FC = () => {
 
                 <View style={styles.orderSummary}>
                     <Text style={styles.sectionTitle}>Order Summary</Text>
+                    <View style={styles.summaryContainer}>
+                        {ListingsInCart.map(listing => (
+                            <View key={listing.id} style={styles.summaryRow}>
+                                <Text style={styles.summaryLabel}>
+                                    {listing.title} (x{cartItems.find(ci => ci.listing_id === listing.id)?.count || 1})
+                                </Text>
+
+                            </View>
+                        ))}
+                        {!isPickup && restaurant && restaurant.deliveryFee && (
+                            <View style={styles.summaryRow}>
+                                <Text style={styles.summaryLabel}>Delivery Fee</Text>
+                                <Text style={styles.summaryValue}>{restaurant.deliveryFee.toFixed(2)} TL</Text>
+                            </View>
+                        )}
+
+                    </View>
                     <Text style={styles.totalAmount}>
-                        Total: {currentTotal} TL
+                        TOTAL: {(currentTotal + (!isPickup ? restaurant?.deliveryFee || 0 : 0))} TL
                     </Text>
                 </View>
 
@@ -269,7 +326,7 @@ const CheckoutScreen: React.FC = () => {
                     disabled={!isWorkingDay || !paymentMethod}
                 >
                     <Text style={styles.completeButtonText}>
-                        Complete Purchase ({currentTotal} TL)
+                        Complete Purchase
                     </Text>
                 </TouchableOpacity>
             </View>
@@ -442,6 +499,25 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
         fontSize: 16,
         fontWeight: '600',
+        fontFamily: 'Poppins-Regular',
+    },
+    summaryContainer: {
+        marginBottom: 10,
+    },
+    summaryRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: 8,
+    },
+    summaryLabel: {
+        fontSize: 14,
+        color: '#666666',
+        fontFamily: 'Poppins-Regular',
+    },
+    summaryValue: {
+        fontSize: 14,
+        color: '#333333',
+        fontWeight: '500',
         fontFamily: 'Poppins-Regular',
     },
 });
