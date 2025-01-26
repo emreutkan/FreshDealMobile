@@ -3,6 +3,7 @@ import {
     ActivityIndicator,
     Alert,
     Image,
+    Platform,
     ScrollView,
     StyleSheet,
     Text,
@@ -16,6 +17,7 @@ import {useDispatch, useSelector} from 'react-redux';
 import {AppDispatch} from '@/src/redux/store';
 import {RootState} from "@/src/types/store";
 import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system';
 
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {GoBackIcon} from "@/src/features/homeScreen/components/goBack";
@@ -23,6 +25,7 @@ import {MaterialIcons} from "@expo/vector-icons";
 import {fetchOrderDetailsAsync} from "@/src/redux/thunks/purchaseThunks";
 import {addRestaurantCommentThunk} from "@/src/redux/thunks/restaurantThunks";
 import {BottomSheetModal, BottomSheetScrollView} from "@gorhom/bottom-sheet";
+import {createReportThunk} from "@/src/redux/thunks/reportThunks";
 
 type OrderDetailsRouteProp = RouteProp<RootStackParamList, 'OrderDetails'>;
 type MaterialIconName = keyof typeof MaterialIcons.glyphMap;
@@ -36,20 +39,18 @@ const OrderDetails: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
     const insets = useSafeAreaInsets();
     const {orderId} = route.params;
-
     const {currentOrder, loadingCurrentOrder} = useSelector(
         (state: RootState) => state.purchase
     );
+    const {uploadProgress} = useSelector((state: RootState) => state.report);
 
     const [rating, setRating] = useState<number>(0.0);
     const [comment, setComment] = useState<string>('');
     const [reportImage, setReportImage] = useState<string | null>(null);
     const [reportComment, setReportComment] = useState('');
 
-    // Add bottom sheet ref
     const bottomSheetModalRef = useRef<BottomSheetModal>(null);
 
-    // Handlers for bottom sheet
     const handlePresentModal = useCallback(() => {
         bottomSheetModalRef.current?.present();
     }, []);
@@ -58,18 +59,89 @@ const OrderDetails: React.FC = () => {
         bottomSheetModalRef.current?.dismiss();
     }, []);
 
-    const pickImage = async () => {
-        const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsEditing: true,
-            aspect: [4, 3],
-            quality: 1,
-        });
+    const handleSubmitReport = async () => {
+        if (!currentOrder || !reportComment.trim() || !reportImage) {
+            Alert.alert('Error', 'Please provide both an image and description of the issue');
+            return;
+        }
 
-        if (!result.canceled) {
-            setReportImage(result.assets[0].uri);
+        try {
+            const fileInfo = await FileSystem.getInfoAsync(reportImage);
+            if (!fileInfo.exists) {
+                throw new Error('File does not exist');
+            }
+
+            const formData = new FormData();
+            formData.append('purchase_id', currentOrder.purchase_id.toString());
+            formData.append('description', reportComment.trim());
+
+            const filename = reportImage.split('/').pop() || 'report.jpg';
+            const match = /\.(\w+)$/.exec(filename);
+            const type = match ? `image/${match[1]}` : 'image/jpeg';
+
+            formData.append('image', {
+                uri: Platform.OS === 'ios' ? reportImage.replace('file://', '') : reportImage,
+                name: filename,
+                type: type
+            } as any);
+
+            await dispatch(createReportThunk({
+                formData,
+                onUploadProgress: (progress: number) => {
+                    console.log(`Upload progress: ${progress}%`);
+                }
+            })).unwrap();
+
+            Alert.alert(
+                'Success',
+                'Your report has been submitted successfully',
+                [{text: 'OK', onPress: handleCloseModal}]
+            );
+
+            setReportImage(null);
+            setReportComment('');
+        } catch (error: any) {
+            console.error('Report submission error:', error);
+            Alert.alert(
+                'Error',
+                error.response?.data?.message || 'Failed to submit report'
+            );
         }
     };
+
+    const pickImage = async () => {
+        try {
+            const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+            if (!permissionResult.granted) {
+                Alert.alert(
+                    'Permission Required',
+                    'Please allow access to your photo library to upload images.'
+                );
+                return;
+            }
+
+            const result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                allowsEditing: true,
+                aspect: [4, 3],
+                quality: 0.8,
+            });
+
+            if (!result.canceled) {
+                const selectedAsset = result.assets[0];
+
+
+                setReportImage(selectedAsset.uri);
+            }
+        } catch (error) {
+            console.error('Error picking image:', error);
+            Alert.alert(
+                'Error',
+                'Failed to select image. Please try again.'
+            );
+        }
+    };
+
     const ReportButton = () => {
         if (currentOrder?.status === 'COMPLETED') {
             return (
@@ -84,7 +156,6 @@ const OrderDetails: React.FC = () => {
         return null;
     };
 
-    // Add this new component for the Report Modal content
     const ReportModalContent = () => (
         <BottomSheetScrollView contentContainerStyle={styles.reportModalContent}>
             <View style={styles.reportHeader}>
@@ -102,6 +173,7 @@ const OrderDetails: React.FC = () => {
                     <Image
                         source={{uri: reportImage}}
                         style={styles.uploadedImage}
+                        resizeMode="cover"
                     />
                 ) : (
                     <>
@@ -121,28 +193,35 @@ const OrderDetails: React.FC = () => {
                 placeholderTextColor="#666"
             />
 
+            {uploadProgress > 0 && uploadProgress < 100 && (
+                <View style={styles.progressContainer}>
+                    <View style={[styles.progressBar, {width: `${uploadProgress}%`}]}/>
+                    <Text style={styles.progressText}>{`${Math.round(uploadProgress)}%`}</Text>
+                </View>
+            )}
+
             <TouchableOpacity
-                style={styles.reportSubmitButton}
-                onPress={() => {
-                    // Handle submit logic here
-                    handleCloseModal();
-                    setReportImage(null);
-                    setReportComment('');
-                }}
+                style={[
+                    styles.reportSubmitButton,
+                    (!reportImage || !reportComment.trim()) && styles.reportSubmitButtonDisabled
+                ]}
+                onPress={handleSubmitReport}
+                disabled={!reportImage || !reportComment.trim() || uploadProgress > 0}
             >
-                <Text style={styles.reportSubmitButtonText}>Submit Report</Text>
+                <Text style={styles.reportSubmitButtonText}>
+                    {uploadProgress > 0 ? 'Uploading...' : 'Submit Report'}
+                </Text>
             </TouchableOpacity>
         </BottomSheetScrollView>
     );
 
-    // In OrderDetails.tsx
     const handleSubmitRating = () => {
         if (currentOrder?.restaurant?.id && rating > 0) {
             dispatch(addRestaurantCommentThunk({
                 restaurantId: currentOrder.restaurant.id,
                 commentData: {
                     comment: comment.trim() || ' ',
-                    rating: rating, // This will be converted to integer in the API call
+                    rating: rating,
                     purchase_id: currentOrder.purchase_id
                 }
             }))
@@ -159,13 +238,13 @@ const OrderDetails: React.FC = () => {
                 .catch((error) => {
                     Alert.alert(
                         'Error',
-                        'Failed to submit rating. Please try again.',
-                        [{text: 'OK'}]
+                        'Failed to submit rating. Please try again.'
                     );
                     console.error('Rating submission error:', error);
                 });
         }
     };
+
     const RatingStars = () => {
         return (
             <View style={styles.ratingContainer}>
@@ -187,7 +266,7 @@ const OrderDetails: React.FC = () => {
 
     const renderRatingSection = () => {
         if (!currentOrder) {
-            return <GoBackIcon></GoBackIcon>;
+            return <GoBackIcon/>;
         }
         if (currentOrder.status === 'COMPLETED') {
             return (
@@ -265,14 +344,6 @@ const OrderDetails: React.FC = () => {
         );
     };
 
-    if (loadingCurrentOrder || !currentOrder) {
-        return (
-            <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#50703C"/>
-            </View>
-        );
-    }
-
     return (
         <>
             <View style={[styles.header, {paddingTop: insets.top}]}>
@@ -289,8 +360,11 @@ const OrderDetails: React.FC = () => {
                     <View style={styles.statusSection}>
                         <View style={styles.detailRow}>
                             <MaterialIcons name="flag" size={20} color="#666"/>
-                            <Text style={[styles.detailText, styles.statusText,
-                                {color: currentOrder.status === 'COMPLETED' ? '#4CAF50' : '#FFA500'}]}>
+                            <Text style={[
+                                styles.detailText,
+                                styles.statusText,
+                                {color: currentOrder.status === 'COMPLETED' ? '#4CAF50' : '#FFA500'}
+                            ]}>
                                 Status: {currentOrder.status}
                             </Text>
                         </View>
@@ -635,6 +709,29 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '600',
         fontFamily: 'Poppins-Regular',
+    },
+    progressContainer: {
+        height: 20,
+        backgroundColor: '#f0f0f0',
+        borderRadius: 10,
+        marginVertical: 10,
+        overflow: 'hidden',
+    },
+    progressBar: {
+        height: '100%',
+        backgroundColor: '#50703C',
+        borderRadius: 10,
+    },
+    progressText: {
+        position: 'absolute',
+        width: '100%',
+        textAlign: 'center',
+        lineHeight: 20,
+        color: '#000',
+        fontFamily: 'Poppins-Regular',
+    },
+    reportSubmitButtonDisabled: {
+        backgroundColor: '#cccccc',
     },
 });
 

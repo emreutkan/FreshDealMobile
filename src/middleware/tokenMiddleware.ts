@@ -7,11 +7,12 @@ import type {NativeStackNavigationProp} from "@react-navigation/native-stack";
 import {RootStackParamList} from "@/src/utils/navigation";
 import {CommonActions, useNavigation} from "@react-navigation/native";
 
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+
 export const tokenMiddleware: Middleware = (store) => (next) => (action: unknown) => {
     // Type guard to check if action is a valid Redux action
     if (typeof action === 'object' && action !== null && 'type' in action) {
         const token = tokenService.getToken();
-        type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
         const navigation = useNavigation<NavigationProp>();
         if (!token) {
