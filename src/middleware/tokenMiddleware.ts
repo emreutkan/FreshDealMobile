@@ -1,38 +1,62 @@
-const token = tokenService.getToken();
-
 // src/middleware/tokenMiddleware.ts
 import {Middleware} from '@reduxjs/toolkit';
 import {tokenService} from "@/src/services/tokenService";
-import type {NativeStackNavigationProp} from "@react-navigation/native-stack";
-import {RootStackParamList} from "@/src/utils/navigation";
-import {CommonActions, useNavigation} from "@react-navigation/native";
 
-type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+const PUBLIC_ACTIONS = [
+    // User input actions
+    'user/setEmail',
+    'user/setPhoneNumber',
+    'user/setPassword',
+    'user/setToken',
+    'user/setName',
+    'user/setPasswordLogin',
+    'user/setSelectedCode',
+    'user/setVerificationCode',
+    'user/setStep',
+    'user/setLoginType',
+    'user/loginUser',
+    'user/logout',
+    'user/logoutThunk/pending',
+    'user/logoutThunk/fulfilled',
+    'user/logoutThunk/rejected',
+    // Login/Register flow actions
+    'user/loginUserThunk/pending',
+    'user/loginUserThunk/fulfilled',
+    'user/loginUserThunk/rejected',
+    'user/registerUserThunk/pending',
+    'user/registerUserThunk/fulfilled',
+    'user/registerUserThunk/rejected',
 
-export const tokenMiddleware: Middleware = (store) => (next) => (action: unknown) => {
-    // Type guard to check if action is a valid Redux action
-    if (typeof action === 'object' && action !== null && 'type' in action) {
-        const token = tokenService.getToken();
+    // Auth state actions
+    'user/logout',
 
-        const navigation = useNavigation<NavigationProp>();
-        if (!token) {
-            if (action.type !== 'user/logout') {
-                store.dispatch({type: 'user/logout'});
+    // Button/UI interaction actions
+    'SUBMIT',
+    'PRESS',
+    'CLICK',
+    'TOUCH'
 
-                // Reset the navigation state and navigate to Login
-                if (navigation) {
-                    navigation.dispatch(
-                        CommonActions.reset({
-                            index: 0,
-                            routes: [
-                                {name: 'Login'}
-                            ],
-                        })
-                    );
-                }
-            }
-            return;
+];
+
+export const tokenMiddleware: Middleware = (store) => (next) => (action) => {
+    // Check if action type includes any of the public action patterns
+    const isPublicAction = PUBLIC_ACTIONS.some(publicAction =>
+        action.type.includes(publicAction)
+    );
+
+    if (isPublicAction) {
+        return next(action);
+    }
+
+    // For protected actions, check token
+    const token = tokenService.getToken();
+
+    if (!token) {
+        // Only dispatch logout if we're not already logging out
+        if (action.type !== 'user/logout') {
+            store.dispatch({type: 'user/logout'});
         }
+        return;
     }
 
     return next(action);

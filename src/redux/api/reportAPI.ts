@@ -56,23 +56,3 @@ export const createReport = async (
         throw error;
     }
 };
-
-// Get User Reports API Call
-export const getUserReports = async (token: string): Promise<Report[]> => {
-    const functionName = 'getUserReports';
-    const endpoint = REPORTS_ENDPOINT;
-
-    logRequest(functionName, endpoint, {});
-
-    try {
-        const response = await axios.get(endpoint, {
-            headers: {Authorization: `Bearer ${token}`},
-        });
-        logResponse(functionName, endpoint, response.data);
-        return response.data.reports;
-    } catch (error: any) {
-        logError(functionName, endpoint, error);
-        throw error;
-    }
-};
-

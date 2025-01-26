@@ -25,10 +25,12 @@ import {MaterialIcons} from "@expo/vector-icons";
 import {fetchOrderDetailsAsync} from "@/src/redux/thunks/purchaseThunks";
 import {addRestaurantCommentThunk} from "@/src/redux/thunks/restaurantThunks";
 import {BottomSheetModal, BottomSheetScrollView} from "@gorhom/bottom-sheet";
-import {createReportThunk} from "@/src/redux/thunks/reportThunks";
+import axios from "axios";
+import {API_BASE_URL} from "@/src/redux/api/API";
 
 type OrderDetailsRouteProp = RouteProp<RootStackParamList, 'OrderDetails'>;
 type MaterialIconName = keyof typeof MaterialIcons.glyphMap;
+
 
 const OrderDetails: React.FC = () => {
 
@@ -42,7 +44,8 @@ const OrderDetails: React.FC = () => {
     const {currentOrder, loadingCurrentOrder} = useSelector(
         (state: RootState) => state.purchase
     );
-    const {uploadProgress} = useSelector((state: RootState) => state.report);
+    const [uploadProgress, setUploadProgress] = useState(0);
+    const token = useSelector((state: RootState) => state.user.token); // Add this at the top with other hooks
 
     const [rating, setRating] = useState<number>(0.0);
     const [comment, setComment] = useState<string>('');
@@ -71,26 +74,36 @@ const OrderDetails: React.FC = () => {
                 throw new Error('File does not exist');
             }
 
-            const formData = new FormData();
-            formData.append('purchase_id', currentOrder.purchase_id.toString());
-            formData.append('description', reportComment.trim());
-
             const filename = reportImage.split('/').pop() || 'report.jpg';
             const match = /\.(\w+)$/.exec(filename);
             const type = match ? `image/${match[1]}` : 'image/jpeg';
 
+            const formData = new FormData();
+            formData.append('purchase_id', currentOrder.purchase_id.toString());
+            formData.append('description', reportComment.trim());
             formData.append('image', {
                 uri: Platform.OS === 'ios' ? reportImage.replace('file://', '') : reportImage,
                 name: filename,
                 type: type
             } as any);
 
-            await dispatch(createReportThunk({
-                formData,
-                onUploadProgress: (progress: number) => {
-                    console.log(`Upload progress: ${progress}%`);
+            // Add logging
+            console.log('Submitting report with:', {
+                purchase_id: currentOrder.purchase_id,
+                description: reportComment.trim(),
+                imageUri: reportImage,
+                filename,
+                type
+            });
+
+            const response = await axios.post(`${API_BASE_URL}/report`, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                    'Authorization': `Bearer ${token}`
                 }
-            })).unwrap();
+            });
+
+            console.log('Response:', response.data);
 
             Alert.alert(
                 'Success',
@@ -100,15 +113,25 @@ const OrderDetails: React.FC = () => {
 
             setReportImage(null);
             setReportComment('');
+            setUploadProgress(0);
+
         } catch (error: any) {
-            console.error('Report submission error:', error);
+            console.error('Report submission error:', {
+                message: error.message,
+                response: error.response?.data,
+                status: error.response?.status
+            });
+
             Alert.alert(
                 'Error',
-                error.response?.data?.message || 'Failed to submit report'
+                error.response?.data?.message ||
+                error.response?.data?.error ||
+                error.message ||
+                'Failed to submit report'
             );
+            setUploadProgress(0);
         }
     };
-
     const pickImage = async () => {
         try {
             const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -121,7 +144,7 @@ const OrderDetails: React.FC = () => {
             }
 
             const result = await ImagePicker.launchImageLibraryAsync({
-                mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                mediaTypes: 'images', // Changed from 'image' to 'images'
                 allowsEditing: true,
                 aspect: [4, 3],
                 quality: 0.8,
@@ -129,8 +152,6 @@ const OrderDetails: React.FC = () => {
 
             if (!result.canceled) {
                 const selectedAsset = result.assets[0];
-
-
                 setReportImage(selectedAsset.uri);
             }
         } catch (error) {
@@ -141,7 +162,6 @@ const OrderDetails: React.FC = () => {
             );
         }
     };
-
     const ReportButton = () => {
         if (currentOrder?.status === 'COMPLETED') {
             return (

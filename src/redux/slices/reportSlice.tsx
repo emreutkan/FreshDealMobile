@@ -1,53 +1,37 @@
 // reportSlice.ts
-import {createSlice, PayloadAction} from '@reduxjs/toolkit';
-import {Report} from "@/src/redux/api/reportAPI";
+import {createSlice} from '@reduxjs/toolkit';
+import {createReportThunk} from "@/src/redux/thunks/reportThunks";
 
-export interface ReportState {
-    reports: Report[];
-    loading: boolean;
+interface ReportState {
+    // Remove uploadProgress from here
     error: string | null;
-    uploadProgress: number; // Add upload progress tracking
+    loading: boolean;
 }
 
 const initialState: ReportState = {
-    reports: [],
-    loading: false,
     error: null,
-    uploadProgress: 0, // Initialize upload progress
+    loading: false,
 };
-
 const reportSlice = createSlice({
     name: 'report',
     initialState,
-    reducers: {
-        setReportLoading: (state, action: PayloadAction<boolean>) => {
-            state.loading = action.payload;
-            if (action.payload === false) {
-                state.uploadProgress = 0; // Reset progress when loading is complete
-            }
-        },
-        setReportError: (state, action: PayloadAction<string | null>) => {
-            state.error = action.payload;
-            state.uploadProgress = 0; // Reset progress on error
-        },
-        setReports: (state, action: PayloadAction<Report[]>) => {
-            state.reports = action.payload;
-        },
-        addReport: (state, action: PayloadAction<Report>) => {
-            state.reports.push(action.payload);
-        },
-        setUploadProgress: (state, action: PayloadAction<number>) => {
-            state.uploadProgress = action.payload;
-        },
+    reducers: {},
+    extraReducers: (builder) => {
+        builder
+            .addCase(createReportThunk.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(createReportThunk.fulfilled, (state) => {
+                state.loading = false;
+            })
+            .addCase(createReportThunk.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload as string;
+            });
     },
 });
 
-export const {
-    setReportLoading,
-    setReportError,
-    setReports,
-    addReport,
-    setUploadProgress,
-} = reportSlice.actions;
+export const {} = reportSlice.actions;
 
 export default reportSlice.reducer;
