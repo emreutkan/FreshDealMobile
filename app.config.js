@@ -19,6 +19,7 @@ export default {
             config: {
                 googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY,
             },
+            bundleIdentifier: "com.emreutkan.freshdeal"
         },
         android: {
             adaptiveIcon: {
@@ -27,7 +28,6 @@ export default {
             },
             package: "com.emreutkan.freshdeal",
             googleServicesFile: "./google-services.json",
-
             config: {
                 googleMaps: {
                     apiKey: process.env.GOOGLE_MAPS_API_KEY,
@@ -37,12 +37,28 @@ export default {
         web: {
             bundler: "metro",
             output: "static",
-            favicon: "./assets/images/favicon.png"
+            favicon: "./src/assets/images/favicon.png"
         },
         plugins: [
             "expo-font",
-            "expo-secure-store"
+            "expo-secure-store",
+            [
+                "expo-notifications",
+                {
+                    icon: "./src/assets/images/adaptive-icon.png",
+                    color: "#50703C",
+                    sounds: ["./src/assets/notification.wav"],
+                    mode: "production"
+                }
+            ]
         ],
+        notification: {
+            icon: "./src/assets/images/adaptive-icon.png",
+            color: "#50703C",
+            iosDisplayInForeground: true,
+            androidMode: "default",
+            androidCollapsedTitle: "Fresh Deal"
+        },
         experiments: {
             typedRoutes: true
         },

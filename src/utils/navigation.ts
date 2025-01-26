@@ -11,6 +11,7 @@ export type RootStackParamList = {
         addressId?: string;
     };
     RestaurantDetails: undefined;
+    RestaurantComments: undefined;
     FavoritesScreen: undefined;
     Cart: undefined;
     Account: undefined;

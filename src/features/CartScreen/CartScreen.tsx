@@ -14,6 +14,7 @@ import type {NativeStackNavigationProp} from "@react-navigation/native-stack";
 import {RootStackParamList} from "@/src/utils/navigation";
 import {useNavigation} from "@react-navigation/native";
 import PickUpDeliveryToggle from "@/src/features/RestaurantScreen/components/PickUpDeliveryToggle";
+import {getRestaurantThunk} from "@/src/redux/thunks/restaurantThunks";
 
 const CartScreen: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
@@ -49,6 +50,7 @@ const CartScreen: React.FC = () => {
             console.log('Final filtered listings:', ListingsInCart);
             if (restaurant) {
                 dispatch(setSelectedRestaurant(restaurant));
+                dispatch(getRestaurantThunk(restaurant.id))
                 if (restaurant.delivery && !restaurant.pickup) {
                     dispatch(setDeliveryMethod(false));
                 } else if (!restaurant.delivery && restaurant.pickup) {

@@ -32,11 +32,13 @@ const BaseInput: React.FC<BaseInputProps> = ({
 
     const handleFocus = () => {
         setIsFocused(true);
-        Animated.timing(animatedLabel, {
-            toValue: 1,
-            duration: 200,
-            useNativeDriver: false,
-        }).start();
+        if (!value) {
+            Animated.timing(animatedLabel, {
+                toValue: 1,
+                duration: 200,
+                useNativeDriver: false,
+            }).start();
+        }
     };
 
     const handleBlur = () => {
@@ -82,7 +84,10 @@ const BaseInput: React.FC<BaseInputProps> = ({
 
                     <TextInput
                         ref={inputRef}
-                        style={[styles.input, {zIndex: 1}]} // Added zIndex
+                        style={[
+                            styles.input,
+                            {color: '#1F2937'} // Add explicit color
+                        ]}
                         value={value}
                         onChangeText={onChangeText}
                         onFocus={handleFocus}
@@ -92,7 +97,7 @@ const BaseInput: React.FC<BaseInputProps> = ({
                         autoCapitalize={autoCapitalize}
                         autoComplete="off"
                         autoCorrect={false}
-                        pointerEvents="auto" // Added this
+                        blurOnSubmit={false} // Add this
                     />
                 </View>
 

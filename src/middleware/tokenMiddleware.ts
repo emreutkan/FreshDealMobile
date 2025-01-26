@@ -1,6 +1,5 @@
 // src/middleware/tokenMiddleware.ts
 import {Middleware} from '@reduxjs/toolkit';
-import {NavigationService} from "@/src/services/navigationService";
 import {tokenService} from "@/src/services/tokenService";
 
 const PUBLIC_ACTIONS = [
@@ -56,7 +55,6 @@ export const tokenMiddleware: Middleware = (store) => (next) => (action) => {
         // Only dispatch logout if we're not already logging out
         if (action.type !== 'user/logout') {
             store.dispatch({type: 'user/logout'});
-            NavigationService.navigateToLogin(); // Changed from navigateToLanding
         }
         return;
     }

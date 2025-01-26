@@ -1,9 +1,17 @@
 // services/tokenService.ts
 import * as SecureStore from 'expo-secure-store';
-import {RootState} from "@/src/types/store";
-import {store} from "@/src/redux/store";
 
 const TOKEN_KEY = 'user_token';
+
+export interface TokenManager {
+    getStateToken: () => string | null;
+}
+
+let tokenManager: TokenManager | null = null;
+
+export const initializeTokenService = (manager: TokenManager) => {
+    tokenManager = manager;
+};
 
 export const tokenService = {
     async setToken(token: string) {
@@ -19,9 +27,13 @@ export const tokenService = {
                 return validateToken(storedToken);
             }
 
-            // If no token in storage, get it from Redux state
-            const stateToken = (store.getState() as RootState).user.token;
-            return validateToken(stateToken);
+            // If no token in storage and token manager is available, get it from state
+            if (tokenManager) {
+                const stateToken = tokenManager.getStateToken();
+                return validateToken(stateToken);
+            }
+
+            throw new Error('No token found and no token manager available');
         } catch (error) {
             // Re-throw the validation error
             throw error;
@@ -39,3 +51,5 @@ export const validateToken = (token: string | null): string => {
     }
     return token;
 };
+
+export default tokenService;

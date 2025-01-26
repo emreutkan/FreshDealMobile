@@ -7,9 +7,15 @@ import {GoBackIcon} from "@/src/features/homeScreen/components/goBack";
 import PickUpDeliveryToggle from "@/src/features/RestaurantScreen/components/PickUpDeliveryToggle";
 import {useSelector} from "react-redux";
 import {RootState} from "@/src/types/store";
+import {NativeStackNavigationProp} from "@react-navigation/native-stack";
+import {RootStackParamList} from "@/src/utils/navigation";
+import {useNavigation} from "@react-navigation/native";
 
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const RestaurantInfoSection: React.FC = () => {
+    const navigation = useNavigation<NavigationProp>();
+
     const [showInfoModal, setShowInfoModal] = useState(false);
     const restaurant = useSelector((state: RootState) => state.restaurant.selectedRestaurant);
     console.log("the restaurant that restaurantinfo sees", restaurant);
@@ -167,8 +173,9 @@ const RestaurantInfoSection: React.FC = () => {
                         </View>
 
                     </View>
-                    <TouchableOpacity style={styles.distanceBox}
-                                      onPress={() => setShowInfoModal(true)}
+                    <TouchableOpacity
+                        style={styles.distanceBox}
+                        onPress={() => navigation.navigate('RestaurantComments')}
                     >
                         <Text style={styles.distanceText}>
                             Comments

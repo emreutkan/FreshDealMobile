@@ -122,10 +122,7 @@ export interface UserState {
     email_verified: boolean
     isInitialized: boolean;
     shouldNavigateToLanding: boolean;
-}
-
-
-export interface AuthState {
-    token: string | null;
     isAuthenticated: boolean;
 }
+
+

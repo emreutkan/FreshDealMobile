@@ -3,7 +3,7 @@ import {Image, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
 import {AppDispatch} from '@/src/redux/store';
 import {RootState} from "@/src/types/store";
-import {getRestaurantsByProximity} from "@/src/redux/thunks/restaurantThunks";
+import {getRestaurantsByProximity, getRestaurantThunk} from "@/src/redux/thunks/restaurantThunks";
 import {strongHaptic} from "@/src/utils/Haptics";
 import MapView, {Marker} from "react-native-maps";
 import {Address} from "@/src/types/api/address/model";
@@ -78,6 +78,8 @@ const HomeMapView: React.FC = () => {
         const restaurant = restaurants.find((r) => r.id.toString() === restaurantId);
         if (!restaurant) return;
         dispatch(setSelectedRestaurant(restaurant));
+        dispatch(getRestaurantThunk(restaurant.id))
+
         setTimeout(() => {
             bottomSheetRef.current?.snapToIndex(0);
         }, 100);

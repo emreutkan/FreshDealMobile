@@ -68,3 +68,111 @@ export const getAllRestaurants = async (token: string): Promise<Restaurant[]> =>
     }
 };
 
+// Create Restaurant API Call
+export const createRestaurant = async (
+    formData: FormData,
+    token: string
+): Promise<Restaurant> => {
+    const functionName = 'createRestaurant';
+    const endpoint = RESTAURANTS_ENDPOINT;
+
+    logRequest(functionName, endpoint, formData);
+
+    try {
+        const response = await axios.post(endpoint, formData, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+        logResponse(functionName, endpoint, response.data);
+        return response.data.restaurant;
+    } catch (error: any) {
+        logError(functionName, endpoint, error);
+        throw error;
+    }
+};
+
+// Delete Restaurant API Call
+export const deleteRestaurant = async (
+    restaurantId: number,
+    token: string
+): Promise<void> => {
+    const functionName = 'deleteRestaurant';
+    const endpoint = `${RESTAURANTS_ENDPOINT}/${restaurantId}`;
+
+    logRequest(functionName, endpoint, {});
+
+    try {
+        const response = await axios.delete(endpoint, {
+            headers: {Authorization: `Bearer ${token}`},
+        });
+        logResponse(functionName, endpoint, response.data);
+    } catch (error: any) {
+        logError(functionName, endpoint, error);
+        throw error;
+    }
+};
+
+
+// Update Restaurant API Call
+export const updateRestaurant = async (
+    restaurantId: number,
+    formData: FormData,
+    token: string
+): Promise<Restaurant> => {
+    const functionName = 'updateRestaurant';
+    const endpoint = `${RESTAURANTS_ENDPOINT}/${restaurantId}`;
+
+    logRequest(functionName, endpoint, formData);
+
+    try {
+        const response = await axios.put(endpoint, formData, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+        logResponse(functionName, endpoint, response.data);
+        return response.data.restaurant;
+    } catch (error: any) {
+        logError(functionName, endpoint, error);
+        throw error;
+    }
+};
+
+// Add Comment to Restaurant API Call
+export const addRestaurantComment = async (
+    restaurantId: number,
+    commentData: {
+        comment: string;
+        rating: number;
+        purchase_id: number;
+    },
+    token: string
+): Promise<void> => {
+    const functionName = 'addRestaurantComment';
+    const endpoint = `${RESTAURANTS_ENDPOINT}/${restaurantId}/comments`;
+
+    // Ensure the rating is an integer
+    const sanitizedData = {
+        ...commentData,
+        rating: Math.round(commentData.rating), // Convert to integer using Math.round
+        purchase_id: parseInt(String(commentData.purchase_id))
+    };
+
+    logRequest(functionName, endpoint, sanitizedData);
+
+    try {
+        const response = await axios.post(endpoint, sanitizedData, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+        });
+        logResponse(functionName, endpoint, response.data);
+    } catch (error: any) {
+        logError(functionName, endpoint, error);
+        throw error;
+    }
+};

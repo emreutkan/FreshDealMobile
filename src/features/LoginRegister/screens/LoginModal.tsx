@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useCallback, useState} from 'react';
 import {Alert, Keyboard, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View,} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
 import {AppDispatch} from '@/src/redux/store';
@@ -13,6 +13,8 @@ import GoogleOTP from "@/src/features/LoginRegister/components/GoogleOTP";
 import {Ionicons, MaterialIcons} from "@expo/vector-icons";
 import BaseInput from "@/src/features/LoginRegister/components/BaseInput";
 import {CustomButton} from "@/src/features/LoginRegister/components/CustomButton";
+import {forgotPassword} from "@/src/redux/api/authAPI";
+import {ForgotPasswordModal} from "@/src/features/LoginRegister/components/ForgotPasswordModalContent";
 
 interface LoginModalProps {
     switchToRegister: () => void; // Callback to switch to RegisterModal
@@ -23,6 +25,27 @@ const LoginModal: React.FC<LoginModalProps> = ({switchToRegister}) => {
     const dispatch = useDispatch<AppDispatch>();
     const {loading, token, error} = useSelector((state: RootState) => state.user);
     const [showPassword, setShowPassword] = useState(false);
+    const [isForgotPasswordVisible, setIsForgotPasswordVisible] = useState(false);
+
+    const handleForgotPasswordSubmit = useCallback(async (email: string) => {
+        try {
+            console.log(email, 'email', 'forgotPassword');
+            dispatch(forgotPassword({email}));
+            setIsForgotPasswordVisible(false);
+            Alert.alert(
+                'Success',
+                'Password reset instructions have been sent to your email.',
+                [{text: 'OK'}]
+            );
+        } catch (error) {
+            throw error;
+        }
+    }, []);
+
+    const toggleForgotPassword = useCallback(() => {
+        setIsForgotPasswordVisible(prev => !prev);
+    }, []);
+
 
     const {
         phoneNumber,
@@ -119,6 +142,15 @@ const LoginModal: React.FC<LoginModalProps> = ({switchToRegister}) => {
 
                 }
 
+                {(phoneNumber || email) && (
+                    <TouchableOpacity
+                        onPress={() => setIsForgotPasswordVisible(true)}
+                        style={styles.forgotPasswordLink}
+                    >
+                        <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+                    </TouchableOpacity>
+                )}
+
                 <View>
                     {!phoneNumber && !email && (
                         <View style={{
@@ -184,10 +216,17 @@ const LoginModal: React.FC<LoginModalProps> = ({switchToRegister}) => {
                                   icon={<Ionicons name="call-outline" size={20} color="#000" style={{}}/>}/>
 
                 )}
+                <ForgotPasswordModal
+                    isVisible={isForgotPasswordVisible}
+                    onClose={toggleForgotPassword}
+                    onSubmit={handleForgotPasswordSubmit}
+                />
             </View>
         </TouchableWithoutFeedback>
+
     );
 };
+
 
 const styles = StyleSheet.create({
     bottomContainer: {
@@ -262,6 +301,17 @@ const styles = StyleSheet.create({
         fontSize: 18,
         color: '#000',
     },
+    forgotPasswordLink: {
+        alignSelf: 'flex-end',
+        marginTop: 8,
+        marginBottom: 16,
+    },
+    forgotPasswordText: {
+        color: '#50703C',
+        fontSize: scaleFont(14),
+        textDecorationLine: 'underline',
+    },
+
 });
 
 export default LoginModal;
