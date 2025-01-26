@@ -129,12 +129,16 @@ const RestaurantList: React.FC<RestaurantListProps> = ({restaurants}) => {
                 style={styles.touchableContainer}
             >
                 <View style={styles.restaurantCard}>
-                    <Image
-                        source={{
-                            uri: item.image_url?.replace('127.0.0.1', '192.168.1.3')
-                        }}
-                        style={styles.image}
-                    />
+                    {item.image_url && (
+                        <Image
+                            source={{
+                                uri: item.image_url,
+                            }}
+                            style={styles.image}
+                        />
+                    )
+
+                    }
 
                     {isDisabled && (
                         <View style={styles.overlay}>

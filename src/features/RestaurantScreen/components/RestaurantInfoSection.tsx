@@ -12,7 +12,6 @@ import {RootStackParamList} from "@/src/utils/navigation";
 import {useNavigation} from "@react-navigation/native";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
-
 const RestaurantInfoSection: React.FC = () => {
     const navigation = useNavigation<NavigationProp>();
 
