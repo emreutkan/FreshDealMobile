@@ -54,6 +54,7 @@ const initialState: UserState = {
     email_verified: false,
     isInitialized: false,
     shouldNavigateToLanding: true,
+    isAuthenticated: false,
 };
 
 const userSlice = createSlice({
@@ -95,6 +96,7 @@ const userSlice = createSlice({
         },
         setToken(state, action: PayloadAction<string>) {
             state.token = action.payload;
+            state.isAuthenticated = true;
         },
         logout: (state) => {
             state.shouldNavigateToLanding = true;
@@ -114,6 +116,7 @@ const userSlice = createSlice({
             .addCase(loginUserThunk.fulfilled, (state, action) => {
                 state.loading = false;
                 state.token = action.payload.token;
+                state.isAuthenticated = true;
 
 
             })

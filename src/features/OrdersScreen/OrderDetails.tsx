@@ -186,6 +186,9 @@ const OrderDetails: React.FC = () => {
     };
 
     const renderRatingSection = () => {
+        if (!currentOrder) {
+            return <GoBackIcon></GoBackIcon>;
+        }
         if (currentOrder.status === 'COMPLETED') {
             return (
                 <View style={[styles.ratingSection, {paddingBottom: insets.bottom}]}>

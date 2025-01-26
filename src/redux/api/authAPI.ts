@@ -27,6 +27,12 @@ export interface ForgotPasswordResponse {
 }
 
 
+interface ApiResponse<T> {
+    data: T;
+    message: string;
+    status: number;
+}
+
 /*
   Example structure for auth-related API calls using the apiClient.
   The return types are defined using your custom ApiResponse interface,

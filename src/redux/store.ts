@@ -8,6 +8,7 @@ import searchReducer from '@/src/redux/slices/searchSlice';
 import purchaseReducer from '@/src/redux/slices/purchaseSlice';
 import {tokenMiddleware} from "@/src/middleware/tokenMiddleware";
 import {restaurantMiddleware} from "@/src/middleware/restaurantMiddleware";
+import notificationReducer from '@/src/redux/slices/notificationSlice';
 
 const store = configureStore({
     reducer: {
@@ -17,6 +18,8 @@ const store = configureStore({
         restaurant: restaurantReducer,
         search: searchReducer,
         purchase: purchaseReducer,
+        notification: notificationReducer,
+
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware({

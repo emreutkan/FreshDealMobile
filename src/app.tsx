@@ -1,33 +1,33 @@
+// src/app.tsx
 import React from 'react';
 import {StyleSheet} from 'react-native';
 import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
-import {Provider} from 'react-redux';
-import {store} from '@/src/redux/store';
+import {GestureHandlerRootView} from 'react-native-gesture-handler';
+import {BottomSheetModalProvider} from "@gorhom/bottom-sheet";
+import {navigationRef, RootStackParamList} from '@/src/utils/navigation';
+import {NotificationsProvider} from '@/src/providers/NotificationProvider';
+
+// Screen imports
 import HomeScreen from './features/homeScreen/screens/Home';
 import Landing from './features/LoginRegister/screens/Landing';
-import AddressSelectionScreen from "@/src/features/AddressSelectionScreen/addressSelectionScreen";
-import {navigationRef, RootStackParamList} from '@/src/utils/navigation';
-import {GestureHandlerRootView} from 'react-native-gesture-handler';
-import RestaurantDetails from "@/src/features/RestaurantScreen/RestaurantDetails";
-import FavoritesScreen from "@/src/features/favoritesScreen/FavoritesScreen";
-import CartScreen from "@/src/features/CartScreen/CartScreen";
-import Orders from "@/src/features/OrdersScreen/Orders"; // Add this import
-import OrderDetails from "@/src/features/OrdersScreen/OrderDetails"; // Add this import
-import AccountScreen from "@/src/features/accountScreen/accountScreen";
-import {BottomSheetModalProvider} from "@gorhom/bottom-sheet";
-import CheckoutScreen from "@/src/features/CheckoutScreen/CheckoutScreen";
-import RestaurantComments from "@/src/features/RestaurantComments/RestaurantComments";
+import AddressSelectionScreen from "./features/AddressSelectionScreen/addressSelectionScreen";
+import RestaurantDetails from "./features/RestaurantScreen/RestaurantDetails";
+import FavoritesScreen from "./features/favoritesScreen/FavoritesScreen";
+import CartScreen from "./features/CartScreen/CartScreen";
+import Orders from "./features/OrdersScreen/Orders";
+import OrderDetails from "./features/OrdersScreen/OrderDetails";
+import AccountScreen from "./features/accountScreen/accountScreen";
+import CheckoutScreen from "./features/CheckoutScreen/CheckoutScreen";
+import RestaurantComments from "./features/RestaurantComments/RestaurantComments";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 const AppContent: React.FC = () => {
     return (
         <GestureHandlerRootView style={styles.container}>
-
-            <Provider store={store}>
+            <NotificationsProvider>
                 <BottomSheetModalProvider>
-
                     <NavigationContainer ref={navigationRef}>
                         <Stack.Navigator
                             initialRouteName="Login"
@@ -42,7 +42,6 @@ const AppContent: React.FC = () => {
                                 name="AddressSelectionScreen"
                                 component={AddressSelectionScreen}
                             />
-
                             <Stack.Screen
                                 name="RestaurantDetails"
                                 component={RestaurantDetails}
@@ -57,7 +56,6 @@ const AppContent: React.FC = () => {
                                 options={{title: 'Favorites'}}
                             />
                             <Stack.Screen name="Cart" component={CartScreen}/>
-
                             <Stack.Screen name="Account" component={AccountScreen}/>
                             <Stack.Screen
                                 name="Orders"
@@ -75,19 +73,15 @@ const AppContent: React.FC = () => {
                         </Stack.Navigator>
                     </NavigationContainer>
                 </BottomSheetModalProvider>
-
-            </Provider>
-
+            </NotificationsProvider>
         </GestureHandlerRootView>
     );
 };
 
-export default AppContent;
-
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        // margin: 0,
-        // padding: 0,
     },
 });
+
+export default AppContent;
