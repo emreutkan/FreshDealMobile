@@ -1,3 +1,11 @@
+interface RestaurantComment {
+    id: number;
+    user_id: number;
+    comment: string;
+    rating: number;
+    timestamp: string; // iso
+}
+
 export interface Restaurant {
     id: number;
     owner_id: number;

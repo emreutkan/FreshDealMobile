@@ -1,5 +1,5 @@
 // Define the base URL
-// export const API_BASE_URL = 'https://freshdealapi-fkfaajfaffh4c0ex.uksouth-01.azurewebsites.net';
+// export const API_BASE_URL = 'https://freshdealapi-fkfaajfaffh4c0ex.uksouth-01.azurewebsites.net/v1';
 import axios from "axios";
 import {logError, logRequest, logResponse} from "@/src/utils/logger";
 

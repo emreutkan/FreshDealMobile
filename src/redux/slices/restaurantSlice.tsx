@@ -1,6 +1,6 @@
 // src/store/slices/restaurantSlice.ts
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
-import {getListingsThunk, getRestaurantsByProximity,} from '@/src/redux/thunks/restaurantThunks';
+import {getListingsThunk, getRestaurantsByProximity, getRestaurantThunk,} from '@/src/redux/thunks/restaurantThunks';
 
 import {addFavoriteThunk, getFavoritesThunk, removeFavoriteThunk,} from "@/src/redux/thunks/userThunks";
 import {Pagination, RestaurantState} from "@/src/types/states";
@@ -28,6 +28,7 @@ const emptyRestaurant: Restaurant = {
     maxDeliveryDistance: null,
     deliveryFee: null,
     minOrderAmount: null,
+    comments: [],
 };
 
 
@@ -95,6 +96,7 @@ const restaurantSlice = createSlice({
         },
         setSelectedListing(state, action: PayloadAction<Listing>) {
             state.selectedRestaurantListing = action.payload;
+
 
         },
     },
@@ -165,7 +167,15 @@ const restaurantSlice = createSlice({
             .addCase(getListingsThunk.rejected, (state, action) => {
                 state.listingsLoading = false;
                 state.listingsError = action.payload as string;
-            });
+            })
+            .addCase(getRestaurantThunk.fulfilled, (state, action: PayloadAction<Restaurant>) => {
+                // TODO
+                // this api is actually better to use when finding selected restaurant compared to filtering restaurants in proximity and searching the restaurant.id
+                // but it's not implemented in the app
+                // so I just use this to get the comments for now, will change that later though :)
+                state.selectedRestaurant.comments = action.payload.comments || [];
+            })
+        ;
     },
 });
 

@@ -17,6 +17,7 @@ import OrderDetails from "@/src/features/OrdersScreen/OrderDetails"; // Add this
 import AccountScreen from "@/src/features/accountScreen/accountScreen";
 import {BottomSheetModalProvider} from "@gorhom/bottom-sheet";
 import CheckoutScreen from "@/src/features/CheckoutScreen/CheckoutScreen";
+import RestaurantComments from "@/src/features/RestaurantComments/RestaurantComments";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -47,13 +48,16 @@ const AppContent: React.FC = () => {
                                 component={RestaurantDetails}
                             />
                             <Stack.Screen
+                                name="RestaurantComments"
+                                component={RestaurantComments}
+                            />
+                            <Stack.Screen
                                 name="FavoritesScreen"
                                 component={FavoritesScreen}
                                 options={{title: 'Favorites'}}
                             />
                             <Stack.Screen name="Cart" component={CartScreen}/>
 
-                            {/* Add these new screens */}
                             <Stack.Screen name="Account" component={AccountScreen}/>
                             <Stack.Screen
                                 name="Orders"

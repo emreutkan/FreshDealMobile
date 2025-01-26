@@ -6,6 +6,7 @@ import {RootState} from "@/src/types/store";
 import {setSelectedRestaurant} from "@/src/redux/slices/restaurantSlice";
 import {NativeStackNavigationProp} from "@react-navigation/native-stack";
 import {RootStackParamList} from "@/src/utils/navigation";
+import {getRestaurantThunk} from "@/src/redux/thunks/restaurantThunks";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'RestaurantDetails'>;
 
@@ -27,6 +28,8 @@ export const useHandleRestaurantPress = () => {
         }
 
         dispatch(setSelectedRestaurant(restaurant));
+        dispatch(getRestaurantThunk(restaurant.id))
+
         navigation.navigate('RestaurantDetails');
     }, [dispatch, navigation, restaurantsInProximity]);
 };

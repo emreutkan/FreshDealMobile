@@ -74,14 +74,17 @@ export const updateAddress = createAsyncThunk<
     { state: RootState; rejectValue: string }
 >(
     'address/updateAddress',
-    async ({id, updates}, {getState, rejectWithValue}) => {
+    async ({id, updates}, {getState, dispatch, rejectWithValue}) => {
         try {
             const token = await tokenService.getToken();
             if (!token) {
                 console.error('Authentication token is missing.');
                 return rejectWithValue('Authentication token is missing.');
             }
-            return await updateAddressAPI(id, updates, token);
+            updates.is_primary = true; // temporary solution updated address
+            const response = await updateAddressAPI(id, updates, token);
+            await dispatch(getUserDataThunk({token}));
+            return response;
         } catch (error: any) {
             return rejectWithValue(error.response?.data?.message || 'Failed to update address');
         }

@@ -13,6 +13,19 @@ import axios from "axios";
 const LOGIN_ENDPOINT = `${API_BASE_URL}/login`;
 const REGISTER_ENDPOINT = `${API_BASE_URL}/register`;
 const VERIFY_EMAIL_ENDPOINT = `${API_BASE_URL}/verify_email`;
+const FORGOT_PASSWORD_ENDPOINT = `${API_BASE_URL}/forgot-password`;
+const RESET_PASSWORD_ENDPOINT = `${API_BASE_URL}/reset-password`;
+
+// Add these interfaces
+export interface ForgotPasswordPayload {
+    email: string;
+}
+
+export interface ForgotPasswordResponse {
+    success: boolean;
+    message: string;
+}
+
 
 /*
   Example structure for auth-related API calls using the apiClient.
@@ -47,21 +60,7 @@ export const authApi = {
         });
     },
 
-    /*
-      Verifies an email using a verification code. You might have a specialized
-      payload type such as VerifyCodePayload that includes fields like email
-      and verification_code. Adjust accordingly to match your API’s structure.
-    */
-    async verifyEmail(payload: { verification_code: string; email: string }): Promise<Response<{
-        success: boolean;
-        message: string
-    }>> {
-        return apiClient.request({
-            method: "POST",
-            url: VERIFY_EMAIL_ENDPOINT,
-            data: payload
-        });
-    }
+
 };
 
 interface VerifyCodePayload {
@@ -94,3 +93,32 @@ export const verifyCode = createAsyncThunk<
         }
     }
 );
+
+
+// Add these async thunks for Redux integration
+export const forgotPassword = createAsyncThunk<
+    ForgotPasswordResponse,
+    ForgotPasswordPayload,
+    { rejectValue: string }
+>(
+    "user/forgotPassword",
+    async (payload, {rejectWithValue}) => {
+        try {
+            console.log("Forgot Password", payload);
+            const response = await axios.post(FORGOT_PASSWORD_ENDPOINT, payload);
+            if (response.data.success) {
+                return response.data;
+            } else {
+                return rejectWithValue(response.data.message);
+            }
+        } catch (error: any) {
+            return rejectWithValue(
+                error.response?.data?.message ||
+                error.message ||
+                "Failed to send reset instructions"
+            );
+        }
+    }
+);
+
+

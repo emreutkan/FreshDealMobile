@@ -244,7 +244,7 @@ const styles = StyleSheet.create({
         shadowOffset: {width: 0, height: -3},
         shadowOpacity: 0.1,
         shadowRadius: 5,
-        elevation: 5,
+        // elevation: 5,
     },
 
     bottomSheetIndicator: {
@@ -290,7 +290,7 @@ const styles = StyleSheet.create({
         shadowOffset: {width: 0, height: 2},
         shadowOpacity: 0.05,
         shadowRadius: 3.84,
-        elevation: 2,
+        // elevation: 2,
     },
 
     selectedAddressItem: {
@@ -327,7 +327,7 @@ const styles = StyleSheet.create({
         shadowOffset: {width: 0, height: 2},
         shadowOpacity: 0.1,
         shadowRadius: 3,
-        elevation: 5,
+        // elevation: 5,
     },
 
     addAddressText: {
@@ -356,7 +356,7 @@ const styles = StyleSheet.create({
         shadowOffset: {width: 0, height: 2},
         shadowOpacity: 0.1,
         shadowRadius: 4,
-        elevation: 3,
+        // elevation: 3,
         maxHeight: 60,
         minWidth: 120,
         marginVertical: 8,

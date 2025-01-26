@@ -1,6 +1,14 @@
 // src/store/thunks/restaurantThunks.ts
 import {createAsyncThunk} from '@reduxjs/toolkit';
-import {getRestaurantsInProximity} from "@/src/redux/api/restaurantAPI";
+import {
+    addRestaurantComment,
+    createRestaurant,
+    deleteRestaurant,
+    getAllRestaurants,
+    getRestaurant,
+    getRestaurantsInProximity,
+    updateRestaurant
+} from "@/src/redux/api/restaurantAPI";
 import {RootState} from "@/src/types/store";
 import {tokenService} from "@/src/services/tokenService";
 import {Restaurant} from "@/src/types/api/restaurant/model";
@@ -62,6 +70,138 @@ export const getListingsThunk = createAsyncThunk<
             };
         } catch (error: any) {
             return rejectWithValue(error.response?.data?.message || error.message);
+        }
+    }
+);
+
+// Get a single restaurant
+export const getRestaurantThunk = createAsyncThunk<
+    Restaurant,
+    number,
+    { rejectValue: string }
+>(
+    'restaurant/getRestaurant',
+    async (restaurantId, {rejectWithValue}) => {
+        try {
+            return await getRestaurant(restaurantId);
+        } catch (error: any) {
+            return rejectWithValue('Failed to fetch restaurant: ' + error.message);
+        }
+    }
+);
+
+// Get all restaurants for owner
+export const getAllRestaurantsThunk = createAsyncThunk<
+    Restaurant[],
+    void,
+    { rejectValue: string }
+>(
+    'restaurant/getAllRestaurants',
+    async (_, {rejectWithValue}) => {
+        try {
+            const token = await tokenService.getToken();
+            if (!token) {
+                return rejectWithValue('Authentication token is missing.');
+            }
+            return await getAllRestaurants(token);
+        } catch (error: any) {
+            return rejectWithValue('Failed to fetch restaurants: ' + error.message);
+        }
+    }
+);
+
+// Create restaurant
+export const createRestaurantThunk = createAsyncThunk<
+    Restaurant,
+    FormData,
+    { rejectValue: string }
+>(
+    'restaurant/createRestaurant',
+    async (formData, {rejectWithValue}) => {
+        try {
+            const token = await tokenService.getToken();
+            if (!token) {
+                return rejectWithValue('Authentication token is missing.');
+            }
+            return await createRestaurant(formData, token);
+        } catch (error: any) {
+            return rejectWithValue('Failed to create restaurant: ' + error.message);
+        }
+    }
+);
+
+// Update restaurant
+export const updateRestaurantThunk = createAsyncThunk<
+    Restaurant,
+    { restaurantId: number; formData: FormData },
+    { rejectValue: string }
+>(
+    'restaurant/updateRestaurant',
+    async ({restaurantId, formData}, {rejectWithValue}) => {
+        try {
+            const token = await tokenService.getToken();
+            if (!token) {
+                return rejectWithValue('Authentication token is missing.');
+            }
+            return await updateRestaurant(restaurantId, formData, token);
+        } catch (error: any) {
+            return rejectWithValue('Failed to update restaurant: ' + error.message);
+        }
+    }
+);
+
+// Delete restaurant
+export const deleteRestaurantThunk = createAsyncThunk<
+    void,
+    number,
+    { rejectValue: string }
+>(
+    'restaurant/deleteRestaurant',
+    async (restaurantId, {rejectWithValue}) => {
+        try {
+            const token = await tokenService.getToken();
+            if (!token) {
+                return rejectWithValue('Authentication token is missing.');
+            }
+            await deleteRestaurant(restaurantId, token);
+        } catch (error: any) {
+            return rejectWithValue('Failed to delete restaurant: ' + error.message);
+        }
+    }
+);
+
+// src/redux/thunks/restaurantThunks.ts
+export const addRestaurantCommentThunk = createAsyncThunk<
+    void,
+    {
+        restaurantId: number;
+        commentData: {
+            comment: string;
+            rating: number;
+            purchase_id: number;
+        };
+    },
+    { rejectValue: string }
+>(
+    'restaurant/addComment',
+    async ({restaurantId, commentData}, {rejectWithValue}) => {
+        try {
+            const token = await tokenService.getToken();
+            if (!token) {
+                return rejectWithValue('Authentication token is missing.');
+            }
+
+            // Ensure all numeric values are integers
+            const sanitizedData = {
+                ...commentData,
+                rating: parseInt(String(commentData.rating), 10),
+                purchase_id: parseInt(String(commentData.purchase_id), 10)
+            };
+
+            await addRestaurantComment(restaurantId, sanitizedData, token);
+        } catch (error: any) {
+            console.error('[addRestaurantComment] Error:', error);
+            return rejectWithValue(error.response?.data?.message || 'Failed to add comment');
         }
     }
 );
