@@ -18,9 +18,6 @@ import {AppDispatch} from "@/src/redux/store";
 import {RootState} from "@/src/types/store";
 
 import {useSafeAreaInsets} from "react-native-safe-area-context";
-import type {NativeStackNavigationProp} from "@react-navigation/native-stack";
-import {RootStackParamList} from "@/src/utils/navigation";
-import {useNavigation} from "@react-navigation/native";
 import {scaleFont} from "@/src/utils/ResponsiveFont";
 import {getRestaurantsByProximity} from "@/src/redux/thunks/restaurantThunks";
 import {SearchforRestaurantsThunk} from "@/src/redux/thunks/searchThunks";
@@ -36,10 +33,8 @@ const Search: React.FC = () => {
 
     const dispatch = useDispatch<AppDispatch>();
     const inputRef = React.useRef<TextInput>(null);
-    const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
     const insets = useSafeAreaInsets();
     const [recentSearches, setRecentSearches] = useState<string[]>([]);
-    const [inputFocused, setInputFocused] = useState(false);
 
 
     // Selectors
@@ -48,9 +43,6 @@ const Search: React.FC = () => {
     );
     const restaurants = useSelector((state: RootState) =>
         state.restaurant.restaurantsProximity ?? []
-    );
-    const isLoading = useSelector((state: RootState) =>
-        state.restaurant.restaurantsProximityLoading
     );
 
     // Filtered restaurants logic
@@ -111,14 +103,7 @@ const Search: React.FC = () => {
         dispatch(getRestaurantsByProximity());
     }, []);
 
-    const NoResults = () => (
-        <View style={styles.noResultsContainer}>
-            <Icon name="search-outline" size={50} color="#666"/>
-            <Text style={styles.noResultsText}>
-                No restaurants found for "{searchText}"
-            </Text>
-        </View>
-    );
+
     return (
         <View style={styles.container}>
             <KeyboardAvoidingView
@@ -160,7 +145,6 @@ const Search: React.FC = () => {
                 </TouchableWithoutFeedback>
             </KeyboardAvoidingView>
 
-            {/* Results Section */}
             <View style={styles.resultsContainer}>
                 {isSearching ? (
                     <View style={styles.loadingContainer}>

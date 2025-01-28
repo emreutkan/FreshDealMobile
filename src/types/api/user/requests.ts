@@ -1,8 +1,3 @@
-export interface VerifyEmailPayload {
-    email: string;
-    verification_code: string;
-}
-
 export interface UpdatePasswordPayload {
     old_password: string;
     new_password: string;

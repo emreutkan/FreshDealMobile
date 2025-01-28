@@ -9,10 +9,8 @@ import * as Notifications from 'expo-notifications';
 import {initializeTokenService} from "@/src/services/tokenService";
 import {View} from 'react-native';
 
-// Prevent the splash screen from auto-hiding
-SplashScreen.preventAutoHideAsync();
+SplashScreen.preventAutoHideAsync().then(r => console.log(r));
 
-// Configure notifications
 Notifications.setNotificationHandler({
     handleNotification: async () => ({
         shouldShowAlert: true,
@@ -47,7 +45,7 @@ const App: React.FC = () => {
             }
         }
 
-        prepare();
+        prepare().then(r => console.log(r));
     }, []);
 
     const onLayoutRootView = useCallback(async () => {

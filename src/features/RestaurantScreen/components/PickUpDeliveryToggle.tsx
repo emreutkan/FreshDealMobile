@@ -67,7 +67,6 @@ export const PickupDeliveryToggle: React.FC<PickupDeliveryToggleProps> = ({layou
         );
     }
 
-    // Single button for pickup or delivery only
     return (
         <DeliveryButton
             isActive={true}
@@ -102,7 +101,7 @@ const styles = StyleSheet.create({
     rowContainer: {
         flexDirection: "row",
 
-        gap: 10, // Adjust gap for row layout
+        gap: 10,
     },
     columnContainer: {
         flexDirection: "column",

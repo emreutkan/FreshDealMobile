@@ -1,14 +1,13 @@
 import React from "react";
 import {Animated, Dimensions, Image, Platform, StyleSheet, Text, TouchableOpacity, View} from "react-native";
 import {Restaurant} from "@/src/types/api/restaurant/model";
-import {useDispatch, useSelector} from "react-redux";
+import {useSelector} from "react-redux";
 import {RootState} from "@/src/types/store";
 import {Ionicons, MaterialCommunityIcons} from "@expo/vector-icons";
 import {LinearGradient} from 'expo-linear-gradient';
 import {useNavigation} from "@react-navigation/native";
 import {NativeStackNavigationProp} from "@react-navigation/native-stack";
 import {RootStackParamList} from "@/src/utils/navigation";
-import {AppDispatch} from "@/src/redux/store";
 import {useHandleRestaurantPress} from "@/src/hooks/handleRestaurantPress";
 
 const {width} = Dimensions.get('window');
@@ -31,7 +30,6 @@ const FavoriteRestaurantList: React.FC<FavoriteRestaurantListProps> = ({
         favoriteRestaurantsIDs.includes(restaurant.id)
     );
     const navigation = useNavigation<NavigationProp>();
-    const dispatch = useDispatch<AppDispatch>();
 
     const handleRestaurantPress = useHandleRestaurantPress();
 

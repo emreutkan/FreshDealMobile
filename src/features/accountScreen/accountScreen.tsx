@@ -152,7 +152,6 @@ const AccountScreen: React.FC = () => {
             <ScrollView style={styles.safeArea}>
 
                 <View style={styles.container}>
-                    {/* Profile Section */}
                     <View style={styles.profileSection}>
                         <View style={styles.avatarContainer}>
                             <View style={styles.avatar}>
@@ -171,7 +170,6 @@ const AccountScreen: React.FC = () => {
                         </View>
                     </View>
 
-                    {/* Info Cards */}
                     <View style={styles.infoCards}>
                         <View style={styles.card}>
                             <View style={styles.cardIcon}>
@@ -224,7 +222,6 @@ const AccountScreen: React.FC = () => {
                             <MaterialIcons name="chevron-right" size={24} color="#666"/>
                         </TouchableOpacity>
                     </View>
-                    {/* Actions Section */}
                     <View style={styles.actionsSection}>
 
                         <TouchableOpacity style={styles.actionButton} onPress={handlePasswordReset}>
@@ -234,7 +231,6 @@ const AccountScreen: React.FC = () => {
                         </TouchableOpacity>
                     </View>
 
-                    {/* Logout Button */}
                     <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
                         <MaterialIcons name="logout" size={24} color="#FFF"/>
                         <Text style={styles.logoutButtonText}>Logout</Text>

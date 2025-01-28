@@ -2,9 +2,8 @@ import {Image, StyleSheet, Text, View} from "react-native";
 import {Marker} from "react-native-maps";
 import React, {useMemo, useState} from "react";
 import {Ionicons} from "@expo/vector-icons";
-import {Restaurant} from "@/src/types/api/restaurant/model"; // Adjust the import path as needed
+import {Restaurant} from "@/src/types/api/restaurant/model";
 
-// Helper function to check if restaurant is open
 const isRestaurantOpen = (
     workingDays: string[],
     workingHoursStart?: string,

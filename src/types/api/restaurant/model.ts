@@ -30,6 +30,3 @@ export interface Restaurant {
     comments?: RestaurantComment[];
 }
 
-export interface ProximityRestaurant extends Restaurant {
-    distance_km: number;
-}

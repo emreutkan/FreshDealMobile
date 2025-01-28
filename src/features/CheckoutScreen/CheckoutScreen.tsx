@@ -80,12 +80,13 @@ const CheckoutScreen: React.FC = () => {
 
     const totalPickUpPrice = ListingsInCart.reduce((sum, item) => {
         const cartItem = cartItems.find(ci => ci.listing_id === item.id);
-        const quantity = cartItem?.count || 1; // Default to 1 if count is not found
+        const quantity = cartItem?.count || 1;
         return sum + (item.pick_up_price || 0) * quantity;
     }, 0);
+
     const totalDeliveryPrice = ListingsInCart.reduce((sum, item) => {
         const cartItem = cartItems.find(ci => ci.listing_id === item.id);
-        const quantity = cartItem?.count || 1; // Default to 1 if count is not found
+        const quantity = cartItem?.count || 1;
         return sum + (item.delivery_price || 0) * quantity;
     }, 0);
 
@@ -93,7 +94,7 @@ const CheckoutScreen: React.FC = () => {
 
 
     const handlePaymentMethodSelect = (method: 'card' | 'cash') => {
-        lightHaptic();
+        lightHaptic().then(r => console.log(r));
         setPaymentMethod(method);
         if (method === 'card') {
             setIsCardAdded(true);
@@ -130,14 +131,13 @@ const CheckoutScreen: React.FC = () => {
                 notes: deliveryNotes ? deliveryNotes : " ",
             }));
 
-            complexHaptic();
+            await complexHaptic();
             setShowSuccess(true); // Show success animation
         } catch (error: any) {
             Alert.alert('Error', error.message);
         }
-        complexHaptic();
-        // show checkout complete
-        // navigate to active orders screen and set the previous screen to homescreen
+        await complexHaptic();
+
 
     }
 

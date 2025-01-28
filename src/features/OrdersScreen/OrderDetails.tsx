@@ -71,7 +71,8 @@ const OrderDetails: React.FC = () => {
         try {
             const fileInfo = await FileSystem.getInfoAsync(reportImage);
             if (!fileInfo.exists) {
-                throw new Error('File does not exist');
+                Alert.alert('Error', 'Selected file does not exist');
+                return;
             }
 
             const filename = reportImage.split('/').pop() || 'report.jpg';

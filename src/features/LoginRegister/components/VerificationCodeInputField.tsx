@@ -19,11 +19,9 @@ const VerificationCodeInputField: React.FC<VerificationCodeInputFieldProps> = ({
         newValue[index] = text;
         onChangeText(newValue.join(""));
 
-        // Move to the next input if text is entered
         if (text && index < 5) {
             inputRefs.current[index + 1]?.focus();
         }
-        // Move to the previous input if backspace is pressed
         if (!text && index > 0) {
             inputRefs.current[index - 1]?.focus();
         }
@@ -43,7 +41,6 @@ const VerificationCodeInputField: React.FC<VerificationCodeInputFieldProps> = ({
                             keyboardType="numeric"
                         />
                     </View>
-                    {/* Add separator between groups */}
                     {index === 2 && <Text style={styles.separator}>-</Text>}
                 </React.Fragment>
             ))}

@@ -93,14 +93,9 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll}) => {
     }, [lastCreatedPurchases]);
 
     useEffect(() => {
-        lightHaptic();
+        lightHaptic().then(r => console.log(r));
     }, [localRadius]);
 
-    const contentPadding = scrollY.interpolate({
-        inputRange: [0, HEADER_SCROLL_DISTANCE],
-        outputRange: [HEADER_MAX_HEIGHT, 0], // Animate from max height to 0
-        extrapolate: 'clamp',
-    });
 
     useEffect(() => {
         let timer: NodeJS.Timeout;
@@ -118,7 +113,7 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll}) => {
     }, [restaurantsProximityLoading]);
 
     const onRefresh = useCallback(() => {
-        strongHaptic();
+        strongHaptic().then(r => console.log(r));
         setRefreshing(true);
         dispatch(getRestaurantsByProximity()).finally(() => {
             setRefreshing(false);
@@ -127,7 +122,7 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll}) => {
 
 
     useEffect(() => {
-        strongHaptic();
+        strongHaptic().then(r => console.log(r));
         dispatch(getRestaurantsByProximity());
     }, [dispatch, reduxRadius]);
 
@@ -184,12 +179,9 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll}) => {
     const handlePriceSelect = (price: '$' | '$$' | '$$$') => {
         triggerFilterLoading();
         setSelectedPrice(price);
-        setIsPriceExpanded(false); // Collapse the dropdown after selection
+        setIsPriceExpanded(false);
     };
 
-
-    // Filter restaurant data based on filters.
-    // For the "Under 30 min" filter, we assume that 3km or less is reachable in 30 minutes.
     const filteredRestaurants = useMemo(() => {
         if (!restaurantsProximity) return [];
         console.log('restaurantsProximity in HomeCardView:', restaurantsProximity);
@@ -205,11 +197,6 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll}) => {
 
     }, [restaurantsProximity, filters]);
 
-
-    const handleScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
-        const y = event.nativeEvent.contentOffset.y;
-        scrollY.setValue(y);
-    }, [scrollY]);
 
     return (
         <View style={styles.safeArea}>
@@ -238,13 +225,11 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll}) => {
                     showsHorizontalScrollIndicator={false}
                     contentContainerStyle={styles.filterContentContainer}
                 >
-                    {/* Icon Button */}
                     <TouchableOpacity style={styles.iconButton}>
                         <Feather name="sliders" size={16} color="#333"/>
                     </TouchableOpacity>
 
 
-                    {/* Pick Up Button */}
                     <TouchableOpacity
                         style={[
                             styles.filterButton,
@@ -262,7 +247,6 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll}) => {
                         </Text>
                     </TouchableOpacity>
 
-                    {/* Delivery Button */}
                     <TouchableOpacity
                         style={[
                             styles.filterButton,
@@ -280,7 +264,6 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll}) => {
                         </Text>
                     </TouchableOpacity>
 
-                    {/* Price Button */}
                     <TouchableOpacity
                         style={[styles.filterButton, isPriceExpanded && styles.filterButtonSelected]}
                         onPress={togglePriceDropdown}
@@ -301,7 +284,6 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll}) => {
                         />
                     </TouchableOpacity>
 
-                    {/* Under 30 min Button */}
                     <TouchableOpacity
                         style={[
                             styles.filterButton,
@@ -321,7 +303,6 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll}) => {
                 </ScrollView>
             </Animated.View>
 
-            {/* Expandable Price Section */}
             {isPriceExpanded && (
                 <View style={styles.priceDropdown}>
                     {['$', '$$', '$$$'].map((price) => (
@@ -346,7 +327,6 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll}) => {
                 </View>
             )}
 
-            {/* Main Content */}
             <View style={styles.container}>
                 {isLoading ? (
                     <View style={styles.loadingContainer}>

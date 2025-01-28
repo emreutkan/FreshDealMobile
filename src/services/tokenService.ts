@@ -1,5 +1,6 @@
 // services/tokenService.ts
 import * as SecureStore from 'expo-secure-store';
+import {Alert} from "react-native";
 
 const TOKEN_KEY = 'user_token';
 
@@ -20,28 +21,21 @@ export const tokenService = {
 
     async getToken() {
         try {
-            // First try to get token from secure storage
             const storedToken = await SecureStore.getItemAsync(TOKEN_KEY);
 
             if (storedToken) {
                 return validateToken(storedToken);
             }
 
-            // If no token in storage and token manager is available, get it from state
             if (tokenManager) {
                 const stateToken = tokenManager.getStateToken();
                 return validateToken(stateToken);
             }
 
-            throw new Error('No token found and no token manager available');
+            Alert.alert('No token found and no token manager available');
         } catch (error) {
-            // Re-throw the validation error
             throw error;
         }
-    },
-
-    async removeToken() {
-        await SecureStore.deleteItemAsync(TOKEN_KEY);
     }
 };
 

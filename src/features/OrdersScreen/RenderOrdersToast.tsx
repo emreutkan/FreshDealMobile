@@ -20,8 +20,7 @@ const RecentOrderToast: React.FC<RecentOrderToastProps> = ({order, onDismiss}) =
     const opacity = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
-        lightHaptic();
-        // Slide up and fade in
+        lightHaptic().then(r => console.log(r));
         Animated.parallel([
             Animated.timing(translateY, {
                 toValue: 0,

@@ -15,4 +15,4 @@ export interface RootState {
     report: ReportState
 }
 
-export type AppDispatch = any; // We'll type this properly after store is created
+export type AppDispatch = any; 

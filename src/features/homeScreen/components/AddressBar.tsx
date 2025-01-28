@@ -1,7 +1,7 @@
 // components/LoginScreenComponents/AddressBar.tsx
 
 import React, {useMemo, useRef, useState} from 'react';
-import {Animated, FlatList, StyleSheet, Text, TouchableOpacity, View,} from 'react-native';
+import {FlatList, StyleSheet, Text, TouchableOpacity, View,} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
 import {Ionicons, MaterialIcons} from '@expo/vector-icons';
 import {useNavigation} from '@react-navigation/native';
@@ -16,11 +16,8 @@ import {Address} from "@/src/types/api/address/model"
 import {useSafeAreaInsets} from "react-native-safe-area-context";
 import {BottomSheetModal, BottomSheetScrollView} from '@gorhom/bottom-sheet';
 
-interface AddressBarProps {
-    textColor: Animated.AnimatedInterpolation<string> | string;
-}
 
-const AddressBar: React.FC<AddressBarProps> = ({textColor}) => {
+const AddressBar: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
     type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'UpdateAddress'>;
 

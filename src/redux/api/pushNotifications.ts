@@ -40,7 +40,7 @@ export const pushNotificationsApi = {
         };
 
         try {
-            const response = await apiClient.request<PushTokenResponse>({
+            return await apiClient.request<PushTokenResponse>({
                 method: 'POST',
                 url: `${API_BASE_URL}/users/push-token`,
                 headers: {
@@ -48,36 +48,11 @@ export const pushNotificationsApi = {
                 },
                 data: payload,
             });
-            return response;
         } catch (error) {
             console.error('Failed to update push token:', error);
             throw error;
         }
     },
 
-    deleteToken: async (expoPushToken: string): Promise<PushTokenResponse> => {
-        const jwtToken = await tokenService.getToken();
 
-        if (!jwtToken) {
-            throw new Error('No JWT token available');
-        }
-
-        // Clean the push token before sending
-        const cleanedToken = cleanPushToken(expoPushToken);
-
-        try {
-            const response = await apiClient.request<PushTokenResponse>({
-                method: 'DELETE',
-                url: `${API_BASE_URL}/users/push-token`,
-                headers: {
-                    Authorization: `Bearer ${jwtToken}`,
-                },
-                data: {push_token: cleanedToken},
-            });
-            return response;
-        } catch (error) {
-            console.error('Failed to delete push token:', error);
-            throw error;
-        }
-    },
 };

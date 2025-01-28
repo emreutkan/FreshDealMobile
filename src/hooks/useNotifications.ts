@@ -12,10 +12,7 @@ export function useNotifications() {
     const dispatch = useDispatch();
     const {isAuthenticated} = useSelector((state: RootState) => state.user);
     const {pushToken, isRegistered} = useSelector((state: RootState) => state.notification);
-    const cleanPushToken = (token: string): string => {
-        // Remove 'ExponentPushToken[' prefix and ']' suffix
-        return token.replace('ExponentPushToken[', '').replace(']', '');
-    };
+
 
     const registerForPushNotificationsAsync = async () => {
         if (!Device.isDevice) {
@@ -37,12 +34,10 @@ export function useNotifications() {
                 return null;
             }
 
-            // Make sure to use the correct project ID
             const expoPushToken = await Notifications.getExpoPushTokenAsync({
-                projectId: process.env.EXPO_PROJECT_ID // Make sure this is set in your app.config.js
+                projectId: process.env.EXPO_PROJECT_ID
             });
 
-            // Verify token format
             if (!expoPushToken.data.startsWith('ExponentPushToken[')) {
                 console.error('Invalid push token format:', expoPushToken.data);
                 return null;
@@ -62,14 +57,12 @@ export function useNotifications() {
                 return;
             }
 
-            // Get or register push token
             const newPushToken = await registerForPushNotificationsAsync();
             if (!newPushToken) {
                 console.log('Could not get push token');
                 return;
             }
 
-            // Set up Android channel if needed
             if (Platform.OS === 'android') {
                 await Notifications.setNotificationChannelAsync('default', {
                     name: 'default',
@@ -79,10 +72,8 @@ export function useNotifications() {
                 });
             }
 
-            // Save token in Redux
             dispatch(setPushToken(newPushToken));
 
-            // Register with backend
             try {
                 await pushNotificationsApi.updatePushToken(newPushToken);
                 dispatch(setIsRegistered(true));

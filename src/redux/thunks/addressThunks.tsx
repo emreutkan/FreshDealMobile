@@ -13,7 +13,7 @@ export const addAddressAsync = createAsyncThunk<
     { rejectValue: string; state: RootState }
 >(
     'address/addAddressAsync',
-    async (address, {rejectWithValue, getState, dispatch}) => {
+    async (address, {rejectWithValue, dispatch}) => {
         const tempId = `temp-${Date.now()}`;
         // Make sure is_primary is set in the temp address too
         const tempAddress = {...address, id: tempId, is_primary: true};
@@ -35,6 +35,9 @@ export const addAddressAsync = createAsyncThunk<
             // Log the exact payload being sent to API
             console.log('Sending to API:', addressPayload);
 
+            if (!token) {
+                return rejectWithValue('Authentication token is missing');
+            }
             const response = await addAddressAPI(addressPayload, token);
 
             // Log the response to see what the API returns
@@ -49,13 +52,16 @@ export const addAddressAsync = createAsyncThunk<
             // Check the nested address object's is_primary property
             if (response?.address && !response.address.is_primary) {
                 // Make an API call to set this address as primary
-                await setPrimaryAddress(response.address.id);
+                setPrimaryAddress(response.address.id);
             }
 
             // Return the address object from the response
             return response.address as Address;
         } catch (error: any) {
             dispatch(removeAddress(tempId));
+            if (!token) {
+                return rejectWithValue('Authentication token is missing');
+            }
             await dispatch(getUserDataThunk({token}));
 
             return rejectWithValue(
@@ -74,7 +80,7 @@ export const updateAddress = createAsyncThunk<
     { state: RootState; rejectValue: string }
 >(
     'address/updateAddress',
-    async ({id, updates}, {getState, dispatch, rejectWithValue}) => {
+    async ({id, updates}, {dispatch, rejectWithValue}) => {
         try {
             const token = await tokenService.getToken();
             if (!token) {
@@ -108,7 +114,7 @@ export const setPrimaryAddress = createAsyncThunk<
                 (addr) => addr.id === addressId
             );
             if (!addressToUpdate) {
-                throw new Error('Address not found');
+                console.log('Address not found');
             }
 
             const updatedAddress = await updateAddressAPI(addressId, {is_primary: true}, token);
@@ -139,10 +145,8 @@ export const deleteAddressAsync = createAsyncThunk<
                 return rejectWithValue('Authentication token is missing.');
             }
 
-            const response = await deleteAddressAPI(addressId, token);
+            await deleteAddressAPI(addressId, token);
 
-
-            // await dispatch(setPrimaryAddress(response.new_primary_address_id));
             await dispatch(getUserDataThunk({token}));
 
         } catch (error: any) {

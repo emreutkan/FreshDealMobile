@@ -22,8 +22,7 @@ const HomeMapView: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
     const mapRef = useRef<MapView>(null);
     const bottomSheetRef = useRef<BottomSheet>(null);  // Reference for the bottom sheet
-    const [isMapReady, setIsMapReady] = useState(false);
-    const [isLoading, setIsLoading] = useState(true);
+
     const [selectedRestaurantId, setSelectedRestaurantId] = useState<string | null>(null);
     const snapPoints = useMemo(() => [200], []);
     const navigation = useNavigation<NavigationProp>();
@@ -32,7 +31,6 @@ const HomeMapView: React.FC = () => {
     const selectedAddress = addressState.addresses.find(
         (address) => address.id === addressState.selectedAddressId
     ) as Address;
-// Helper function to check if restaurant is open
     const isRestaurantOpen = (
         workingDays: string[],
         workingHoursStart?: string,
@@ -59,7 +57,6 @@ const HomeMapView: React.FC = () => {
         return true;
     };
 
-// Helper function to check if restaurant is available
     const isRestaurantAvailable = (restaurant: Restaurant): boolean => {
         const isOpen = isRestaurantOpen(
             restaurant.workingDays,
@@ -74,19 +71,17 @@ const HomeMapView: React.FC = () => {
     const userLongitude = selectedAddress.longitude;
 
     useEffect(() => {
-        strongHaptic();
+        strongHaptic().then(r => console.log(r));
         const loadData = async () => {
             try {
-                setIsLoading(true);
                 await dispatch(getRestaurantsByProximity());
             } catch (error) {
                 console.error('Failed to load restaurants:', error);
             } finally {
-                setIsLoading(false);
             }
         };
 
-        loadData();
+        loadData().then(r => console.log(r));
     }, [dispatch]);
 
     const relocateToUserLocation = () => {
@@ -153,8 +148,7 @@ const HomeMapView: React.FC = () => {
                 showsCompass
                 showsScale
                 onMapReady={() => {
-                    setIsMapReady(true);
-                    setIsLoading(false);
+
                 }}
                 userInterfaceStyle="light"  // Add this line
 
@@ -220,7 +214,7 @@ const HomeMapView: React.FC = () => {
                 index={-1}
                 enablePanDownToClose={true}
                 onChange={(index) => {
-                    console.log('bottomsheet index changed:', index);
+                    console.log('bottom sheet index changed:', index);
                 }}>
                 <BottomSheetScrollView>
                     {selectedRestaurantId && restaurants.find(r => r.id.toString() === selectedRestaurantId) && (
@@ -240,7 +234,6 @@ const HomeMapView: React.FC = () => {
                                         {restaurants.find(r => r.id.toString() === selectedRestaurantId)?.restaurantName}
                                     </Text>
 
-                                    {/* Add availability status */}
                                     {!isRestaurantAvailable(restaurants.find(r => r.id.toString() === selectedRestaurantId)!) && (
                                         <Text style={styles.unavailableText}>
                                             {!isRestaurantOpen(
@@ -269,7 +262,6 @@ const HomeMapView: React.FC = () => {
                                     </View>
                                 </View>
 
-                                {/* Only show menu button if restaurant is available */}
                                 {isRestaurantAvailable(restaurants.find(r => r.id.toString() === selectedRestaurantId)!) && (
                                     <TouchableOpacity
                                         style={styles.menuButton}

@@ -1,4 +1,3 @@
-// Get Restaurants by Proximity API Call
 import axios from "axios";
 
 import {logError, logRequest, logResponse} from "@/src/utils/logger";
@@ -33,7 +32,6 @@ export const getRestaurantsInProximity = async (
 };
 
 
-// Get a Single Restaurant API Call
 export const getRestaurant = async (restaurantId: number): Promise<Restaurant> => {
     const functionName = 'getRestaurant';
     const endpoint = `${RESTAURANTS_ENDPOINT}/${restaurantId}`;
@@ -50,7 +48,6 @@ export const getRestaurant = async (restaurantId: number): Promise<Restaurant> =
     }
 };
 
-// Get All Restaurants for Owner API Call
 export const getAllRestaurants = async (token: string): Promise<Restaurant[]> => {
     const functionName = 'getAllRestaurants';
 
@@ -68,7 +65,6 @@ export const getAllRestaurants = async (token: string): Promise<Restaurant[]> =>
     }
 };
 
-// Create Restaurant API Call
 export const createRestaurant = async (
     formData: FormData,
     token: string
@@ -93,7 +89,6 @@ export const createRestaurant = async (
     }
 };
 
-// Delete Restaurant API Call
 export const deleteRestaurant = async (
     restaurantId: number,
     token: string
@@ -115,7 +110,6 @@ export const deleteRestaurant = async (
 };
 
 
-// Update Restaurant API Call
 export const updateRestaurant = async (
     restaurantId: number,
     formData: FormData,
@@ -141,7 +135,6 @@ export const updateRestaurant = async (
     }
 };
 
-// Add Comment to Restaurant API Call
 export const addRestaurantComment = async (
     restaurantId: number,
     commentData: {
@@ -154,10 +147,9 @@ export const addRestaurantComment = async (
     const functionName = 'addRestaurantComment';
     const endpoint = `${RESTAURANTS_ENDPOINT}/${restaurantId}/comments`;
 
-    // Ensure the rating is an integer
     const sanitizedData = {
         ...commentData,
-        rating: Math.round(commentData.rating), // Convert to integer using Math.round
+        rating: Math.round(commentData.rating),
         purchase_id: parseInt(String(commentData.purchase_id))
     };
 

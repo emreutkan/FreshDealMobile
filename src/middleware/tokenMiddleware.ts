@@ -11,8 +11,6 @@ const PUBLIC_ACTIONS = [
     'user/setName',
     'user/setPasswordLogin',
     'user/setSelectedCode',
-    'user/setVerificationCode',
-    'user/setStep',
     'user/setLoginType',
     'user/loginUser',
     'user/logout',

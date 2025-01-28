@@ -4,7 +4,7 @@ import {API_BASE_URL} from '@/src/redux/api/API';
 import {logError, logRequest, logResponse} from '@/src/utils/logger';
 
 class ApiClient {
-    private client: AxiosInstance;
+    private readonly client: AxiosInstance;
 
     constructor(baseURL: string) {
         this.client = axios.create({
@@ -12,14 +12,12 @@ class ApiClient {
             timeout: 10000,
         });
 
-        // Add request interceptor for logging
         this.client.interceptors.request.use((config) => {
             const functionName = config.url?.split('/').pop() || 'unknown';
             logRequest(functionName, config.url || '', config.data);
             return config;
         });
 
-        // Add response interceptor for logging
         this.client.interceptors.response.use(
             (response) => {
                 const functionName = response.config.url?.split('/').pop() || 'unknown';
