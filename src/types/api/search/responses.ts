@@ -8,17 +8,6 @@ export interface RestaurantSearchResult {
 }
 
 
-export interface ListingSearchResult {
-    id: number;
-    restaurant_id: number;
-    title: string;
-    description: string;
-    image_url: string;
-    price: number;
-    count: number;
-}
-
-
 export interface SearchResponse<T> {
     success: boolean;
     type: string;

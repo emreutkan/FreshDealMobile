@@ -137,7 +137,6 @@ const AddressScreen: React.FC = () => {
         animateForm(activateAddressDetails);
     }, [activateAddressDetails]);
 
-    // Clean up debounced function on unmount.
     useEffect(() => {
         return () => {
             debouncedHandleAddressUpdate.cancel();
@@ -212,7 +211,6 @@ const AddressScreen: React.FC = () => {
     };
 
     useEffect(() => {
-        // If we are adding a new address, fetch current location on mount.
         if (!isEditing) {
             (async () => {
                 await fetchLocation();
@@ -234,7 +232,11 @@ const AddressScreen: React.FC = () => {
             console.log('Received address data:', addressData);
 
             if (!addressData) {
-                throw new Error('No address data found');
+                Alert.alert(
+                    'Address Lookup Failed',
+                    'No address data found. Please try again or enter manually.'
+                );
+                return;
             }
 
             // To avoid duplicate street info, we choose one based on preference:
@@ -286,7 +288,6 @@ const AddressScreen: React.FC = () => {
         debouncedValidateField(field, value);
     };
 
-    // Debounce validator so that it runs after user stops typing.
     const debouncedValidateField = useRef(
         debounce((field: keyof TempAddress, value: string) => {
             const validationRules: Record<string, any> = {
@@ -454,7 +455,6 @@ const AddressScreen: React.FC = () => {
                 <Marker coordinate={{latitude: region.latitude, longitude: region.longitude}} opacity={0}/>
             </MapView>
 
-            {/* Center marker */}
             <View style={styles.centerMarkerContainer}>
                 <Animated.View
                     style={[
@@ -490,7 +490,6 @@ const AddressScreen: React.FC = () => {
                 />
             </View>
 
-            {/* Location button */}
             <TouchableOpacity
                 style={[styles.locationButton, locationLoading && styles.locationButtonLoading]}
                 onPress={getUserLocation}
@@ -503,16 +502,14 @@ const AddressScreen: React.FC = () => {
                 )}
             </TouchableOpacity>
 
-            {/* Optionally overlay a BlurView if you wish */}
             {activateAddressDetails && (
                 <BlurView
                     intensity={20}
                     style={StyleSheet.absoluteFill}
-                    pointerEvents="none" // Allow touches to fall through the BlurView
+                    pointerEvents="none"
                 />
             )}
 
-            {/* Address preview container – visible when form is hidden */}
             {!activateAddressDetails && (
                 <View style={[styles.addressPreviewContainer]}>
                     <View style={styles.addressPreviewContent}>
@@ -555,7 +552,6 @@ const AddressScreen: React.FC = () => {
                 </View>
             )}
 
-            {/* Address Form – overlays the map */}
             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                 <Animated.View
                     style={[
@@ -588,7 +584,6 @@ const AddressScreen: React.FC = () => {
                         </View>
 
                         <View style={styles.formContent}>
-                            {/* Title Input */}
                             <BaseInput
                                 value={selectedAddress.title}
                                 onChangeText={(text) => handleInputChange('title', text)}
@@ -599,7 +594,6 @@ const AddressScreen: React.FC = () => {
                                 <Text style={styles.errorText}>{errors.title}</Text>
                             ) : null}
 
-                            {/* Address Details */}
                             <View style={styles.addressDetailsContainer}>
                                 <Text style={styles.addressDetailsTitle}>Selected Location</Text>
                                 <Text style={styles.addressDetailsText}>{selectedAddress.street}</Text>
@@ -615,7 +609,6 @@ const AddressScreen: React.FC = () => {
                                 </Text>
                             </View>
 
-                            {/* Apartment and Door Number Inputs */}
                             <View style={styles.rowInputs}>
                                 <View style={styles.inputHalf}>
                                     <BaseInput
@@ -644,7 +637,6 @@ const AddressScreen: React.FC = () => {
                                 </View>
                             </View>
 
-                            {/* Additional Info */}
                             <View style={styles.additionalInfoContainer}>
                                 <Text style={styles.additionalInfoText}>
                                     Coordinates: {selectedAddress.latitude.toFixed(6)}, {selectedAddress.longitude.toFixed(6)}

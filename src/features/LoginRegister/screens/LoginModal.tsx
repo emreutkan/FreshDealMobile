@@ -23,7 +23,7 @@ interface LoginModalProps {
 
 const LoginModal: React.FC<LoginModalProps> = ({switchToRegister}) => {
     const dispatch = useDispatch<AppDispatch>();
-    const {loading, token, error} = useSelector((state: RootState) => state.user);
+    const {loading} = useSelector((state: RootState) => state.user);
     const [showPassword, setShowPassword] = useState(false);
     const [isForgotPasswordVisible, setIsForgotPasswordVisible] = useState(false);
 
@@ -80,7 +80,7 @@ const LoginModal: React.FC<LoginModalProps> = ({switchToRegister}) => {
                 return;
             }
             try {
-                const result = await dispatch(
+                await dispatch(
                     loginUserThunk({
                         email: email,
                         phone_number: selectedCode + phoneNumber,

@@ -13,12 +13,10 @@ export interface RestaurantSearchResults {
 
 
 export interface PurchaseState {
-    // Active orders
     activeOrders: Purchase[];
     loadingActiveOrders: boolean;
     activeOrdersError: string | null;
 
-    // Previous orders
     previousOrders: Purchase[];
     loadingPreviousOrders: boolean;
     previousOrdersError: string | null;
@@ -31,17 +29,14 @@ export interface PurchaseState {
         hasPrev: boolean;
     };
 
-    // Current order details
     currentOrder: Purchase | null;
     loadingCurrentOrder: boolean;
     currentOrderError: string | null;
 
-    // Purchase creation
     creatingPurchase: boolean;
     createPurchaseError: string | null;
     lastCreatedPurchases: Purchase[] | null;
 
-    // Restaurant purchases (if user is restaurant owner)
     restaurantPurchases: Purchase[];
     loadingRestaurantPurchases: boolean;
     restaurantPurchasesError: string | null;
@@ -79,13 +74,6 @@ export interface CartState {
     error: string | null;
 }
 
-export interface ListingState {
-    listings: Listing[];
-    loading: boolean;
-    error: string | null;
-    pagination: Pagination | null;
-}
-
 export interface RestaurantState {
     restaurantsProximity: Restaurant[];
     restaurantsProximityStatus: 'idle' | 'loading' | 'succeeded' | 'failed';
@@ -100,7 +88,7 @@ export interface RestaurantState {
     selectedRestaurantListing: Listing | null;
     listingsLoading: boolean,
     listingsError: string | null;
-    isPickup: boolean; // Current delivery method
+    isPickup: boolean;
     pagination: Pagination | null;
 
 }

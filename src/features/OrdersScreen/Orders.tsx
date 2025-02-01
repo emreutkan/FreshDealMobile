@@ -88,8 +88,8 @@ const Orders: React.FC = () => {
     const status = route.params?.status || 'active';
 
     useEffect(() => {
-        lightHaptic();
-        loadOrders();
+        lightHaptic().then(r => console.log(r));
+        loadOrders().then(r => console.log(r));
     }, [status]);
 
     const loadOrders = async () => {

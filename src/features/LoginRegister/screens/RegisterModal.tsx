@@ -42,7 +42,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({switchToLogin}) => {
         email,
         loading,
         selectedCode,
-        error,
+
     } = useSelector((state: RootState) => state.user);
 
     // Local state to track if verification code has been sent
@@ -92,7 +92,6 @@ const RegisterModal: React.FC<RegisterModalProps> = ({switchToLogin}) => {
                     "A verification code has been sent to your email."
                 );
 
-                // Optionally, you can auto-login the user or perform other actions here
             } else {
                 Alert.alert("Registration Failed", result.message || "Something went wrong.");
             }
@@ -102,8 +101,6 @@ const RegisterModal: React.FC<RegisterModalProps> = ({switchToLogin}) => {
     };
 
     const handleVerifyCode = async (): Promise<void> => {
-        // Implement your verification logic here
-        // For example, send the verificationCode to the backend to verify
 
         if (verificationCode.length !== 6) {
             Alert.alert("Error", "Please enter a 6-digit verification code.");
@@ -118,7 +115,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({switchToLogin}) => {
 
             if (verifyResult.success) {
                 Alert.alert("Success", "Your email has been verified!");
-                skipLoginUser()
+                await skipLoginUser()
             } else {
                 Alert.alert("Verification Failed", verifyResult.message || "Invalid code.");
             }

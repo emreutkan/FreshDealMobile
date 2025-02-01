@@ -53,9 +53,9 @@ const LocateToRestaurant = () => {
             Linking.canOpenURL('comgooglemaps://')
                 .then((supported) => {
                     if (supported) {
-                        Linking.openURL(googleMapsUrl);
+                        Linking.openURL(googleMapsUrl).then(r => console.log(r));
                     } else {
-                        Linking.openURL(fallbackUrl);
+                        Linking.openURL(fallbackUrl).then(r => console.log(r));
                     }
                 })
                 .catch((err) => console.error('Error opening map:', err));
@@ -83,24 +83,22 @@ const LocateToRestaurant = () => {
                     longitudeDelta: 0.05,
                 }}
             >
-                {/* Marker: User's Location */}
                 <Marker
                     coordinate={userLocation}
                     title="Your Location"
                     pinColor="blue"
                 />
 
-                {/* Interactive Marker: Restaurant */}
                 <Marker
                     key={restaurant.id}
                     coordinate={restaurantLocation}
                     onPress={handleMarkerPress}
                 >
-                    {/* We wrap the image (or Ionicon) in a parent View that handles the green border */}
+
                     <View
                         style={[
                             styles.markerContainer,
-                            selected && styles.markerSelected, // Apply green ring if selected
+                            selected && styles.markerSelected,
                         ]}
                     >
                         {restaurant.image_url ? (
@@ -122,7 +120,6 @@ const LocateToRestaurant = () => {
                     </View>
                 </Marker>
 
-                {/* Draw the route if the API key exists */}
                 {Constants.expoConfig?.extra?.googleMapsApiKey && (
                     <MapViewDirections
                         origin={userLocation}
@@ -146,7 +143,6 @@ const LocateToRestaurant = () => {
                 )}
             </MapView>
 
-            {/* Navigation Button displayed when marker is selected */}
             {selected && (
                 <View style={styles.navigationButtonContainer}>
                     <TouchableOpacity
@@ -159,7 +155,6 @@ const LocateToRestaurant = () => {
                 </View>
             )}
 
-            {/* Buttons for toggling travel mode */}
             <View style={styles.buttonContainer}>
                 <View style={styles.travelModeContainer}>
                     <TouchableOpacity
@@ -197,24 +192,20 @@ const styles = StyleSheet.create({
         height: 46,
         borderRadius: 23,
         borderWidth: 2,
-        borderColor: 'transparent', // Default is transparent
-        // backgroundColor: 'white',    // Optional - helps define the ring visually
+        borderColor: 'transparent',
     },
     markerSelected: {
-        borderColor: '#b2f7a5', // Highlight border
+        borderColor: '#b2f7a5',
         borderWidth: 20,
     },
-    // If using an actual image, you can adapt:
     markerImage: {
         width: 40,
         height: 40,
         borderRadius: 20,
     },
     iconPlaceholder: {
-        // This is just to show a placeholder Ionicon in place of the image
         textAlign: 'center',
     },
-    // Default pin, if no image_url
     defaultMarker: {
         width: 40,
         height: 40,
@@ -223,7 +214,7 @@ const styles = StyleSheet.create({
     buttonContainer: {
         position: 'absolute',
         right: 20,
-        top: '2%', // Adjust as needed
+        top: '2%',
         flexDirection: 'column',
         alignItems: 'center',
     },
@@ -244,9 +235,9 @@ const styles = StyleSheet.create({
     },
     navigationButtonContainer: {
         position: 'absolute',
-        bottom: 30, // Adjust as needed
+        bottom: 30,
         left: '50%',
-        transform: [{translateX: -scaleFont(80)}], // Half of button width to center
+        transform: [{translateX: -scaleFont(80)}],
     },
     navigateButton: {
         flexDirection: 'row',

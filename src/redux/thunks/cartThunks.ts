@@ -13,7 +13,7 @@ export const fetchCart = createAsyncThunk<
     CartItem[],
     void,
     { state: RootState; rejectValue: string }
->("cart/fetchCart", async (_, {getState, rejectWithValue}) => {
+>("cart/fetchCart", async (_, {rejectWithValue}) => {
     const token = await tokenService.getToken();
     if (!token) {
         return rejectWithValue("Authentication token is missing.");
@@ -33,7 +33,7 @@ export const addItemToCart = createAsyncThunk<
     CartOperationResponse,
     { payload: AddToCartPayload },
     { state: RootState; rejectValue: string }
->("cart/addItemToCart", async ({payload}, {dispatch, getState, rejectWithValue}) => {
+>("cart/addItemToCart", async ({payload}, {dispatch, rejectWithValue}) => {
     const token = await tokenService.getToken();
     if (!token) {
         return rejectWithValue("Authentication token is missing.");
@@ -55,7 +55,7 @@ export const updateCartItem = createAsyncThunk<
     CartOperationResponse,
     { payload: UpdateCartItemPayload },
     { state: RootState; rejectValue: string }
->("cart/updateCartItem", async ({payload}, {dispatch, getState, rejectWithValue}) => {
+>("cart/updateCartItem", async ({payload}, {dispatch, rejectWithValue}) => {
     const token = await tokenService.getToken();
     if (!token) {
         return rejectWithValue("Authentication token is missing.");
@@ -77,7 +77,7 @@ export const removeItemFromCart = createAsyncThunk<
     CartOperationResponse,
     { listing_id: number },
     { state: RootState; rejectValue: string }
->("cart/removeItemFromCart", async ({listing_id}, {dispatch, getState, rejectWithValue}) => {
+>("cart/removeItemFromCart", async ({listing_id}, {dispatch, rejectWithValue}) => {
     const token = await tokenService.getToken();
     if (!token) {
         return rejectWithValue("Authentication token is missing.");
@@ -98,7 +98,7 @@ export const resetCart = createAsyncThunk<
     CartOperationResponse,
     void,
     { state: RootState; rejectValue: string }
->("cart/resetCart", async (_, {getState, rejectWithValue}) => {
+>("cart/resetCart", async (_, {rejectWithValue}) => {
     const token = await tokenService.getToken();
     if (!token) {
         return rejectWithValue("Authentication token is missing.");

@@ -26,21 +26,6 @@ export const addAddressAPI = async (address: Omit<Address, 'id'>, token: string)
 };
 
 
-export const getAddressesAPI = async (token: string) => {
-    const functionName = 'getAddresses';
-    logRequest(functionName, ADDRESS_ENDPOINT, {});
-    try {
-        const response = await axios.get(ADDRESS_ENDPOINT, {
-            headers: {Authorization: `Bearer ${token}`}
-        });
-        logResponse(functionName, ADDRESS_ENDPOINT, response.data);
-        return response.data;
-    } catch (error: any) {
-        logError(functionName, ADDRESS_ENDPOINT, error);
-        throw error;
-    }
-};
-
 export const deleteAddressAPI = async (addressId: string, token: string) => {
     const functionName = 'deleteAddressAPI';
     const DELETE_ADDRESS_ENDPOINT = `${ADDRESS_ENDPOINT}/${addressId}`;

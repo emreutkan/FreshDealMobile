@@ -23,22 +23,17 @@ import {
     UpdateUsernameResponse
 } from "@/src/types/api/user/responses";
 import {setToken, UserDataResponse} from "@/src/redux/slices/userSlice"; // Example import, adjust as needed
-import {logout as userLogout} from "../slices/userSlice";
 
-// Login
 export const loginUserThunk = createAsyncThunk<
     LoginResponse,
     LoginPayload,
     { state: RootState; rejectValue: string }
 >(
     "user/loginUser",
-    async (payload, {dispatch, getState, rejectWithValue}) => {
+    async (payload, {dispatch, rejectWithValue}) => {
         try {
             const response = await authApi.login(payload);
             console.log(response)
-            // Transform the response to match LoginResponse.
-            // For example, if your ApiResponse is structured as:
-            // { data: { token: string }, message: string, status: number }
 
             if (response.token) {
                 dispatch(setToken(response.token));
@@ -64,7 +59,11 @@ export const registerUserThunk = createAsyncThunk<
     "user/registerUser",
     async (userData, {rejectWithValue}) => {
         try {
-            return await authApi.register(userData);
+            const response = await authApi.register(userData);
+            return {
+                success: response.success,
+                message: response.message,
+            } as RegisterResponse;
         } catch (error: any) {
             return rejectWithValue(error.response?.data || "Registration failed");
         }
@@ -78,9 +77,12 @@ export const updateUsernameThunk = createAsyncThunk<
     { state: RootState; rejectValue: string }
 >(
     "user/updateUsername",
-    async ({username}, {dispatch, getState, rejectWithValue}) => {
+    async ({username}, {dispatch, rejectWithValue}) => {
         try {
             const token = await tokenService.getToken();
+            if (!token) {
+                return rejectWithValue("Authentication token is missing");
+            }
             const response = await userApi.updateUsername(username, token);
             await dispatch(getUserDataThunk({token}));
             return response;
@@ -97,9 +99,12 @@ export const updateEmailThunk = createAsyncThunk<
     { state: RootState; rejectValue: string }
 >(
     "user/updateEmail",
-    async ({old_email, new_email}, {dispatch, getState, rejectWithValue}) => {
+    async ({old_email, new_email}, {dispatch, rejectWithValue}) => {
         try {
             const token = await tokenService.getToken();
+            if (!token) {
+                return rejectWithValue("Authentication token is missing");
+            }
             const response = await userApi.updateEmail(old_email, new_email, token);
             await dispatch(getUserDataThunk({token}));
             return response;
@@ -116,9 +121,12 @@ export const updatePasswordThunk = createAsyncThunk<
     { state: RootState; rejectValue: string }
 >(
     "user/updatePassword",
-    async ({old_password, new_password}, {dispatch, getState, rejectWithValue}) => {
+    async ({old_password, new_password}, {dispatch, rejectWithValue}) => {
         try {
             const token = await tokenService.getToken();
+            if (!token) {
+                return rejectWithValue("Authentication token is missing");
+            }
             const response = await userApi.updatePassword(old_password, new_password, token);
             await dispatch(getUserDataThunk({token}));
             return response;
@@ -151,9 +159,12 @@ export const addFavoriteThunk = createAsyncThunk<
     { state: RootState; rejectValue: string }
 >(
     "favorites/addFavorite",
-    async ({restaurant_id}, {dispatch, getState, rejectWithValue}) => {
+    async ({restaurant_id}, {dispatch, rejectWithValue}) => {
         try {
             const token = await tokenService.getToken();
+            if (!token) {
+                return rejectWithValue("Authentication token is missing");
+            }
             const response = await userApi.addToFavorites(restaurant_id, token);
             await dispatch(getFavoritesThunk()); // Refresh favorites
             return response;
@@ -170,11 +181,14 @@ export const removeFavoriteThunk = createAsyncThunk<
     { state: RootState; rejectValue: string }
 >(
     "favorites/removeFavorite",
-    async ({restaurant_id}, {dispatch, getState, rejectWithValue}) => {
+    async ({restaurant_id}, {dispatch, rejectWithValue}) => {
         try {
             const token = await tokenService.getToken();
+            if (!token) {
+                return rejectWithValue("Authentication token is missing");
+            }
             const response = await userApi.removeFromFavorites(restaurant_id, token);
-            await dispatch(getFavoritesThunk()); // Refresh favorites
+            await dispatch(getFavoritesThunk());
             return response;
         } catch (error: any) {
             return rejectWithValue(error.response?.data?.message || "Failed to remove favorite");
@@ -188,33 +202,19 @@ export const getFavoritesThunk = createAsyncThunk<
     { state: RootState; rejectValue: string }
 >(
     "favorites/getFavorites",
-    async (_, {getState, rejectWithValue}) => {
+    async (_, {rejectWithValue}) => {
         try {
             const token = await tokenService.getToken();
+            if (!token) {
+                return rejectWithValue("Authentication token is missing");
+            }
             const response = await userApi.getFavorites(token);
-            // Ensure that we wrap the favorites array inside an object with a favorites property.
             return {favorites: response.favorites};
         } catch (error: any) {
             return rejectWithValue(
                 error.response?.data?.message || "Failed to fetch favorites"
             );
         }
-    }
-);
-
-export const logoutThunk = createAsyncThunk(
-    "user/logout",
-    async (_, {dispatch, getState}) => {
-        // Dispatch logout action for each slice that needs to be reset
-        dispatch(userLogout());
-        // Add other slice logout actions here
-
-        // Clear any stored tokens or session data
-        localStorage.removeItem('token'); // If you're storing token in localStorage
-        sessionStorage.removeItem('token'); // If you're storing token in sessionStorage
-
-        // Note: Navigation should be handled in the component that dispatches this thunk
-        return true;
     }
 );
 

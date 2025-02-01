@@ -1,15 +1,65 @@
-// First, create a separate component for the marker to better control renders
-import {Image, StyleSheet, View} from "react-native";
+import {Image, StyleSheet, Text, View} from "react-native";
 import {Marker} from "react-native-maps";
-import React, {useState} from "react";
+import React, {useMemo, useState} from "react";
 import {Ionicons} from "@expo/vector-icons";
+import {Restaurant} from "@/src/types/api/restaurant/model";
+
+const isRestaurantOpen = (
+    workingDays: string[],
+    workingHoursStart?: string,
+    workingHoursEnd?: string
+): boolean => {
+    const now = new Date();
+    const currentDay = now.toLocaleDateString('en-US', {weekday: 'long'});
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+
+    if (!workingDays.includes(currentDay)) return false;
+
+    if (workingHoursStart && workingHoursEnd) {
+        const [startHour, startMinute] = workingHoursStart.split(':').map(Number);
+        const [endHour, endMinute] = workingHoursEnd.split(':').map(Number);
+
+        const currentTime = currentHour * 60 + currentMinute;
+        const startTime = startHour * 60 + startMinute;
+        const endTime = endHour * 60 + endMinute;
+
+        return currentTime >= startTime && currentTime <= endTime;
+    }
+
+    return true;
+};
 
 export const RestaurantMarker: React.FC<{
-    restaurant: any; // Replace 'any' with your restaurant type
+    restaurant: Restaurant;
     isSelected: boolean;
     onPress: () => void;
 }> = React.memo(({restaurant, isSelected, onPress}) => {
     const [imageError, setImageError] = useState(false);
+
+    const isAvailable = useMemo(() => {
+        const isOpen = isRestaurantOpen(
+            restaurant.workingDays,
+            restaurant.workingHoursStart,
+            restaurant.workingHoursEnd
+        );
+        const hasStock = restaurant.listings > 0;
+        return isOpen && hasStock;
+    }, [restaurant]);
+
+    const getUnavailableReason = () => {
+        if (!isRestaurantOpen(
+            restaurant.workingDays,
+            restaurant.workingHoursStart,
+            restaurant.workingHoursEnd
+        )) {
+            return 'Closed';
+        }
+        if (restaurant.listings <= 0) {
+            return 'Out of Stock';
+        }
+        return '';
+    };
 
     return (
         <Marker
@@ -17,34 +67,51 @@ export const RestaurantMarker: React.FC<{
                 latitude: restaurant.latitude,
                 longitude: restaurant.longitude,
             }}
-            onPress={onPress}
+            onPress={() => isAvailable && onPress()}
             tracksViewChanges={false}
         >
             <View
                 style={[
                     styles.markerContainer,
                     isSelected && styles.selectedMarker,
+                    !isAvailable && styles.unavailableMarker,
                 ]}
             >
                 {restaurant.image_url && !imageError ? (
                     <Image
                         source={{
-                            uri: restaurant.image_url.replace('127.0.0.1', '192.168.1.3'),
+                            uri: restaurant.image_url
                         }}
-                        style={styles.markerImage}
+                        style={[
+                            styles.markerImage,
+                            !isAvailable && styles.unavailableImage
+                        ]}
                         resizeMode="cover"
                         onError={() => setImageError(true)}
                     />
                 ) : (
-                    <View style={styles.defaultMarkerContainer}>
-                        <Ionicons name="restaurant-outline" size={30} color="#333"/>
+                    <View style={[
+                        styles.defaultMarkerContainer,
+                        !isAvailable && styles.unavailableMarker
+                    ]}>
+                        <Ionicons
+                            name="restaurant-outline"
+                            size={30}
+                            color={!isAvailable ? "#999" : "#333"}
+                        />
+                    </View>
+                )}
+                {!isAvailable && (
+                    <View style={styles.unavailableLabel}>
+                        <Text style={styles.unavailableLabelText}>
+                            {getUnavailableReason()}
+                        </Text>
                     </View>
                 )}
             </View>
         </Marker>
     );
 });
-
 
 const styles = StyleSheet.create({
     headerContainer: {
@@ -246,6 +313,30 @@ const styles = StyleSheet.create({
         fontSize: 12,
         color: '#333',
         fontFamily: 'Poppins-Regular',
+    },
+    unavailableMarker: {
+        opacity: 0.7,
+        borderColor: '#ccc',
+    },
+    unavailableImage: {
+        opacity: 0.7,
+    },
+    unavailableLabel: {
+        position: 'absolute',
+        bottom: -20,
+        left: 0,
+        right: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        paddingVertical: 2,
+        paddingHorizontal: 4,
+        borderRadius: 4,
+        alignItems: 'center',
+    },
+    unavailableLabelText: {
+        color: '#fff',
+        fontSize: 10,
+        fontWeight: '500',
+        fontFamily: 'Poppins-Medium',
     },
 
 });

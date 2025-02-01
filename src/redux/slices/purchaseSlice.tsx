@@ -44,7 +44,7 @@ const purchaseSlice = createSlice({
     reducers: {},
     extraReducers: (builder) => {
         builder
-            .addCase('user/logout', (state) => {
+            .addCase('user/logout', () => {
                 return initialState;
             })
             .addCase(createPurchaseOrderAsync.pending, (state) => {

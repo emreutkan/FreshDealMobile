@@ -5,18 +5,8 @@ import {RootState} from "@/src/types/store";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
 import {GoBackIcon} from "@/src/features/homeScreen/components/goBack";
 import {Ionicons} from "@expo/vector-icons";
-import {NativeStackNavigationProp} from "@react-navigation/native-stack";
-import {RootStackParamList} from "@/src/utils/navigation";
 import {lightHaptic} from "@/src/utils/Haptics";
 
-type RestaurantCommentsScreenNavigationProp = NativeStackNavigationProp<
-    RootStackParamList,
-    'RestaurantComments'
->;
-
-interface RestaurantCommentsProps {
-    navigation: RestaurantCommentsScreenNavigationProp;
-}
 
 interface Comment {
     id: number;
@@ -66,14 +56,14 @@ const CommentCard: React.FC<{ comment: Comment }> = ({comment}) => {
     );
 };
 
-const RestaurantComments: React.FC<RestaurantCommentsProps> = ({navigation}) => {
+const RestaurantComments: React.FC = () => {
     const insets = useSafeAreaInsets();
     const [refreshing, setRefreshing] = useState(false);
 
     const restaurant = useSelector((state: RootState) => state.restaurant.selectedRestaurant);
     const comments = restaurant.comments || [];
     const onRefresh = React.useCallback(() => {
-        lightHaptic();
+        lightHaptic().then(r => console.log(r));
         setRefreshing(true);
         console.log('Comments:', comments);
         setTimeout(() => setRefreshing(false), 1000);

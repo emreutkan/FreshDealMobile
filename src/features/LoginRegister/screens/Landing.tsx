@@ -11,7 +11,6 @@ import {RootStackParamList} from "@/src/utils/navigation";
 
 const Landing: React.FC = () => {
     const {height: screenHeight} = Dimensions.get('window');
-    const isSmallScreen = screenHeight < 700;
     const [activeModal, setActiveModal] = useState<'login' | 'register'>('login');
 
     const imageScale = useRef(new Animated.Value(1.5)).current;
@@ -34,26 +33,21 @@ const Landing: React.FC = () => {
     }, [token]);
 
     useEffect(() => {
-        const initialDelay = 200; // 0.2 seconds delay
+        const initialDelay = 200;
         const animationDuration = 1500;
-        const initialScaleDuration = 500; // Duration for initial scale up
+        const initialScaleDuration = 500;
 
-        // Calculate the distance to move up
         const moveUpDistance = -screenHeight * 0.33;
 
-        // First animation: Scale up
         Animated.sequence([
-            // Initial scale up animation
             Animated.timing(imageScale, {
-                toValue: 1.8, // Scale up slightly bigger than starting value
+                toValue: 1.8,
                 duration: initialScaleDuration,
                 useNativeDriver: true
             }),
 
-            // Add a small delay
             Animated.delay(initialDelay),
 
-            // Main animation sequence
             Animated.parallel([
                 Animated.timing(imageScale, {
                     toValue: 1,
@@ -96,7 +90,6 @@ const Landing: React.FC = () => {
             >
                 <StatusBar translucent backgroundColor="transparent" barStyle="dark-content"/>
 
-                {/* Modified logo container to be absolutely positioned */}
                 <Animated.View style={[
                     styles.logoContainer,
                     {
@@ -143,7 +136,7 @@ const styles = StyleSheet.create({
     },
     logoContainer: {
         position: 'absolute',
-        top: '40%', // Start from vertical center
+        top: '40%',
         left: 0,
         right: 0,
         alignItems: 'center',

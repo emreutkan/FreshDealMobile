@@ -8,7 +8,6 @@ import {BottomSheetModalProvider} from "@gorhom/bottom-sheet";
 import {navigationRef, RootStackParamList} from '@/src/utils/navigation';
 import {NotificationsProvider} from '@/src/providers/NotificationProvider';
 
-// Screen imports
 import HomeScreen from './features/homeScreen/screens/Home';
 import Landing from './features/LoginRegister/screens/Landing';
 import AddressSelectionScreen from "./features/AddressSelectionScreen/addressSelectionScreen";

@@ -12,7 +12,6 @@ import {RootStackParamList} from "@/src/utils/navigation";
 import {useNavigation} from "@react-navigation/native";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
-
 const RestaurantInfoSection: React.FC = () => {
     const navigation = useNavigation<NavigationProp>();
 
@@ -65,7 +64,7 @@ const RestaurantInfoSection: React.FC = () => {
                             {restaurant.delivery && (
                                 <Text style={styles.modalInfoText}>
                                     <Text style={{fontFamily: "Poppins-SemiBold"}}>Delivery Fee: </Text>
-                                    {`${restaurant?.deliveryFee || 0}${'\u20BA'}`}
+                                    {`${restaurant?.deliveryFee || 0}\u20BA`}
                                 </Text>
                             )}
 
@@ -104,7 +103,6 @@ const RestaurantInfoSection: React.FC = () => {
         <View style={styles.container}>
             <StatusBar barStyle="light-content"/>
 
-            {/* Restaurant Image */}
             <View style={styles.imageContainer}>
                 {restaurant?.image_url ? (
                     <>
@@ -146,7 +144,6 @@ const RestaurantInfoSection: React.FC = () => {
                     </TouchableOpacity>
                 </View>
 
-                {/* Rating & Distance */}
                 <View
                     style={{
                         flexDirection: 'row',
@@ -184,7 +181,6 @@ const RestaurantInfoSection: React.FC = () => {
                 </View>
 
 
-                {/* Info Cards */}
                 <View style={styles.infoCard}>
                     <Text style={styles.cardTitle}>Delivery Information</Text>
                     <View style={{
@@ -214,7 +210,6 @@ const RestaurantInfoSection: React.FC = () => {
 
                         />
                     </View>
-                    {/* Pickup/Delivery Toggle */}
 
                 </View>
 

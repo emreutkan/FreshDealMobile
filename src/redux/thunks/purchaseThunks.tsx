@@ -62,7 +62,7 @@ export const createPurchaseOrderAsync = createAsyncThunk<
                 } : {})
             };
             if (isDelivery && !requestData.delivery_address) {
-                throw new Error('Delivery address is required for delivery orders');
+                console.log('Delivery address is required for delivery orders');
             }
 
 
@@ -78,7 +78,7 @@ export const fetchActiveOrdersAsync = createAsyncThunk<
     { state: RootState; rejectValue: string }
 >(
     'purchase/fetchActiveOrders',
-    async (_, {getState, rejectWithValue}) => {
+    async (_, {rejectWithValue}) => {
         try {
             const token = await tokenService.getToken();
             if (!token) {
@@ -97,7 +97,7 @@ export const fetchPreviousOrdersAsync = createAsyncThunk<
     { state: RootState; rejectValue: string }
 >(
     'purchase/fetchPreviousOrders',
-    async ({page = 1, perPage = 10}, {getState, rejectWithValue}) => {
+    async ({page = 1, perPage = 10}, {rejectWithValue}) => {
         try {
             const token = await tokenService.getToken();
             if (!token) {
@@ -116,7 +116,7 @@ export const fetchOrderDetailsAsync = createAsyncThunk<
     { state: RootState; rejectValue: string }
 >(
     'purchase/fetchOrderDetails',
-    async (purchaseId, {getState, rejectWithValue}) => {
+    async (purchaseId, {rejectWithValue}) => {
         try {
             const token = await tokenService.getToken();
             if (!token) {
@@ -129,33 +129,6 @@ export const fetchOrderDetailsAsync = createAsyncThunk<
     }
 );
 
-export const handlePurchaseResponseAsync = createAsyncThunk<
-    any,
-    { purchaseId: number; action: 'accept' | 'reject' },
-    { state: RootState; rejectValue: string }
->(
-    'purchase/handleResponse',
-    async ({purchaseId, action}, {getState, rejectWithValue, dispatch}) => {
-        try {
-            const token = await tokenService.getToken();
-            if (!token) {
-                return rejectWithValue('Authentication token is missing');
-            }
-
-            const response = await purchaseAPI.handleRestaurantResponse(purchaseId, action, token);
-
-            // Refresh restaurant purchases after action
-            const restaurantId = getState().address.selectedAddressId;
-            if (restaurantId) {
-                await dispatch(fetchRestaurantPurchasesAsync(Number(restaurantId)));
-            }
-
-            return response;
-        } catch (error: any) {
-            return rejectWithValue(error.response?.data?.message || 'Failed to handle purchase response');
-        }
-    }
-);
 
 export const fetchRestaurantPurchasesAsync = createAsyncThunk<
     any,
@@ -163,7 +136,7 @@ export const fetchRestaurantPurchasesAsync = createAsyncThunk<
     { state: RootState; rejectValue: string }
 >(
     'purchase/fetchRestaurantPurchases',
-    async (restaurantId, {getState, rejectWithValue}) => {
+    async (restaurantId, {rejectWithValue}) => {
         try {
             const token = await tokenService.getToken();
             if (!token) {

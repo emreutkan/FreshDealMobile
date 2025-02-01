@@ -10,14 +10,11 @@ import {getRestaurantThunk} from "@/src/redux/thunks/restaurantThunks";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'RestaurantDetails'>;
 
-// Create a custom hook
 export const useHandleRestaurantPress = () => {
     const navigation = useNavigation<NavigationProp>();
     const dispatch = useDispatch<AppDispatch>();
-    // Move the selector inside the hook
     const restaurantsInProximity = useSelector((state: RootState) => state.restaurant.restaurantsProximity);
 
-    // Use useCallback to memoize the function
     return useCallback((restaurantId: number) => {
         const restaurant = restaurantsInProximity.find((r) => r.id === restaurantId);
         console.log('Selected restaurant:', restaurant);

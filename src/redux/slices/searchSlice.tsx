@@ -18,7 +18,7 @@ const searchSlice = createSlice({
     reducers: {},
     extraReducers: (builder) => {
         builder
-            .addCase('user/logout', (state) => {
+            .addCase('user/logout', () => {
                 return initialState;
             }).addCase(SearchforRestaurantsThunk.pending, (state) => {
             state.loading = true;

@@ -3,8 +3,8 @@ import {StyleSheet, Text, View,} from 'react-native';
 import {useSelector} from 'react-redux';
 import CartBar from "@/src/features/RestaurantScreen/components/cartBar";
 import RestaurantInfoSection from "@/src/features/RestaurantScreen/components/RestaurantInfoSection";
-import ListingsCard from "@/src/features/RestaurantScreen/components/listingsCard";
 import {RootState} from "@/src/types/store";
+import ListingsCard from "@/src/features/RestaurantScreen/components/listingsCard";
 
 
 const RestaurantDetails: React.FC = () => {

@@ -16,6 +16,13 @@
     },
     "production": {
       "autoIncrement": true
+    },
+    "local": {
+      "android": {
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleRelease",
+        "withoutCredentials": true
+      }
     }
   },
   "submit": {

@@ -1,14 +1,13 @@
 import React from "react";
 import {Animated, Dimensions, Image, Platform, StyleSheet, Text, TouchableOpacity, View} from "react-native";
 import {Restaurant} from "@/src/types/api/restaurant/model";
-import {useDispatch, useSelector} from "react-redux";
+import {useSelector} from "react-redux";
 import {RootState} from "@/src/types/store";
 import {Ionicons, MaterialCommunityIcons} from "@expo/vector-icons";
 import {LinearGradient} from 'expo-linear-gradient';
 import {useNavigation} from "@react-navigation/native";
 import {NativeStackNavigationProp} from "@react-navigation/native-stack";
 import {RootStackParamList} from "@/src/utils/navigation";
-import {AppDispatch} from "@/src/redux/store";
 import {useHandleRestaurantPress} from "@/src/hooks/handleRestaurantPress";
 
 const {width} = Dimensions.get('window');
@@ -31,9 +30,45 @@ const FavoriteRestaurantList: React.FC<FavoriteRestaurantListProps> = ({
         favoriteRestaurantsIDs.includes(restaurant.id)
     );
     const navigation = useNavigation<NavigationProp>();
-    const dispatch = useDispatch<AppDispatch>();
 
     const handleRestaurantPress = useHandleRestaurantPress();
+
+    const isRestaurantOpen = (
+        workingDays: string[],
+        workingHoursStart?: string,
+        workingHoursEnd?: string
+    ): boolean => {
+        const now = new Date();
+        const currentDay = now.toLocaleDateString('en-US', {weekday: 'long'});
+        const currentHour = now.getHours();
+        const currentMinute = now.getMinutes();
+
+        if (!workingDays.includes(currentDay)) return false;
+
+        if (workingHoursStart && workingHoursEnd) {
+            const [startHour, startMinute] = workingHoursStart.split(':').map(Number);
+            const [endHour, endMinute] = workingHoursEnd.split(':').map(Number);
+
+            const currentTime = currentHour * 60 + currentMinute;
+            const startTime = startHour * 60 + startMinute;
+            const endTime = endHour * 60 + endMinute;
+
+            return currentTime >= startTime && currentTime <= endTime;
+        }
+
+        return true;
+    };
+
+    const isRestaurantAvailable = (restaurant: Restaurant): boolean => {
+        const isOpen = isRestaurantOpen(
+            restaurant.workingDays,
+            restaurant.workingHoursStart,
+            restaurant.workingHoursEnd
+        );
+        const hasStock = restaurant.listings > 0;
+        return isOpen && hasStock;
+    };
+
 
     const renderFavoriteItem = ({item, index}: { item: Restaurant; index: number }) => {
         const inputRange = [
@@ -54,6 +89,8 @@ const FavoriteRestaurantList: React.FC<FavoriteRestaurantListProps> = ({
             extrapolate: 'clamp',
         });
 
+        const isAvailable = isRestaurantAvailable(item);
+
         return (
             <Animated.View
                 style={[
@@ -62,18 +99,21 @@ const FavoriteRestaurantList: React.FC<FavoriteRestaurantListProps> = ({
                 ]}
             >
                 <TouchableOpacity
-                    onPress={() => handleRestaurantPress(item.id)}
-                    activeOpacity={0.95}
-                    style={styles.favoriteCard}
+                    onPress={() => isAvailable && handleRestaurantPress(item.id)}
+                    activeOpacity={isAvailable ? 0.95 : 1}
+                    style={[styles.favoriteCard, !isAvailable && styles.unavailableCard]}
                 >
                     <View style={styles.favoriteImageContainer}>
                         {item.image_url ? (
                             <>
                                 <Image
                                     source={{
-                                        uri: item.image_url.replace('127.0.0.1', '192.168.1.3'),
+                                        uri: item.image_url
                                     }}
-                                    style={styles.favoriteImage}
+                                    style={[
+                                        styles.favoriteImage,
+                                        !isAvailable && styles.unavailableImage
+                                    ]}
                                 />
                                 <LinearGradient
                                     colors={['transparent', 'rgba(0,0,0,0.8)']}
@@ -82,17 +122,43 @@ const FavoriteRestaurantList: React.FC<FavoriteRestaurantListProps> = ({
                             </>
                         ) : (
                             <View style={styles.favoriteNoImageContainer}>
-                                <MaterialCommunityIcons name="food-fork-drink" size={40} color="#999"/>
+                                <MaterialCommunityIcons
+                                    name="food-fork-drink"
+                                    size={40}
+                                    color={isAvailable ? "#999" : "#ccc"}
+                                />
+                            </View>
+                        )}
+
+                        {!isAvailable && (
+                            <View style={styles.unavailableOverlay}>
+                                <Text style={styles.unavailableText}>
+                                    {!isRestaurantOpen(
+                                        item.workingDays,
+                                        item.workingHoursStart,
+                                        item.workingHoursEnd
+                                    ) ? 'Currently Closed' : 'Out of Stock'}
+                                </Text>
                             </View>
                         )}
                     </View>
                     <View style={styles.favoriteDetailsContainer}>
-                        <Text style={styles.favoriteTitle} numberOfLines={1}>
+                        <Text style={[
+                            styles.favoriteTitle,
+                            !isAvailable && styles.unavailableTitle
+                        ]} numberOfLines={1}>
                             {item.restaurantName || 'Unnamed Restaurant'}
                         </Text>
                         <View style={styles.favoriteRatingContainer}>
-                            <MaterialCommunityIcons name="star" size={16} color="#FFC107"/>
-                            <Text style={styles.favoriteRating}>
+                            <MaterialCommunityIcons
+                                name="star"
+                                size={16}
+                                color={isAvailable ? "#FFC107" : "#999"}
+                            />
+                            <Text style={[
+                                styles.favoriteRating,
+                                !isAvailable && styles.unavailableRating
+                            ]}>
                                 {(item.rating ?? 0).toFixed(1)}
                             </Text>
                         </View>
@@ -235,6 +301,39 @@ const styles = StyleSheet.create({
         color: '#ffffff',
         marginLeft: 4,
         fontFamily: 'Poppins-SemiBold',
+    },
+    unavailableCard: {
+        opacity: 0.7,
+    },
+    unavailableImage: {
+        opacity: 0.7,
+    },
+    unavailableOverlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    unavailableText: {
+        color: '#ffffff',
+        fontSize: 16,
+        fontWeight: '600',
+        fontFamily: 'Poppins-SemiBold',
+        textAlign: 'center',
+        paddingHorizontal: 16,
+        textShadowColor: 'rgba(0, 0, 0, 0.75)',
+        textShadowOffset: {width: 0, height: 1},
+        textShadowRadius: 3,
+    },
+    unavailableTitle: {
+        color: '#cccccc',
+    },
+    unavailableRating: {
+        color: '#999999',
     },
 });
 

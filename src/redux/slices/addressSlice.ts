@@ -32,23 +32,19 @@ const addressSlice = createSlice({
                 state.selectedAddressId = primaryAddress?.id || null;
             }
         },
-        setSelectedAddress(state, action: PayloadAction<string>) {
-            if (state.addresses.some((address) => address.id === action.payload)) {
-                state.selectedAddressId = action.payload;
-            }
-        },
+
 
     },
     extraReducers: (builder) => {
         builder
-            .addCase('user/logout', (state) => {
+            .addCase('user/logout', () => {
                 return initialState;
             })
             .addCase(addAddressAsync.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(addAddressAsync.fulfilled, (state, action) => {
+            .addCase(addAddressAsync.fulfilled, (state) => {
 
                 state.loading = false;
             })
@@ -120,6 +116,6 @@ const addressSlice = createSlice({
 });
 
 
-export const {addAddress, removeAddress, setSelectedAddress} = addressSlice.actions;
+export const {addAddress, removeAddress} = addressSlice.actions;
 
 export default addressSlice.reducer;

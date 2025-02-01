@@ -27,59 +27,6 @@ export interface CreatePurchaseOrderResponse {
     purchases: PurchaseOrder[];
 }
 
-export interface PurchaseResponseResponse {
-    message: string;
-    purchase: {
-        id: number;
-        user_id: number;
-        listing_id: number;
-        quantity: number;
-        restaurant_id: number;
-        total_price: string;
-        status: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'COMPLETED';
-        is_delivery: boolean;
-        delivery_address?: string;
-        delivery_notes?: string;
-        purchase_date: string;
-        completion_image_url?: string;
-        listing?: {
-            id: number;
-            title: string;
-            count: number;
-        };
-        restaurant?: {
-            id: number;
-            name: string;
-        };
-    };
-}
-
-export interface AddCompletionImageResponse {
-    message: string;
-    purchase: {
-        id: number;
-        user_id: number;
-        listing_id: number;
-        quantity: number;
-        restaurant_id: number;
-        total_price: string;
-        status: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'COMPLETED';
-        is_delivery: boolean;
-        delivery_address?: string;
-        delivery_notes?: string;
-        purchase_date: string;
-        completion_image_url: string;
-        listing?: {
-            id: number;
-            title: string;
-        };
-        restaurant?: {
-            id: number;
-            name: string;
-        };
-    };
-}
-
 
 export interface GetRestaurantPurchasesResponse {
     purchases: Purchase[];

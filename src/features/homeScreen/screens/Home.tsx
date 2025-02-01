@@ -51,7 +51,7 @@ const HomeScreen: React.FC = () => {
     const favoriteRestaurantsIDs = useSelector((state: RootState) => state.restaurant.favoriteRestaurantsIDs);
 
     useEffect(() => {
-        lightHaptic();
+        lightHaptic().then(r => console.log(r));
     }, [activeTab]);
 
     useFocusEffect(

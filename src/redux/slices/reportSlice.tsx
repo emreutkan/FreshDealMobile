@@ -2,8 +2,7 @@
 import {createSlice} from '@reduxjs/toolkit';
 import {createReportThunk} from "@/src/redux/thunks/reportThunks";
 
-interface ReportState {
-    // Remove uploadProgress from here
+export interface ReportState {
     error: string | null;
     loading: boolean;
 }

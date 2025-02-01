@@ -14,7 +14,6 @@ const LOGIN_ENDPOINT = `${API_BASE_URL}/login`;
 const REGISTER_ENDPOINT = `${API_BASE_URL}/register`;
 const VERIFY_EMAIL_ENDPOINT = `${API_BASE_URL}/verify_email`;
 const FORGOT_PASSWORD_ENDPOINT = `${API_BASE_URL}/forgot-password`;
-const RESET_PASSWORD_ENDPOINT = `${API_BASE_URL}/reset-password`;
 
 // Add these interfaces
 export interface ForgotPasswordPayload {
@@ -28,6 +27,8 @@ export interface ForgotPasswordResponse {
 
 
 interface ApiResponse<T> {
+    token: string;
+    success: boolean;
     data: T;
     message: string;
     status: number;

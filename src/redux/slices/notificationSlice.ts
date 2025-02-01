@@ -26,26 +26,15 @@ const notificationSlice = createSlice({
         setIsRegistered: (state, action: PayloadAction<boolean>) => {
             state.isRegistered = action.payload;
         },
-        setLastNotification: (state, action: PayloadAction<{
-            title: string;
-            body: string;
-            data?: any;
-        }>) => {
-            state.lastNotification = action.payload;
-        },
-        resetNotificationState: (state) => {
-            state.pushToken = undefined;
-            state.isRegistered = false;
-            state.lastNotification = undefined;
-        },
+
+
     },
 });
 
 export const {
     setPushToken,
     setIsRegistered,
-    setLastNotification,
-    resetNotificationState,
+
 } = notificationSlice.actions;
 
 export default notificationSlice.reducer;

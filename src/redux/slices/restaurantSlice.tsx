@@ -88,21 +88,11 @@ const restaurantSlice = createSlice({
             state.isPickup = action.payload;
             console.log("state.isPickup", state.isPickup);
         },
-        clearSelectedRestaurant(state) {
-            state.selectedRestaurant = emptyRestaurant;
-            state.isPickup = true;
-            state.selectedRestaurantListings = [];
-            state.selectedRestaurantListing = EmptyListing;
-        },
-        setSelectedListing(state, action: PayloadAction<Listing>) {
-            state.selectedRestaurantListing = action.payload;
 
-
-        },
     },
     extraReducers: (builder) => {
         builder
-            .addCase('user/logout', (state) => {
+            .addCase('user/logout', () => {
                 return initialState;
             })
             .addCase(getRestaurantsByProximity.pending, (state) => {
@@ -135,22 +125,17 @@ const restaurantSlice = createSlice({
                 state.favoriteRestaurantsIDs = action.payload.favorites;
                 console.log('Favorites:', action.payload);
             })
-            .addCase(getFavoritesThunk.rejected, (state, action) => {
+            .addCase(getFavoritesThunk.rejected, (state) => {
                 state.favoritesStatus = 'failed';
                 state.favoritesLoading = false;
                 // state.error = action.payload || 'Failed to fetch favorites';
             })
-            .addCase(addFavoriteThunk.pending, (state) => {
-            })
-            .addCase(addFavoriteThunk.fulfilled, (state, action) => {
-            })
+
+
             .addCase(addFavoriteThunk.rejected, (state, action) => {
                 state.error = action.payload || 'Failed to add to favorites';
             })
-            .addCase(removeFavoriteThunk.pending, (state) => {
-            })
-            .addCase(removeFavoriteThunk.fulfilled, (state, action) => {
-            })
+
             .addCase(removeFavoriteThunk.rejected, (state, action) => {
                 state.error = action.payload || 'Failed to remove from favorites';
             })
@@ -183,8 +168,7 @@ export const {
     setRadius,
     setSelectedRestaurant,
     setDeliveryMethod,
-    clearSelectedRestaurant,
-    setSelectedListing,
+
 
 } = restaurantSlice.actions;
 

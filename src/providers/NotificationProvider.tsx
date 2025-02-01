@@ -10,7 +10,7 @@ interface NotificationsProviderProps {
 
 export const NotificationsProvider: React.FC<NotificationsProviderProps> = ({children}) => {
     const {token} = useSelector((state: RootState) => state.user);
-    const {pushToken, isRegistered} = useSelector((state: RootState) => state.notification);
+    const {isRegistered} = useSelector((state: RootState) => state.notification);
     const {initializeNotifications} = useNotifications();
 
     // Watch for auth state changes

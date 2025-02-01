@@ -11,40 +11,77 @@ import {Ionicons} from "@expo/vector-icons";
 import BottomSheet, {BottomSheetScrollView} from '@gorhom/bottom-sheet';
 import {setSelectedRestaurant} from "@/src/redux/slices/restaurantSlice";
 import {RestaurantMarker} from "@/src/features/RestaurantScreen/components/RestaurantMarker";
+import {RootStackParamList} from "@/src/utils/navigation";
+import {NativeStackNavigationProp} from "@react-navigation/native-stack";
+import {useNavigation} from "@react-navigation/native";
+import {Restaurant} from "@/src/types/api/restaurant/model";
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const HomeMapView: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
     const mapRef = useRef<MapView>(null);
     const bottomSheetRef = useRef<BottomSheet>(null);  // Reference for the bottom sheet
-    const [isMapReady, setIsMapReady] = useState(false);
-    const [isLoading, setIsLoading] = useState(true);
+
     const [selectedRestaurantId, setSelectedRestaurantId] = useState<string | null>(null);
     const snapPoints = useMemo(() => [200], []);
-
+    const navigation = useNavigation<NavigationProp>();
     const restaurants = useSelector((state: RootState) => state.restaurant.restaurantsProximity);
     const addressState = useSelector((state: RootState) => state.address);
     const selectedAddress = addressState.addresses.find(
         (address) => address.id === addressState.selectedAddressId
     ) as Address;
+    const isRestaurantOpen = (
+        workingDays: string[],
+        workingHoursStart?: string,
+        workingHoursEnd?: string
+    ): boolean => {
+        const now = new Date();
+        const currentDay = now.toLocaleDateString('en-US', {weekday: 'long'});
+        const currentHour = now.getHours();
+        const currentMinute = now.getMinutes();
 
+        if (!workingDays.includes(currentDay)) return false;
+
+        if (workingHoursStart && workingHoursEnd) {
+            const [startHour, startMinute] = workingHoursStart.split(':').map(Number);
+            const [endHour, endMinute] = workingHoursEnd.split(':').map(Number);
+
+            const currentTime = currentHour * 60 + currentMinute;
+            const startTime = startHour * 60 + startMinute;
+            const endTime = endHour * 60 + endMinute;
+
+            return currentTime >= startTime && currentTime <= endTime;
+        }
+
+        return true;
+    };
+
+    const isRestaurantAvailable = (restaurant: Restaurant): boolean => {
+        const isOpen = isRestaurantOpen(
+            restaurant.workingDays,
+            restaurant.workingHoursStart,
+            restaurant.workingHoursEnd
+        );
+        const hasStock = restaurant.listings > 0;
+        return isOpen && hasStock;
+    };
 
     const userLatitude = selectedAddress.latitude;
     const userLongitude = selectedAddress.longitude;
 
     useEffect(() => {
-        strongHaptic();
+        strongHaptic().then(r => console.log(r));
         const loadData = async () => {
             try {
-                setIsLoading(true);
                 await dispatch(getRestaurantsByProximity());
             } catch (error) {
                 console.error('Failed to load restaurants:', error);
             } finally {
-                setIsLoading(false);
             }
         };
 
-        loadData();
+        loadData().then(r => console.log(r));
     }, [dispatch]);
 
     const relocateToUserLocation = () => {
@@ -111,8 +148,7 @@ const HomeMapView: React.FC = () => {
                 showsCompass
                 showsScale
                 onMapReady={() => {
-                    setIsMapReady(true);
-                    setIsLoading(false);
+
                 }}
                 userInterfaceStyle="light"  // Add this line
 
@@ -178,26 +214,40 @@ const HomeMapView: React.FC = () => {
                 index={-1}
                 enablePanDownToClose={true}
                 onChange={(index) => {
-                    console.log('bottomsheet index changed:', index);
+                    console.log('bottom sheet index changed:', index);
                 }}>
                 <BottomSheetScrollView>
                     {selectedRestaurantId && restaurants.find(r => r.id.toString() === selectedRestaurantId) && (
                         <View style={styles.restaurantInfoContainer}>
                             <View style={styles.headerContainer}>
-                                {/* Restaurant Image */}
-                                <Image
-                                    source={{
-                                        uri: restaurants.find(r => r.id.toString() === selectedRestaurantId)?.image_url?.replace('127.0.0.1', '192.168.1.3')
-                                            || 'https://via.placeholder.com/150'
-                                    }}
-                                    style={styles.restaurantImage}
-                                />
+                                {restaurants.find(r => r.id.toString() === selectedRestaurantId)?.image_url && (
+                                    <Image
+                                        source={{
+                                            uri: restaurants.find(r => r.id.toString() === selectedRestaurantId)?.image_url || ''
+                                        }}
+                                        style={styles.restaurantImage}
+                                    />
+                                )}
 
-                                {/* Basic Info */}
                                 <View style={styles.basicInfo}>
                                     <Text style={styles.restaurantName}>
                                         {restaurants.find(r => r.id.toString() === selectedRestaurantId)?.restaurantName}
                                     </Text>
+
+                                    {!isRestaurantAvailable(restaurants.find(r => r.id.toString() === selectedRestaurantId)!) && (
+                                        <Text style={styles.unavailableText}>
+                                            {!isRestaurantOpen(
+                                                restaurants.find(r => r.id.toString() === selectedRestaurantId)!.workingDays,
+                                                restaurants.find(r => r.id.toString() === selectedRestaurantId)!.workingHoursStart,
+                                                restaurants.find(r => r.id.toString() === selectedRestaurantId)!.workingHoursEnd
+                                            )
+                                                ? 'Currently Closed'
+                                                : restaurants.find(r => r.id.toString() === selectedRestaurantId)!.listings <= 0
+                                                    ? 'Out of Stock'
+                                                    : ''
+                                            }
+                                        </Text>
+                                    )}
 
                                     <View style={styles.infoRow}>
                                         <View style={styles.ratingContainer}>
@@ -212,16 +262,18 @@ const HomeMapView: React.FC = () => {
                                     </View>
                                 </View>
 
-                                {/* New Menu Button */}
-                                <TouchableOpacity
-                                    style={styles.menuButton}
-                                    onPress={() => {
-                                        // handle it here
-                                    }}
-                                >
-                                    <Text style={styles.menuButtonText}>View Menu</Text>
-                                    <Ionicons name="chevron-forward" size={20} color="#333"/>
-                                </TouchableOpacity>
+                                {isRestaurantAvailable(restaurants.find(r => r.id.toString() === selectedRestaurantId)!) && (
+                                    <TouchableOpacity
+                                        style={styles.menuButton}
+                                        onPress={() => {
+                                            dispatch(setSelectedRestaurant(restaurants.find(r => r.id.toString() === selectedRestaurantId) as Restaurant));
+                                            navigation.navigate('RestaurantDetails');
+                                        }}
+                                    >
+                                        <Text style={styles.menuButtonText}>View Menu</Text>
+                                        <Ionicons name="chevron-forward" size={20} color="#333"/>
+                                    </TouchableOpacity>
+                                )}
                             </View>
                         </View>
                     )}
@@ -431,6 +483,13 @@ const styles = StyleSheet.create({
         fontSize: 12,
         color: '#333',
         fontFamily: 'Poppins-Regular',
+    },
+    unavailableText: {
+        color: '#FF4444',
+        fontSize: 12,
+        fontWeight: '500',
+        marginBottom: 4,
+        fontFamily: 'Poppins-Medium',
     },
 
 });

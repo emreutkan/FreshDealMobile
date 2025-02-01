@@ -1,24 +1,16 @@
 import {API_BASE_URL} from "@/src/redux/api/API";
 import {apiClient} from '@/src/services/apiClient';
 import {
-    AddCompletionImageResponse,
     CreatePurchaseOrderResponse,
     GetOrderDetailsResponse,
     GetRestaurantPurchasesResponse,
     GetUserActiveOrdersResponse,
     GetUserPreviousOrdersResponse,
-    PurchaseResponseResponse,
 } from "@/src/types/api/purchase/responses";
 import {CreatePurchaseOrderData} from "@/src/types/api/purchase/requests";
 
 const PURCHASE_ENDPOINT = `${API_BASE_URL}/purchase`;
 
-// First, let's define the types for the delivery info and pagination
-interface DeliveryInfo {
-    delivery_notes?: string;
-    delivery_address?: string;
-    is_delivery: boolean;
-}
 
 interface PaginationParams {
     page?: number;
@@ -41,33 +33,7 @@ export const purchaseAPI = {
     },
 
     // Handle restaurant response to purchase (accept/reject)
-    async handleRestaurantResponse(
-        purchaseId: number,
-        action: 'accept' | 'reject',
-        token: string
-    ): Promise<PurchaseResponseResponse> {
-        return apiClient.request({
-            method: 'POST',
-            url: `${PURCHASE_ENDPOINT}/${purchaseId}/response`,
-            data: {action},
-            token,
-        });
-    },
-
     // Add completion image to purchase
-    async addCompletionImage(
-        purchaseId: number,
-        imageUrl: string,
-        token: string
-    ): Promise<AddCompletionImageResponse> {
-        return apiClient.request({
-            method: 'POST',
-            url: `${PURCHASE_ENDPOINT}/${purchaseId}/completion-image`,
-            data: {image_url: imageUrl},
-            token,
-        });
-    },
-
     // Get restaurant purchases
     async getRestaurantPurchases(
         restaurantId: number,
@@ -81,29 +47,7 @@ export const purchaseAPI = {
     },
 
     // Accept purchase (shorthand method)
-    async acceptPurchase(
-        purchaseId: number,
-        token: string
-    ): Promise<PurchaseResponseResponse> {
-        return apiClient.request({
-            method: 'POST',
-            url: `${PURCHASE_ENDPOINT}/${purchaseId}/accept`,
-            token,
-        });
-    },
-
     // Reject purchase (shorthand method)
-    async rejectPurchase(
-        purchaseId: number,
-        token: string
-    ): Promise<PurchaseResponseResponse> {
-        return apiClient.request({
-            method: 'POST',
-            url: `${PURCHASE_ENDPOINT}/${purchaseId}/reject`,
-            token,
-        });
-    },
-
     // New endpoints based on Flask implementation
 
     // Get user's active orders

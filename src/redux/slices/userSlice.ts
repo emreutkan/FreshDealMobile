@@ -67,7 +67,7 @@ const userSlice = createSlice({
         setEmail(state, action: PayloadAction<string>) {
             state.email = action.payload;
             if (!state.phoneNumber && !state.email) {
-                state.password = ''; // Clear password when both are empty
+                state.password = '';
             }
         },
         setName(state, action: PayloadAction<string>) {
@@ -76,7 +76,7 @@ const userSlice = createSlice({
         setPhoneNumber(state, action: PayloadAction<string>) {
             state.phoneNumber = action.payload.replace(/[^0-9]/g, '').slice(0, 15);
             if (!state.phoneNumber && !state.email) {
-                state.password = ''; // Clear password when both are empty
+                state.password = '';
             }
         },
         setPassword(state, action: PayloadAction<string>) {
@@ -84,12 +84,6 @@ const userSlice = createSlice({
         },
         setPasswordLogin(state, action: PayloadAction<boolean>) {
             state.passwordLogin = action.payload;
-        },
-        setVerificationCode(state, action: PayloadAction<string>) {
-            state.verificationCode = action.payload;
-        },
-        setStep(state, action: PayloadAction<"send_code" | "verify_code" | "skip_verification">) {
-            state.step = action.payload;
         },
         setLoginType(state, action: PayloadAction<"email" | "phone_number">) {
             state.login_type = action.payload;
@@ -101,9 +95,6 @@ const userSlice = createSlice({
         logout: (state) => {
             state.shouldNavigateToLanding = true;
             return initialState;
-        },
-        resetNavigation: (state) => {
-            state.shouldNavigateToLanding = false;
         }
     },
     extraReducers: (builder) => {
@@ -193,7 +184,7 @@ const userSlice = createSlice({
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(verifyCode.fulfilled, (state, action) => {
+            .addCase(verifyCode.fulfilled, (state) => {
                 state.loading = false;
             })
             .addCase(verifyCode.rejected, (state, action) => {
@@ -210,8 +201,6 @@ export const {
     setPassword,
     setPasswordLogin,
     setSelectedCode,
-    setVerificationCode,
-    setStep,
     setLoginType,
     setToken,
     logout,

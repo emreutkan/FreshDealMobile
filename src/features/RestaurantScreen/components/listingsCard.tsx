@@ -142,12 +142,14 @@ export const ListingCard: React.FC<ListingCardProps> = ({
                     </View>
 
                     <View style={styles.priceSection}>
-                        {selectedListing.original_price > displayPrice && (
+                        {selectedListing.original_price && displayPrice && (
+
                             <View style={styles.savingsBadge}>
                                 <Text style={styles.savingsText}>
                                     Save {Math.round(((selectedListing.original_price - displayPrice) / selectedListing.original_price) * 100)}%
                                 </Text>
                             </View>
+
                         )}
                         <Text style={styles.modalOriginalPrice}>
                             {selectedListing.original_price} TL
@@ -198,8 +200,13 @@ export const ListingCard: React.FC<ListingCardProps> = ({
             (cartItem) => cartItem.listing_id === item.id
         );
         const countInCart = cartItem ? cartItem.count : 0;
-        const discountPercentage = item.original_price
-            ? Math.round(((item.original_price - displayPrice) / item.original_price) * 100)
+
+        
+        if (displayPrice) {
+
+        }
+
+        const discountPercentage = item.original_price ? Math.round(((item.original_price - displayPrice) / item.original_price) * 100)
             : 0;
 
         return (

@@ -16,8 +16,7 @@ import {Listing} from "@/src/types/api/listing/model";
 import {getListingsAPI} from "@/src/redux/api/listingsAPI";
 import {Pagination} from "@/src/types/states";
 
-// Get restaurants by proximity
-// Get restaurants by proximity
+
 export const getRestaurantsByProximity = createAsyncThunk<
     Restaurant[],
     void,
@@ -91,7 +90,7 @@ export const getRestaurantThunk = createAsyncThunk<
 );
 
 // Get all restaurants for owner
-export const getAllRestaurantsThunk = createAsyncThunk<
+createAsyncThunk<
     Restaurant[],
     void,
     { rejectValue: string }
@@ -110,8 +109,7 @@ export const getAllRestaurantsThunk = createAsyncThunk<
     }
 );
 
-// Create restaurant
-export const createRestaurantThunk = createAsyncThunk<
+createAsyncThunk<
     Restaurant,
     FormData,
     { rejectValue: string }
@@ -130,8 +128,7 @@ export const createRestaurantThunk = createAsyncThunk<
     }
 );
 
-// Update restaurant
-export const updateRestaurantThunk = createAsyncThunk<
+createAsyncThunk<
     Restaurant,
     { restaurantId: number; formData: FormData },
     { rejectValue: string }
@@ -151,7 +148,7 @@ export const updateRestaurantThunk = createAsyncThunk<
 );
 
 // Delete restaurant
-export const deleteRestaurantThunk = createAsyncThunk<
+createAsyncThunk<
     void,
     number,
     { rejectValue: string }

@@ -92,7 +92,6 @@ const CartScreen: React.FC = () => {
 
     return (
         <View style={[styles.container, {paddingTop: insets.top}]}>
-            {/* Header Section */}
             <View style={styles.header}>
                 <View style={styles.headerTop}>
                     <GoBackIcon/>
@@ -103,9 +102,9 @@ const CartScreen: React.FC = () => {
                 </View>
                 <View style={{
                     flexDirection: 'row',
-                    justifyContent: 'space-between', // Add this
-                    alignItems: 'center',           // Add this
-                    width: '100%'                   // Add this
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    width: '100%'
                 }}>
                     {restaurant && (
                         <View style={styles.restaurantInfo}>
@@ -118,7 +117,6 @@ const CartScreen: React.FC = () => {
                 </View>
             </View>
 
-            {/* Main Content */}
             {ListingsInCart.length > 0 ? (
                 <>
                     <ScrollView
@@ -130,11 +128,12 @@ const CartScreen: React.FC = () => {
                                 listingList={ListingsInCart.map(listing => ({
                                     ...listing,
                                     quantity: cartItems.find(ci => ci.listing_id === listing.id)?.count || 1
-                                }))} viewType="rectangle"
-                            /> </View>
+                                }))}
+                                viewType={"rectangle"}
+                            />
+                        </View>
                     </ScrollView>
 
-                    {/* Bottom Section with Total and Checkout */}
                     <View style={styles.bottomSection}>
                         <View style={styles.summaryContainer}>
                             {ListingsInCart.map(listing => (
@@ -176,7 +175,6 @@ const CartScreen: React.FC = () => {
                     </View>
                 </>
             ) : (
-                // Empty Cart State
                 <View style={styles.emptyCartContainer}>
                     <Ionicons name="cart-outline" size={100} color="#CCCCCC"/>
                     <Text style={styles.emptyCartText}>Your cart is empty</Text>
