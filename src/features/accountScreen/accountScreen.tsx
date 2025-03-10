@@ -16,17 +16,30 @@ import {Feather, FontAwesome5, MaterialCommunityIcons, MaterialIcons} from '@exp
 import {useNavigation} from '@react-navigation/native';
 import {updateEmailThunk, updatePasswordThunk, updateUsernameThunk} from '@/src/redux/thunks/userThunks';
 import {logout} from '@/src/redux/slices/userSlice';
-import {useSafeAreaInsets} from "react-native-safe-area-context";
-import {GoBackIcon} from "@/src/features/homeScreen/components/goBack";
-import type {NativeStackNavigationProp} from "@react-navigation/native-stack";
-import {RootStackParamList} from "@/src/utils/navigation";
-import {RootState} from "@/src/types/store";
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import {GoBackIcon} from '@/src/features/homeScreen/components/goBack';
+import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import {RootStackParamList} from '@/src/utils/navigation';
+import {RootState} from '@/src/types/store';
 
+// Types
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
+// Constants
+const ACHIEVEMENTS = [
+    {id: 1, name: 'First Save', icon: 'star', unlocked: true},
+    {id: 2, name: 'Save Streak: 3 Days', icon: 'fire', unlocked: true},
+    {id: 3, name: 'Big Spender', icon: 'dollar-sign', unlocked: false},
+    {id: 4, name: 'Eco Warrior', icon: 'leaf', unlocked: false},
+];
+
 const AccountScreen: React.FC = () => {
+    // Hooks
     const dispatch = useDispatch<AppDispatch>();
     const navigation = useNavigation<NavigationProp>();
+    const insets = useSafeAreaInsets();
+
+    // Redux state
     const {
         name_surname,
         email,
@@ -36,6 +49,7 @@ const AccountScreen: React.FC = () => {
         loading
     } = useSelector((state: RootState) => state.user);
 
+    // Local state
     const [isEditing, setIsEditing] = useState(false);
     const [editedValues, setEditedValues] = useState({
         name_surname,
@@ -43,25 +57,16 @@ const AccountScreen: React.FC = () => {
         phoneNumber,
     });
 
-    // Calculate user level based on food saved (you can adjust the formula)
+    // Derived data
     const userLevel = Math.floor(foodSaved / 10) + 1;
     const progressToNextLevel = (foodSaved % 10) / 10;
-
-    // Mock data for gamification elements
-    const userAchievements = [
-        {id: 1, name: 'First Save', icon: 'star', unlocked: true},
-        {id: 2, name: 'Save Streak: 3 Days', icon: 'fire', unlocked: true},
-        {id: 3, name: 'Big Spender', icon: 'dollar-sign', unlocked: false},
-        {id: 4, name: 'Eco Warrior', icon: 'leaf', unlocked: false},
-    ];
-
+    const streakDays = 5; // This would come from your state
     const environmentalImpact = {
         co2Saved: (foodSaved * 2.5).toFixed(1), // kg
         waterSaved: (foodSaved * 1000).toFixed(0), // liters
     };
 
-    const streakDays = 5; // This would come from your state
-
+    // Event handlers
     const handleLogout = () => {
         Alert.alert('Logout', 'Are you sure you want to logout?', [
             {text: 'Cancel', style: 'cancel'},
@@ -70,7 +75,7 @@ const AccountScreen: React.FC = () => {
                 style: 'destructive',
                 onPress: () => {
                     dispatch(logout());
-                    navigation.navigate('Login'); // Use React Navigation
+                    navigation.navigate('Login');
                 },
             },
         ]);
@@ -154,12 +159,11 @@ const AccountScreen: React.FC = () => {
         }
     };
 
-    // Function to navigate to achievements screen
     const handleViewAchievements = () => {
-        // Replace with actual navigation to achievements screen
         Alert.alert('Coming Soon', 'Achievements screen is under development');
     };
 
+    // Loading state
     if (loading) {
         return (
             <View style={styles.loadingContainer}>
@@ -168,224 +172,235 @@ const AccountScreen: React.FC = () => {
         );
     }
 
-    const inset = useSafeAreaInsets();
+    // Render components
+    const renderHeader = () => (
+        <View style={[styles.topBar, {paddingTop: insets.top}]}>
+            <GoBackIcon/>
+            <Text style={styles.title}>Profile</Text>
+            <TouchableOpacity onPress={handleEditInfo} style={styles.iconButton}>
+                <Feather name={isEditing ? 'check' : 'edit-2'} size={24} color="#50703C"/>
+            </TouchableOpacity>
+        </View>
+    );
+
+    const renderProfileSection = () => (
+        <View style={styles.profileSection}>
+            <View style={styles.avatarContainer}>
+                <View style={styles.avatar}>
+                    <MaterialCommunityIcons name="food" size={40} color="#50703C"/>
+                    <View style={styles.badge}>
+                        <Feather name="award" size={16} color="#fff"/>
+                    </View>
+                    <View style={styles.levelBadge}>
+                        <Text style={styles.levelText}>{userLevel}</Text>
+                    </View>
+                </View>
+
+                {isEditing ? (
+                    <TextInput
+                        style={[styles.userName, styles.input]}
+                        value={editedValues.name_surname}
+                        onChangeText={(text) => setEditedValues({...editedValues, name_surname: text})}
+                        placeholder="Enter your name"
+                    />
+                ) : (
+                    <Text style={styles.userName}>{name_surname}</Text>
+                )}
+
+                <View style={styles.levelContainer}>
+                    <Text style={styles.levelLabel}>Level {userLevel}</Text>
+                    <View style={styles.progressBarContainer}>
+                        <View style={[styles.progressBar, {width: `${progressToNextLevel * 100}%`}]}/>
+                    </View>
+                    <Text style={styles.progressText}>
+                        {Math.round(progressToNextLevel * 100)}% to Level {userLevel + 1}
+                    </Text>
+                </View>
+            </View>
+
+            <View style={styles.streakContainer}>
+                <FontAwesome5 name="fire" size={20} color="#ff7700"/>
+                <Text style={styles.streakText}>{streakDays} Day Streak!</Text>
+            </View>
+
+            <View style={styles.gamificationContainer}>
+                <View style={styles.gamificationCard}>
+                    <Text style={styles.gamificationLabel}>Money Saved</Text>
+                    <Text style={styles.gamificationValue}>${moneySaved}</Text>
+                </View>
+                <View style={styles.gamificationCard}>
+                    <Text style={styles.gamificationLabel}>Food Saved</Text>
+                    <Text style={styles.gamificationValue}>{foodSaved}</Text>
+                </View>
+            </View>
+
+            <View style={styles.impactContainer}>
+                <Text style={styles.impactTitle}>Your Environmental Impact</Text>
+                <View style={styles.impactStatsContainer}>
+                    <View style={styles.impactStat}>
+                        <FontAwesome5 name="cloud" size={24} color="#50703C"/>
+                        <Text style={styles.impactValue}>{environmentalImpact.co2Saved} kg</Text>
+                        <Text style={styles.impactLabel}>CO₂ Saved</Text>
+                    </View>
+                    <View style={styles.impactStat}>
+                        <FontAwesome5 name="tint" size={24} color="#50703C"/>
+                        <Text style={styles.impactValue}>{environmentalImpact.waterSaved} L</Text>
+                        <Text style={styles.impactLabel}>Water Saved</Text>
+                    </View>
+                </View>
+            </View>
+        </View>
+    );
+
+    const renderAchievementsSection = () => (
+        <View style={styles.achievementsSection}>
+            <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>Achievements</Text>
+                <TouchableOpacity onPress={handleViewAchievements}>
+                    <Text style={styles.viewAllText}>View All</Text>
+                </TouchableOpacity>
+            </View>
+
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.achievementsScroll}>
+                {ACHIEVEMENTS.map(achievement => (
+                    <View
+                        key={achievement.id}
+                        style={[
+                            styles.achievementBadge,
+                            !achievement.unlocked && styles.lockedAchievement
+                        ]}
+                    >
+                        <Feather
+                            name={achievement.icon as any}
+                            size={24}
+                            color={achievement.unlocked ? "#50703C" : "#aaaaaa"}
+                        />
+                        <Text
+                            style={[
+                                styles.achievementName,
+                                !achievement.unlocked && styles.lockedAchievementText
+                            ]}
+                        >
+                            {achievement.name}
+                        </Text>
+                        {!achievement.unlocked && (
+                            <MaterialIcons name="lock" size={12} color="#aaaaaa" style={styles.lockIcon}/>
+                        )}
+                    </View>
+                ))}
+            </ScrollView>
+        </View>
+    );
+
+    const renderInfoCards = () => (
+        <View style={styles.infoCards}>
+            <View style={styles.card}>
+                <View style={styles.cardIcon}>
+                    <MaterialIcons name="email" size={24} color="#50703C"/>
+                </View>
+                <View style={styles.cardContent}>
+                    <Text style={styles.cardLabel}>Email</Text>
+                    {isEditing ? (
+                        <TextInput
+                            style={[styles.cardValue, styles.input]}
+                            value={editedValues.email}
+                            onChangeText={(text) => setEditedValues({...editedValues, email: text})}
+                            keyboardType="email-address"
+                            placeholder="Enter your email"
+                        />
+                    ) : (
+                        <Text style={styles.cardValue}>{email || 'No email provided'}</Text>
+                    )}
+                </View>
+            </View>
+
+            <View style={styles.card}>
+                <View style={styles.cardIcon}>
+                    <MaterialIcons name="phone" size={24} color="#50703C"/>
+                </View>
+                <View style={styles.cardContent}>
+                    <Text style={styles.cardLabel}>Phone</Text>
+                    <Text style={styles.cardValue}>{phoneNumber || 'No phone number provided'}</Text>
+                </View>
+            </View>
+        </View>
+    );
+
+    const renderOrdersSection = () => (
+        <View style={styles.orderSection}>
+            <Text style={styles.sectionTitle}>Orders</Text>
+
+            <TouchableOpacity
+                style={[styles.actionButton, styles.activeOrderButton]}
+                onPress={() => navigation.navigate('Orders', {status: 'active'})}
+            >
+                <MaterialIcons name="pending-actions" size={24} color="#50703C"/>
+                <Text style={styles.actionButtonText}>Active Orders</Text>
+                <MaterialIcons name="chevron-right" size={24} color="#666"/>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+                style={styles.actionButton}
+                onPress={() => navigation.navigate('Orders', {status: 'previous'})}
+            >
+                <MaterialIcons name="history" size={24} color="#50703C"/>
+                <Text style={styles.actionButtonText}>Previous Orders</Text>
+                <MaterialIcons name="chevron-right" size={24} color="#666"/>
+            </TouchableOpacity>
+        </View>
+    );
+
+    const renderChallengesSection = () => (
+        <View style={styles.challengesSection}>
+            <Text style={styles.sectionTitle}>Current Challenges</Text>
+            <View style={styles.challengeCard}>
+                <View style={styles.challengeHeader}>
+                    <FontAwesome5 name="calendar-check" size={20} color="#50703C"/>
+                    <Text style={styles.challengeName}>Weekly Challenge</Text>
+                </View>
+                <Text style={styles.challengeDescription}>
+                    Save 5 more meals this week
+                </Text>
+                <View style={styles.challengeProgressContainer}>
+                    <View style={styles.challengeProgressBar}>
+                        <View style={[styles.challengeProgress, {width: '40%'}]}/>
+                    </View>
+                    <Text style={styles.challengeProgressText}>2/5 meals</Text>
+                </View>
+                <Text style={styles.challengeReward}>
+                    Reward: 50 points + Level 3 Saver badge
+                </Text>
+            </View>
+        </View>
+    );
+
+    const renderActionsSection = () => (
+        <View style={styles.actionsSection}>
+            <TouchableOpacity style={styles.actionButton} onPress={handlePasswordReset}>
+                <MaterialIcons name="lock" size={24} color="#50703C"/>
+                <Text style={styles.actionButtonText}>Reset Password</Text>
+                <MaterialIcons name="chevron-right" size={24} color="#666"/>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+                <MaterialIcons name="logout" size={24} color="#FFF"/>
+                <Text style={styles.logoutButtonText}>Logout</Text>
+            </TouchableOpacity>
+        </View>
+    );
+
     return (
         <>
             <StatusBar translucent backgroundColor="transparent" barStyle="dark-content"/>
-
-            <View style={[styles.topBar, {paddingTop: inset.top}]}>
-                <GoBackIcon/>
-                <Text style={styles.title}>Profile</Text>
-                <TouchableOpacity onPress={handleEditInfo} style={styles.iconButton}>
-                    <Feather name={isEditing ? 'check' : 'edit-2'} size={24} color="#50703C"/>
-                </TouchableOpacity>
-            </View>
+            {renderHeader()}
             <ScrollView style={styles.safeArea}>
                 <View style={styles.container}>
-                    <View style={styles.profileSection}>
-                        <View style={styles.avatarContainer}>
-                            <View style={styles.avatar}>
-                                <MaterialCommunityIcons name="food" size={40} color="#50703C"/>
-                                <View style={styles.badge}>
-                                    <Feather name="award" size={16} color="#fff"/>
-                                </View>
-                                {/* Level badge */}
-                                <View style={styles.levelBadge}>
-                                    <Text style={styles.levelText}>{userLevel}</Text>
-                                </View>
-                            </View>
-                            {isEditing ? (
-                                <TextInput
-                                    style={[styles.userName, styles.input]}
-                                    value={editedValues.name_surname}
-                                    onChangeText={(text) => setEditedValues({...editedValues, name_surname: text})}
-                                    placeholder="Enter your name"
-                                />
-                            ) : (
-                                <Text style={styles.userName}>{name_surname}</Text>
-                            )}
-
-                            {/* Level progress bar */}
-                            <View style={styles.levelContainer}>
-                                <Text style={styles.levelLabel}>Level {userLevel}</Text>
-                                <View style={styles.progressBarContainer}>
-                                    <View
-                                        style={[
-                                            styles.progressBar,
-                                            {width: `${progressToNextLevel * 100}%`}
-                                        ]}
-                                    />
-                                </View>
-                                <Text style={styles.progressText}>
-                                    {Math.round(progressToNextLevel * 100)}% to Level {userLevel + 1}
-                                </Text>
-                            </View>
-                        </View>
-
-                        {/* Streak counter */}
-                        <View style={styles.streakContainer}>
-                            <FontAwesome5 name="fire" size={20} color="#ff7700"/>
-                            <Text style={styles.streakText}>{streakDays} Day Streak!</Text>
-                        </View>
-
-                        {/* Gamification stats */}
-                        <View style={styles.gamificationContainer}>
-                            <View style={styles.gamificationCard}>
-                                <Text style={styles.gamificationLabel}>Money Saved</Text>
-                                <Text style={styles.gamificationValue}>${moneySaved}</Text>
-                            </View>
-                            <View style={styles.gamificationCard}>
-                                <Text style={styles.gamificationLabel}>Food Saved</Text>
-                                <Text style={styles.gamificationValue}>{foodSaved}</Text>
-                            </View>
-                        </View>
-
-                        {/* Environmental impact */}
-                        <View style={styles.impactContainer}>
-                            <Text style={styles.impactTitle}>Your Environmental Impact</Text>
-                            <View style={styles.impactStatsContainer}>
-                                <View style={styles.impactStat}>
-                                    <FontAwesome5 name="cloud" size={24} color="#50703C"/>
-                                    <Text style={styles.impactValue}>{environmentalImpact.co2Saved} kg</Text>
-                                    <Text style={styles.impactLabel}>CO₂ Saved</Text>
-                                </View>
-                                <View style={styles.impactStat}>
-                                    <FontAwesome5 name="tint" size={24} color="#50703C"/>
-                                    <Text style={styles.impactValue}>{environmentalImpact.waterSaved} L</Text>
-                                    <Text style={styles.impactLabel}>Water Saved</Text>
-                                </View>
-                            </View>
-                        </View>
-                    </View>
-
-                    {/* Achievements preview */}
-                    <View style={styles.achievementsSection}>
-                        <View style={styles.sectionHeader}>
-                            <Text style={styles.sectionTitle}>Achievements</Text>
-                            <TouchableOpacity onPress={handleViewAchievements}>
-                                <Text style={styles.viewAllText}>View All</Text>
-                            </TouchableOpacity>
-                        </View>
-
-                        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.achievementsScroll}>
-                            {userAchievements.map(achievement => (
-                                <View
-                                    key={achievement.id}
-                                    style={[
-                                        styles.achievementBadge,
-                                        !achievement.unlocked && styles.lockedAchievement
-                                    ]}
-                                >
-                                    <Feather
-                                        name={achievement.icon as any}
-                                        size={24}
-                                        color={achievement.unlocked ? "#50703C" : "#aaaaaa"}
-                                    />
-                                    <Text
-                                        style={[
-                                            styles.achievementName,
-                                            !achievement.unlocked && styles.lockedAchievementText
-                                        ]}
-                                    >
-                                        {achievement.name}
-                                    </Text>
-                                    {!achievement.unlocked && (
-                                        <MaterialIcons name="lock" size={12} color="#aaaaaa" style={styles.lockIcon}/>
-                                    )}
-                                </View>
-                            ))}
-                        </ScrollView>
-                    </View>
-
-                    <View style={styles.infoCards}>
-                        <View style={styles.card}>
-                            <View style={styles.cardIcon}>
-                                <MaterialIcons name="email" size={24} color="#50703C"/>
-                            </View>
-                            <View style={styles.cardContent}>
-                                <Text style={styles.cardLabel}>Email</Text>
-                                {isEditing ? (
-                                    <TextInput
-                                        style={[styles.cardValue, styles.input]}
-                                        value={editedValues.email}
-                                        onChangeText={(text) => setEditedValues({...editedValues, email: text})}
-                                        keyboardType="email-address"
-                                        placeholder="Enter your email"
-                                    />
-                                ) : (
-                                    <Text style={styles.cardValue}>{email || 'No email provided'}</Text>
-                                )}
-                            </View>
-                        </View>
-
-                        <View style={styles.card}>
-                            <View style={styles.cardIcon}>
-                                <MaterialIcons name="phone" size={24} color="#50703C"/>
-                            </View>
-                            <View style={styles.cardContent}>
-                                <Text style={styles.cardLabel}>Phone</Text>
-                                <Text style={styles.cardValue}>{phoneNumber || 'No phone number provided'}</Text>
-                            </View>
-                        </View>
-                    </View>
-
-                    <View style={styles.orderSection}>
-                        <Text style={styles.sectionTitle}>Orders</Text>
-
-                        <TouchableOpacity
-                            style={[styles.actionButton, styles.activeOrderButton]}
-                            onPress={() => navigation.navigate('Orders', {status: 'active'})}
-                        >
-                            <MaterialIcons name="pending-actions" size={24} color="#50703C"/>
-                            <Text style={styles.actionButtonText}>Active Orders</Text>
-                            <MaterialIcons name="chevron-right" size={24} color="#666"/>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity
-                            style={styles.actionButton}
-                            onPress={() => navigation.navigate('Orders', {status: 'previous'})}
-                        >
-                            <MaterialIcons name="history" size={24} color="#50703C"/>
-                            <Text style={styles.actionButtonText}>Previous Orders</Text>
-                            <MaterialIcons name="chevron-right" size={24} color="#666"/>
-                        </TouchableOpacity>
-                    </View>
-
-                    {/* Challenges section */}
-                    <View style={styles.challengesSection}>
-                        <Text style={styles.sectionTitle}>Current Challenges</Text>
-                        <View style={styles.challengeCard}>
-                            <View style={styles.challengeHeader}>
-                                <FontAwesome5 name="calendar-check" size={20} color="#50703C"/>
-                                <Text style={styles.challengeName}>Weekly Challenge</Text>
-                            </View>
-                            <Text style={styles.challengeDescription}>
-                                Save 5 more meals this week
-                            </Text>
-                            <View style={styles.challengeProgressContainer}>
-                                <View style={styles.challengeProgressBar}>
-                                    <View style={[styles.challengeProgress, {width: '40%'}]}/>
-                                </View>
-                                <Text style={styles.challengeProgressText}>2/5 meals</Text>
-                            </View>
-                            <Text style={styles.challengeReward}>
-                                Reward: 50 points + Level 3 Saver badge
-                            </Text>
-                        </View>
-                    </View>
-
-                    <View style={styles.actionsSection}>
-                        <TouchableOpacity style={styles.actionButton} onPress={handlePasswordReset}>
-                            <MaterialIcons name="lock" size={24} color="#50703C"/>
-                            <Text style={styles.actionButtonText}>Reset Password</Text>
-                            <MaterialIcons name="chevron-right" size={24} color="#666"/>
-                        </TouchableOpacity>
-                    </View>
-
-                    <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-                        <MaterialIcons name="logout" size={24} color="#FFF"/>
-                        <Text style={styles.logoutButtonText}>Logout</Text>
-                    </TouchableOpacity>
+                    {renderProfileSection()}
+                    {renderAchievementsSection()}
+                    {renderInfoCards()}
+                    {renderOrdersSection()}
+                    {renderChallengesSection()}
+                    {renderActionsSection()}
                 </View>
             </ScrollView>
         </>
@@ -767,6 +782,7 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 3.84,
         elevation: 5,
+        marginTop: 16,
     },
     logoutButtonText: {
         fontFamily: 'Poppins-Regular',
