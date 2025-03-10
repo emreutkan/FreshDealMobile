@@ -201,7 +201,7 @@ export const ListingCard: React.FC<ListingCardProps> = ({
         );
         const countInCart = cartItem ? cartItem.count : 0;
 
-        
+
         if (displayPrice) {
 
         }
