@@ -111,6 +111,9 @@ export interface UserState {
     isInitialized: boolean;
     shouldNavigateToLanding: boolean;
     isAuthenticated: boolean;
+    moneySaved: number;
+    foodSaved: number;
+
 }
 
 

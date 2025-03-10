@@ -24,11 +24,17 @@ import {RootState} from "@/src/types/store";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
-
 const AccountScreen: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
     const navigation = useNavigation<NavigationProp>();
-    const {name_surname, email, phoneNumber, loading} = useSelector((state: RootState) => state.user);
+    const {
+        name_surname,
+        email,
+        phoneNumber,
+        moneySaved,
+        foodSaved,
+        loading
+    } = useSelector((state: RootState) => state.user);
 
     const [isEditing, setIsEditing] = useState(false);
     const [editedValues, setEditedValues] = useState({
@@ -36,6 +42,7 @@ const AccountScreen: React.FC = () => {
         email,
         phoneNumber,
     });
+
 
     const handleLogout = () => {
         Alert.alert('Logout', 'Are you sure you want to logout?', [
@@ -137,7 +144,7 @@ const AccountScreen: React.FC = () => {
         );
     }
 
-    const inset = useSafeAreaInsets()
+    const inset = useSafeAreaInsets();
     return (
         <>
             <StatusBar translucent backgroundColor="transparent" barStyle="dark-content"/>
@@ -150,12 +157,15 @@ const AccountScreen: React.FC = () => {
                 </TouchableOpacity>
             </View>
             <ScrollView style={styles.safeArea}>
-
                 <View style={styles.container}>
                     <View style={styles.profileSection}>
                         <View style={styles.avatarContainer}>
                             <View style={styles.avatar}>
                                 <MaterialCommunityIcons name="food" size={40} color="#50703C"/>
+                                {/* Optional: Add a small gamification badge overlay on the avatar */}
+                                <View style={styles.badge}>
+                                    <Feather name="award" size={16} color="#fff"/>
+                                </View>
                             </View>
                             {isEditing ? (
                                 <TextInput
@@ -167,6 +177,17 @@ const AccountScreen: React.FC = () => {
                             ) : (
                                 <Text style={styles.userName}>{name_surname}</Text>
                             )}
+                        </View>
+                        {/* Gamification stats */}
+                        <View style={styles.gamificationContainer}>
+                            <View style={styles.gamificationCard}>
+                                <Text style={styles.gamificationLabel}>Money Saved</Text>
+                                <Text style={styles.gamificationValue}>${moneySaved}</Text>
+                            </View>
+                            <View style={styles.gamificationCard}>
+                                <Text style={styles.gamificationLabel}>Food Saved</Text>
+                                <Text style={styles.gamificationValue}>{foodSaved}</Text>
+                            </View>
                         </View>
                     </View>
 
@@ -201,6 +222,7 @@ const AccountScreen: React.FC = () => {
                             </View>
                         </View>
                     </View>
+
                     <View style={styles.orderSection}>
                         <Text style={styles.sectionTitle}>Orders</Text>
 
@@ -223,7 +245,6 @@ const AccountScreen: React.FC = () => {
                         </TouchableOpacity>
                     </View>
                     <View style={styles.actionsSection}>
-
                         <TouchableOpacity style={styles.actionButton} onPress={handlePasswordReset}>
                             <MaterialIcons name="lock" size={24} color="#50703C"/>
                             <Text style={styles.actionButtonText}>Reset Password</Text>
@@ -237,7 +258,6 @@ const AccountScreen: React.FC = () => {
                     </TouchableOpacity>
                 </View>
             </ScrollView>
-
         </>
     );
 };
@@ -294,13 +314,49 @@ const styles = StyleSheet.create({
         borderWidth: 3,
         borderColor: '#50703C',
     },
+    badge: {
+        position: 'absolute',
+        bottom: 0,
+        right: 0,
+        backgroundColor: '#50703C',
+        borderRadius: 10,
+        padding: 2,
+    },
     userName: {
         fontSize: 24,
         fontWeight: '600',
         color: '#333',
         textAlign: 'center',
         fontFamily: 'Poppins-Regular',
-
+    },
+    gamificationContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        width: '80%',
+        marginTop: 8,
+    },
+    gamificationCard: {
+        flex: 1,
+        backgroundColor: '#FFFFFF',
+        padding: 12,
+        borderRadius: 10,
+        alignItems: 'center',
+        marginHorizontal: 4,
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.05,
+        shadowRadius: 3.84,
+        elevation: 2,
+    },
+    gamificationLabel: {
+        fontSize: 12,
+        color: '#666',
+        marginBottom: 4,
+    },
+    gamificationValue: {
+        fontSize: 16,
+        color: '#50703C',
+        fontWeight: '600',
     },
     infoCards: {
         marginBottom: 12,
@@ -348,7 +404,6 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
         fontSize: 16,
         fontFamily: 'Poppins-Regular',
-
     },
     actionsSection: {
         marginBottom: 12,
@@ -373,7 +428,6 @@ const styles = StyleSheet.create({
         marginLeft: 12,
         fontWeight: '500',
         fontFamily: 'Poppins-Regular',
-
     },
     logoutButton: {
         flexDirection: 'row',
@@ -390,7 +444,6 @@ const styles = StyleSheet.create({
     },
     logoutButtonText: {
         fontFamily: 'Poppins-Regular',
-
         fontSize: 16,
         color: '#fff',
         fontWeight: '600',
@@ -399,10 +452,8 @@ const styles = StyleSheet.create({
     orderSection: {
         marginBottom: 24,
     },
-
     sectionTitle: {
         fontFamily: 'Poppins-Regular',
-
         fontSize: 18,
         fontWeight: '600',
         color: '#333',
@@ -416,15 +467,3 @@ const styles = StyleSheet.create({
 });
 
 export default AccountScreen;
-
-///////////////////////////////////////////////
-// #50703C
-// #50703C
-// #50703C
-// #50703C
-// #50703C
-// #50703C
-// #50703C
-// #50703C
-// #50703C
-// #50703C

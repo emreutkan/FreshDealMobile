@@ -55,6 +55,8 @@ const initialState: UserState = {
     isInitialized: false,
     shouldNavigateToLanding: true,
     isAuthenticated: false,
+    foodSaved: 0,
+    moneySaved: 0,
 };
 
 const userSlice = createSlice({
