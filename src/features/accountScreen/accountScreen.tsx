@@ -805,6 +805,7 @@ const styles = StyleSheet.create({
     activeOrderButton: {
         borderColor: '#50703C',
         borderWidth: 1,
+        
     },
 });
 
