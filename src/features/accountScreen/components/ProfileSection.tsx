@@ -1,6 +1,7 @@
 import React from 'react';
-import {StyleSheet, Text, TextInput, View} from 'react-native';
-import {Feather, FontAwesome5, MaterialCommunityIcons} from '@expo/vector-icons';
+import {StyleSheet, Text, TextInput, TouchableOpacity, View,} from 'react-native';
+import {Feather, FontAwesome5, MaterialCommunityIcons,} from '@expo/vector-icons';
+import {useNavigation} from '@react-navigation/native';
 
 interface ProfileSectionProps {
     isEditing: boolean;
@@ -29,40 +30,50 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
                                                            foodSaved,
                                                            environmentalImpact,
                                                        }) => {
+    const navigation = useNavigation();
+    // Fake rank value for demonstration purposes
+    const fakeRank = 3;
+
     return (
         <View style={styles.profileSection}>
-            <View style={styles.avatarContainer}>
-                <View style={styles.avatar}>
-                    <MaterialCommunityIcons name="food" size={40} color="#50703C"/>
-                    <View style={styles.badge}>
-                        <Feather name="award" size={16} color="#fff"/>
+            {/* Wrap the avatar container so that tapping it navigates to the Leaderboard */}
+            <TouchableOpacity onPress={() => navigation.navigate('Leaderboard')}>
+                <View style={styles.avatarContainer}>
+                    <View style={styles.avatar}>
+                        <MaterialCommunityIcons name="food" size={40} color="#50703C"/>
+                        <View style={styles.badge}>
+                            <Feather name="award" size={16} color="#fff"/>
+                        </View>
+                        {/* Rank badge overlay */}
+                        <View style={styles.rankBadge}>
+                            <Text style={styles.rankBadgeText}>{fakeRank}</Text>
+                        </View>
                     </View>
-                    <View style={styles.levelBadge}>
-                        <Text style={styles.levelText}>{userLevel}</Text>
+                    {isEditing ? (
+                        <TextInput
+                            style={[styles.userName, styles.input]}
+                            value={editedValues.name_surname}
+                            onChangeText={(text) =>
+                                setEditedValues({...editedValues, name_surname: text})
+                            }
+                            placeholder="Enter your name"
+                        />
+                    ) : (
+                        <Text style={styles.userName}>{name_surname}</Text>
+                    )}
+                    <View style={styles.levelContainer}>
+                        <Text style={styles.levelLabel}>Level {userLevel}</Text>
+                        <View style={styles.progressBarContainer}>
+                            <View
+                                style={[styles.progressBar, {width: `${progressToNextLevel * 100}%`}]}
+                            />
+                        </View>
+                        <Text style={styles.progressText}>
+                            {Math.round(progressToNextLevel * 100)}% to Level {userLevel + 1}
+                        </Text>
                     </View>
                 </View>
-                {isEditing ? (
-                    <TextInput
-                        style={[styles.userName, styles.input]}
-                        value={editedValues.name_surname}
-                        onChangeText={(text) =>
-                            setEditedValues({...editedValues, name_surname: text})
-                        }
-                        placeholder="Enter your name"
-                    />
-                ) : (
-                    <Text style={styles.userName}>{name_surname}</Text>
-                )}
-                <View style={styles.levelContainer}>
-                    <Text style={styles.levelLabel}>Level {userLevel}</Text>
-                    <View style={styles.progressBarContainer}>
-                        <View style={[styles.progressBar, {width: `${progressToNextLevel * 100}%`}]}/>
-                    </View>
-                    <Text style={styles.progressText}>
-                        {Math.round(progressToNextLevel * 100)}% to Level {userLevel + 1}
-                    </Text>
-                </View>
-            </View>
+            </TouchableOpacity>
             <View style={styles.streakContainer}>
                 <FontAwesome5 name="fire" size={20} color="#ff7700"/>
                 <Text style={styles.streakText}>{streakDays} Day Streak!</Text>
@@ -124,10 +135,11 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         padding: 2,
     },
-    levelBadge: {
+    // New rank badge style
+    rankBadge: {
         position: 'absolute',
         top: -5,
-        right: -5,
+        left: -5,
         backgroundColor: '#ffc107',
         borderRadius: 15,
         width: 30,
@@ -137,8 +149,8 @@ const styles = StyleSheet.create({
         borderWidth: 2,
         borderColor: '#fff',
     },
-    levelText: {
-        fontSize: 16,
+    rankBadgeText: {
+        fontSize: 14,
         fontWeight: 'bold',
         color: '#333',
     },
