@@ -8,7 +8,8 @@ import {
     updateUsernameThunk,
 } from "@/src/redux/thunks/userThunks";
 import {verifyCode} from "@/src/redux/api/authAPI";
-import {UserState} from "@/src/types/states";
+import {Achievement, UserState} from "@/src/types/states";
+import {fetchUserAchievementsThunk} from "@/src/redux/thunks/achievementThunks";
 
 
 export interface UserDataResponse {
@@ -57,6 +58,9 @@ const initialState: UserState = {
     isAuthenticated: false,
     foodSaved: 0,
     moneySaved: 0,
+    achievements: [],
+    totalDiscountEarned: 0,
+
 };
 
 const userSlice = createSlice({
@@ -192,6 +196,26 @@ const userSlice = createSlice({
             .addCase(verifyCode.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload || "Verification failed";
+            })
+            .addCase(fetchUserAchievementsThunk.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(fetchUserAchievementsThunk.fulfilled, (state, action) => {
+                state.loading = false;
+                state.achievements = action.payload;
+
+                // Calculate total discount earned
+                state.totalDiscountEarned = action.payload
+                    .filter((achievement: Achievement) =>
+                        achievement.unlocked && achievement.discount_percentage
+                    )
+                    .reduce((total: number, achievement: Achievement) =>
+                        total + (achievement.discount_percentage || 0), 0);
+            })
+            .addCase(fetchUserAchievementsThunk.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.error?.message || 'Failed to fetch achievements';
             });
     }
 });

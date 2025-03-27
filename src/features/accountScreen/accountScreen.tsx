@@ -1,5 +1,5 @@
-import React, {useState} from 'react';
-import {ActivityIndicator, Alert, ScrollView, StatusBar, StyleSheet, View,} from 'react-native';
+import React, {useEffect, useState} from 'react';
+import {ActivityIndicator, Alert, ScrollView, StatusBar, StyleSheet, View} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useNavigation} from '@react-navigation/native';
@@ -10,7 +10,6 @@ import ProfileSection from './components/ProfileSection';
 import AchievementsSection from './components/AchievementsSection';
 import InfoCards from './components/InfoCards';
 import OrdersSection from './components/OrdersSection';
-import ChallengesSection from './components/ChallengesSection';
 import ActionsSection from './components/ActionsSection';
 
 import {RootStackParamList} from '@/src/utils/navigation';
@@ -18,15 +17,9 @@ import {RootState} from '@/src/types/store';
 import {logout} from '@/src/redux/slices/userSlice';
 import {updateEmailThunk, updatePasswordThunk, updateUsernameThunk} from '@/src/redux/thunks/userThunks';
 import {AppDispatch} from '@/src/redux/store';
+import {fetchUserAchievementsThunk} from '@/src/redux/thunks/achievementThunks';
 
 export type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
-
-const ACHIEVEMENTS = [
-    {id: 1, name: 'First Save', icon: 'star', unlocked: true},
-    {id: 2, name: 'Save Streak: 3 Days', icon: 'fire', unlocked: true},
-    {id: 3, name: 'Big Spender', icon: 'dollar-sign', unlocked: false},
-    {id: 4, name: 'Eco Warrior', icon: 'leaf', unlocked: false},
-];
 
 const AccountScreen: React.FC = () => {
     // Redux and navigation hooks
@@ -35,9 +28,16 @@ const AccountScreen: React.FC = () => {
     const insets = useSafeAreaInsets();
 
     // Redux state
-    const {name_surname, email, phoneNumber, moneySaved, foodSaved, loading} = useSelector(
-        (state: RootState) => state.user
-    );
+    const {
+        name_surname,
+        email,
+        phoneNumber,
+        moneySaved,
+        foodSaved,
+        loading,
+        achievements = [],
+        totalDiscountEarned = 0
+    } = useSelector((state: RootState) => state.user);
 
     // Local state for editing
     const [isEditing, setIsEditing] = useState(false);
@@ -46,6 +46,20 @@ const AccountScreen: React.FC = () => {
         email,
         phoneNumber,
     });
+
+    // Fetch achievements on component mount
+    useEffect(() => {
+        dispatch(fetchUserAchievementsThunk());
+    }, [dispatch]);
+
+    // Update edited values when user data changes
+    useEffect(() => {
+        setEditedValues({
+            name_surname,
+            email,
+            phoneNumber,
+        });
+    }, [name_surname, email, phoneNumber]);
 
     // Derived data
     const userLevel = Math.floor(foodSaved / 10) + 1;
@@ -151,7 +165,24 @@ const AccountScreen: React.FC = () => {
     };
 
     const handleViewAchievements = () => {
-        Alert.alert('Coming Soon', 'Achievements screen is under development');
+        if (achievements.length === 0) {
+            Alert.alert(
+                'No Achievements Yet',
+                'Complete orders and rescue food to earn achievements!',
+                [{text: 'OK'}]
+            );
+            return;
+        }
+
+        const achievementDetails = achievements
+            .map(a => `• ${a.name}: ${a.description}`)
+            .join('\n');
+
+        Alert.alert(
+            'Your Achievements',
+            `You have earned ${achievements.length} achievement(s):\n\n${achievementDetails}`,
+            [{text: 'OK'}]
+        );
     };
 
     if (loading) {
@@ -180,7 +211,16 @@ const AccountScreen: React.FC = () => {
                         foodSaved={foodSaved}
                         environmentalImpact={environmentalImpact}
                     />
-                    <AchievementsSection achievements={ACHIEVEMENTS} onViewAchievements={handleViewAchievements}/>
+
+                    {/* Only show achievements section if there are achievements */}
+                    {achievements.length > 0 && (
+                        <AchievementsSection
+                            achievements={achievements}
+                            onViewAchievements={handleViewAchievements}
+                            totalDiscountEarned={totalDiscountEarned}
+                        />
+                    )}
+
                     <InfoCards
                         isEditing={isEditing}
                         email={email}
@@ -189,7 +229,6 @@ const AccountScreen: React.FC = () => {
                         setEditedValues={setEditedValues}
                     />
                     <OrdersSection navigation={navigation}/>
-                    <ChallengesSection/>
                     <ActionsSection onPasswordReset={handlePasswordReset} onLogout={handleLogout}/>
                 </View>
             </ScrollView>
