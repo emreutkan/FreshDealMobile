@@ -8,9 +8,8 @@ import {
     updateUsernameThunk,
 } from "@/src/redux/thunks/userThunks";
 import {verifyCode} from "@/src/redux/api/authAPI";
-import {Achievement, UserState} from "@/src/types/states";
-import {fetchUserAchievementsThunk} from "@/src/redux/thunks/achievementThunks";
-
+import {UserState} from "@/src/types/states";
+import {CombinedAchievementsData, fetchUserAchievementsThunk} from '../thunks/achievementThunks';
 
 export interface UserDataResponse {
     user_data: {
@@ -58,9 +57,11 @@ const initialState: UserState = {
     isAuthenticated: false,
     foodSaved: 0,
     moneySaved: 0,
-    achievements: [],
-    totalDiscountEarned: 0,
 
+    // Achievement-related state
+    achievements: [],
+    achievementsLoading: false,
+    totalDiscountEarned: 0,
 };
 
 const userSlice = createSlice({
@@ -105,7 +106,9 @@ const userSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
-
+            .addCase('user/logout', () => {
+                return initialState;
+            })
             .addCase(loginUserThunk.pending, (state) => {
                 state.loading = true;
                 state.error = null;
@@ -114,13 +117,10 @@ const userSlice = createSlice({
                 state.loading = false;
                 state.token = action.payload.token;
                 state.isAuthenticated = true;
-
-
             })
             .addCase(loginUserThunk.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.error?.message || 'Login failed';
-
             })
             .addCase(registerUserThunk.pending, (state) => {
                 state.loading = true;
@@ -132,7 +132,18 @@ const userSlice = createSlice({
             .addCase(registerUserThunk.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.error?.message || 'Registration failed';
-
+            })
+            .addCase(verifyCode.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(verifyCode.fulfilled, (state) => {
+                state.loading = false;
+                state.email_verified = true;
+            })
+            .addCase(verifyCode.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.error?.message || 'Verification failed';
             })
             .addCase(updateUsernameThunk.pending, (state) => {
                 state.loading = true;
@@ -140,11 +151,11 @@ const userSlice = createSlice({
             })
             .addCase(updateUsernameThunk.fulfilled, (state, action) => {
                 state.loading = false;
-                state.name_surname = action.payload.message;
+                state.name_surname = action.meta.arg.username;
             })
             .addCase(updateUsernameThunk.rejected, (state, action) => {
                 state.loading = false;
-                state.error = action.payload || 'Failed to update username';
+                state.error = action.error?.message || 'Failed to update username';
             })
             .addCase(updateEmailThunk.pending, (state) => {
                 state.loading = true;
@@ -152,11 +163,11 @@ const userSlice = createSlice({
             })
             .addCase(updateEmailThunk.fulfilled, (state, action) => {
                 state.loading = false;
-                state.email = action.payload.message;
+                state.email = action.meta.arg.new_email;
             })
             .addCase(updateEmailThunk.rejected, (state, action) => {
                 state.loading = false;
-                state.error = action.payload || 'Failed to update email';
+                state.error = action.error?.message || 'Failed to update email';
             })
             .addCase(updatePasswordThunk.pending, (state) => {
                 state.loading = true;
@@ -167,69 +178,60 @@ const userSlice = createSlice({
             })
             .addCase(updatePasswordThunk.rejected, (state, action) => {
                 state.loading = false;
-                state.error = action.payload || 'Failed to update password';
+                state.error = action.error?.message || 'Failed to update password';
             })
             .addCase(getUserDataThunk.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
             .addCase(getUserDataThunk.fulfilled, (state, action) => {
+                state.loading = false;
                 state.name_surname = action.payload.user_data.name;
                 state.email = action.payload.user_data.email;
-                state.phoneNumber = action.payload.user_data.phone_number;
-                state.role = "customer";
-                state.email_verified = action.payload.user_data.email_verified
-                state.loading = false;
+                state.phoneNumber = action.payload.user_data.phone_number?.replace(state.selectedCode, '') || '';
+                state.role = action.payload.user_data.role;
+                state.email_verified = action.payload.user_data.email_verified;
                 state.isInitialized = true;
             })
             .addCase(getUserDataThunk.rejected, (state, action) => {
                 state.loading = false;
-                state.error = action.payload || 'Failed to fetch user data';
+                state.error = action.error?.message || 'Failed to get user data';
             })
-            .addCase(verifyCode.pending, (state) => {
-                state.loading = true;
-                state.error = null;
-            })
-            .addCase(verifyCode.fulfilled, (state) => {
-                state.loading = false;
-            })
-            .addCase(verifyCode.rejected, (state, action) => {
-                state.loading = false;
-                state.error = action.payload || "Verification failed";
-            })
-            .addCase(fetchUserAchievementsThunk.pending, (state) => {
-                state.loading = true;
-                state.error = null;
-            })
-            .addCase(fetchUserAchievementsThunk.fulfilled, (state, action) => {
-                state.loading = false;
-                state.achievements = action.payload;
 
-                // Calculate total discount earned
-                state.totalDiscountEarned = action.payload
-                    .filter((achievement: Achievement) =>
+            // Achievement fetching cases with separate loading state
+            .addCase(fetchUserAchievementsThunk.pending, (state) => {
+                state.achievementsLoading = true;
+                state.error = null;
+            })
+            .addCase(fetchUserAchievementsThunk.fulfilled, (state, action: PayloadAction<CombinedAchievementsData>) => {
+                state.achievementsLoading = false;
+                state.achievements = action.payload.achievements;
+
+                // Calculate total discount earned (for future use)
+                state.totalDiscountEarned = action.payload.achievements
+                    .filter(achievement =>
                         achievement.unlocked && achievement.discount_percentage
                     )
-                    .reduce((total: number, achievement: Achievement) =>
+                    .reduce((total, achievement) =>
                         total + (achievement.discount_percentage || 0), 0);
             })
             .addCase(fetchUserAchievementsThunk.rejected, (state, action) => {
-                state.loading = false;
+                state.achievementsLoading = false;
                 state.error = action.error?.message || 'Failed to fetch achievements';
             });
-    }
+    },
 });
 
 export const {
+    setSelectedCode,
     setEmail,
     setName,
     setPhoneNumber,
     setPassword,
     setPasswordLogin,
-    setSelectedCode,
     setLoginType,
     setToken,
-    logout,
+    logout
 } = userSlice.actions;
 
 export default userSlice.reducer;

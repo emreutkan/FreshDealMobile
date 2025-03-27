@@ -114,6 +114,7 @@ export interface UserState {
     moneySaved: number;
     foodSaved: number;
     achievements: Achievement[];
+    achievementsLoading: boolean;
     totalDiscountEarned: number;
 
 }
@@ -121,10 +122,11 @@ export interface UserState {
 export interface Achievement {
     id: number;
     name: string;
-    icon: string;
-    unlocked: boolean;
-    discount_percentage?: number;
+    achievement_type: string;
+    badge_image_url: string;
+    description: string;
     earned_at?: string;
-    description?: string;
+    threshold?: number;
+    unlocked?: boolean;
+    discount_percentage?: number;
 }
-

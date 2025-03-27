@@ -167,24 +167,35 @@ const AccountScreen: React.FC = () => {
     const handleViewAchievements = () => {
         if (achievements.length === 0) {
             Alert.alert(
-                'No Achievements Yet',
-                'Complete orders and rescue food to earn achievements!',
+                'No Achievements Available',
+                'There are no achievements to display at the moment.',
                 [{text: 'OK'}]
             );
             return;
         }
 
-        const achievementDetails = achievements
-            .map(a => `• ${a.name}: ${a.description}`)
+        const unlockedCount = achievements.filter(a => a.unlocked).length;
+        const totalCount = achievements.length;
+
+        // Create lists of unlocked and locked achievements
+        const unlockedAchievements = achievements
+            .filter(a => a.unlocked)
+            .map(a => `✅ ${a.name}: ${a.description}${a.earned_at ? ` (${new Date(a.earned_at).toLocaleDateString()})` : ''}`)
+            .join('\n');
+
+        const lockedAchievements = achievements
+            .filter(a => !a.unlocked)
+            .map(a => `🔒 ${a.name}: ${a.description}`)
             .join('\n');
 
         Alert.alert(
-            'Your Achievements',
-            `You have earned ${achievements.length} achievement(s):\n\n${achievementDetails}`,
+            'Achievements',
+            `You've unlocked ${unlockedCount} out of ${totalCount} achievements.\n\n` +
+            `UNLOCKED:\n${unlockedAchievements}\n\n` +
+            `LOCKED:\n${lockedAchievements}`,
             [{text: 'OK'}]
         );
     };
-
     if (loading) {
         return (
             <View style={styles.loadingContainer}>

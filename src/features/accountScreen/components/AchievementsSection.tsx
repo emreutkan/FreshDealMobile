@@ -1,6 +1,6 @@
 import React from 'react';
 import {ScrollView, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
-import {MaterialCommunityIcons} from '@expo/vector-icons'; // Using Material Community Icons instead
+import {MaterialCommunityIcons, MaterialIcons} from '@expo/vector-icons';
 
 export interface Achievement {
     id: number;
@@ -8,8 +8,10 @@ export interface Achievement {
     achievement_type: string;
     badge_image_url?: string;
     description: string;
-    earned_at: string;
-    discount_percentage?: number; // Added for future discount functionality
+    earned_at?: string;
+    threshold?: number;
+    unlocked?: boolean;
+    discount_percentage?: number;
 }
 
 interface AchievementsSectionProps {
@@ -21,6 +23,8 @@ interface AchievementsSectionProps {
 // Map of achievement types to icon names (Material Community Icons)
 const ACHIEVEMENT_ICONS: { [key: string]: string } = {
     'FIRST_PURCHASE': 'trophy',
+    'PURCHASE_COUNT': 'shopping',
+    'WEEKLY_PURCHASE': 'calendar-week',
     'STREAK': 'fire',
     'BIG_SPENDER': 'cash',
     'ECO_WARRIOR': 'leaf',
@@ -32,6 +36,17 @@ const AchievementsSection: React.FC<AchievementsSectionProps> = ({
                                                                      onViewAchievements,
                                                                      totalDiscountEarned = 0
                                                                  }) => {
+    // Sort achievements by unlocked status (unlocked first)
+    const sortedAchievements = [...achievements].sort((a, b) => {
+        // If unlocked is not defined, treat it as false
+        const aUnlocked = a.unlocked === true;
+        const bUnlocked = b.unlocked === true;
+
+        if (aUnlocked && !bUnlocked) return -1;
+        if (!aUnlocked && bUnlocked) return 1;
+        return 0;
+    });
+
     return (
         <View style={styles.achievementsSection}>
             <View style={styles.sectionHeader}>
@@ -50,30 +65,62 @@ const AchievementsSection: React.FC<AchievementsSectionProps> = ({
             )}
 
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.achievementsScroll}>
-                {achievements.map((achievement) => {
+                {sortedAchievements.map((achievement) => {
                     // Get icon name from mapping or use default
                     const iconName = ACHIEVEMENT_ICONS[achievement.achievement_type] || ACHIEVEMENT_ICONS.DEFAULT;
+                    const isUnlocked = achievement.unlocked === true;
 
                     return (
-                        <View key={achievement.id} style={styles.achievementBadge}>
+                        <View
+                            key={achievement.id}
+                            style={[
+                                styles.achievementBadge,
+                                !isUnlocked && styles.lockedAchievement
+                            ]}
+                        >
                             <MaterialCommunityIcons
                                 name={iconName as any}
                                 size={24}
-                                color="#50703C"
+                                color={isUnlocked ? '#50703C' : '#aaaaaa'}
                             />
-                            <Text style={styles.achievementName}>
+                            <Text style={[
+                                styles.achievementName,
+                                !isUnlocked && styles.lockedText
+                            ]}>
                                 {achievement.name}
                             </Text>
-                            {achievement.discount_percentage && (
+
+                            {achievement.threshold && (
+                                <Text style={[
+                                    styles.thresholdText,
+                                    !isUnlocked && styles.lockedText
+                                ]}>
+                                    Required: {achievement.threshold}
+                                </Text>
+                            )}
+
+                            {isUnlocked && achievement.earned_at && (
+                                <Text style={styles.achievementDate}>
+                                    {new Date(achievement.earned_at).toLocaleDateString()}
+                                </Text>
+                            )}
+
+                            {achievement.discount_percentage && isUnlocked && (
                                 <View style={styles.discountTag}>
                                     <Text style={styles.discountTagText}>
                                         +{achievement.discount_percentage}%
                                     </Text>
                                 </View>
                             )}
-                            <Text style={styles.achievementDate}>
-                                {new Date(achievement.earned_at).toLocaleDateString()}
-                            </Text>
+
+                            {!isUnlocked && (
+                                <MaterialIcons
+                                    name="lock"
+                                    size={12}
+                                    color="#aaaaaa"
+                                    style={styles.lockIcon}
+                                />
+                            )}
                         </View>
                     );
                 })}
@@ -125,12 +172,25 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#e0e0e0',
     },
+    lockedAchievement: {
+        backgroundColor: '#f5f5f5',
+        borderColor: '#e0e0e0',
+    },
     achievementName: {
         fontSize: 12,
         color: '#333',
         textAlign: 'center',
         marginTop: 8,
         fontWeight: '600',
+    },
+    lockedText: {
+        color: '#aaaaaa',
+    },
+    thresholdText: {
+        fontSize: 10,
+        color: '#555',
+        textAlign: 'center',
+        marginTop: 2,
     },
     achievementDate: {
         fontSize: 10,
@@ -163,6 +223,11 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
         fontSize: 10,
         fontWeight: '700',
+    },
+    lockIcon: {
+        position: 'absolute',
+        top: 8,
+        right: 8,
     }
 });
 

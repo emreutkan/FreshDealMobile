@@ -5,15 +5,16 @@ import {logError, logRequest, logResponse} from "@/src/utils/logger";
 const USER_ACHIEVEMENTS_ENDPOINT = `${API_BASE_URL}/user/achievements`;
 const ALL_ACHIEVEMENTS_ENDPOINT = `${API_BASE_URL}/achievements`;
 
-// Updated Achievement interface
+// Updated to match actual API response
 export interface Achievement {
     id: number;
     name: string;
     achievement_type: string;
     badge_image_url: string;
     description: string;
-    earned_at?: string; // Optional because not all achievements are earned
-    unlocked: boolean;  // Add this to track unlock status
+    threshold?: number; // From all achievements endpoint
+    earned_at?: string; // From user achievements endpoint
+    unlocked?: boolean; // Added by our code
 }
 
 export interface AchievementsResponse {
