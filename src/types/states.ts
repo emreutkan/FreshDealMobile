@@ -113,7 +113,20 @@ export interface UserState {
     isAuthenticated: boolean;
     moneySaved: number;
     foodSaved: number;
+    achievements: Achievement[];
+    achievementsLoading: boolean;
+    totalDiscountEarned: number;
 
 }
 
-
+export interface Achievement {
+    id: number;
+    name: string;
+    achievement_type: string;
+    badge_image_url: string;
+    description: string;
+    earned_at?: string;
+    threshold?: number;
+    unlocked?: boolean;
+    discount_percentage?: number;
+}
