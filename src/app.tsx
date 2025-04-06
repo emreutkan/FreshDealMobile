@@ -19,7 +19,7 @@ import OrderDetails from "./features/OrdersScreen/OrderDetails";
 import AccountScreen from "./features/accountScreen/accountScreen";
 import CheckoutScreen from "./features/CheckoutScreen/CheckoutScreen";
 import RestaurantComments from "./features/RestaurantComments/RestaurantComments";
-import LeaderboardScreen from "@/src/features/LeaderBoardScreen/LeaderBoardScreen";
+import RankingsScreen from "@/src/features/rankingsScreen/RankingsScreen";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -70,7 +70,7 @@ const AppContent: React.FC = () => {
                                 options={{title: 'Order Details'}}
                             />
                             <Stack.Screen name="Checkout" component={CheckoutScreen}/>
-                            <Stack.Screen name="Leaderboard" component={LeaderboardScreen}/>
+                            <Stack.Screen name="Rankings" component={RankingsScreen} options={{headerShown: false}}/>
                         </Stack.Navigator>
                     </NavigationContainer>
                 </BottomSheetModalProvider>

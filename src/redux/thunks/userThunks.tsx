@@ -3,7 +3,7 @@
 import {createAsyncThunk} from "@reduxjs/toolkit";
 import {RootState} from "@/src/types/store";
 import {tokenService} from "@/src/services/tokenService";
-import {userApi} from "@/src/redux/api/userAPI";
+import {userApi, UserSavingsResponse} from "@/src/redux/api/userAPI";
 import {authApi} from "@/src/redux/api/authAPI";
 import {LoginResponse, RegisterResponse} from "@/src/types/api/auth/responses";
 import {LoginPayload, RegisterPayload} from "@/src/types/api/auth/requests";
@@ -20,9 +20,13 @@ import {
     RemoveFavoriteResponse,
     UpdateEmailResponse,
     UpdatePasswordResponse,
-    UpdateUsernameResponse
+    UpdateUsernameResponse,
+    UserDataResponse
 } from "@/src/types/api/user/responses";
-import {setToken, UserDataResponse} from "@/src/redux/slices/userSlice"; // Example import, adjust as needed
+import {setToken} from "@/src/redux/slices/userSlice";
+import {API_BASE_URL} from "@/src/redux/api/API";
+import {apiClient} from "expo-dev-launcher/bundle/apiClient";
+import {UserRank} from "@/src/types/states";
 
 export const loginUserThunk = createAsyncThunk<
     LoginResponse,
@@ -218,3 +222,103 @@ export const getFavoritesThunk = createAsyncThunk<
     }
 );
 
+export const getUserSavingsThunk = createAsyncThunk<
+    UserSavingsResponse,
+    void,
+    { state: RootState; rejectValue: string }
+>(
+    "user/getUserSavings",
+    async (_, {rejectWithValue}) => {
+        try {
+            const token = await tokenService.getToken();
+            if (!token) {
+                return rejectWithValue("Authentication token is missing");
+            }
+
+            // Make API call to get user's savings statistics
+            const response = await userApi.getUserSavings(token);
+            return response;
+        } catch (error: any) {
+            console.log("Error fetching user savings:", error);
+            // Return a default value in case of error during development
+            return {
+                total_money_saved: 0,
+                currency: "USD"
+            };
+        }
+    }
+);
+
+export const getUserRankThunk = createAsyncThunk<
+    UserRank,
+    number, // User ID
+    { state: RootState; rejectValue: string }
+>(
+    "user/getUserRank",
+    async (userId, {rejectWithValue}) => {
+        try {
+            const token = await tokenService.getToken();
+            if (!token) {
+                return rejectWithValue("Authentication token is missing");
+            }
+
+            // This endpoint contains both rank and total_discount
+            const response = await apiClient.request({
+                method: 'GET',
+                url: `${API_BASE_URL}/user/rank/${userId}`,
+                token,
+            });
+
+            console.log("User rank response:", response);
+
+            if (!response || !response.rank) {
+                return rejectWithValue("Invalid response format from server");
+            }
+
+            return response;
+        } catch (error: any) {
+            console.log("Error fetching user rank:", error);
+            return rejectWithValue(
+                error.response?.data?.message ||
+                error.message ||
+                "Failed to fetch user rank"
+            );
+        }
+    }
+);
+
+// Get all user rankings
+export const getUserRankingsThunk = createAsyncThunk<
+    UserRank[],
+    void,
+    { state: RootState; rejectValue: string }
+>(
+    "user/getUserRankings",
+    async (_, {rejectWithValue}) => {
+        try {
+            const token = await tokenService.getToken();
+            if (!token) {
+                return rejectWithValue("Authentication token is missing");
+            }
+
+            const response = await apiClient.request({
+                method: 'GET',
+                url: `${API_BASE_URL}/user/rankings`,
+                token,
+            });
+
+            if (!Array.isArray(response)) {
+                return rejectWithValue("Invalid rankings response format");
+            }
+
+            return response;
+        } catch (error: any) {
+            console.log("Error fetching user rankings:", error);
+            return rejectWithValue(
+                error.response?.data?.message ||
+                error.message ||
+                "Failed to fetch user rankings"
+            );
+        }
+    }
+);

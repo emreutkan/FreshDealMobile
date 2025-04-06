@@ -116,7 +116,14 @@ export interface UserState {
     achievements: Achievement[];
     achievementsLoading: boolean;
     totalDiscountEarned: number;
-
+    savingsLoading: boolean;
+    currency: "USD",
+    userId: number;
+    rank: number;
+    totalDiscount: number;
+    rankLoading: boolean;
+    rankings: UserRank[];
+    rankingsLoading: boolean;
 }
 
 export interface Achievement {
@@ -129,4 +136,11 @@ export interface Achievement {
     threshold?: number;
     unlocked?: boolean;
     discount_percentage?: number;
+}
+
+export interface UserRank {
+    rank: number;
+    total_discount: number;
+    user_id: number;
+    user_name: string;
 }

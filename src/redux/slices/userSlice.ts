@@ -1,6 +1,9 @@
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 import {
     getUserDataThunk,
+    getUserRankingsThunk,
+    getUserRankThunk,
+    getUserSavingsThunk,
     loginUserThunk,
     registerUserThunk,
     updateEmailThunk,
@@ -8,34 +11,9 @@ import {
     updateUsernameThunk,
 } from "@/src/redux/thunks/userThunks";
 import {verifyCode} from "@/src/redux/api/authAPI";
-import {UserState} from "@/src/types/states";
+import {UserRank, UserState} from "@/src/types/states";
 import {CombinedAchievementsData, fetchUserAchievementsThunk} from '../thunks/achievementThunks';
 
-export interface UserDataResponse {
-    user_data: {
-        id: number;
-        name: string;
-        email: string;
-        phone_number: string;
-        role: string;
-        email_verified: boolean;
-    };
-    user_address_list: Array<{
-        id: number;
-        title: string;
-        longitude: number;
-        latitude: number;
-        street: string;
-        neighborhood: string;
-        district: string;
-        province: string;
-        country: string;
-        postalCode: number;
-        apartmentNo: number;
-        doorNo: string;
-        is_primary: boolean;
-    }>;
-}
 
 const initialState: UserState = {
     email: '',
@@ -59,9 +37,19 @@ const initialState: UserState = {
     moneySaved: 0,
 
     // Achievement-related state
+    currency: "USD",
+
     achievements: [],
     achievementsLoading: false,
     totalDiscountEarned: 0,
+    savingsLoading: false,
+    userId: 0,
+    rank: 0,
+    totalDiscount: 0,
+    rankings: [],
+    rankLoading: false,
+    rankingsLoading: false,
+
 };
 
 const userSlice = createSlice({
@@ -192,6 +180,8 @@ const userSlice = createSlice({
                 state.role = action.payload.user_data.role;
                 state.email_verified = action.payload.user_data.email_verified;
                 state.isInitialized = true;
+                state.userId = action.payload.user_data.id;
+
             })
             .addCase(getUserDataThunk.rejected, (state, action) => {
                 state.loading = false;
@@ -218,8 +208,61 @@ const userSlice = createSlice({
             .addCase(fetchUserAchievementsThunk.rejected, (state, action) => {
                 state.achievementsLoading = false;
                 state.error = action.error?.message || 'Failed to fetch achievements';
+            })
+            .addCase(getUserSavingsThunk.pending, (state) => {
+                state.savingsLoading = true;
+            })
+            .addCase(getUserSavingsThunk.fulfilled, (state, action) => {
+                state.savingsLoading = false;
+                state.moneySaved = action.payload.total_money_saved;
+                if (action.payload.currency) {
+                    state.currency = action.payload.currency;
+                }
+            })
+            .addCase(getUserSavingsThunk.rejected, (state) => {
+                state.savingsLoading = false;
+            })
+            .addCase(getUserRankThunk.pending, (state) => {
+                state.rankLoading = true;
+            })
+            .addCase(getUserRankThunk.pending, (state) => {
+                state.rankLoading = true;
+            })
+            .addCase(getUserRankThunk.fulfilled, (state, action: PayloadAction<UserRank>) => {
+                state.rankLoading = false;
+                state.rank = action.payload.rank;
+                state.totalDiscount = action.payload.total_discount;
+            })
+            .addCase(getUserRankThunk.rejected, (state) => {
+                state.rankLoading = false;
+            })
+
+            // Handle getUserRankingsThunk
+            .addCase(getUserRankingsThunk.pending, (state) => {
+                state.rankingsLoading = true;
+            })
+            .addCase(getUserRankingsThunk.fulfilled, (state, action: PayloadAction<UserRank[]>) => {
+                state.rankingsLoading = false;
+                state.rankings = action.payload;
+            })
+            .addCase(getUserRankingsThunk.rejected, (state) => {
+                state.rankingsLoading = false;
+            })
+
+            // Existing achievement cases...
+            .addCase(fetchUserAchievementsThunk.pending, (state) => {
+                state.achievementsLoading = true;
+            })
+            .addCase(fetchUserAchievementsThunk.fulfilled, (state, action) => {
+                state.achievementsLoading = false;
+                state.achievements = action.payload.achievements;
+            })
+            .addCase(fetchUserAchievementsThunk.rejected, (state) => {
+                state.achievementsLoading = false;
             });
+
     },
+
 });
 
 export const {

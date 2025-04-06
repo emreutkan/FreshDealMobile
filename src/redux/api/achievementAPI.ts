@@ -23,7 +23,7 @@ export interface AchievementsResponse {
 
 export const achievementApi = {
     // Get user's unlocked achievements
-    async getUserAchievements(token: string): Promise<AchievementsResponse> {
+    async getUserAchievements(token: string): Promise<unknown> {
         const functionName = 'getUserAchievements';
         const endpoint = USER_ACHIEVEMENTS_ENDPOINT;
 
@@ -44,7 +44,7 @@ export const achievementApi = {
     },
 
     // Get all available achievements
-    async getAllAchievements(token: string): Promise<AchievementsResponse> {
+    async getAllAchievements(token: string): Promise<unknown> {
         const functionName = 'getAllAchievements';
         const endpoint = ALL_ACHIEVEMENTS_ENDPOINT;
 

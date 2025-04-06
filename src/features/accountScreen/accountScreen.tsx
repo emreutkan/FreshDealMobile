@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {ActivityIndicator, Alert, ScrollView, StatusBar, StyleSheet, View} from 'react-native';
+import {ActivityIndicator, Alert, ScrollView, StatusBar, StyleSheet, Text, View} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useNavigation} from '@react-navigation/native';
@@ -7,6 +7,7 @@ import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 
 import AccountHeader from './components/AccountHeader';
 import ProfileSection from './components/ProfileSection';
+import RankingCard from './components/RankingCard';
 import AchievementsSection from './components/AchievementsSection';
 import InfoCards from './components/InfoCards';
 import OrdersSection from './components/OrdersSection';
@@ -15,7 +16,14 @@ import ActionsSection from './components/ActionsSection';
 import {RootStackParamList} from '@/src/utils/navigation';
 import {RootState} from '@/src/types/store';
 import {logout} from '@/src/redux/slices/userSlice';
-import {updateEmailThunk, updatePasswordThunk, updateUsernameThunk} from '@/src/redux/thunks/userThunks';
+import {
+    getUserDataThunk,
+    getUserRankThunk,
+    getUserSavingsThunk,
+    updateEmailThunk,
+    updatePasswordThunk,
+    updateUsernameThunk
+} from '@/src/redux/thunks/userThunks';
 import {AppDispatch} from '@/src/redux/store';
 import {fetchUserAchievementsThunk} from '@/src/redux/thunks/achievementThunks';
 
@@ -33,9 +41,15 @@ const AccountScreen: React.FC = () => {
         email,
         phoneNumber,
         moneySaved,
-        foodSaved,
+        currency = "USD",
+        savingsLoading = false,
+        userId,
+        rank = 0,
+        totalDiscount = 0,
+        rankLoading = false,
         loading,
         achievements = [],
+        achievementsLoading = false,
         totalDiscountEarned = 0
     } = useSelector((state: RootState) => state.user);
 
@@ -47,9 +61,19 @@ const AccountScreen: React.FC = () => {
         phoneNumber,
     });
 
-    // Fetch achievements on component mount
+    // Fetch user data, achievements, rank and savings on component mount
     useEffect(() => {
+        // First get user data to get userId
+        dispatch(getUserDataThunk())
+            .unwrap()
+            .then((userData) => {
+                if (userData && userData.user_data && userData.user_data.id) {
+                    dispatch(getUserRankThunk(userData.user_data.id));
+                }
+            });
+
         dispatch(fetchUserAchievementsThunk());
+        dispatch(getUserSavingsThunk());
     }, [dispatch]);
 
     // Update edited values when user data changes
@@ -60,15 +84,6 @@ const AccountScreen: React.FC = () => {
             phoneNumber,
         });
     }, [name_surname, email, phoneNumber]);
-
-    // Derived data
-    const userLevel = Math.floor(foodSaved / 10) + 1;
-    const progressToNextLevel = (foodSaved % 10) / 10;
-    const streakDays = 5; // This would typically come from state
-    const environmentalImpact = {
-        co2Saved: (foodSaved * 2.5).toFixed(1),
-        waterSaved: (foodSaved * 1000).toFixed(0),
-    };
 
     // Event Handlers
     const handleLogout = () => {
@@ -185,17 +200,22 @@ const AccountScreen: React.FC = () => {
 
         const lockedAchievements = achievements
             .filter(a => !a.unlocked)
-            .map(a => `🔒 ${a.name}: ${a.description}`)
+            .map(a => `🔒 ${a.name}: ${a.description}${a.threshold ? ` (Required: ${a.threshold})` : ''}`)
             .join('\n');
 
         Alert.alert(
             'Achievements',
             `You've unlocked ${unlockedCount} out of ${totalCount} achievements.\n\n` +
-            `UNLOCKED:\n${unlockedAchievements}\n\n` +
-            `LOCKED:\n${lockedAchievements}`,
+            `UNLOCKED:\n${unlockedAchievements || 'None yet'}\n\n` +
+            `LOCKED:\n${lockedAchievements || 'None'}`,
             [{text: 'OK'}]
         );
     };
+
+    const handleViewAllRankings = () => {
+        navigation.navigate('Rankings');
+    };
+
     if (loading) {
         return (
             <View style={styles.loadingContainer}>
@@ -215,21 +235,31 @@ const AccountScreen: React.FC = () => {
                         editedValues={editedValues}
                         setEditedValues={setEditedValues}
                         name_surname={name_surname}
-                        userLevel={userLevel}
-                        progressToNextLevel={progressToNextLevel}
-                        streakDays={streakDays}
                         moneySaved={moneySaved}
-                        foodSaved={foodSaved}
-                        environmentalImpact={environmentalImpact}
+                        currency={currency}
+                        savingsLoading={savingsLoading}
                     />
 
-                    {/* Only show achievements section if there are achievements */}
-                    {achievements.length > 0 && (
-                        <AchievementsSection
-                            achievements={achievements}
-                            onViewAchievements={handleViewAchievements}
-                            totalDiscountEarned={totalDiscountEarned}
-                        />
+                    <RankingCard
+                        rank={rank}
+                        totalDiscount={totalDiscount}
+                        isLoading={rankLoading}
+                        onViewAllRankings={handleViewAllRankings}
+                    />
+
+                    {achievementsLoading ? (
+                        <View style={styles.loadingSection}>
+                            <ActivityIndicator size="small" color="#50703C"/>
+                            <Text style={styles.loadingText}>Loading achievements...</Text>
+                        </View>
+                    ) : (
+                        achievements.length > 0 && (
+                            <AchievementsSection
+                                achievements={achievements}
+                                onViewAchievements={handleViewAchievements}
+                                totalDiscountEarned={totalDiscountEarned}
+                            />
+                        )
                     )}
 
                     <InfoCards
@@ -261,6 +291,16 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
     },
+    loadingSection: {
+        height: 150,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 16,
+    },
+    loadingText: {
+        marginTop: 8,
+        color: '#666',
+    }
 });
 
 export default AccountScreen;

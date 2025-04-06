@@ -11,9 +11,26 @@ import {
     UpdatePasswordResponse,
     UpdateUsernameResponse
 } from "@/src/types/api/user/responses";
+import {UserRank} from "@/src/types/states";
 
 const USER_ENDPOINT = `${API_BASE_URL}/user`;
 
+export interface UserSavingsResponse {
+    total_money_saved: number;
+    currency: string;  // In case you have multiple currencies
+}
+
+
+export interface UserRankResponse {
+    rank: number;
+    total_discount: number;
+    user_id: number;
+    user_name: string;
+}
+
+export interface UserRankingsResponse {
+    rankings: UserRank[];
+}
 
 export const userApi = {
     async updateUsername(newUsername: string, token: string): Promise<UpdateUsernameResponse> {
@@ -72,6 +89,28 @@ export const userApi = {
         return apiClient.request({
             method: 'GET',
             url: `${USER_ENDPOINT}/favorites`,
+            token,
+        });
+    },
+    async getUserSavings(token: string): Promise<UserSavingsResponse> {
+        return apiClient.request({
+            method: 'GET',
+            url: `${USER_ENDPOINT}/savings`,
+            token,
+        });
+    },
+    async getUserRank(userId: number, token: string): Promise<UserRankResponse> {
+        return apiClient.request({
+            method: 'GET',
+            url: `${API_BASE_URL}/user/rank/${userId}`,
+            token,
+        });
+    },
+
+    async getUserRankings(token: string): Promise<UserRankingsResponse> {
+        return apiClient.request({
+            method: 'GET',
+            url: `${API_BASE_URL}/user/rankings`,
             token,
         });
     },

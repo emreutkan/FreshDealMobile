@@ -1,21 +1,20 @@
 import React from 'react';
-import {StyleSheet, Text, TextInput, TouchableOpacity, View,} from 'react-native';
-import {Feather, FontAwesome5, MaterialCommunityIcons,} from '@expo/vector-icons';
-import {useNavigation} from '@react-navigation/native';
+import {ActivityIndicator, StyleSheet, Text, TextInput, View} from 'react-native';
+import {Feather} from '@expo/vector-icons';
 
 interface ProfileSectionProps {
     isEditing: boolean;
-    editedValues: { name_surname: string; email: string; phoneNumber: string };
-    setEditedValues: React.Dispatch<
-        React.SetStateAction<{ name_surname: string; email: string; phoneNumber: string }>
-    >;
+    editedValues: {
+        name_surname: string;
+    };
+    setEditedValues: React.Dispatch<React.SetStateAction<{
+        name_surname: string;
+        email: string;
+        phoneNumber: string;
+    }>>;
     name_surname: string;
-    userLevel: number;
-    progressToNextLevel: number;
-    streakDays: number;
-    moneySaved: number;
-    foodSaved: number;
-    environmentalImpact: { co2Saved: string; waterSaved: string };
+    totalDiscount: number;
+    isLoading?: boolean;
 }
 
 const ProfileSection: React.FC<ProfileSectionProps> = ({
@@ -23,85 +22,66 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
                                                            editedValues,
                                                            setEditedValues,
                                                            name_surname,
-                                                           userLevel,
-                                                           progressToNextLevel,
-                                                           streakDays,
-                                                           moneySaved,
-                                                           foodSaved,
-                                                           environmentalImpact,
+                                                           totalDiscount = 0,
+                                                           isLoading = false,
                                                        }) => {
-    const navigation = useNavigation();
-    // Fake rank value for demonstration purposes
-    const fakeRank = 3;
+    // Get user initials for avatar
+    const getInitials = (name: string) => {
+        if (!name) return "?";
+        const parts = name.split(' ');
+        if (parts.length >= 2) {
+            return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+        }
+        return name.substring(0, 2).toUpperCase();
+    };
+
+    // Format currency
+    const formatCurrency = (amount: number) => {
+        return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD',
+            minimumFractionDigits: 2
+        }).format(amount);
+    };
 
     return (
-        <View style={styles.profileSection}>
-            {/* Wrap the avatar container so that tapping it navigates to the Leaderboard */}
-            <TouchableOpacity onPress={() => navigation.navigate('Leaderboard')}>
+        <View style={styles.container}>
+            {/* User profile header with avatar and name */}
+            <View style={styles.profileHeader}>
                 <View style={styles.avatarContainer}>
-                    <View style={styles.avatar}>
-                        <MaterialCommunityIcons name="food" size={40} color="#50703C"/>
-                        <View style={styles.badge}>
-                            <Feather name="award" size={16} color="#fff"/>
-                        </View>
-                        {/* Rank badge overlay */}
-                        <View style={styles.rankBadge}>
-                            <Text style={styles.rankBadgeText}>{fakeRank}</Text>
-                        </View>
-                    </View>
+                    <Text style={styles.avatarText}>{getInitials(name_surname)}</Text>
+                </View>
+
+                <View style={styles.nameContainer}>
                     {isEditing ? (
                         <TextInput
-                            style={[styles.userName, styles.input]}
+                            style={styles.nameInput}
                             value={editedValues.name_surname}
                             onChangeText={(text) =>
-                                setEditedValues({...editedValues, name_surname: text})
+                                setEditedValues((prev) => ({...prev, name_surname: text}))
                             }
-                            placeholder="Enter your name"
+                            placeholder="Full Name"
                         />
                     ) : (
-                        <Text style={styles.userName}>{name_surname}</Text>
+                        <Text style={styles.name}>{name_surname}</Text>
                     )}
-                    <View style={styles.levelContainer}>
-                        <Text style={styles.levelLabel}>Level {userLevel}</Text>
-                        <View style={styles.progressBarContainer}>
-                            <View
-                                style={[styles.progressBar, {width: `${progressToNextLevel * 100}%`}]}
-                            />
-                        </View>
-                        <Text style={styles.progressText}>
-                            {Math.round(progressToNextLevel * 100)}% to Level {userLevel + 1}
+                </View>
+            </View>
+
+            {/* Money saved card */}
+            <View style={styles.moneySavedContainer}>
+                <View style={styles.moneySavedCard}>
+                    <Feather name="dollar-sign" size={24} color="#50703C"/>
+
+                    {isLoading ? (
+                        <ActivityIndicator size="small" color="#50703C" style={styles.moneySavedValue}/>
+                    ) : (
+                        <Text style={styles.moneySavedValue}>
+                            {formatCurrency(totalDiscount)}
                         </Text>
-                    </View>
-                </View>
-            </TouchableOpacity>
-            <View style={styles.streakContainer}>
-                <FontAwesome5 name="fire" size={20} color="#ff7700"/>
-                <Text style={styles.streakText}>{streakDays} Day Streak!</Text>
-            </View>
-            {/* Gamification and environmental impact sections */}
-            <View style={styles.gamificationContainer}>
-                <View style={styles.gamificationCard}>
-                    <Text style={styles.gamificationLabel}>Money Saved</Text>
-                    <Text style={styles.gamificationValue}>${moneySaved}</Text>
-                </View>
-                <View style={styles.gamificationCard}>
-                    <Text style={styles.gamificationLabel}>Food Saved</Text>
-                    <Text style={styles.gamificationValue}>{foodSaved}</Text>
-                </View>
-            </View>
-            <View style={styles.impactContainer}>
-                <Text style={styles.impactTitle}>Your Environmental Impact</Text>
-                <View style={styles.impactStatsContainer}>
-                    <View style={styles.impactStat}>
-                        <FontAwesome5 name="cloud" size={24} color="#50703C"/>
-                        <Text style={styles.impactValue}>{environmentalImpact.co2Saved} kg</Text>
-                        <Text style={styles.impactLabel}>CO₂ Saved</Text>
-                    </View>
-                    <View style={styles.impactStat}>
-                        <FontAwesome5 name="tint" size={24} color="#50703C"/>
-                        <Text style={styles.impactValue}>{environmentalImpact.waterSaved} L</Text>
-                        <Text style={styles.impactLabel}>Water Saved</Text>
-                    </View>
+                    )}
+
+                    <Text style={styles.moneySavedLabel}>Total Money Saved</Text>
                 </View>
             </View>
         </View>
@@ -109,169 +89,74 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
 };
 
 const styles = StyleSheet.create({
-    profileSection: {
+    container: {
+        marginBottom: 24,
+    },
+    profileHeader: {
+        flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 18,
+        marginBottom: 16,
     },
     avatarContainer: {
-        alignItems: 'center',
-    },
-    avatar: {
-        width: 100,
-        height: 100,
-        borderRadius: 50,
-        backgroundColor: '#e8f5e9',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginBottom: 12,
-        borderWidth: 3,
-        borderColor: '#50703C',
-    },
-    badge: {
-        position: 'absolute',
-        bottom: 0,
-        right: 0,
+        width: 60,
+        height: 60,
+        borderRadius: 30,
         backgroundColor: '#50703C',
-        borderRadius: 10,
-        padding: 2,
-    },
-    // New rank badge style
-    rankBadge: {
-        position: 'absolute',
-        top: -5,
-        left: -5,
-        backgroundColor: '#ffc107',
-        borderRadius: 15,
-        width: 30,
-        height: 30,
         justifyContent: 'center',
         alignItems: 'center',
-        borderWidth: 2,
-        borderColor: '#fff',
+        marginRight: 16,
     },
-    rankBadgeText: {
-        fontSize: 14,
-        fontWeight: 'bold',
-        color: '#333',
+    avatarText: {
+        color: 'white',
+        fontSize: 24,
+        fontWeight: '600',
     },
-    userName: {
+    nameContainer: {
+        flex: 1,
+    },
+    name: {
         fontSize: 24,
         fontWeight: '600',
         color: '#333',
-        textAlign: 'center',
-        fontFamily: 'Poppins-Regular',
     },
-    levelContainer: {
-        alignItems: 'center',
-        width: '100%',
-        marginBottom: 10,
-    },
-    levelLabel: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#50703C',
-        marginBottom: 4,
-    },
-    progressBarContainer: {
-        width: '80%',
-        height: 8,
-        backgroundColor: '#e0e0e0',
-        borderRadius: 4,
-        overflow: 'hidden',
-    },
-    progressBar: {
-        height: '100%',
-        backgroundColor: '#50703C',
-    },
-    progressText: {
-        fontSize: 12,
-        color: '#666',
-        marginTop: 4,
-    },
-    streakContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#fff8e1',
-        paddingVertical: 8,
-        paddingHorizontal: 16,
-        borderRadius: 20,
-        marginBottom: 16,
-    },
-    streakText: {
-        marginLeft: 8,
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#ff7700',
-    },
-    gamificationContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        width: '80%',
-        marginTop: 8,
-        marginBottom: 16,
-    },
-    gamificationCard: {
-        flex: 1,
-        backgroundColor: '#FFFFFF',
-        padding: 12,
-        borderRadius: 10,
-        alignItems: 'center',
-        marginHorizontal: 4,
-        shadowColor: '#000',
-        shadowOffset: {width: 0, height: 2},
-        shadowOpacity: 0.05,
-        shadowRadius: 3.84,
-        elevation: 2,
-    },
-    gamificationLabel: {
-        fontSize: 12,
-        color: '#666',
-        marginBottom: 4,
-    },
-    gamificationValue: {
-        fontSize: 16,
-        color: '#50703C',
-        fontWeight: '600',
-    },
-    impactContainer: {
-        width: '100%',
-        backgroundColor: '#f1f8e9',
-        borderRadius: 12,
-        padding: 12,
-        marginBottom: 16,
-    },
-    impactTitle: {
-        fontSize: 16,
+    nameInput: {
+        fontSize: 24,
         fontWeight: '600',
         color: '#333',
-        textAlign: 'center',
-        marginBottom: 10,
+        borderBottomWidth: 1,
+        borderBottomColor: '#50703C',
+        paddingBottom: 4,
     },
-    impactStatsContainer: {
+    moneySavedContainer: {
         flexDirection: 'row',
-        justifyContent: 'space-around',
-    },
-    impactStat: {
+        justifyContent: 'center',
         alignItems: 'center',
+        marginTop: 12,
     },
-    impactValue: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#50703C',
-        marginTop: 4,
-    },
-    impactLabel: {
-        fontSize: 12,
-        color: '#666',
-    },
-    input: {
-        borderWidth: 1,
-        borderColor: '#e0e0e0',
-        borderRadius: 8,
-        padding: 8,
+    moneySavedCard: {
         backgroundColor: '#fff',
-        fontSize: 16,
-        fontFamily: 'Poppins-Regular',
+        borderRadius: 12,
+        padding: 16,
+        alignItems: 'center',
+        justifyContent: 'center',
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.1,
+        shadowRadius: 3,
+        elevation: 2,
+        width: '90%',
+    },
+    moneySavedValue: {
+        fontSize: 24,
+        fontWeight: '700',
+        color: '#333',
+        marginTop: 8,
+        marginBottom: 4,
+    },
+    moneySavedLabel: {
+        fontSize: 14,
+        color: '#666',
+        marginTop: 4,
     },
 });
 
