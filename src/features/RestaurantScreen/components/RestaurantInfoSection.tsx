@@ -1,5 +1,15 @@
-import React, {useEffect, useState} from "react";
-import {FlatList, Image, Modal, StatusBar, StyleSheet, Text, TouchableOpacity, View} from "react-native";
+import React, {useContext, useEffect, useState} from "react";
+import {
+    Animated,
+    FlatList,
+    Image,
+    LayoutChangeEvent,
+    Modal,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
+} from "react-native";
 import {Ionicons, MaterialCommunityIcons} from "@expo/vector-icons";
 import LocateToRestaurant from "@/src/features/RestaurantScreen/components/locateToRestaurant";
 import {LinearGradient} from "expo-linear-gradient";
@@ -12,6 +22,9 @@ import {RootStackParamList} from "@/src/utils/navigation";
 import {useNavigation} from "@react-navigation/native";
 import {AppDispatch} from "@/src/redux/store";
 import {getRestaurantBadgesThunk} from "@/src/redux/thunks/restaurantThunks";
+
+// Import our context
+import {ScrollContext} from "@/src/features/RestaurantScreen/RestaurantDetails";
 
 // Enhanced badge icon mappings with both icon and color
 const BADGE_INFO = {
@@ -51,6 +64,7 @@ const BADGE_INFO = {
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const RestaurantInfoSection: React.FC = () => {
+    const {scrollY, setHeaderHeight} = useContext(ScrollContext);
     const dispatch = useDispatch<AppDispatch>();
     const navigation = useNavigation<NavigationProp>();
 
@@ -68,6 +82,35 @@ const RestaurantInfoSection: React.FC = () => {
             }));
         }
     }, [restaurant?.id, dispatch]);
+
+    // Measure the header height and set it in context
+    const onLayout = (event: LayoutChangeEvent) => {
+        const {height} = event.nativeEvent.layout;
+        if (setHeaderHeight && height > 0) {
+            setHeaderHeight(height);
+        }
+    };
+
+    // Calculate header translation based on scroll position
+    const headerTranslate = scrollY.interpolate({
+        inputRange: [0, 300],
+        outputRange: [0, -300],
+        extrapolate: 'clamp'
+    });
+
+    // Calculate title opacity for mini header
+    const miniHeaderOpacity = scrollY.interpolate({
+        inputRange: [100, 150],
+        outputRange: [0, 1],
+        extrapolate: 'clamp'
+    });
+
+    // Calculate main content opacity
+    const contentOpacity = scrollY.interpolate({
+        inputRange: [0, 150],
+        outputRange: [1, 0],
+        extrapolate: 'clamp'
+    });
 
     // Badge detail modal
     const BadgeDetailModal = () => {
@@ -245,131 +288,203 @@ const RestaurantInfoSection: React.FC = () => {
         return Math.round(distance_km * 2);
     }
 
-
     const formatWorkingHours = (start: string, end: string) => {
         return `${start} - ${end}`;
     };
 
-
     return (
-        <View style={styles.container}>
-            <StatusBar barStyle="light-content"/>
-
-            <View style={styles.imageContainer}>
-                {restaurant?.image_url ? (
-                    <>
-                        <Image
-                            source={{uri: restaurant.image_url}}
-                            style={styles.restaurantImage}
-                            resizeMode="cover"
-                        />
-                        <LinearGradient
-                            colors={['transparent', 'rgba(0,0,0,0.7)']}
-                            style={styles.imageOverlay}
-                        />
-                    </>
-                ) : (
-                    <View style={styles.noImageContainer}>
-                        <Ionicons
-                            name="restaurant-outline"
-                            size={48}
-                            color="#CCCCCC"
-                        />
-                        <Text style={styles.noImageText}>
-                            No image available
-                        </Text>
-                    </View>
-                )}
-                <GoBackIcon/>
-            </View>
-
-            <View style={styles.contentContainer}>
-                <View style={styles.titleRow}>
-                    <Text style={styles.mainRestaurantTitle} numberOfLines={1}>
-                        {restaurant?.restaurantName || "Restaurant"}
+        <Animated.View
+            style={[
+                styles.container,
+            ]}
+            onLayout={onLayout}
+        >
+            {/* Mini Header - appears on scroll */}
+            <Animated.View
+                style={[
+                    styles.miniHeader,
+                    {
+                        opacity: scrollY.interpolate({
+                            inputRange: [50, 100],
+                            outputRange: [0, 1],
+                            extrapolate: 'clamp'
+                        })
+                    }
+                ]}
+            >
+                <Text style={styles.miniTitle} numberOfLines={1}>
+                    {restaurant?.restaurantName || "Restaurant"}
+                </Text>
+                <View style={styles.miniRating}>
+                    <Ionicons name="star" size={16} color="#FFD700"/>
+                    <Text style={styles.miniRatingText}>
+                        {(restaurant?.rating ?? 0).toFixed(1)}
                     </Text>
-                    <TouchableOpacity
-                        style={styles.infoButton}
-                        onPress={() => setShowInfoModal(true)}
-                    >
-                        <Ionicons name="information-circle-outline" size={24} color="#666666"/>
-                    </TouchableOpacity>
+                </View>
+            </Animated.View>
+
+            {/* Main Content - fades out on scroll */}
+            <Animated.View style={{}}>
+                <View style={styles.imageContainer}>
+                    {restaurant?.image_url ? (
+                        <>
+                            <Image
+                                source={{uri: restaurant.image_url}}
+                                style={styles.restaurantImage}
+                                resizeMode="cover"
+                            />
+                            <LinearGradient
+                                colors={['transparent', 'rgba(0,0,0,0.7)']}
+                                style={styles.imageOverlay}
+                            />
+                        </>
+                    ) : (
+                        <View style={styles.noImageContainer}>
+                            <Ionicons
+                                name="restaurant-outline"
+                                size={48}
+                                color="#CCCCCC"
+                            />
+                            <Text style={styles.noImageText}>
+                                No image available
+                            </Text>
+                        </View>
+                    )}
+                    <GoBackIcon/>
                 </View>
 
-                <View
-                    style={{
-                        flexDirection: 'row',
-                        justifyContent: 'space-between',
-                        marginBottom: 16,
-                    }}
-                >
-                    <View style={styles.ratingContainer}>
-                        <View style={styles.ratingBox}>
-                            <Ionicons name="star" size={18} color="#FFD700"/>
-                            <Text style={styles.ratingText}>
-                                {(restaurant?.rating ?? 0).toFixed(1)}
-                            </Text>
-                            <Text style={styles.ratingCount}>
-                                ({restaurant?.ratingCount ?? 0}+)
-                            </Text>
-                        </View>
-                        <View style={styles.distanceBox}>
-                            <Text style={styles.distanceText}>
-                                {(restaurant?.distance_km ?? 0).toFixed(1)} km
-                            </Text>
-                        </View>
+                <View style={styles.contentContainer}>
+                    <View style={styles.titleRow}>
+                        <Text style={styles.mainRestaurantTitle} numberOfLines={1}>
+                            {restaurant?.restaurantName || "Restaurant"}
+                        </Text>
+                        <TouchableOpacity
+                            style={styles.infoButton}
+                            onPress={() => setShowInfoModal(true)}
+                        >
+                            <Ionicons name="information-circle-outline" size={24} color="#666666"/>
+                        </TouchableOpacity>
                     </View>
 
-                    <TouchableOpacity
-                        style={styles.commentsButton}
-                        onPress={() => navigation.navigate('RestaurantComments')}
+                    <View
+                        style={{
+                            flexDirection: 'row',
+                            justifyContent: 'space-between',
+                            marginBottom: 16,
+                        }}
                     >
-                        <Ionicons name="chatbubble-outline" size={18} color="#666666"/>
-                        <Text style={styles.commentsText}>Comments</Text>
-                    </TouchableOpacity>
-                </View>
-
-                {/* Badges Section */}
-                {renderBadges()}
-
-                <View style={styles.infoCard}>
-                    <Text style={styles.cardTitle}>Delivery Information</Text>
-                    <View style={{
-                        flexDirection: "row",
-                        justifyContent: "space-between",
-                    }}>
-                        <View>
-                            <View style={styles.timeRow}>
-                                <View style={styles.timeIcon}>
-                                    <Ionicons name="walk-outline" size={20} color="#666666"/>
-                                </View>
-                                <Text style={styles.timeText}>
-                                    {getWalkingTime(restaurant?.distance_km ?? 0)} min walking
+                        <View style={styles.ratingContainer}>
+                            <View style={styles.ratingBox}>
+                                <Ionicons name="star" size={18} color="#FFD700"/>
+                                <Text style={styles.ratingText}>
+                                    {(restaurant?.rating ?? 0).toFixed(1)}
+                                </Text>
+                                <Text style={styles.ratingCount}>
+                                    ({restaurant?.ratingCount ?? 0}+)
                                 </Text>
                             </View>
-                            <View style={styles.timeRow}>
-                                <View style={styles.timeIcon}>
-                                    <Ionicons name="car-outline" size={20} color="#666666"/>
-                                </View>
-                                <Text style={styles.timeText}>
-                                    {getDrivingTime(restaurant?.distance_km ?? 0)} min driving
+                            <View style={styles.distanceBox}>
+                                <Text style={styles.distanceText}>
+                                    {(restaurant?.distance_km ?? 0).toFixed(1)} km
                                 </Text>
                             </View>
                         </View>
 
-                        <PickUpDeliveryToggle/>
+                        <TouchableOpacity
+                            style={styles.commentsButton}
+                            onPress={() => navigation.navigate('RestaurantComments')}
+                        >
+                            <Ionicons name="chatbubble-outline" size={18} color="#666666"/>
+                            <Text style={styles.commentsText}>Comments</Text>
+                        </TouchableOpacity>
+                    </View>
+
+                    {/* Badges Section */}
+                    {renderBadges()}
+
+                    <View style={styles.infoCard}>
+                        <Text style={styles.cardTitle}>Delivery Information</Text>
+                        <View style={{
+                            flexDirection: "row",
+                            justifyContent: "space-between",
+                        }}>
+                            <View>
+                                <View style={styles.timeRow}>
+                                    <View style={styles.timeIcon}>
+                                        <Ionicons name="walk-outline" size={20} color="#666666"/>
+                                    </View>
+                                    <Text style={styles.timeText}>
+                                        {getWalkingTime(restaurant?.distance_km ?? 0)} min walking
+                                    </Text>
+                                </View>
+                                <View style={styles.timeRow}>
+                                    <View style={styles.timeIcon}>
+                                        <Ionicons name="car-outline" size={20} color="#666666"/>
+                                    </View>
+                                    <Text style={styles.timeText}>
+                                        {getDrivingTime(restaurant?.distance_km ?? 0)} min driving
+                                    </Text>
+                                </View>
+                            </View>
+
+                            <PickUpDeliveryToggle/>
+                        </View>
                     </View>
                 </View>
-            </View>
+            </Animated.View>
+
             <InformationMapModal/>
             <BadgeDetailModal/>
-        </View>
+        </Animated.View>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
         backgroundColor: '#FFFFFF',
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 10,
+    },
+    miniHeader: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: 60,
+        backgroundColor: '#FFFFFF',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 16,
+        zIndex: 10,
+        elevation: 3,
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.1,
+        shadowRadius: 3,
+    },
+    miniTitle: {
+        fontFamily: 'Poppins-SemiBold',
+        fontSize: 18,
+        color: '#1A1A1A',
+        flex: 1,
+    },
+    miniRating: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#F8F8F8',
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 12,
+    },
+    miniRatingText: {
+        fontFamily: 'Poppins-Regular',
+        fontSize: 14,
+        color: '#1A1A1A',
+        marginLeft: 4,
     },
     imageContainer: {
         width: '100%',
