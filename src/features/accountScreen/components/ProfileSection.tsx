@@ -1,29 +1,24 @@
 import React from 'react';
-import {ActivityIndicator, StyleSheet, Text, TextInput, View} from 'react-native';
-import {Feather} from '@expo/vector-icons';
+import {StyleSheet, Text, TextInput, View} from 'react-native';
+import {useSelector} from "react-redux";
+import {RootState} from "@/src/types/store";
 
 interface ProfileSectionProps {
-    isEditing: boolean;
+    isEditing: boolean,
     editedValues: {
         name_surname: string;
-    };
+    },
     setEditedValues: React.Dispatch<React.SetStateAction<{
         name_surname: string;
         email: string;
         phoneNumber: string;
-    }>>;
-    name_surname: string;
-    totalDiscount: number;
-    isLoading?: boolean;
+    }>>,
 }
 
 const ProfileSection: React.FC<ProfileSectionProps> = ({
                                                            isEditing,
                                                            editedValues,
                                                            setEditedValues,
-                                                           name_surname,
-                                                           totalDiscount = 0,
-                                                           isLoading = false,
                                                        }) => {
     // Get user initials for avatar
     const getInitials = (name: string) => {
@@ -35,18 +30,11 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
         return name.substring(0, 2).toUpperCase();
     };
 
-    // Format currency
-    const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: 'USD',
-            minimumFractionDigits: 2
-        }).format(amount);
-    };
+
+    const name_surname = useSelector((state: RootState) => state.user.name_surname);
 
     return (
         <View style={styles.container}>
-            {/* User profile header with avatar and name */}
             <View style={styles.profileHeader}>
                 <View style={styles.avatarContainer}>
                     <Text style={styles.avatarText}>{getInitials(name_surname)}</Text>
@@ -68,22 +56,17 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
                 </View>
             </View>
 
-            {/* Money saved card */}
-            <View style={styles.moneySavedContainer}>
-                <View style={styles.moneySavedCard}>
-                    <Feather name="dollar-sign" size={24} color="#50703C"/>
+            {/*/!* Money saved card *!/*/}
+            {/*<View style={styles.moneySavedContainer}>*/}
+            {/*    <View style={styles.moneySavedCard}>*/}
+            {/*        <Feather name="dollar-sign" size={24} color="#50703C"/>*/}
 
-                    {isLoading ? (
-                        <ActivityIndicator size="small" color="#50703C" style={styles.moneySavedValue}/>
-                    ) : (
-                        <Text style={styles.moneySavedValue}>
-                            {formatCurrency(totalDiscount)}
-                        </Text>
-                    )}
-
-                    <Text style={styles.moneySavedLabel}>Total Money Saved</Text>
-                </View>
-            </View>
+            {/*        <Text style={styles.moneySavedValue}>*/}
+            {/*            {moneySaved}*/}
+            {/*        </Text>*/}
+            {/*        <Text style={styles.moneySavedLabel}>Total Money Saved</Text>*/}
+            {/*    </View>*/}
+            {/*</View>*/}
         </View>
     );
 };

@@ -1,23 +1,25 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import {ScrollView, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import {MaterialCommunityIcons, MaterialIcons} from '@expo/vector-icons';
+import {useDispatch} from "react-redux";
+import {AppDispatch} from "@/src/redux/store";
+import {fetchUserAchievementsThunk} from "@/src/redux/thunks/achievementThunks";
+import type {NativeStackNavigationProp} from "@react-navigation/native-stack";
+import {RootStackParamList} from "@/src/utils/navigation";
 
 export interface Achievement {
     id: number;
     name: string;
     achievement_type: string;
-    badge_image_url?: string;
+    badge_image_url: string;
     description: string;
-    earned_at?: string;
     threshold?: number;
-    unlocked?: boolean;
-    discount_percentage?: number;
+    earned_at?: string;
 }
 
 interface AchievementsSectionProps {
     achievements: Achievement[];
     onViewAchievements: () => void;
-    totalDiscountEarned?: number;
 }
 
 // Map of achievement types to icon names (Material Community Icons)
@@ -30,22 +32,46 @@ const ACHIEVEMENT_ICONS: { [key: string]: string } = {
     'ECO_WARRIOR': 'leaf',
     'DEFAULT': 'medal',
 };
+export type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const AchievementsSection: React.FC<AchievementsSectionProps> = ({
                                                                      achievements,
                                                                      onViewAchievements,
-                                                                     totalDiscountEarned = 0
                                                                  }) => {
+    // Track whether we've already dispatched the thunk
+    const [hasDispatchedFetch, setHasDispatchedFetch] = useState(false);
+
+    console.log("[DEBUG][2025-04-06 20:02:59][emreutkan] AchievementsSection: Component rendering with",
+        achievements?.length || 0, "achievements", "hasDispatchedFetch:", hasDispatchedFetch);
+
+    if (achievements?.length) {
+        console.log("[DEBUG][2025-04-06 20:02:59][emreutkan] AchievementsSection: First few achievements:",
+            JSON.stringify(achievements.slice(0, 2), null, 2));
+    }
+
     // Sort achievements by unlocked status (unlocked first)
-    const sortedAchievements = [...achievements].sort((a, b) => {
-        // If unlocked is not defined, treat it as false
-        const aUnlocked = a.unlocked === true;
-        const bUnlocked = b.unlocked === true;
+    const sortedAchievements = [...(achievements || [])].sort((a, b) => {
+        // Determine unlocked status based on earned_at existence
+        const aUnlocked = !!a.earned_at;
+        const bUnlocked = !!b.earned_at;
 
         if (aUnlocked && !bUnlocked) return -1;
         if (!aUnlocked && bUnlocked) return 1;
         return 0;
     });
+
+    console.log("[DEBUG][2025-04-06 20:02:59][emreutkan] AchievementsSection: Sorted achievements - Unlocked count:",
+        sortedAchievements.filter(a => !!a.earned_at).length);
+
+    const dispatch = useDispatch<AppDispatch>();
+
+    useEffect(() => {
+        if (!hasDispatchedFetch) {
+            console.log("[DEBUG][2025-04-06 20:02:59][emreutkan] AchievementsSection: useEffect running, dispatching thunk");
+            dispatch(fetchUserAchievementsThunk());
+            setHasDispatchedFetch(true);
+        }
+    }, [dispatch, hasDispatchedFetch]);
 
     return (
         <View style={styles.achievementsSection}>
@@ -56,19 +82,13 @@ const AchievementsSection: React.FC<AchievementsSectionProps> = ({
                 </TouchableOpacity>
             </View>
 
-            {totalDiscountEarned > 0 && (
-                <View style={styles.discountBanner}>
-                    <Text style={styles.discountText}>
-                        You've earned {totalDiscountEarned}% discount on your next order!
-                    </Text>
-                </View>
-            )}
-
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.achievementsScroll}>
                 {sortedAchievements.map((achievement) => {
                     // Get icon name from mapping or use default
                     const iconName = ACHIEVEMENT_ICONS[achievement.achievement_type] || ACHIEVEMENT_ICONS.DEFAULT;
-                    const isUnlocked = achievement.unlocked === true;
+                    const isUnlocked = !!achievement.earned_at;
+
+                    console.log(`[DEBUG][2025-04-06 20:02:59][emreutkan] AchievementsSection: Rendering achievement ${achievement.id} - ${achievement.name}, unlocked: ${isUnlocked}`);
 
                     return (
                         <View
@@ -103,14 +123,6 @@ const AchievementsSection: React.FC<AchievementsSectionProps> = ({
                                 <Text style={styles.achievementDate}>
                                     {new Date(achievement.earned_at).toLocaleDateString()}
                                 </Text>
-                            )}
-
-                            {achievement.discount_percentage && isUnlocked && (
-                                <View style={styles.discountTag}>
-                                    <Text style={styles.discountTagText}>
-                                        +{achievement.discount_percentage}%
-                                    </Text>
-                                </View>
                             )}
 
                             {!isUnlocked && (
@@ -197,32 +209,6 @@ const styles = StyleSheet.create({
         color: '#777',
         textAlign: 'center',
         marginTop: 4,
-    },
-    discountBanner: {
-        backgroundColor: '#fef3c7',
-        borderRadius: 8,
-        padding: 10,
-        marginBottom: 12,
-        borderLeftWidth: 4,
-        borderLeftColor: '#f59e0b',
-    },
-    discountText: {
-        color: '#92400e',
-        fontWeight: '500',
-    },
-    discountTag: {
-        position: 'absolute',
-        top: 8,
-        right: 8,
-        backgroundColor: '#50703C',
-        borderRadius: 10,
-        paddingHorizontal: 6,
-        paddingVertical: 2,
-    },
-    discountTagText: {
-        color: '#FFFFFF',
-        fontSize: 10,
-        fontWeight: '700',
     },
     lockIcon: {
         position: 'absolute',

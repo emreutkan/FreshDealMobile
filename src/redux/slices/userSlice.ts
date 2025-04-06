@@ -2,7 +2,6 @@ import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 import {
     getUserDataThunk,
     getUserRankThunk,
-    getUserSavingsThunk,
     loginUserThunk,
     registerUserThunk,
     updateEmailThunk,
@@ -10,8 +9,9 @@ import {
     updateUsernameThunk,
 } from "@/src/redux/thunks/userThunks";
 import {verifyCode} from "@/src/redux/api/authAPI";
-import {UserRank, UserState} from "@/src/types/states";
+import {UserState} from "@/src/types/states";
 import {CombinedAchievementsData, fetchUserAchievementsThunk} from '../thunks/achievementThunks';
+import {UserRankResponse} from "@/src/redux/api/userAPI";
 
 
 const initialState: UserState = {
@@ -34,14 +34,9 @@ const initialState: UserState = {
     isAuthenticated: false,
     foodSaved: 0,
     moneySaved: 0,
-
-    // Achievement-related state
-    currency: "USD",
-
     achievements: [],
     achievementsLoading: false,
     totalDiscountEarned: 0,
-    savingsLoading: false,
     userId: 0,
     rank: 0,
     totalDiscount: 0,
@@ -196,30 +191,16 @@ const userSlice = createSlice({
                 state.achievementsLoading = false;
                 state.achievements = action.payload.achievements;
 
-
             })
             .addCase(fetchUserAchievementsThunk.rejected, (state, action) => {
                 state.achievementsLoading = false;
                 state.error = action.error?.message || 'Failed to fetch achievements';
             })
-            .addCase(getUserSavingsThunk.pending, (state) => {
-                state.savingsLoading = true;
-            })
-            .addCase(getUserSavingsThunk.fulfilled, (state, action) => {
-                state.savingsLoading = false;
-                state.moneySaved = action.payload.total_money_saved;
-                if (action.payload.currency) {
-                    state.currency = action.payload.currency as 'USD';
-                }
-            })
-            .addCase(getUserSavingsThunk.rejected, (state) => {
-                state.savingsLoading = false;
-            })
+
             .addCase(getUserRankThunk.pending, (state) => {
                 state.rankLoading = true;
             })
-
-            .addCase(getUserRankThunk.fulfilled, (state, action: PayloadAction<UserRank>) => {
+            .addCase(getUserRankThunk.fulfilled, (state, action: PayloadAction<UserRankResponse>) => {
                 state.rankLoading = false;
                 state.rank = action.payload.rank;
                 state.totalDiscount = action.payload.total_discount;

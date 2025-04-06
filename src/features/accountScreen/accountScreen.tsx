@@ -1,7 +1,6 @@
-import React, {useEffect, useState} from 'react';
-import {ActivityIndicator, Alert, ScrollView, StatusBar, StyleSheet, Text, View} from 'react-native';
+import React, {useCallback, useEffect, useState} from 'react';
+import {ActivityIndicator, Alert, RefreshControl, ScrollView, StatusBar, StyleSheet, Text, View} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
-import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useNavigation} from '@react-navigation/native';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 
@@ -16,43 +15,35 @@ import ActionsSection from './components/ActionsSection';
 import {RootStackParamList} from '@/src/utils/navigation';
 import {RootState} from '@/src/types/store';
 import {logout} from '@/src/redux/slices/userSlice';
-import {
-    getUserDataThunk,
-    getUserRankThunk,
-    getUserSavingsThunk,
-    updateEmailThunk,
-    updatePasswordThunk,
-    updateUsernameThunk
-} from '@/src/redux/thunks/userThunks';
+import {updateEmailThunk, updatePasswordThunk, updateUsernameThunk} from '@/src/redux/thunks/userThunks';
 import {AppDispatch} from '@/src/redux/store';
 import {fetchUserAchievementsThunk} from '@/src/redux/thunks/achievementThunks';
 
 export type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const AccountScreen: React.FC = () => {
+    console.log("[DEBUG][2025-04-06 20:08:58][emreutkan] AccountScreen: Component initializing");
+
     // Redux and navigation hooks
     const dispatch = useDispatch<AppDispatch>();
     const navigation = useNavigation<NavigationProp>();
-    const insets = useSafeAreaInsets();
 
-    // Redux state
+    // Redux state - user data
     const {
         name_surname,
         email,
         phoneNumber,
-        moneySaved,
-        currency = "USD",
-        savingsLoading = false,
-        userId,
-        rank = 0,
-        totalDiscount = 0,
-        rankLoading = false,
         loading,
-        achievements = [],
-        achievementsLoading = false,
-        totalDiscountEarned = 0,
-        token // Add token to the destructured state
+        token
     } = useSelector((state: RootState) => state.user);
+
+    // Redux state - achievements data
+    const {
+        achievements = [],
+        loading: achievementsLoading
+    } = useSelector((state: RootState) => state.user);
+
+    console.log(`[DEBUG][2025-04-06 20:08:58][emreutkan] AccountScreen: User state loaded, achievements count: ${achievements.length}`);
 
     // Local state for editing
     const [isEditing, setIsEditing] = useState(false);
@@ -62,20 +53,8 @@ const AccountScreen: React.FC = () => {
         phoneNumber,
     });
 
-    // Fetch user data, achievements, rank and savings on component mount
-    useEffect(() => {
-        // First get user data to get userId
-        dispatch(getUserDataThunk())
-            .unwrap()
-            .then((userData) => {
-                if (userData && userData.user_data && userData.user_data.id) {
-                    dispatch(getUserRankThunk(userData.user_data.id));
-                }
-            });
-
-        dispatch(fetchUserAchievementsThunk());
-        dispatch(getUserSavingsThunk());
-    }, [dispatch]);
+    // Add state for refresh control
+    const [refreshing, setRefreshing] = useState(false);
 
     // Update edited values when user data changes
     useEffect(() => {
@@ -85,6 +64,28 @@ const AccountScreen: React.FC = () => {
             phoneNumber,
         });
     }, [name_surname, email, phoneNumber]);
+
+    // Fetch achievements on initial load
+    useEffect(() => {
+        console.log("[DEBUG][2025-04-06 20:08:58][emreutkan] AccountScreen: Initial fetch of achievements");
+        dispatch(fetchUserAchievementsThunk());
+    }, [dispatch]);
+
+    // Refresh function - now also refreshes achievements
+    const onRefresh = useCallback(() => {
+        console.log("[DEBUG][2025-04-06 20:08:58][emreutkan] AccountScreen: Refreshing data");
+        setRefreshing(true);
+
+        // Dispatch achievement thunk when refreshing
+        dispatch(fetchUserAchievementsThunk())
+            .finally(() => {
+                setTimeout(() => {
+                    setRefreshing(false);
+                    console.log("[DEBUG][2025-04-06 20:08:58][emreutkan] AccountScreen: Refresh complete");
+                }, 300);
+            });
+
+    }, [dispatch]);
 
     // Event Handlers
     const handleLogout = () => {
@@ -181,6 +182,8 @@ const AccountScreen: React.FC = () => {
     };
 
     const handleViewAchievements = () => {
+        console.log("[DEBUG][2025-04-06 20:08:58][emreutkan] AccountScreen: View Achievements triggered with", achievements.length, "achievements");
+
         if (achievements.length === 0) {
             Alert.alert(
                 'No Achievements Available',
@@ -190,17 +193,18 @@ const AccountScreen: React.FC = () => {
             return;
         }
 
-        const unlockedCount = achievements.filter(a => a.unlocked).length;
+        // Count unlocked achievements (ones with earned_at date)
+        const unlockedCount = achievements.filter(a => !!a.earned_at).length;
         const totalCount = achievements.length;
 
         // Create lists of unlocked and locked achievements
         const unlockedAchievements = achievements
-            .filter(a => a.unlocked)
+            .filter(a => !!a.earned_at)
             .map(a => `✅ ${a.name}: ${a.description}${a.earned_at ? ` (${new Date(a.earned_at).toLocaleDateString()})` : ''}`)
             .join('\n');
 
         const lockedAchievements = achievements
-            .filter(a => !a.unlocked)
+            .filter(a => !a.earned_at)
             .map(a => `🔒 ${a.name}: ${a.description}${a.threshold ? ` (Required: ${a.threshold})` : ''}`)
             .join('\n');
 
@@ -213,16 +217,13 @@ const AccountScreen: React.FC = () => {
         );
     };
 
-    const handleViewAllRankings = () => {
-        navigation.navigate('Rankings');
-    };
 
     const handleDebugToken = () => {
         if (token) {
-            console.log('User Token:', token);
+            console.log('[DEBUG][2025-04-06 20:08:58][emreutkan] AccountScreen: User Token:', token);
             Alert.alert('Debug Info', 'Token has been logged to console');
         } else {
-            console.log('No token found');
+            console.log('[DEBUG][2025-04-06 20:08:58][emreutkan] AccountScreen: No token found');
             Alert.alert('Debug Info', 'No token found');
         }
     };
@@ -239,23 +240,27 @@ const AccountScreen: React.FC = () => {
         <>
             <StatusBar translucent backgroundColor="transparent" barStyle="dark-content"/>
             <AccountHeader isEditing={isEditing} onEdit={handleEditInfo}/>
-            <ScrollView style={styles.safeArea}>
+            <ScrollView
+                style={styles.safeArea}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        colors={['#50703C']} // Android
+                        tintColor="#50703C" // iOS
+                        title="Refreshing..." // iOS
+                        titleColor="#50703C" // iOS
+                    />
+                }
+            >
                 <View style={styles.container}>
                     <ProfileSection
                         isEditing={isEditing}
                         editedValues={editedValues}
                         setEditedValues={setEditedValues}
-                        name_surname={name_surname}
-                        moneySaved={moneySaved}
-                        currency={currency}
-                        savingsLoading={savingsLoading}
                     />
 
                     <RankingCard
-                        rank={rank}
-                        totalDiscount={totalDiscount}
-                        isLoading={rankLoading}
-                        onViewAllRankings={handleViewAllRankings}
                     />
 
                     {achievementsLoading ? (
@@ -264,13 +269,10 @@ const AccountScreen: React.FC = () => {
                             <Text style={styles.loadingText}>Loading achievements...</Text>
                         </View>
                     ) : (
-                        achievements.length > 0 && (
-                            <AchievementsSection
-                                achievements={achievements}
-                                onViewAchievements={handleViewAchievements}
-                                totalDiscountEarned={totalDiscountEarned}
-                            />
-                        )
+                        <AchievementsSection
+                            achievements={achievements}
+                            onViewAchievements={handleViewAchievements}
+                        />
                     )}
 
                     <InfoCards

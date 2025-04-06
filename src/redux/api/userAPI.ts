@@ -2,22 +2,22 @@
 import {API_BASE_URL} from "@/src/redux/api/API";
 // api/userAPI.ts
 import {apiClient} from '@/src/services/apiClient';
-import {UserDataResponse} from "@/src/redux/slices/userSlice";
 import {
     AddFavoriteResponse,
     GetFavoritesResponse,
     RemoveFavoriteResponse,
     UpdateEmailResponse,
     UpdatePasswordResponse,
-    UpdateUsernameResponse
-} from "@/src/types/api/user/responses";
+    UpdateUsernameResponse,
+    UserDataResponse
+} from "@/src/types/api/user/responses"
 import {UserRank} from "@/src/types/states";
 
 const USER_ENDPOINT = `${API_BASE_URL}/user`;
 
 export interface UserSavingsResponse {
-    total_money_saved: number;
-    currency: string;  // In case you have multiple currencies
+    total_discount: number;
+    rank: number;  // In case you have multiple currencies
 }
 
 
@@ -92,13 +92,7 @@ export const userApi = {
             token,
         });
     },
-    async getUserSavings(token: string): Promise<UserSavingsResponse> {
-        return apiClient.request({
-            method: 'GET',
-            url: `${USER_ENDPOINT}/savings`,
-            token,
-        });
-    },
+
     async getUserRank(userId: number, token: string): Promise<UserRankResponse> {
         return apiClient.request({
             method: 'GET',

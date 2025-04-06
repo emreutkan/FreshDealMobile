@@ -1,53 +1,52 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import {ActivityIndicator, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import {MaterialCommunityIcons} from '@expo/vector-icons';
+import {RootState} from "@/src/types/store";
+import {getUserRankThunk} from "@/src/redux/thunks/userThunks";
+import {useDispatch, useSelector} from 'react-redux';
+import {AppDispatch} from '@/src/redux/store';
+import type {NativeStackNavigationProp} from "@react-navigation/native-stack";
+import {RootStackParamList} from "@/src/utils/navigation";
+import {useNavigation} from "@react-navigation/native";
 
-interface RankingCardProps {
-    rank: number;
-    totalDiscount: number;
-    isLoading?: boolean;
-    onViewAllRankings?: () => void;
-}
 
-const RankingCard: React.FC<RankingCardProps> = ({
-                                                     rank,
-                                                     totalDiscount,
-                                                     isLoading = false,
-                                                     onViewAllRankings
-                                                 }) => {
-    // Get medal icon based on rank
-    const getMedalIcon = () => {
-        switch (rank) {
-            case 1:
-                return {name: 'medal', color: '#FFD700'}; // Gold
-            case 2:
-                return {name: 'medal', color: '#C0C0C0'}; // Silver
-            case 3:
-                return {name: 'medal', color: '#CD7F32'}; // Bronze
-            default:
-                return {name: 'medal-outline', color: '#50703C'}; // Default
-        }
+export type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+
+const RankingCard: React.FC = () => {
+    const dispatch = useDispatch<AppDispatch>();
+
+    useEffect(() => {
+        dispatch(getUserRankThunk());
+
+    }, []);
+    const rank = useSelector((state: RootState) => state.user.rank);
+    const totalDiscount = useSelector((state: RootState) => state.user.totalDiscount);
+    const rankLoading = useSelector((state: RootState) => state.user.rankLoading);
+    console.log(rank, totalDiscount, rankLoading);
+    const navigation = useNavigation<NavigationProp>();
+
+    const handleViewAllRankings = () => {
+        navigation.navigate('Rankings');
     };
 
-    const {name, color} = getMedalIcon();
 
     return (
         <View style={styles.container}>
             <View style={styles.header}>
                 <Text style={styles.title}>Your Ranking</Text>
-                <TouchableOpacity onPress={onViewAllRankings}>
+                <TouchableOpacity onPress={handleViewAllRankings}>
                     <Text style={styles.viewAll}>View All</Text>
                 </TouchableOpacity>
             </View>
 
-            {isLoading ? (
+            {rankLoading ? (
                 <View style={styles.loadingContainer}>
                     <ActivityIndicator size="small" color="#50703C"/>
                 </View>
             ) : (
                 <View style={styles.content}>
                     <View style={styles.rankSection}>
-                        <MaterialCommunityIcons name={name} size={32} color={color}/>
+                        <MaterialCommunityIcons name={"medal-outline"} size={32} color={"#50703C"}/>
                         <Text style={styles.rankText}>Rank #{rank}</Text>
                     </View>
 

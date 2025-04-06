@@ -4,7 +4,7 @@ import {Listing} from "@/src/types/api/listing/model";
 import {CartItem} from "@/src/types/api/cart/model";
 import {Address} from "@/src/types/api/address/model";
 import {Purchase} from "@/src/types/api/purchase/model";
-
+import {UserRankResponse} from "@/src/types/api/user/rank";
 
 export interface RestaurantSearchResults {
     results: RestaurantSearchResult[];
@@ -116,13 +116,11 @@ export interface UserState {
     achievements: Achievement[];
     achievementsLoading: boolean;
     totalDiscountEarned: number;
-    savingsLoading: boolean;
-    currency: "USD",
     userId: number;
     rank: number;
     totalDiscount: number;
     rankLoading: boolean;
-    rankings: UserRank[];
+    rankings: UserRankResponse[];
     rankingsLoading: boolean;
 }
 
@@ -138,9 +136,3 @@ export interface Achievement {
     discount_percentage?: number;
 }
 
-export interface UserRank {
-    rank: number;
-    total_discount: number;
-    user_id: number;
-    user_name: string;
-}
