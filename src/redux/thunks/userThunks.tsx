@@ -25,7 +25,7 @@ import {
 } from "@/src/types/api/user/responses";
 import {setToken} from "@/src/redux/slices/userSlice";
 import {API_BASE_URL} from "@/src/redux/api/API";
-import {apiClient} from "expo-dev-launcher/bundle/apiClient";
+import {apiClient} from '@/src/services/apiClient';
 import {UserRank} from "@/src/types/states";
 
 export const loginUserThunk = createAsyncThunk<

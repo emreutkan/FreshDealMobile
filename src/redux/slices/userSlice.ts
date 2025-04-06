@@ -1,7 +1,6 @@
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 import {
     getUserDataThunk,
-    getUserRankingsThunk,
     getUserRankThunk,
     getUserSavingsThunk,
     loginUserThunk,
@@ -177,7 +176,7 @@ const userSlice = createSlice({
                 state.name_surname = action.payload.user_data.name;
                 state.email = action.payload.user_data.email;
                 state.phoneNumber = action.payload.user_data.phone_number?.replace(state.selectedCode, '') || '';
-                state.role = action.payload.user_data.role;
+                state.role = action.payload.user_data.role as 'customer';
                 state.email_verified = action.payload.user_data.email_verified;
                 state.isInitialized = true;
                 state.userId = action.payload.user_data.id;
@@ -197,13 +196,7 @@ const userSlice = createSlice({
                 state.achievementsLoading = false;
                 state.achievements = action.payload.achievements;
 
-                // Calculate total discount earned (for future use)
-                state.totalDiscountEarned = action.payload.achievements
-                    .filter(achievement =>
-                        achievement.unlocked && achievement.discount_percentage
-                    )
-                    .reduce((total, achievement) =>
-                        total + (achievement.discount_percentage || 0), 0);
+
             })
             .addCase(fetchUserAchievementsThunk.rejected, (state, action) => {
                 state.achievementsLoading = false;
@@ -216,7 +209,7 @@ const userSlice = createSlice({
                 state.savingsLoading = false;
                 state.moneySaved = action.payload.total_money_saved;
                 if (action.payload.currency) {
-                    state.currency = action.payload.currency;
+                    state.currency = action.payload.currency as 'USD';
                 }
             })
             .addCase(getUserSavingsThunk.rejected, (state) => {
@@ -225,9 +218,7 @@ const userSlice = createSlice({
             .addCase(getUserRankThunk.pending, (state) => {
                 state.rankLoading = true;
             })
-            .addCase(getUserRankThunk.pending, (state) => {
-                state.rankLoading = true;
-            })
+
             .addCase(getUserRankThunk.fulfilled, (state, action: PayloadAction<UserRank>) => {
                 state.rankLoading = false;
                 state.rank = action.payload.rank;
@@ -237,29 +228,6 @@ const userSlice = createSlice({
                 state.rankLoading = false;
             })
 
-            // Handle getUserRankingsThunk
-            .addCase(getUserRankingsThunk.pending, (state) => {
-                state.rankingsLoading = true;
-            })
-            .addCase(getUserRankingsThunk.fulfilled, (state, action: PayloadAction<UserRank[]>) => {
-                state.rankingsLoading = false;
-                state.rankings = action.payload;
-            })
-            .addCase(getUserRankingsThunk.rejected, (state) => {
-                state.rankingsLoading = false;
-            })
-
-            // Existing achievement cases...
-            .addCase(fetchUserAchievementsThunk.pending, (state) => {
-                state.achievementsLoading = true;
-            })
-            .addCase(fetchUserAchievementsThunk.fulfilled, (state, action) => {
-                state.achievementsLoading = false;
-                state.achievements = action.payload.achievements;
-            })
-            .addCase(fetchUserAchievementsThunk.rejected, (state) => {
-                state.achievementsLoading = false;
-            });
 
     },
 

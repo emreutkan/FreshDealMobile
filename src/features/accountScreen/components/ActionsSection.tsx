@@ -5,69 +5,76 @@ import {MaterialIcons} from '@expo/vector-icons';
 interface ActionsSectionProps {
     onPasswordReset: () => void;
     onLogout: () => void;
+    onDebugToken: () => void; // Add new prop for debug function
 }
 
-const ActionsSection: React.FC<ActionsSectionProps> = ({onPasswordReset, onLogout}) => {
+const ActionsSection: React.FC<ActionsSectionProps> = ({
+                                                           onPasswordReset,
+                                                           onLogout,
+                                                           onDebugToken,
+                                                       }) => {
     return (
-        <View style={styles.actionsSection}>
-            <TouchableOpacity style={styles.actionButton} onPress={onPasswordReset}>
+        <View style={styles.container}>
+            <Text style={styles.title}>Account Actions</Text>
+
+            <TouchableOpacity style={styles.actionItem} onPress={onPasswordReset}>
                 <MaterialIcons name="lock" size={24} color="#50703C"/>
-                <Text style={styles.actionButtonText}>Reset Password</Text>
-                <MaterialIcons name="chevron-right" size={24} color="#666"/>
+                <Text style={styles.actionText}>Change Password</Text>
+                <MaterialIcons name="chevron-right" size={24} color="#CCCCCC"/>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.logoutButton} onPress={onLogout}>
-                <MaterialIcons name="logout" size={24} color="#FFF"/>
-                <Text style={styles.logoutButtonText}>Logout</Text>
+
+            <TouchableOpacity style={styles.actionItem} onPress={onLogout}>
+                <MaterialIcons name="logout" size={24} color="#D32F2F"/>
+                <Text style={[styles.actionText, styles.logoutText]}>Logout</Text>
+                <MaterialIcons name="chevron-right" size={24} color="#CCCCCC"/>
+            </TouchableOpacity>
+
+            {/* Debug Button */}
+            <TouchableOpacity style={styles.actionItem} onPress={onDebugToken}>
+                <MaterialIcons name="bug-report" size={24} color="#4285F4"/>
+                <Text style={[styles.actionText, styles.debugText]}>Debug Token</Text>
+                <MaterialIcons name="chevron-right" size={24} color="#CCCCCC"/>
             </TouchableOpacity>
         </View>
     );
 };
 
 const styles = StyleSheet.create({
-    actionsSection: {
-        marginBottom: 12,
-    },
-    actionButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
+    container: {
         backgroundColor: '#FFFFFF',
+        borderRadius: 12,
         padding: 16,
-        borderRadius: 12,
-        marginBottom: 12,
-        shadowColor: '#000',
-        shadowOffset: {width: 0, height: 2},
-        shadowOpacity: 0.05,
-        shadowRadius: 3.84,
+        marginBottom: 16,
         elevation: 2,
-    },
-    actionButtonText: {
-        flex: 1,
-        fontSize: 16,
-        color: '#333',
-        marginLeft: 12,
-        fontWeight: '500',
-        fontFamily: 'Poppins-Regular',
-    },
-    logoutButton: {
-        flexDirection: 'row',
-        backgroundColor: '#ff4444',
-        paddingVertical: 16,
-        borderRadius: 12,
-        alignItems: 'center',
-        justifyContent: 'center',
         shadowColor: '#000',
-        shadowOffset: {width: 0, height: 2},
+        shadowOffset: {width: 0, height: 1},
         shadowOpacity: 0.1,
-        shadowRadius: 3.84,
-        elevation: 5,
-        marginTop: 16,
+        shadowRadius: 1,
     },
-    logoutButtonText: {
-        fontFamily: 'Poppins-Regular',
-        fontSize: 16,
-        color: '#fff',
+    title: {
+        fontSize: 18,
         fontWeight: '600',
-        marginLeft: 8,
+        marginBottom: 16,
+        color: '#333333',
+    },
+    actionItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: '#EEEEEE',
+    },
+    actionText: {
+        flex: 1,
+        marginLeft: 12,
+        fontSize: 16,
+        color: '#333333',
+    },
+    logoutText: {
+        color: '#D32F2F',
+    },
+    debugText: {
+        color: '#4285F4',
     },
 });
 

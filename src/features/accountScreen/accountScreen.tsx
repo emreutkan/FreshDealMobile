@@ -50,7 +50,8 @@ const AccountScreen: React.FC = () => {
         loading,
         achievements = [],
         achievementsLoading = false,
-        totalDiscountEarned = 0
+        totalDiscountEarned = 0,
+        token // Add token to the destructured state
     } = useSelector((state: RootState) => state.user);
 
     // Local state for editing
@@ -216,6 +217,16 @@ const AccountScreen: React.FC = () => {
         navigation.navigate('Rankings');
     };
 
+    const handleDebugToken = () => {
+        if (token) {
+            console.log('User Token:', token);
+            Alert.alert('Debug Info', 'Token has been logged to console');
+        } else {
+            console.log('No token found');
+            Alert.alert('Debug Info', 'No token found');
+        }
+    };
+
     if (loading) {
         return (
             <View style={styles.loadingContainer}>
@@ -270,7 +281,11 @@ const AccountScreen: React.FC = () => {
                         setEditedValues={setEditedValues}
                     />
                     <OrdersSection navigation={navigation}/>
-                    <ActionsSection onPasswordReset={handlePasswordReset} onLogout={handleLogout}/>
+                    <ActionsSection
+                        onPasswordReset={handlePasswordReset}
+                        onLogout={handleLogout}
+                        onDebugToken={handleDebugToken} // Pass debug handler to ActionsSection
+                    />
                 </View>
             </ScrollView>
         </>
