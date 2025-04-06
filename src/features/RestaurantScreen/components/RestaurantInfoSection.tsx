@@ -13,35 +13,111 @@ import {useNavigation} from "@react-navigation/native";
 import {AppDispatch} from "@/src/redux/store";
 import {getRestaurantBadgesThunk} from "@/src/redux/thunks/restaurantThunks";
 
-// Badge icon mappings
-const BADGE_ICONS = {
-    'fresh': 'food-apple',
-    'fast_delivery': 'truck-fast',
-    'customer_friendly': 'emoticon-happy-outline'
-};
-
-const BADGE_NAMES = {
-    'fresh': 'Fresh',
-    'fast_delivery': 'Fast Delivery',
-    'customer_friendly': 'Friendly'
+// Enhanced badge icon mappings with both icon and color
+const BADGE_INFO = {
+    'fresh': {
+        icon: 'food-apple',
+        name: 'Fresh Ingredients',
+        color: '#5CB85C',
+        description: 'Uses fresh, locally sourced ingredients'
+    },
+    'fast_delivery': {
+        icon: 'truck-fast',
+        name: 'Fast Delivery',
+        color: '#F0AD4E',
+        description: 'Quick delivery times, usually under 30 minutes'
+    },
+    'customer_friendly': {
+        icon: 'emoticon-happy-outline',
+        name: 'Customer Friendly',
+        color: '#5BC0DE',
+        description: 'Known for exceptional customer service'
+    },
+    // Add more badges with descriptions
+    'eco_friendly': {
+        icon: 'leaf',
+        name: 'Eco Friendly',
+        color: '#50703C',
+        description: 'Uses sustainable practices and eco-friendly packaging'
+    },
+    'best_value': {
+        icon: 'currency-usd',
+        name: 'Best Value',
+        color: '#D9534F',
+        description: 'Great quality food at competitive prices'
+    }
 };
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+
 const RestaurantInfoSection: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
     const navigation = useNavigation<NavigationProp>();
 
     const [showInfoModal, setShowInfoModal] = useState(false);
+    const [showBadgeModal, setShowBadgeModal] = useState(false);
+    const [selectedBadge, setSelectedBadge] = useState<string | null>(null);
+
     const restaurant = useSelector((state: RootState) => state.restaurant.selectedRestaurant);
+    const badges = useSelector((state: RootState) => state.restaurant.selectedRestaurant.badges || []);
+
     useEffect(() => {
         if (restaurant?.id) {
-            dispatch(getRestaurantBadgesThunk(restaurant.id));
+            dispatch(getRestaurantBadgesThunk({
+                restaurantId: Number(restaurant.id)
+            }));
         }
     }, [restaurant?.id, dispatch]);
 
-    console.log("the restaurant that restaurantinfo sees", restaurant);
+    // Badge detail modal
+    const BadgeDetailModal = () => {
+        if (!selectedBadge) return null;
 
+        const badgeInfo = BADGE_INFO[selectedBadge] || {
+            icon: 'medal',
+            name: selectedBadge,
+            color: '#666666',
+            description: 'No description available'
+        };
+
+        return (
+            <Modal
+                transparent
+                visible={showBadgeModal}
+                animationType="fade"
+                onRequestClose={() => setShowBadgeModal(false)}
+            >
+                <View style={styles.badgeModalContainer}>
+                    <TouchableOpacity
+                        style={styles.backdrop}
+                        onPress={() => setShowBadgeModal(false)}
+                    />
+                    <View style={styles.badgeModalContent}>
+                        <View style={[styles.badgeIconLarge, {backgroundColor: badgeInfo.color + '20'}]}>
+                            <MaterialCommunityIcons
+                                name={badgeInfo.icon}
+                                size={40}
+                                color={badgeInfo.color}
+                            />
+                        </View>
+                        <Text style={styles.badgeModalTitle}>{badgeInfo.name}</Text>
+                        <Text style={styles.badgeModalDescription}>{badgeInfo.description}</Text>
+
+                        <TouchableOpacity
+                            style={[styles.closeButtonSmall, {backgroundColor: badgeInfo.color}]}
+                            onPress={() => setShowBadgeModal(false)}
+                        >
+                            <Text style={styles.closeButtonText}>Close</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
+        );
+    };
+
+    // Information map modal remains the same
     const InformationMapModal = () => {
+        // Your existing InformationMapModal code
         return (
             <Modal
                 transparent
@@ -67,14 +143,12 @@ const RestaurantInfoSection: React.FC = () => {
 
                         <View style={{
                             marginBottom: 20,
-
                         }}>
                             <Text style={styles.modalInfoText}>
                                 {restaurant?.restaurantDescription || "No info available."}
                             </Text>
                             <Text style={styles.modalInfoText}>
                                 <Text style={{fontFamily: "Poppins-SemiBold"}}>Category: </Text>
-
                                 {restaurant?.category || "N/A"}
                             </Text>
                             <Text style={styles.modalInfoText}>
@@ -84,14 +158,12 @@ const RestaurantInfoSection: React.FC = () => {
                                     restaurant?.workingHoursEnd || ""
                                 )}
                             </Text>
-                            {restaurant.delivery && (
+                            {restaurant?.delivery && (
                                 <Text style={styles.modalInfoText}>
                                     <Text style={{fontFamily: "Poppins-SemiBold"}}>Delivery Fee: </Text>
                                     {`${restaurant?.deliveryFee || 0}\u20BA`}
                                 </Text>
                             )}
-
-
                         </View>
 
                         <View style={styles.mapContainer}>
@@ -103,32 +175,56 @@ const RestaurantInfoSection: React.FC = () => {
         )
     }
 
-    // Render badges section
+    // Enhanced badges section with animation and interactivity
     const renderBadges = () => {
-        // Get badges from restaurant object
-        const badges = restaurant?.badges || [];
-
-        if (badges.length === 0) {
+        if (!badges || badges.length === 0) {
             return null;
         }
 
         return (
             <View style={styles.badgesContainer}>
-                <Text style={styles.cardTitle}>Badges</Text>
+                <View style={styles.badgesTitleRow}>
+                    <Text style={styles.cardTitle}>Badges</Text>
+                    {badges.length > 3 && (
+                        <TouchableOpacity>
+                            <Text style={styles.seeAllText}>See All</Text>
+                        </TouchableOpacity>
+                    )}
+                </View>
+
                 <FlatList
                     data={badges}
                     horizontal
                     showsHorizontalScrollIndicator={false}
-                    renderItem={({item}) => (
-                        <View style={styles.badgeItem}>
-                            <MaterialCommunityIcons
-                                name={BADGE_ICONS[item] || 'medal'}
-                                size={24}
-                                color="#50703C"
-                            />
-                            <Text style={styles.badgeName}>{BADGE_NAMES[item] || item}</Text>
-                        </View>
-                    )}
+                    renderItem={({item}) => {
+                        const badgeInfo = BADGE_INFO[item] || {
+                            icon: 'medal',
+                            name: item,
+                            color: '#666666'
+                        };
+
+                        return (
+                            <TouchableOpacity
+                                style={[styles.badgeItem, {borderColor: badgeInfo.color}]}
+                                onPress={() => {
+                                    setSelectedBadge(item);
+                                    setShowBadgeModal(true);
+                                }}
+                                activeOpacity={0.7}
+                            >
+                                <View style={[styles.badgeIcon, {backgroundColor: badgeInfo.color + '20'}]}>
+                                    <MaterialCommunityIcons
+                                        name={badgeInfo.icon}
+                                        size={24}
+                                        color={badgeInfo.color}
+                                    />
+                                </View>
+                                <Text style={[styles.badgeName, {color: badgeInfo.color}]}>
+                                    {badgeInfo.name}
+                                </Text>
+                            </TouchableOpacity>
+                        );
+                    }}
                     keyExtractor={(item) => item}
                     contentContainerStyle={styles.badgesList}
                 />
@@ -205,10 +301,8 @@ const RestaurantInfoSection: React.FC = () => {
                         flexDirection: 'row',
                         justifyContent: 'space-between',
                         marginBottom: 16,
-
                     }}
                 >
-
                     <View style={styles.ratingContainer}>
                         <View style={styles.ratingBox}>
                             <Ionicons name="star" size={18} color="#FFD700"/>
@@ -224,15 +318,14 @@ const RestaurantInfoSection: React.FC = () => {
                                 {(restaurant?.distance_km ?? 0).toFixed(1)} km
                             </Text>
                         </View>
-
                     </View>
+
                     <TouchableOpacity
-                        style={styles.distanceBox}
+                        style={styles.commentsButton}
                         onPress={() => navigation.navigate('RestaurantComments')}
                     >
-                        <Text style={styles.distanceText}>
-                            Comments
-                        </Text>
+                        <Ionicons name="chatbubble-outline" size={18} color="#666666"/>
+                        <Text style={styles.commentsText}>Comments</Text>
                     </TouchableOpacity>
                 </View>
 
@@ -269,10 +362,10 @@ const RestaurantInfoSection: React.FC = () => {
                 </View>
             </View>
             <InformationMapModal/>
+            <BadgeDetailModal/>
         </View>
     );
 };
-
 
 const styles = StyleSheet.create({
     container: {
@@ -288,7 +381,6 @@ const styles = StyleSheet.create({
     restaurantImage: {
         width: '100%',
         height: '100%',
-
     },
     imageOverlay: {
         ...StyleSheet.absoluteFillObject,
@@ -370,6 +462,20 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#666666',
     },
+    commentsButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#F8F8F8',
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        borderRadius: 16,
+    },
+    commentsText: {
+        fontFamily: "Poppins-Regular",
+        fontSize: 14,
+        color: '#666666',
+        marginLeft: 6,
+    },
     infoCard: {
         backgroundColor: '#FFFFFF',
         borderRadius: 16,
@@ -385,7 +491,7 @@ const styles = StyleSheet.create({
         shadowRadius: 8,
         elevation: 3,
     },
-    // Badge styles
+    // Enhanced Badge styles
     badgesContainer: {
         backgroundColor: '#FFFFFF',
         borderRadius: 16,
@@ -401,24 +507,97 @@ const styles = StyleSheet.create({
         shadowRadius: 8,
         elevation: 3,
     },
+    badgesTitleRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 12,
+    },
+    seeAllText: {
+        fontFamily: "Poppins-Medium",
+        fontSize: 14,
+        color: '#50703C',
+    },
     badgesList: {
         paddingVertical: 8,
     },
     badgeItem: {
-        backgroundColor: '#F5F5F5',
-        borderRadius: 12,
+        flexDirection: 'column',
+        backgroundColor: '#FFFFFF',
+        borderRadius: 16,
         padding: 12,
         marginRight: 12,
         alignItems: 'center',
         justifyContent: 'center',
-        minWidth: 90,
+        minWidth: 100,
+        borderWidth: 1,
+        borderColor: '#50703C',
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 1,
+        },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+        elevation: 2,
+    },
+    badgeIcon: {
+        width: 50,
+        height: 50,
+        borderRadius: 25,
+        backgroundColor: '#F0F8FF',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 8,
+    },
+    badgeIconLarge: {
+        width: 80,
+        height: 80,
+        borderRadius: 40,
+        backgroundColor: '#F0F8FF',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 16,
     },
     badgeName: {
-        fontFamily: "Poppins-Regular",
+        fontFamily: "Poppins-Medium",
         fontSize: 12,
-        color: '#333333',
-        marginTop: 4,
+        color: '#50703C',
         textAlign: 'center',
+    },
+    badgeModalContainer: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: 'rgba(0,0,0,0.5)',
+    },
+    badgeModalContent: {
+        width: "80%",
+        backgroundColor: "#fff",
+        borderRadius: 16,
+        padding: 24,
+        alignItems: 'center',
+    },
+    badgeModalTitle: {
+        fontFamily: "Poppins-SemiBold",
+        fontSize: 20,
+        color: "#333",
+        marginBottom: 12,
+    },
+    badgeModalDescription: {
+        fontFamily: "Poppins-Regular",
+        fontSize: 16,
+        color: "#666",
+        textAlign: 'center',
+        lineHeight: 24,
+        marginBottom: 20,
+    },
+    closeButtonSmall: {
+        paddingHorizontal: 24,
+        paddingVertical: 10,
+        borderRadius: 20,
+        backgroundColor: "#50703C",
+        marginTop: 12,
     },
     cardTitle: {
         fontFamily: "Poppins-Regular",
@@ -452,7 +631,6 @@ const styles = StyleSheet.create({
         justifyContent: "flex-end",
         alignItems: "center",
         backgroundColor: 'rgba(0,0,0,0.5)',
-
     },
     backdrop: {
         position: "absolute",
@@ -492,7 +670,6 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: "600",
         fontFamily: "Poppins-Regular",
-
     },
     modalInfoText: {
         fontFamily: "Poppins-Regular",
