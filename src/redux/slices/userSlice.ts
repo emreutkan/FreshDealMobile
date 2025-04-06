@@ -1,6 +1,7 @@
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 import {
     getUserDataThunk,
+    getUserRankThunk,
     loginUserThunk,
     registerUserThunk,
     updateEmailThunk,
@@ -10,32 +11,8 @@ import {
 import {verifyCode} from "@/src/redux/api/authAPI";
 import {UserState} from "@/src/types/states";
 import {CombinedAchievementsData, fetchUserAchievementsThunk} from '../thunks/achievementThunks';
+import {UserRankResponse} from "@/src/redux/api/userAPI";
 
-export interface UserDataResponse {
-    user_data: {
-        id: number;
-        name: string;
-        email: string;
-        phone_number: string;
-        role: string;
-        email_verified: boolean;
-    };
-    user_address_list: Array<{
-        id: number;
-        title: string;
-        longitude: number;
-        latitude: number;
-        street: string;
-        neighborhood: string;
-        district: string;
-        province: string;
-        country: string;
-        postalCode: number;
-        apartmentNo: number;
-        doorNo: string;
-        is_primary: boolean;
-    }>;
-}
 
 const initialState: UserState = {
     email: '',
@@ -57,11 +34,16 @@ const initialState: UserState = {
     isAuthenticated: false,
     foodSaved: 0,
     moneySaved: 0,
-
-    // Achievement-related state
     achievements: [],
     achievementsLoading: false,
     totalDiscountEarned: 0,
+    userId: 0,
+    rank: 0,
+    totalDiscount: 0,
+    rankings: [],
+    rankLoading: false,
+    rankingsLoading: false,
+
 };
 
 const userSlice = createSlice({
@@ -189,9 +171,11 @@ const userSlice = createSlice({
                 state.name_surname = action.payload.user_data.name;
                 state.email = action.payload.user_data.email;
                 state.phoneNumber = action.payload.user_data.phone_number?.replace(state.selectedCode, '') || '';
-                state.role = action.payload.user_data.role;
+                state.role = action.payload.user_data.role as 'customer';
                 state.email_verified = action.payload.user_data.email_verified;
                 state.isInitialized = true;
+                state.userId = action.payload.user_data.id;
+
             })
             .addCase(getUserDataThunk.rejected, (state, action) => {
                 state.loading = false;
@@ -207,19 +191,27 @@ const userSlice = createSlice({
                 state.achievementsLoading = false;
                 state.achievements = action.payload.achievements;
 
-                // Calculate total discount earned (for future use)
-                state.totalDiscountEarned = action.payload.achievements
-                    .filter(achievement =>
-                        achievement.unlocked && achievement.discount_percentage
-                    )
-                    .reduce((total, achievement) =>
-                        total + (achievement.discount_percentage || 0), 0);
             })
             .addCase(fetchUserAchievementsThunk.rejected, (state, action) => {
                 state.achievementsLoading = false;
                 state.error = action.error?.message || 'Failed to fetch achievements';
-            });
+            })
+
+            .addCase(getUserRankThunk.pending, (state) => {
+                state.rankLoading = true;
+            })
+            .addCase(getUserRankThunk.fulfilled, (state, action: PayloadAction<UserRankResponse>) => {
+                state.rankLoading = false;
+                state.rank = action.payload.rank;
+                state.totalDiscount = action.payload.total_discount;
+            })
+            .addCase(getUserRankThunk.rejected, (state) => {
+                state.rankLoading = false;
+            })
+
+
     },
+
 });
 
 export const {

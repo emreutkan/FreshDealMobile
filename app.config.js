@@ -9,6 +9,7 @@ export default {
         icon: "./src/assets/images/icon.png",
         scheme: "myapp",
         userInterfaceStyle: "automatic",
+        newArchEnabled: true,
         splash: {
             image: "./src/assets/images/splash.png",
             resizeMode: "contain",
@@ -41,6 +42,7 @@ export default {
         },
         plugins: [
             "expo-font",
+            ...(process.env.USE_DEV_LAUNCHER === 'true' ? ["expo-dev-launcher"] : []),
             "expo-secure-store",
             [
                 "expo-notifications",

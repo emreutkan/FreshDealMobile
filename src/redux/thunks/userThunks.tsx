@@ -3,7 +3,7 @@
 import {createAsyncThunk} from "@reduxjs/toolkit";
 import {RootState} from "@/src/types/store";
 import {tokenService} from "@/src/services/tokenService";
-import {userApi} from "@/src/redux/api/userAPI";
+import {userApi, UserRankResponse} from "@/src/redux/api/userAPI";
 import {authApi} from "@/src/redux/api/authAPI";
 import {LoginResponse, RegisterResponse} from "@/src/types/api/auth/responses";
 import {LoginPayload, RegisterPayload} from "@/src/types/api/auth/requests";
@@ -20,9 +20,10 @@ import {
     RemoveFavoriteResponse,
     UpdateEmailResponse,
     UpdatePasswordResponse,
-    UpdateUsernameResponse
+    UpdateUsernameResponse,
+    UserDataResponse
 } from "@/src/types/api/user/responses";
-import {setToken, UserDataResponse} from "@/src/redux/slices/userSlice"; // Example import, adjust as needed
+import {setToken} from "@/src/redux/slices/userSlice";
 
 export const loginUserThunk = createAsyncThunk<
     LoginResponse,
@@ -218,3 +219,65 @@ export const getFavoritesThunk = createAsyncThunk<
     }
 );
 
+export const getUserRankThunk = createAsyncThunk<
+    UserRankResponse,
+    number | void, // Accept userId as parameter or use void
+    { state: RootState; rejectValue: string }
+>(
+    "user/getUserRank",
+    async (userId, {getState, rejectWithValue}) => {
+        try {
+            const token = await tokenService.getToken();
+            if (!token) {
+                return rejectWithValue("Authentication token is missing");
+            }
+
+            // Get userId from parameters or from state if not provided
+            const actualUserId = userId || getState().user.userId;
+
+            const response = await userApi.getUserRank(actualUserId, token);
+            console.log("User rank response:", response);
+
+            return response;
+        } catch (error: any) {
+            console.log("Error fetching user rank:", error);
+            return rejectWithValue(
+                error.response?.data?.message ||
+                error.message ||
+                "Failed to fetch user rank"
+            );
+        }
+    }
+);
+// Get all user rankings
+export const getUserRankingsThunk = createAsyncThunk<
+    UserRankResponse[],
+    void,
+    { state: RootState; rejectValue: string }
+>(
+    "user/getUserRankings",
+    async (_, {rejectWithValue}) => {
+        try {
+            const token = await tokenService.getToken();
+            if (!token) {
+                return rejectWithValue("Authentication token is missing");
+            }
+
+            const response = await userApi.getUserRankings(token);
+
+
+            if (!Array.isArray(response)) {
+                return rejectWithValue("Invalid rankings response format");
+            }
+
+            return response;
+        } catch (error: any) {
+            console.log("Error fetching user rankings:", error);
+            return rejectWithValue(
+                error.response?.data?.message ||
+                error.message ||
+                "Failed to fetch user rankings"
+            );
+        }
+    }
+);

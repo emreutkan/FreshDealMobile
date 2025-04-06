@@ -28,5 +28,7 @@ export interface Restaurant {
     deliveryFee: number | null;
     minOrderAmount: number | null;
     comments?: RestaurantComment[];
+    badges?: string[]; // Add this field
+
 }
 

@@ -1,12 +1,12 @@
-import React, {useEffect, useState} from 'react';
-import {ActivityIndicator, Alert, ScrollView, StatusBar, StyleSheet, View} from 'react-native';
+import React, {useCallback, useEffect, useState} from 'react';
+import {ActivityIndicator, Alert, RefreshControl, ScrollView, StatusBar, StyleSheet, Text, View} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
-import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useNavigation} from '@react-navigation/native';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 
 import AccountHeader from './components/AccountHeader';
 import ProfileSection from './components/ProfileSection';
+import RankingCard from './components/RankingCard';
 import AchievementsSection from './components/AchievementsSection';
 import InfoCards from './components/InfoCards';
 import OrdersSection from './components/OrdersSection';
@@ -22,22 +22,28 @@ import {fetchUserAchievementsThunk} from '@/src/redux/thunks/achievementThunks';
 export type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const AccountScreen: React.FC = () => {
+    console.log("[DEBUG][2025-04-06 20:08:58][emreutkan] AccountScreen: Component initializing");
+
     // Redux and navigation hooks
     const dispatch = useDispatch<AppDispatch>();
     const navigation = useNavigation<NavigationProp>();
-    const insets = useSafeAreaInsets();
 
-    // Redux state
+    // Redux state - user data
     const {
         name_surname,
         email,
         phoneNumber,
-        moneySaved,
-        foodSaved,
         loading,
-        achievements = [],
-        totalDiscountEarned = 0
+        token
     } = useSelector((state: RootState) => state.user);
+
+    // Redux state - achievements data
+    const {
+        achievements = [],
+        loading: achievementsLoading
+    } = useSelector((state: RootState) => state.user);
+
+    console.log(`[DEBUG][2025-04-06 20:08:58][emreutkan] AccountScreen: User state loaded, achievements count: ${achievements.length}`);
 
     // Local state for editing
     const [isEditing, setIsEditing] = useState(false);
@@ -47,10 +53,8 @@ const AccountScreen: React.FC = () => {
         phoneNumber,
     });
 
-    // Fetch achievements on component mount
-    useEffect(() => {
-        dispatch(fetchUserAchievementsThunk());
-    }, [dispatch]);
+    // Add state for refresh control
+    const [refreshing, setRefreshing] = useState(false);
 
     // Update edited values when user data changes
     useEffect(() => {
@@ -61,14 +65,27 @@ const AccountScreen: React.FC = () => {
         });
     }, [name_surname, email, phoneNumber]);
 
-    // Derived data
-    const userLevel = Math.floor(foodSaved / 10) + 1;
-    const progressToNextLevel = (foodSaved % 10) / 10;
-    const streakDays = 5; // This would typically come from state
-    const environmentalImpact = {
-        co2Saved: (foodSaved * 2.5).toFixed(1),
-        waterSaved: (foodSaved * 1000).toFixed(0),
-    };
+    // Fetch achievements on initial load
+    useEffect(() => {
+        console.log("[DEBUG][2025-04-06 20:08:58][emreutkan] AccountScreen: Initial fetch of achievements");
+        dispatch(fetchUserAchievementsThunk());
+    }, [dispatch]);
+
+    // Refresh function - now also refreshes achievements
+    const onRefresh = useCallback(() => {
+        console.log("[DEBUG][2025-04-06 20:08:58][emreutkan] AccountScreen: Refreshing data");
+        setRefreshing(true);
+
+        // Dispatch achievement thunk when refreshing
+        dispatch(fetchUserAchievementsThunk())
+            .finally(() => {
+                setTimeout(() => {
+                    setRefreshing(false);
+                    console.log("[DEBUG][2025-04-06 20:08:58][emreutkan] AccountScreen: Refresh complete");
+                }, 300);
+            });
+
+    }, [dispatch]);
 
     // Event Handlers
     const handleLogout = () => {
@@ -165,6 +182,8 @@ const AccountScreen: React.FC = () => {
     };
 
     const handleViewAchievements = () => {
+        console.log("[DEBUG][2025-04-06 20:08:58][emreutkan] AccountScreen: View Achievements triggered with", achievements.length, "achievements");
+
         if (achievements.length === 0) {
             Alert.alert(
                 'No Achievements Available',
@@ -174,28 +193,41 @@ const AccountScreen: React.FC = () => {
             return;
         }
 
-        const unlockedCount = achievements.filter(a => a.unlocked).length;
+        // Count unlocked achievements (ones with earned_at date)
+        const unlockedCount = achievements.filter(a => !!a.earned_at).length;
         const totalCount = achievements.length;
 
         // Create lists of unlocked and locked achievements
         const unlockedAchievements = achievements
-            .filter(a => a.unlocked)
+            .filter(a => !!a.earned_at)
             .map(a => `✅ ${a.name}: ${a.description}${a.earned_at ? ` (${new Date(a.earned_at).toLocaleDateString()})` : ''}`)
             .join('\n');
 
         const lockedAchievements = achievements
-            .filter(a => !a.unlocked)
-            .map(a => `🔒 ${a.name}: ${a.description}`)
+            .filter(a => !a.earned_at)
+            .map(a => `🔒 ${a.name}: ${a.description}${a.threshold ? ` (Required: ${a.threshold})` : ''}`)
             .join('\n');
 
         Alert.alert(
             'Achievements',
             `You've unlocked ${unlockedCount} out of ${totalCount} achievements.\n\n` +
-            `UNLOCKED:\n${unlockedAchievements}\n\n` +
-            `LOCKED:\n${lockedAchievements}`,
+            `UNLOCKED:\n${unlockedAchievements || 'None yet'}\n\n` +
+            `LOCKED:\n${lockedAchievements || 'None'}`,
             [{text: 'OK'}]
         );
     };
+
+
+    const handleDebugToken = () => {
+        if (token) {
+            console.log('[DEBUG][2025-04-06 20:08:58][emreutkan] AccountScreen: User Token:', token);
+            Alert.alert('Debug Info', 'Token has been logged to console');
+        } else {
+            console.log('[DEBUG][2025-04-06 20:08:58][emreutkan] AccountScreen: No token found');
+            Alert.alert('Debug Info', 'No token found');
+        }
+    };
+
     if (loading) {
         return (
             <View style={styles.loadingContainer}>
@@ -208,27 +240,38 @@ const AccountScreen: React.FC = () => {
         <>
             <StatusBar translucent backgroundColor="transparent" barStyle="dark-content"/>
             <AccountHeader isEditing={isEditing} onEdit={handleEditInfo}/>
-            <ScrollView style={styles.safeArea}>
+            <ScrollView
+                style={styles.safeArea}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        colors={['#50703C']} // Android
+                        tintColor="#50703C" // iOS
+                        title="Refreshing..." // iOS
+                        titleColor="#50703C" // iOS
+                    />
+                }
+            >
                 <View style={styles.container}>
                     <ProfileSection
                         isEditing={isEditing}
                         editedValues={editedValues}
                         setEditedValues={setEditedValues}
-                        name_surname={name_surname}
-                        userLevel={userLevel}
-                        progressToNextLevel={progressToNextLevel}
-                        streakDays={streakDays}
-                        moneySaved={moneySaved}
-                        foodSaved={foodSaved}
-                        environmentalImpact={environmentalImpact}
                     />
 
-                    {/* Only show achievements section if there are achievements */}
-                    {achievements.length > 0 && (
+                    <RankingCard
+                    />
+
+                    {achievementsLoading ? (
+                        <View style={styles.loadingSection}>
+                            <ActivityIndicator size="small" color="#50703C"/>
+                            <Text style={styles.loadingText}>Loading achievements...</Text>
+                        </View>
+                    ) : (
                         <AchievementsSection
                             achievements={achievements}
                             onViewAchievements={handleViewAchievements}
-                            totalDiscountEarned={totalDiscountEarned}
                         />
                     )}
 
@@ -240,7 +283,11 @@ const AccountScreen: React.FC = () => {
                         setEditedValues={setEditedValues}
                     />
                     <OrdersSection navigation={navigation}/>
-                    <ActionsSection onPasswordReset={handlePasswordReset} onLogout={handleLogout}/>
+                    <ActionsSection
+                        onPasswordReset={handlePasswordReset}
+                        onLogout={handleLogout}
+                        onDebugToken={handleDebugToken} // Pass debug handler to ActionsSection
+                    />
                 </View>
             </ScrollView>
         </>
@@ -261,6 +308,16 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
     },
+    loadingSection: {
+        height: 150,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 16,
+    },
+    loadingText: {
+        marginTop: 8,
+        color: '#666',
+    }
 });
 
 export default AccountScreen;
