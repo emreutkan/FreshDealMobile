@@ -141,6 +141,7 @@ export const addRestaurantComment = async (
         comment: string;
         rating: number;
         purchase_id: number;
+        badge_names?: string[] | string;
     },
     token: string
 ): Promise<void> => {
@@ -163,6 +164,27 @@ export const addRestaurantComment = async (
             },
         });
         logResponse(functionName, endpoint, response.data);
+    } catch (error: any) {
+        logError(functionName, endpoint, error);
+        throw error;
+    }
+};
+
+export const getRestaurantBadges = async (
+    restaurantId: number,
+    token: string
+): Promise<string[]> => {
+    const functionName = 'getRestaurantBadges';
+    const endpoint = `${RESTAURANTS_ENDPOINT}/${restaurantId}/badges`;
+
+    logRequest(functionName, endpoint, {});
+
+    try {
+        const response = await axios.get(endpoint, {
+            headers: {Authorization: `Bearer ${token}`}
+        });
+        logResponse(functionName, endpoint, response.data);
+        return response.data.badges || [];
     } catch (error: any) {
         logError(functionName, endpoint, error);
         throw error;

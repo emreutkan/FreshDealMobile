@@ -6,6 +6,7 @@ import {
     deleteRestaurant,
     getAllRestaurants,
     getRestaurant,
+    getRestaurantBadges,
     getRestaurantsInProximity,
     updateRestaurant
 } from "@/src/redux/api/restaurantAPI";
@@ -200,6 +201,28 @@ export const addRestaurantCommentThunk = createAsyncThunk<
         } catch (error: any) {
             console.error('[addRestaurantComment] Error:', error);
             return rejectWithValue(error.response?.data?.message || 'Failed to add comment');
+        }
+    }
+);
+
+export const getRestaurantBadgesThunk = createAsyncThunk<
+    { badges: string[], restaurant_id: number },
+    number,
+    { rejectValue: string }
+>(
+    'restaurant/getBadges',
+    async (restaurantId, {rejectWithValue}) => {
+        try {
+            const token = await tokenService.getToken();
+            if (!token) {
+                return rejectWithValue('Authentication token is missing.');
+            }
+
+            const response = await getRestaurantBadges(restaurantId, token);
+            return response; // Make sure this returns the full response object
+        } catch (error: any) {
+            console.error('[getRestaurantBadges] Error:', error);
+            return rejectWithValue(error.response?.data?.message || 'Failed to fetch badges');
         }
     }
 );

@@ -1,23 +1,46 @@
-import React, {useState} from "react";
-import {Image, Modal, StatusBar, StyleSheet, Text, TouchableOpacity, View,} from "react-native";
-import {Ionicons} from "@expo/vector-icons";
+import React, {useEffect, useState} from "react";
+import {FlatList, Image, Modal, StatusBar, StyleSheet, Text, TouchableOpacity, View} from "react-native";
+import {Ionicons, MaterialCommunityIcons} from "@expo/vector-icons";
 import LocateToRestaurant from "@/src/features/RestaurantScreen/components/locateToRestaurant";
 import {LinearGradient} from "expo-linear-gradient";
 import {GoBackIcon} from "@/src/features/homeScreen/components/goBack";
 import PickUpDeliveryToggle from "@/src/features/RestaurantScreen/components/PickUpDeliveryToggle";
-import {useSelector} from "react-redux";
+import {useDispatch, useSelector} from "react-redux";
 import {RootState} from "@/src/types/store";
 import {NativeStackNavigationProp} from "@react-navigation/native-stack";
 import {RootStackParamList} from "@/src/utils/navigation";
 import {useNavigation} from "@react-navigation/native";
+import {AppDispatch} from "@/src/redux/store";
+import {getRestaurantBadgesThunk} from "@/src/redux/thunks/restaurantThunks";
+
+// Badge icon mappings
+const BADGE_ICONS = {
+    'fresh': 'food-apple',
+    'fast_delivery': 'truck-fast',
+    'customer_friendly': 'emoticon-happy-outline'
+};
+
+const BADGE_NAMES = {
+    'fresh': 'Fresh',
+    'fast_delivery': 'Fast Delivery',
+    'customer_friendly': 'Friendly'
+};
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 const RestaurantInfoSection: React.FC = () => {
+    const dispatch = useDispatch<AppDispatch>();
     const navigation = useNavigation<NavigationProp>();
 
     const [showInfoModal, setShowInfoModal] = useState(false);
     const restaurant = useSelector((state: RootState) => state.restaurant.selectedRestaurant);
+    useEffect(() => {
+        if (restaurant?.id) {
+            dispatch(getRestaurantBadgesThunk(restaurant.id));
+        }
+    }, [restaurant?.id, dispatch]);
+
     console.log("the restaurant that restaurantinfo sees", restaurant);
+
     const InformationMapModal = () => {
         return (
             <Modal
@@ -80,7 +103,40 @@ const RestaurantInfoSection: React.FC = () => {
         )
     }
 
-// helper functions for walking / driving times
+    // Render badges section
+    const renderBadges = () => {
+        // Get badges from restaurant object
+        const badges = restaurant?.badges || [];
+
+        if (badges.length === 0) {
+            return null;
+        }
+
+        return (
+            <View style={styles.badgesContainer}>
+                <Text style={styles.cardTitle}>Badges</Text>
+                <FlatList
+                    data={badges}
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    renderItem={({item}) => (
+                        <View style={styles.badgeItem}>
+                            <MaterialCommunityIcons
+                                name={BADGE_ICONS[item] || 'medal'}
+                                size={24}
+                                color="#50703C"
+                            />
+                            <Text style={styles.badgeName}>{BADGE_NAMES[item] || item}</Text>
+                        </View>
+                    )}
+                    keyExtractor={(item) => item}
+                    contentContainerStyle={styles.badgesList}
+                />
+            </View>
+        );
+    };
+
+    // helper functions for walking / driving times
     function getWalkingTime(distance_km: number) {
         // ~5 km/h => distance_km * 12 = minutes
         return Math.round(distance_km * 12);
@@ -180,6 +236,8 @@ const RestaurantInfoSection: React.FC = () => {
                     </TouchableOpacity>
                 </View>
 
+                {/* Badges Section */}
+                {renderBadges()}
 
                 <View style={styles.infoCard}>
                     <Text style={styles.cardTitle}>Delivery Information</Text>
@@ -206,16 +264,11 @@ const RestaurantInfoSection: React.FC = () => {
                             </View>
                         </View>
 
-                        <PickUpDeliveryToggle
-
-                        />
+                        <PickUpDeliveryToggle/>
                     </View>
-
                 </View>
-
             </View>
             <InformationMapModal/>
-
         </View>
     );
 };
@@ -331,7 +384,41 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 8,
         elevation: 3,
-
+    },
+    // Badge styles
+    badgesContainer: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 16,
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        marginBottom: 16,
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        elevation: 3,
+    },
+    badgesList: {
+        paddingVertical: 8,
+    },
+    badgeItem: {
+        backgroundColor: '#F5F5F5',
+        borderRadius: 12,
+        padding: 12,
+        marginRight: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
+        minWidth: 90,
+    },
+    badgeName: {
+        fontFamily: "Poppins-Regular",
+        fontSize: 12,
+        color: '#333333',
+        marginTop: 4,
+        textAlign: 'center',
     },
     cardTitle: {
         fontFamily: "Poppins-Regular",
@@ -407,7 +494,6 @@ const styles = StyleSheet.create({
         fontFamily: "Poppins-Regular",
 
     },
-
     modalInfoText: {
         fontFamily: "Poppins-Regular",
         fontSize: 16,
@@ -422,8 +508,6 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         overflow: "hidden",
     },
-
-
 });
-export default RestaurantInfoSection;
 
+export default RestaurantInfoSection;
