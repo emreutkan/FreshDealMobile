@@ -21,7 +21,7 @@ import * as FileSystem from 'expo-file-system';
 
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {GoBackIcon} from "@/src/features/homeScreen/components/goBack";
-import {MaterialIcons} from "@expo/vector-icons";
+import {MaterialCommunityIcons, MaterialIcons} from "@expo/vector-icons";
 import {fetchOrderDetailsAsync} from "@/src/redux/thunks/purchaseThunks";
 import {addRestaurantCommentThunk} from "@/src/redux/thunks/restaurantThunks";
 import {BottomSheetModal, BottomSheetScrollView} from "@gorhom/bottom-sheet";
@@ -31,6 +31,27 @@ import {API_BASE_URL} from "@/src/redux/api/API";
 type OrderDetailsRouteProp = RouteProp<RootStackParamList, 'OrderDetails'>;
 type MaterialIconName = keyof typeof MaterialIcons.glyphMap;
 
+// Define badge types and their icons
+const BADGES = [
+    {
+        id: 'fresh',
+        name: 'Fresh',
+        icon: 'food-apple',
+        description: 'Food was fresh and high quality'
+    },
+    {
+        id: 'fast_delivery',
+        name: 'Fast Delivery',
+        icon: 'truck-fast',
+        description: 'Delivery was quick and on time'
+    },
+    {
+        id: 'customer_friendly',
+        name: 'Customer Friendly',
+        icon: 'emoticon-happy-outline',
+        description: 'Great customer service'
+    }
+];
 
 const OrderDetails: React.FC = () => {
 
@@ -45,10 +66,11 @@ const OrderDetails: React.FC = () => {
         (state: RootState) => state.purchase
     );
     const [uploadProgress, setUploadProgress] = useState(0);
-    const token = useSelector((state: RootState) => state.user.token); // Add this at the top with other hooks
+    const token = useSelector((state: RootState) => state.user.token);
 
     const [rating, setRating] = useState<number>(0.0);
     const [comment, setComment] = useState<string>('');
+    const [selectedBadges, setSelectedBadges] = useState<string[]>([]);
     const [reportImage, setReportImage] = useState<string | null>(null);
     const [reportComment, setReportComment] = useState('');
 
@@ -61,6 +83,16 @@ const OrderDetails: React.FC = () => {
     const handleCloseModal = useCallback(() => {
         bottomSheetModalRef.current?.dismiss();
     }, []);
+
+    const handleBadgeToggle = (badgeId: string) => {
+        setSelectedBadges(prevBadges => {
+            if (prevBadges.includes(badgeId)) {
+                return prevBadges.filter(id => id !== badgeId);
+            } else {
+                return [...prevBadges, badgeId];
+            }
+        });
+    };
 
     const handleSubmitReport = async () => {
         if (!currentOrder || !reportComment.trim() || !reportImage) {
@@ -133,6 +165,39 @@ const OrderDetails: React.FC = () => {
             setUploadProgress(0);
         }
     };
+
+    const handleSubmitRating = () => {
+        if (currentOrder?.restaurant?.id && rating > 0) {
+            dispatch(addRestaurantCommentThunk({
+                restaurantId: currentOrder.restaurant.id,
+                commentData: {
+                    comment: comment.trim() || ' ',
+                    rating: rating,
+                    purchase_id: currentOrder.purchase_id,
+                    badge_names: selectedBadges.length > 0 ? selectedBadges : undefined
+                }
+            }))
+                .unwrap()
+                .then(() => {
+                    Alert.alert(
+                        'Success',
+                        'Thank you for your rating!',
+                        [{text: 'OK'}]
+                    );
+                    setRating(0);
+                    setComment('');
+                    setSelectedBadges([]);
+                })
+                .catch((error) => {
+                    Alert.alert(
+                        'Error',
+                        'Failed to submit rating. Please try again.'
+                    );
+                    console.error('Rating submission error:', error);
+                });
+        }
+    };
+
     const pickImage = async () => {
         try {
             const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -145,7 +210,7 @@ const OrderDetails: React.FC = () => {
             }
 
             const result = await ImagePicker.launchImageLibraryAsync({
-                mediaTypes: 'images', // Changed from 'image' to 'images'
+                mediaTypes: 'images',
                 allowsEditing: true,
                 aspect: [4, 3],
                 quality: 0.8,
@@ -163,6 +228,71 @@ const OrderDetails: React.FC = () => {
             );
         }
     };
+
+    const RatingStars = () => {
+        return (
+            <View style={styles.ratingContainer}>
+                {[1, 2, 3, 4, 5].map((star) => (
+                    <TouchableOpacity
+                        key={star}
+                        onPress={() => setRating(star)}
+                    >
+                        <MaterialIcons
+                            name={rating >= star ? "star" : "star-border"}
+                            size={32}
+                            color={rating >= star ? "#FFD700" : "#666"}
+                        />
+                    </TouchableOpacity>
+                ))}
+            </View>
+        );
+    };
+
+    const BadgeSelector = () => {
+        return (
+            <View style={styles.badgeSelectorContainer}>
+                <Text style={styles.badgeSelectorTitle}>
+                    What did you like about your order?
+                </Text>
+                <View style={styles.badgesGrid}>
+                    {BADGES.map((badge) => (
+                        <TouchableOpacity
+                            key={badge.id}
+                            style={[
+                                styles.badgeItem,
+                                selectedBadges.includes(badge.id) && styles.badgeItemSelected
+                            ]}
+                            onPress={() => handleBadgeToggle(badge.id)}
+                        >
+                            <MaterialCommunityIcons
+                                name={badge.icon}
+                                size={28}
+                                color={selectedBadges.includes(badge.id) ? "#FFFFFF" : "#666"}
+                            />
+                            <Text
+                                style={[
+                                    styles.badgeName,
+                                    selectedBadges.includes(badge.id) && styles.badgeNameSelected
+                                ]}
+                            >
+                                {badge.name}
+                            </Text>
+                            <Text
+                                style={[
+                                    styles.badgeDescription,
+                                    selectedBadges.includes(badge.id) && styles.badgeDescriptionSelected
+                                ]}
+                                numberOfLines={2}
+                            >
+                                {badge.description}
+                            </Text>
+                        </TouchableOpacity>
+                    ))}
+                </View>
+            </View>
+        );
+    };
+
     const ReportButton = () => {
         if (currentOrder?.status === 'COMPLETED') {
             return (
@@ -236,55 +366,6 @@ const OrderDetails: React.FC = () => {
         </BottomSheetScrollView>
     );
 
-    const handleSubmitRating = () => {
-        if (currentOrder?.restaurant?.id && rating > 0) {
-            dispatch(addRestaurantCommentThunk({
-                restaurantId: currentOrder.restaurant.id,
-                commentData: {
-                    comment: comment.trim() || ' ',
-                    rating: rating,
-                    purchase_id: currentOrder.purchase_id
-                }
-            }))
-                .unwrap()
-                .then(() => {
-                    Alert.alert(
-                        'Success',
-                        'Thank you for your rating!',
-                        [{text: 'OK'}]
-                    );
-                    setRating(0);
-                    setComment('');
-                })
-                .catch((error) => {
-                    Alert.alert(
-                        'Error',
-                        'Failed to submit rating. Please try again.'
-                    );
-                    console.error('Rating submission error:', error);
-                });
-        }
-    };
-
-    const RatingStars = () => {
-        return (
-            <View style={styles.ratingContainer}>
-                {[1, 2, 3, 4, 5].map((star) => (
-                    <TouchableOpacity
-                        key={star}
-                        onPress={() => setRating(star)}
-                    >
-                        <MaterialIcons
-                            name={rating >= star ? "star" : "star-border"}
-                            size={32}
-                            color={rating >= star ? "#FFD700" : "#666"}
-                        />
-                    </TouchableOpacity>
-                ))}
-            </View>
-        );
-    };
-
     const renderRatingSection = () => {
         if (!currentOrder) {
             return <GoBackIcon/>;
@@ -299,6 +380,7 @@ const OrderDetails: React.FC = () => {
                         </Text>
                     </View>
                     <RatingStars/>
+                    <BadgeSelector/>
                     <TextInput
                         style={styles.commentInput}
                         placeholder="Add a comment (optional)"
@@ -609,6 +691,56 @@ const styles = StyleSheet.create({
         padding: 12,
         borderRadius: 8,
         marginVertical: 8,
+    },
+    // Badge selector styles
+    badgeSelectorContainer: {
+        marginVertical: 12,
+    },
+    badgeSelectorTitle: {
+        fontSize: 16,
+        color: '#333',
+        marginBottom: 12,
+        fontFamily: 'Poppins-Regular',
+    },
+    badgesGrid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'space-between',
+    },
+    badgeItem: {
+        width: '31%',
+        backgroundColor: '#f8f9fa',
+        borderRadius: 8,
+        padding: 12,
+        marginBottom: 12,
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#e0e0e0',
+    },
+    badgeItemSelected: {
+        backgroundColor: '#50703C',
+        borderColor: '#50703C',
+    },
+    badgeName: {
+        fontSize: 14,
+        color: '#333',
+        fontWeight: '600',
+        marginTop: 8,
+        textAlign: 'center',
+        fontFamily: 'Poppins-Regular',
+    },
+    badgeNameSelected: {
+        color: '#FFFFFF',
+    },
+    badgeDescription: {
+        fontSize: 12,
+        color: '#666',
+        textAlign: 'center',
+        marginTop: 4,
+        fontFamily: 'Poppins-Regular',
+    },
+    badgeDescriptionSelected: {
+        color: '#FFFFFF',
     },
     commentInput: {
         backgroundColor: '#f8f9fa',

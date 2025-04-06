@@ -176,6 +176,7 @@ export const addRestaurantCommentThunk = createAsyncThunk<
             comment: string;
             rating: number;
             purchase_id: number;
+            badge_names?: string[] | string;
         };
     },
     { rejectValue: string }
