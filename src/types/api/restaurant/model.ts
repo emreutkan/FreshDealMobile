@@ -30,5 +30,6 @@ export interface Restaurant {
     comments?: RestaurantComment[];
     badges?: string[]; // Add this field
 
+
 }
 

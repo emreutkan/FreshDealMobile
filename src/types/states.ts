@@ -4,7 +4,7 @@ import {Listing} from "@/src/types/api/listing/model";
 import {CartItem} from "@/src/types/api/cart/model";
 import {Address} from "@/src/types/api/address/model";
 import {Purchase} from "@/src/types/api/purchase/model";
-import {UserRankResponse} from "@/src/types/api/user/rank";
+import {UserRankResponse} from "@/src/redux/api/userAPI";
 
 export interface RestaurantSearchResults {
     results: RestaurantSearchResult[];
@@ -74,6 +74,16 @@ export interface CartState {
     error: string | null;
 }
 
+export interface CommentAnalysis {
+    restaurant_id: number;
+    restaurant_name: string;
+    comment_count: number;
+    analysis_date: string;
+    good_aspects: string[];
+    bad_aspects: string[];
+}
+
+
 export interface RestaurantState {
     restaurantsProximity: Restaurant[];
     restaurantsProximityStatus: 'idle' | 'loading' | 'succeeded' | 'failed';
@@ -90,6 +100,9 @@ export interface RestaurantState {
     listingsError: string | null;
     isPickup: boolean;
     pagination: Pagination | null;
+    commentAnalysis: CommentAnalysis | null;
+    commentAnalysisLoading: boolean;
+    commentAnalysisError: string | null;
 
 }
 
