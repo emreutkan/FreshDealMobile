@@ -3,6 +3,7 @@ import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 import {
     getListingsThunk,
     getRestaurantBadgesThunk,
+    getRestaurantCommentAnalysisThunk,
     getRestaurantsByProximity,
     getRestaurantThunk,
 } from '@/src/redux/thunks/restaurantThunks';
@@ -11,6 +12,7 @@ import {addFavoriteThunk, getFavoritesThunk, removeFavoriteThunk,} from "@/src/r
 import {Pagination, RestaurantState} from "@/src/types/states";
 import {Restaurant} from "@/src/types/api/restaurant/model";
 import {Listing} from "@/src/types/api/listing/model";
+
 
 const emptyRestaurant: Restaurant = {
     id: 0,
@@ -35,6 +37,7 @@ const emptyRestaurant: Restaurant = {
     minOrderAmount: null,
     comments: [],
     badges: [],
+
 
 };
 
@@ -72,6 +75,10 @@ const initialState: RestaurantState = {
 
     isPickup: true, // Default to pickup
     pagination: null,
+    commentAnalysis: null,
+    commentAnalysisLoading: false,
+    commentAnalysisError: null,
+
 };
 
 const restaurantSlice = createSlice({
@@ -172,7 +179,19 @@ const restaurantSlice = createSlice({
                 // so I just use this to get the comments for now, will change that later though :)
                 state.selectedRestaurant.comments = action.payload.comments || [];
             })
-
+            .addCase(getRestaurantCommentAnalysisThunk.pending, (state) => {
+                state.commentAnalysisLoading = true;
+                state.commentAnalysisError = null;
+            })
+            .addCase(getRestaurantCommentAnalysisThunk.fulfilled, (state, action) => {
+                state.commentAnalysisLoading = false;
+                state.commentAnalysis = action.payload;
+                state.commentAnalysisError = null;
+            })
+            .addCase(getRestaurantCommentAnalysisThunk.rejected, (state, action) => {
+                state.commentAnalysisLoading = false;
+                state.commentAnalysisError = action.payload as string;
+            })
         ;
     },
 });

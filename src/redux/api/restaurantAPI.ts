@@ -3,6 +3,7 @@ import axios from "axios";
 import {logError, logRequest, logResponse} from "@/src/utils/logger";
 import {API_BASE_URL} from "@/src/redux/api/API";
 import {Restaurant} from "@/src/types/api/restaurant/model";
+import {CommentAnalysis} from "@/src/types/states";
 
 const RESTAURANTS_ENDPOINT = `${API_BASE_URL}/restaurants`;
 const GET_RESTAURANTS_IN_PROXIMITY_API_ENDPOINT = `${RESTAURANTS_ENDPOINT}/proximity`;
@@ -185,6 +186,28 @@ export const getRestaurantBadges = async (
         });
         logResponse(functionName, endpoint, response.data);
         return response.data.badges || [];
+    } catch (error: any) {
+        logError(functionName, endpoint, error);
+        throw error;
+    }
+};
+
+// Add this to your existing restaurantAPI.ts file
+export const getRestaurantCommentAnalysis = async (
+    restaurantId: number,
+    token: string
+): Promise<CommentAnalysis> => {
+    const functionName = 'getRestaurantCommentAnalysis';
+    const endpoint = `${RESTAURANTS_ENDPOINT}/${restaurantId}/comment-analysis`;
+
+    logRequest(functionName, endpoint, {});
+
+    try {
+        const response = await axios.get(endpoint, {
+            headers: {Authorization: `Bearer ${token}`}
+        });
+        logResponse(functionName, endpoint, response.data);
+        return response.data;
     } catch (error: any) {
         logError(functionName, endpoint, error);
         throw error;

@@ -7,6 +7,7 @@ import {
     getAllRestaurants,
     getRestaurant,
     getRestaurantBadges,
+    getRestaurantCommentAnalysis,
     getRestaurantsInProximity,
     updateRestaurant
 } from "@/src/redux/api/restaurantAPI";
@@ -225,6 +226,29 @@ export const getRestaurantBadgesThunk = createAsyncThunk<
             return {badges: result};
         } catch (error: any) {
             return rejectWithValue('Failed to fetch restaurant badges: ' + error.message);
+        }
+    }
+);
+
+// Add this to your existing restaurantThunks.ts file
+export const getRestaurantCommentAnalysisThunk = createAsyncThunk(
+    'restaurant/getCommentAnalysis',
+    async (restaurantId: number, {getState, rejectWithValue}) => {
+        try {
+            const {user} = getState() as RootState;
+            if (!user.token) {
+                return rejectWithValue('Authentication required');
+            }
+
+            const commentAnalysis = await getRestaurantCommentAnalysis(restaurantId, user.token);
+            return commentAnalysis;
+        } catch (error: any) {
+            console.error('Error fetching restaurant comment analysis:', error);
+            return rejectWithValue(
+                error.response?.data?.message ||
+                error.message ||
+                'Failed to fetch restaurant comment analysis'
+            );
         }
     }
 );
