@@ -1,5 +1,5 @@
-import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
-import {Animated, Dimensions, FlatList, Image, StyleSheet, Text, TouchableOpacity, View,} from 'react-native';
+import React, {useCallback, useContext, useEffect, useMemo, useRef, useState} from 'react';
+import {Animated, Dimensions, Image, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import {addItemToCart, fetchCart, removeItemFromCart, updateCartItem} from '@/src/redux/thunks/cartThunks';
 import {useDispatch, useSelector} from 'react-redux';
 import {AppDispatch} from '@/src/redux/store';
@@ -9,6 +9,9 @@ import {lightHaptic} from "@/src/utils/Haptics";
 import {BottomSheetModal, BottomSheetScrollView} from '@gorhom/bottom-sheet';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {addDays, format} from 'date-fns';
+
+// Import our context
+import {ScrollContext} from "@/src/features/RestaurantScreen/RestaurantDetails";
 
 const {width} = Dimensions.get('window');
 
@@ -21,6 +24,9 @@ export const ListingCard: React.FC<ListingCardProps> = ({
                                                             listingList,
                                                             viewType = 'cube'  // Default to cube view
                                                         }) => {
+    // Get the shared scroll context
+    const {scrollY, headerHeight} = useContext(ScrollContext);
+
     const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
     const bottomSheetRef = useRef<BottomSheetModal>(null);
     const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -39,6 +45,7 @@ export const ListingCard: React.FC<ListingCardProps> = ({
         }).start();
         dispatch(fetchCart());
     }, []);
+
     const isPickup = useSelector((state: RootState) => state.restaurant.isPickup);
 
     const getDisplayPrice = useCallback((item: Listing) => {
@@ -54,6 +61,7 @@ export const ListingCard: React.FC<ListingCardProps> = ({
             bottomSheetRef.current?.present();
         }, 0);
     }, []);
+
     const handleAddToCart = async (item: Listing) => {
         lightHaptic();
         const existingCartItems = cart.cartItems;
@@ -120,7 +128,6 @@ export const ListingCard: React.FC<ListingCardProps> = ({
                 enableOverDrag={false}
                 enableContentPanningGesture={true}
             >
-
                 <BottomSheetScrollView contentContainerStyle={styles.modalContent}>
                     <Image
                         source={{uri: selectedListing.image_url}}
@@ -143,13 +150,11 @@ export const ListingCard: React.FC<ListingCardProps> = ({
 
                     <View style={styles.priceSection}>
                         {selectedListing.original_price && displayPrice && (
-
                             <View style={styles.savingsBadge}>
                                 <Text style={styles.savingsText}>
                                     Save {Math.round(((selectedListing.original_price - displayPrice) / selectedListing.original_price) * 100)}%
                                 </Text>
                             </View>
-
                         )}
                         <Text style={styles.modalOriginalPrice}>
                             {selectedListing.original_price} TL
@@ -189,7 +194,6 @@ export const ListingCard: React.FC<ListingCardProps> = ({
                         </TouchableOpacity>
                     )}
                 </View>
-
             </BottomSheetModal>
         );
     };
@@ -201,13 +205,7 @@ export const ListingCard: React.FC<ListingCardProps> = ({
         );
         const countInCart = cartItem ? cartItem.count : 0;
 
-
-        if (displayPrice) {
-
-        }
-
-        const discountPercentage = item.original_price ? Math.round(((item.original_price - displayPrice) / item.original_price) * 100)
-            : 0;
+        const discountPercentage = item.original_price ? Math.round(((item.original_price - displayPrice) / item.original_price) * 100) : 0;
 
         return (
             <TouchableOpacity
@@ -287,15 +285,25 @@ export const ListingCard: React.FC<ListingCardProps> = ({
             </TouchableOpacity>
         );
     };
+
     return (
         <View style={styles.container}>
-            <FlatList
+            <Animated.FlatList
+                contentContainerStyle={{
+                    paddingTop: headerHeight || 0, // Add padding equal to header height
+                }}
                 data={listings}
                 renderItem={renderListingItem}
                 keyExtractor={(item) => item.id.toString()}
-                numColumns={viewType === 'cube' ? 2 : 1} // Only use columns in cube view
+                numColumns={viewType === 'cube' ? 2 : 1}
                 columnWrapperStyle={viewType === 'cube' ? styles.columnWrapper : undefined}
                 showsVerticalScrollIndicator={false}
+                // Connect to shared scroll animation
+                onScroll={Animated.event(
+                    [{nativeEvent: {contentOffset: {y: scrollY}}}],
+                    {useNativeDriver: true}
+                )}
+                scrollEventThrottle={16}
             />
             {renderBottomSheet()}
         </View>
@@ -309,23 +317,20 @@ const styles = StyleSheet.create({
     modalContent: {
         backgroundColor: '#FFFFFF',
         padding: 16,
-        paddingBottom: 0, // Remove bottom padding since modalCartSection has its own padding
+        paddingBottom: 0,
     },
-
     modalCartSection: {
         backgroundColor: '#FFFFFF',
         paddingVertical: 16,
         paddingHorizontal: 16,
         borderTopWidth: 1,
         borderTopColor: '#E5E7EB',
-        // Remove marginTop: 'auto'
     },
-
     modalDescription: {
         fontSize: 16,
         lineHeight: 24,
         color: '#4B5563',
-        marginBottom: 16, // Reduce this from 24 to 16
+        marginBottom: 16,
     },
     bottomSheetBackground: {
         backgroundColor: '#FFFFFF',
@@ -346,21 +351,21 @@ const styles = StyleSheet.create({
     },
     cardContent: {
         padding: 12,
-        flex: 1, // Add this to ensure proper spacing
+        flex: 1,
     },
     priceAndCartContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
         marginTop: 8,
-        flexWrap: 'nowrap', // Prevent wrapping
+        flexWrap: 'nowrap',
     },
     priceContainer: {
-        flex: 1, // Allow price container to shrink if needed
+        flex: 1,
         marginRight: 8,
     },
     itemCartControls: {
-        flexShrink: 0, // Prevent controls from shrinking
+        flexShrink: 0,
     },
     itemCartButtonsContainer: {
         flexDirection: 'row',
@@ -397,7 +402,7 @@ const styles = StyleSheet.create({
         left: 0,
         right: 0,
         bottom: 0,
-        pointerEvents: 'box-none', // This allows touches to pass through to underlying content
+        pointerEvents: 'box-none',
     },
     cardTitle: {
         fontSize: 16,
@@ -450,18 +455,15 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'space-between',
     },
-
-
     container: {
         flex: 1,
         backgroundColor: '#F5F7FA',
         padding: 12,
-        position: 'relative', // Add this
+        position: 'relative',
     },
     columnWrapper: {
         justifyContent: 'space-between',
     },
-
     cardImage: {
         width: '100%',
         height: 140,
@@ -481,14 +483,12 @@ const styles = StyleSheet.create({
         fontSize: 12,
         fontWeight: '600',
     },
-
     cardHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
         marginBottom: 8,
     },
-
     consumeBadge: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -503,15 +503,12 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         marginLeft: 4,
     },
-
-
     bottomSheetIndicator: {
         backgroundColor: '#CBD5E1',
         width: 40,
         height: 4,
         borderRadius: 2,
     },
-
     modalImage: {
         width: '100%',
         height: 250,
@@ -579,8 +576,6 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         color: '#059669',
     },
-
-
     cartControls: {
         flexDirection: 'row',
         alignItems: 'center',

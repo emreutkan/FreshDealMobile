@@ -206,23 +206,25 @@ export const addRestaurantCommentThunk = createAsyncThunk<
 );
 
 export const getRestaurantBadgesThunk = createAsyncThunk<
-    { badges: string[], restaurant_id: number },
-    number,
+    { badges: string[] },
+    { restaurantId: number },
     { rejectValue: string }
 >(
     'restaurant/getBadges',
-    async (restaurantId, {rejectWithValue}) => {
+    async ({restaurantId}, {rejectWithValue}) => { // Destructure the parameter correctly
         try {
             const token = await tokenService.getToken();
             if (!token) {
                 return rejectWithValue('Authentication token is missing.');
             }
 
-            const response = await getRestaurantBadges(restaurantId, token);
-            return response; // Make sure this returns the full response object
+            // Make sure getRestaurantBadges returns { badges: string[] }
+            const result = await getRestaurantBadges(restaurantId, token);
+            console.log(result);
+            // Return in the correct format
+            return {badges: result};
         } catch (error: any) {
-            console.error('[getRestaurantBadges] Error:', error);
-            return rejectWithValue(error.response?.data?.message || 'Failed to fetch badges');
+            return rejectWithValue('Failed to fetch restaurant badges: ' + error.message);
         }
     }
 );
