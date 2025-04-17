@@ -20,15 +20,15 @@ import {RootState} from "@/src/types/store";
 
 import {getUserDataThunk, loginUserThunk, registerUserThunk,} from "@/src/redux/thunks/userThunks";
 import PhoneInput from "@/src/features/LoginRegister/components/PhoneInput";
-import VerificationCodeInputField from "@/src/features/LoginRegister/components/VerificationCodeInputField"; // Assume this component exists
-import {setEmail, setName, setPassword, setToken} from "@/src/redux/slices/userSlice"; // Adjust the path as needed
+import VerificationCodeInputField from "@/src/features/LoginRegister/components/VerificationCodeInputField";
+import {setEmail, setName, setPassword, setToken} from "@/src/redux/slices/userSlice";
 import {MaterialIcons} from "@expo/vector-icons";
 import {verifyCode} from "@/src/redux/api/authAPI";
 import BaseInput from "@/src/features/LoginRegister/components/BaseInput";
 import {CustomButton} from "@/src/features/LoginRegister/components/CustomButton";
 
 interface RegisterModalProps {
-    switchToLogin: () => void; // Callback to switch to LoginModal
+    switchToLogin: () => void;
 }
 
 const RegisterModal: React.FC<RegisterModalProps> = ({switchToLogin}) => {
@@ -45,13 +45,9 @@ const RegisterModal: React.FC<RegisterModalProps> = ({switchToLogin}) => {
 
     } = useSelector((state: RootState) => state.user);
 
-    // Local state to track if verification code has been sent
     const [isCodeSent, setIsCodeSent] = useState<boolean>(false);
-    const [verificationCode, setVerificationCode] = useState<string>(""); // To store user input for verification code
+    const [verificationCode, setVerificationCode] = useState<string>("");
     const name = useSelector((state: RootState) => state.user.name_surname);
-
-    // Display error alerts when 'error' state changes
-
 
     const validateInput = (): boolean => {
         if (!name_surname) {
@@ -84,14 +80,12 @@ const RegisterModal: React.FC<RegisterModalProps> = ({switchToLogin}) => {
                 })
             ).unwrap();
             console.log("Result = ", result);
-            if (result.message === "User registered successfully!") {
-                // Set isCodeSent to true to show verification input
+            if (result.success) {
                 setIsCodeSent(true);
                 Alert.alert(
-                    "Verification Code Sent",
-                    "A verification code has been sent to your email."
+                    "Success",
+                    result.message || "A verification code has been sent to your email."
                 );
-
             } else {
                 Alert.alert("Registration Failed", result.message || "Something went wrong.");
             }
@@ -109,7 +103,6 @@ const RegisterModal: React.FC<RegisterModalProps> = ({switchToLogin}) => {
 
         try {
             const verifyResult = await dispatch(
-                // Assuming you have a verifyCode thunk
                 verifyCode({verification_code: verificationCode, email})
             ).unwrap();
 

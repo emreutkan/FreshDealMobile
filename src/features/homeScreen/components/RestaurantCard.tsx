@@ -39,11 +39,7 @@ const isRestaurantOpen = (
     const currentDay = now.toLocaleDateString('en-US', {weekday: 'long'});
     const currentHour = now.getHours();
     const currentMinute = now.getMinutes();
-
-    console.log('Current day:', currentDay);
-    console.log('Current time:', currentHour, currentMinute);
-    console.log('Working days:', workingDays);
-    console.log('Working hours:', workingHoursStart, workingHoursEnd);
+    
     if (!workingDays.includes(currentDay)) return false;
 
     if (workingHoursStart && workingHoursEnd) {
