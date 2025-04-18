@@ -9,16 +9,9 @@ import {
     getRestaurantThunk,
 } from '@/src/redux/thunks/restaurantThunks';
 import {addFavoriteThunk, getFavoritesThunk, removeFavoriteThunk,} from "@/src/redux/thunks/userThunks";
-import {Comment, Pagination, RestaurantState} from "@/src/types/states";
-import {Restaurant} from "@/src/types/api/restaurant/model";
+import {Pagination, RestaurantState} from "@/src/types/states";
+import {Comment, Restaurant} from "@/src/types/api/restaurant/model"
 import {Listing} from "@/src/types/api/listing/model";
-
-export interface RecentRestaurant {
-    restaurant_id: number;
-    restaurant_name: string;
-    image_url: string;
-    last_order_date: string;
-}
 
 const emptyRestaurant: Restaurant = {
     id: 0,

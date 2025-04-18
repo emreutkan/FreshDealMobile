@@ -17,17 +17,10 @@ const OrdersSection: React.FC<OrdersSectionProps> = ({navigation}) => {
                 onPress={() => navigation.navigate('Orders', {status: 'active'})}
             >
                 <MaterialIcons name="pending-actions" size={24} color="#50703C"/>
-                <Text style={styles.actionButtonText}>Active Orders</Text>
+                <Text style={styles.actionButtonText}> Orders</Text>
                 <MaterialIcons name="chevron-right" size={24} color="#666"/>
             </TouchableOpacity>
-            <TouchableOpacity
-                style={styles.actionButton}
-                onPress={() => navigation.navigate('Orders', {status: 'previous'})}
-            >
-                <MaterialIcons name="history" size={24} color="#50703C"/>
-                <Text style={styles.actionButtonText}>Previous Orders</Text>
-                <MaterialIcons name="chevron-right" size={24} color="#666"/>
-            </TouchableOpacity>
+
         </View>
     );
 };

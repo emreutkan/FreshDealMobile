@@ -185,7 +185,7 @@ export const getRestaurantBadges = async (
             headers: {Authorization: `Bearer ${token}`}
         });
         logResponse(functionName, endpoint, response.data);
-        return response.data.badges || [];
+        return response.data.badge_points || [];
     } catch (error: any) {
         logError(functionName, endpoint, error);
         throw error;

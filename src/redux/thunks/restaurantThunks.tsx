@@ -244,6 +244,7 @@ export const getRestaurantBadgesThunk = createAsyncThunk<
             }
 
             const result = await getRestaurantBadges(restaurantId, token);
+            console.log('Fetched restaurant badges:', result);
             return {badges: result};
         } catch (error: any) {
             return rejectWithValue('Failed to fetch restaurant badges: ' + error.message);

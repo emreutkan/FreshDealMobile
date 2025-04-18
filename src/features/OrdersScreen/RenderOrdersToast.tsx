@@ -1,6 +1,6 @@
 import React, {useEffect, useRef} from 'react';
 import {Animated, Platform, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
-import {MaterialIcons} from '@expo/vector-icons';
+import {Ionicons} from '@expo/vector-icons';
 import {useNavigation} from '@react-navigation/native';
 import type {NativeStackNavigationProp} from "@react-navigation/native-stack";
 import {RootStackParamList} from "@/src/utils/navigation";
@@ -18,9 +18,11 @@ const RecentOrderToast: React.FC<RecentOrderToastProps> = ({order, onDismiss}) =
     const navigation = useNavigation<NavigationProp>();
     const translateY = useRef(new Animated.Value(100)).current;
     const opacity = useRef(new Animated.Value(0)).current;
+    const progress = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
         lightHaptic().then(r => console.log(r));
+
         Animated.parallel([
             Animated.timing(translateY, {
                 toValue: 0,
@@ -32,11 +34,15 @@ const RecentOrderToast: React.FC<RecentOrderToastProps> = ({order, onDismiss}) =
                 duration: 300,
                 useNativeDriver: true,
             }),
+            Animated.timing(progress, {
+                toValue: 1,
+                duration: 15000,
+                useNativeDriver: false,
+            })
         ]).start();
 
-        // Auto dismiss after 5 seconds
         const timer = setTimeout(() => {
-            // dismissToast();
+            dismissToast();
         }, 15000);
 
         return () => clearTimeout(timer);
@@ -67,17 +73,37 @@ const RecentOrderToast: React.FC<RecentOrderToastProps> = ({order, onDismiss}) =
     const getStatusColor = () => {
         switch (order.status.toUpperCase()) {
             case 'PENDING':
-                return '#856404';
+                return '#FFC107';
             case 'ACCEPTED':
-                return '#155724';
+                return '#4CAF50';
             case 'COMPLETED':
                 return '#50703C';
             case 'REJECTED':
-                return '#721C24';
+                return '#F44336';
             default:
-                return '#383D41';
+                return '#9E9E9E';
         }
     };
+
+    const getStatusIcon = () => {
+        switch (order.status.toUpperCase()) {
+            case 'PENDING':
+                return 'time-outline';
+            case 'ACCEPTED':
+                return 'checkmark-circle-outline';
+            case 'COMPLETED':
+                return 'checkmark-done-circle-outline';
+            case 'REJECTED':
+                return 'close-circle-outline';
+            default:
+                return 'help-circle-outline';
+        }
+    };
+
+    const width = progress.interpolate({
+        inputRange: [0, 1],
+        outputRange: ['100%', '0%'],
+    });
 
     return (
         <Animated.View
@@ -89,47 +115,57 @@ const RecentOrderToast: React.FC<RecentOrderToastProps> = ({order, onDismiss}) =
                 },
             ]}
         >
-            <TouchableOpacity style={styles.content} onPress={handlePress}>
-                <View style={styles.iconContainer}>
-                    <MaterialIcons name="receipt" size={24} color="#50703C"/>
+            <TouchableOpacity style={styles.content} onPress={handlePress} activeOpacity={0.9}>
+                <View style={[styles.iconContainer, {backgroundColor: `${getStatusColor()}20`}]}>
+                    <Ionicons name="receipt-outline" size={24} color={getStatusColor()}/>
                 </View>
                 <View style={styles.textContainer}>
                     <Text style={styles.title}>Order Placed Successfully!</Text>
-                    <Text style={styles.subtitle}>{order.listing_title}</Text>
-                    <Text style={[styles.status, {color: getStatusColor()}]}>
-                        {order.status.charAt(0).toUpperCase() + order.status.slice(1).toLowerCase()}
+                    <Text style={styles.subtitle} numberOfLines={1}>
+                        {order.listing_title}
                     </Text>
+                    <View style={styles.statusContainer}>
+                        <Ionicons name={getStatusIcon()} size={14} color={getStatusColor()}/>
+                        <Text style={[styles.status, {color: getStatusColor()}]}>
+                            {order.status.charAt(0).toUpperCase() + order.status.slice(1).toLowerCase()}
+                        </Text>
+                    </View>
                 </View>
                 <TouchableOpacity style={styles.closeButton} onPress={dismissToast}>
-                    <MaterialIcons name="close" size={20} color="#666"/>
+                    <Ionicons name="close" size={20} color="#666"/>
                 </TouchableOpacity>
             </TouchableOpacity>
+
+            <View style={styles.progressBarContainer}>
+                <Animated.View
+                    style={[
+                        styles.progressBar,
+                        {width, backgroundColor: getStatusColor()}
+                    ]}
+                />
+            </View>
         </Animated.View>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
-        borderColor: '#50703C',
-        borderWidth: 1,
-        marginTop: 10,
         backgroundColor: '#FFFFFF',
-        paddingHorizontal: 16,
-        paddingVertical: 10,
-        borderRadius: 12,
-        // marginBottom: 16,
+        borderRadius: 16,
+        marginHorizontal: 16,
+        marginVertical: 10,
+        overflow: 'hidden',
         ...Platform.select({
             ios: {
-                shadowColor: '#000',
-                shadowOffset: {width: 0, height: 2},
-                shadowOpacity: 0.1,
-                shadowRadius: 4,
+                shadowColor: 'rgba(0,0,0,0.2)',
+                shadowOffset: {width: 0, height: 4},
+                shadowOpacity: 0.25,
+                shadowRadius: 8,
             },
             android: {
-                elevation: 4,
+                elevation: 6,
             },
         }),
-
     },
     content: {
         flexDirection: 'row',
@@ -137,13 +173,12 @@ const styles = StyleSheet.create({
         padding: 16,
     },
     iconContainer: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: '#F3F4F6',
+        width: 46,
+        height: 46,
+        borderRadius: 23,
         justifyContent: 'center',
         alignItems: 'center',
-        marginRight: 12,
+        marginRight: 14,
     },
     textContainer: {
         flex: 1,
@@ -152,22 +187,41 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '600',
         color: '#111827',
-        marginBottom: 4,
-        fontFamily: 'Poppins-Regular',
+        fontFamily: 'Poppins-SemiBold',
     },
     subtitle: {
         fontSize: 14,
         color: '#6B7280',
         fontFamily: 'Poppins-Regular',
+        marginTop: 2,
+    },
+    statusContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginTop: 4,
     },
     status: {
         fontSize: 12,
-        fontWeight: '500',
-        marginTop: 4,
-        fontFamily: 'Poppins-Regular',
+        fontFamily: 'Poppins-Medium',
+        marginLeft: 4,
     },
     closeButton: {
-        padding: 4,
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        backgroundColor: '#F3F4F6',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    progressBarContainer: {
+        height: 3,
+        backgroundColor: '#E5E7EB',
+        width: '100%',
+        position: 'absolute',
+        bottom: 0,
+    },
+    progressBar: {
+        height: '100%',
     },
 });
 

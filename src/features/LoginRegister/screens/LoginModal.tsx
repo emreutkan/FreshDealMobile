@@ -1,4 +1,4 @@
-import React, {useCallback, useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import {Alert, Keyboard, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View,} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
 import {AppDispatch} from '@/src/redux/store';
@@ -7,7 +7,14 @@ import {RootState} from "@/src/types/store";
 import {scaleFont} from '@/src/utils/ResponsiveFont';
 import AppleOTP from '@/src/features/LoginRegister/components/AppleOTPLogin';
 import PhoneInput from '@/src/features/LoginRegister/components/PhoneInput';
-import {setEmail, setLoginType, setPassword, setPasswordLogin} from '@/src/redux/slices/userSlice';
+import {
+    setEmail,
+    setLoginType,
+    setPassword,
+    setPasswordLogin,
+    setPhoneNumber,
+    setSelectedCode
+} from '@/src/redux/slices/userSlice';
 import {loginUserThunk} from '@/src/redux/thunks/userThunks';
 import GoogleOTP from "@/src/features/LoginRegister/components/GoogleOTP";
 import {Ionicons, MaterialIcons} from "@expo/vector-icons";
@@ -17,9 +24,8 @@ import {forgotPassword} from "@/src/redux/api/authAPI";
 import {ForgotPasswordModal} from "@/src/features/LoginRegister/components/ForgotPasswordModalContent";
 
 interface LoginModalProps {
-    switchToRegister: () => void; // Callback to switch to RegisterModal
+    switchToRegister: () => void;
 }
-
 
 const LoginModal: React.FC<LoginModalProps> = ({switchToRegister}) => {
     const dispatch = useDispatch<AppDispatch>();
@@ -46,7 +52,6 @@ const LoginModal: React.FC<LoginModalProps> = ({switchToRegister}) => {
         setIsForgotPasswordVisible(prev => !prev);
     }, []);
 
-
     const {
         phoneNumber,
         password,
@@ -56,7 +61,7 @@ const LoginModal: React.FC<LoginModalProps> = ({switchToRegister}) => {
         selectedCode,
     } = useSelector((state: RootState) => state.user);
 
-    React.useEffect(() => {
+    useEffect(() => {
         if (passwordLogin) {
             (async () => {
                 await handleLoginButton();
@@ -64,6 +69,34 @@ const LoginModal: React.FC<LoginModalProps> = ({switchToRegister}) => {
         }
     }, [passwordLogin]);
 
+    const handleDebugLogin = async () => {
+        dispatch(setLoginType('phone_number'));
+        dispatch(setSelectedCode('+90'));
+        dispatch(setPhoneNumber('5078905010'));
+        dispatch(setPassword('000'));
+
+        console.log("(NOBRIDGE) LOG  [REQUEST] [login] Payload:", {
+            "email": "",
+            "phone_number": "+905078905010",
+            "password": "000",
+            "login_type": "phone_number",
+            "password_login": true
+        });
+
+        try {
+            await dispatch(
+                loginUserThunk({
+                    email: "",
+                    phone_number: "+905078905010",
+                    password: "000",
+                    login_type: "phone_number",
+                    password_login: true,
+                })
+            ).unwrap();
+        } catch (error: any) {
+            Alert.alert('Error', error.message || 'Failed to login. Please try again.');
+        }
+    };
 
     const handleLoginButton = async () => {
         if (login_type === 'phone_number' && !phoneNumber) {
@@ -102,6 +135,7 @@ const LoginModal: React.FC<LoginModalProps> = ({switchToRegister}) => {
         dispatch(setLoginType(type));
     };
 
+    const isDebugEnabled = process.env.NODE_ENV === 'development' || true;
 
     return (
         <TouchableWithoutFeedback
@@ -138,8 +172,6 @@ const LoginModal: React.FC<LoginModalProps> = ({switchToRegister}) => {
                             </TouchableOpacity>
                         }
                     />
-
-
                 }
 
                 {(phoneNumber || email) && (
@@ -173,13 +205,10 @@ const LoginModal: React.FC<LoginModalProps> = ({switchToRegister}) => {
 
                     {(phoneNumber || email) && (
                         <View style={styles.loginContainer}>
-
-
                             <CustomButton onPress={() => {
                                 dispatch(setPasswordLogin(true));
                             }} title="Login" loading={loading}
                                           variant={'green'}/>
-
 
                             <CustomButton onPress={() => {
                                 dispatch(setPasswordLogin(false));
@@ -198,24 +227,28 @@ const LoginModal: React.FC<LoginModalProps> = ({switchToRegister}) => {
                 <GoogleOTP/>
 
                 {login_type === 'phone_number' ? (
-
-
                     <CustomButton onPress={() => handleLoginTypeChange('email')} title="Sign in with Email"
                                   loading={loading}
                                   variant={'default'}
                                   icon={<Ionicons name="mail-outline" size={20} color="#000"
                                                   style={{right: 4}}/>}/>
-
-
                 ) : (
-
-
                     <CustomButton onPress={() => handleLoginTypeChange('phone_number')} title="Sign in with Phone"
                                   loading={loading}
                                   variant={'default'}
                                   icon={<Ionicons name="call-outline" size={20} color="#000" style={{}}/>}/>
-
                 )}
+
+                {isDebugEnabled && (
+                    <TouchableOpacity
+                        style={styles.debugButton}
+                        onPress={handleDebugLogin}
+                        onLongPress={handleDebugLogin}
+                    >
+                        <Text style={styles.debugButtonText}>Debug Login</Text>
+                    </TouchableOpacity>
+                )}
+
                 <ForgotPasswordModal
                     isVisible={isForgotPasswordVisible}
                     onClose={toggleForgotPassword}
@@ -223,17 +256,14 @@ const LoginModal: React.FC<LoginModalProps> = ({switchToRegister}) => {
                 />
             </View>
         </TouchableWithoutFeedback>
-
     );
 };
-
 
 const styles = StyleSheet.create({
     bottomContainer: {
         flex: 1,
         paddingHorizontal: scaleFont(35),
         justifyContent: 'flex-start',
-        // backgroundColor: '#f5f5f5',
     },
     welcomeText: {
         fontSize: scaleFont(32),
@@ -247,10 +277,7 @@ const styles = StyleSheet.create({
         marginBottom: scaleFont(20),
         color: '#50703C',
     },
-
-
     loginContainer: {
-        // flex: 1,
         flexDirection: 'column',
         justifyContent: 'space-between',
         alignItems: 'center',
@@ -311,7 +338,19 @@ const styles = StyleSheet.create({
         fontSize: scaleFont(14),
         textDecorationLine: 'underline',
     },
-
+    debugButton: {
+        marginTop: 20,
+        padding: 10,
+        backgroundColor: '#f8f9fa',
+        borderWidth: 1,
+        borderColor: '#dee2e6',
+        borderRadius: 4,
+        alignItems: 'center',
+    },
+    debugButtonText: {
+        color: '#6c757d',
+        fontSize: 14,
+    },
 });
 
 export default LoginModal;

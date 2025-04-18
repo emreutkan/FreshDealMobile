@@ -23,30 +23,27 @@ import {useNavigation} from "@react-navigation/native";
 import {AppDispatch} from "@/src/redux/store";
 import {getRestaurantBadgesThunk} from "@/src/redux/thunks/restaurantThunks";
 
-// Import our context
 import {ScrollContext} from "@/src/features/RestaurantScreen/RestaurantDetails";
 
-// Enhanced badge icon mappings with both icon and color
 const BADGE_INFO = {
     'fresh': {
         icon: 'food-apple',
         name: 'Fresh Ingredients',
-        color: '#5CB85C',
+        color: '#50703C',
         description: 'Uses fresh, locally sourced ingredients'
     },
     'fast_delivery': {
         icon: 'truck-fast',
         name: 'Fast Delivery',
-        color: '#F0AD4E',
+        color: '#50703C',
         description: 'Quick delivery times, usually under 30 minutes'
     },
     'customer_friendly': {
         icon: 'emoticon-happy-outline',
         name: 'Customer Friendly',
-        color: '#5BC0DE',
+        color: '#50703C',
         description: 'Known for exceptional customer service'
     },
-    // Add more badges with descriptions
     'eco_friendly': {
         icon: 'leaf',
         name: 'Eco Friendly',
@@ -56,10 +53,28 @@ const BADGE_INFO = {
     'best_value': {
         icon: 'currency-usd',
         name: 'Best Value',
-        color: '#D9534F',
+        color: '#50703C',
         description: 'Great quality food at competitive prices'
     }
 };
+
+const LOCKED_BADGES = [
+    {
+        icon: 'lock',
+        name: 'Locked Badge',
+        color: '#CCCCCC'
+    },
+    {
+        icon: 'lock',
+        name: 'Locked Badge',
+        color: '#CCCCCC'
+    },
+    {
+        icon: 'lock',
+        name: 'Locked Badge',
+        color: '#CCCCCC'
+    }
+];
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -81,9 +96,9 @@ const RestaurantInfoSection: React.FC = () => {
                 restaurantId: Number(restaurant.id)
             }));
         }
+        console.log(badges)
     }, [restaurant?.id, dispatch]);
 
-    // Measure the header height and set it in context
     const onLayout = (event: LayoutChangeEvent) => {
         const {height} = event.nativeEvent.layout;
         if (setHeaderHeight && height > 0) {
@@ -91,8 +106,6 @@ const RestaurantInfoSection: React.FC = () => {
         }
     };
 
-
-    // Badge detail modal
     const BadgeDetailModal = () => {
         if (!selectedBadge) return null;
 
@@ -138,9 +151,7 @@ const RestaurantInfoSection: React.FC = () => {
         );
     };
 
-    // Information map modal remains the same
     const InformationMapModal = () => {
-        // Your existing InformationMapModal code
         return (
             <Modal
                 transparent
@@ -198,75 +209,62 @@ const RestaurantInfoSection: React.FC = () => {
         )
     }
 
-    // Enhanced badges section with animation and interactivity
     const renderBadges = () => {
-        if (!badges || badges.length === 0) {
-            return null;
-        }
+        const displayBadges = badges.length > 0 ? badges : [];
 
         return (
-            <View style={styles.badgesContainer}>
-                <View style={styles.badgesTitleRow}>
-                    <Text style={styles.cardTitle}>Badges</Text>
-                    {badges.length > 3 && (
-                        <TouchableOpacity>
-                            <Text style={styles.seeAllText}>See All</Text>
+            <FlatList
+                data={displayBadges}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                renderItem={({item}) => {
+                    const badgeInfo = BADGE_INFO[item] || {
+                        icon: 'medal',
+                        name: item,
+                        color: '#666666'
+                    };
+
+                    return (
+                        <TouchableOpacity
+                            style={styles.badgeItem}
+                            onPress={() => {
+                                setSelectedBadge(item);
+                                setShowBadgeModal(true);
+                            }}
+                            activeOpacity={0.7}
+                        >
+                            <View style={styles.badgeIcon}>
+                                <MaterialCommunityIcons
+                                    name={badgeInfo.icon}
+                                    size={18}
+                                    color="#FFFFFF"
+                                />
+                            </View>
+                            <Text style={styles.badgeName}>{badgeInfo.name}</Text>
                         </TouchableOpacity>
-                    )}
-                </View>
-
-                <FlatList
-                    data={badges}
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    renderItem={({item}) => {
-                        const badgeInfo = BADGE_INFO[item] || {
-                            icon: 'medal',
-                            name: item,
-                            color: '#666666'
-                        };
-
-                        return (
-                            <TouchableOpacity
-                                style={[styles.badgeItem, {borderColor: badgeInfo.color}]}
-                                onPress={() => {
-                                    setSelectedBadge(item);
-                                    setShowBadgeModal(true);
-                                }}
-                                activeOpacity={0.7}
-                            >
-                                <View style={[styles.badgeIcon, {backgroundColor: badgeInfo.color + '20'}]}>
+                    );
+                }}
+                keyExtractor={(item) => item}
+                contentContainerStyle={styles.badgesList}
+                ListEmptyComponent={() => (
+                    <View style={styles.emptyBadgesContainer}>
+                        {LOCKED_BADGES.map((badge, index) => (
+                            <View key={index} style={styles.badgeItem}>
+                                <View style={[styles.badgeIcon, {backgroundColor: badge.color}]}>
                                     <MaterialCommunityIcons
-                                        name={badgeInfo.icon}
-                                        size={24}
-                                        color={badgeInfo.color}
+                                        name={badge.icon}
+                                        size={18}
+                                        color="#FFFFFF"
                                     />
                                 </View>
-                                <Text style={[styles.badgeName, {color: badgeInfo.color}]}>
-                                    {badgeInfo.name}
-                                </Text>
-                            </TouchableOpacity>
-                        );
-                    }}
-                    keyExtractor={(item) => item}
-                    contentContainerStyle={styles.badgesList}
-                />
-            </View>
+                                <Text style={[styles.badgeName, {color: '#AAAAAA'}]}>{badge.name}</Text>
+                            </View>
+                        ))}
+                    </View>
+                )}
+            />
         );
     };
-
-    // helper functions for walking / driving times
-    function getWalkingTime(distance_km: number) {
-        // ~5 km/h => distance_km * 12 = minutes
-        return Math.round(distance_km * 12);
-    }
-
-    function getDrivingTime(distance_km: number) {
-        if (distance_km < 1.5) {
-            return 1;
-        }
-        return Math.round(distance_km * 2);
-    }
 
     const formatWorkingHours = (start: string, end: string) => {
         return `${start} - ${end}`;
@@ -279,7 +277,6 @@ const RestaurantInfoSection: React.FC = () => {
             ]}
             onLayout={onLayout}
         >
-            {/* Mini Header - appears on scroll */}
             <Animated.View
                 style={[
                     styles.miniHeader,
@@ -303,7 +300,6 @@ const RestaurantInfoSection: React.FC = () => {
                 </View>
             </Animated.View>
 
-            {/* Main Content - fades out on scroll */}
             <Animated.View style={{}}>
                 <View style={styles.imageContainer}>
                     {restaurant?.image_url ? (
@@ -350,7 +346,7 @@ const RestaurantInfoSection: React.FC = () => {
                         style={{
                             flexDirection: 'row',
                             justifyContent: 'space-between',
-                            marginBottom: 16,
+                            marginBottom: 8,
                         }}
                     >
                         <View style={styles.ratingContainer}>
@@ -379,34 +375,11 @@ const RestaurantInfoSection: React.FC = () => {
                         </TouchableOpacity>
                     </View>
 
-                    {/* Badges Section */}
-                    {renderBadges()}
-
-                    <View style={styles.infoCard}>
-                        <Text style={styles.cardTitle}>Delivery Information</Text>
-                        <View style={{
-                            flexDirection: "row",
-                            justifyContent: "space-between",
-                        }}>
-                            <View>
-                                <View style={styles.timeRow}>
-                                    <View style={styles.timeIcon}>
-                                        <Ionicons name="walk-outline" size={20} color="#666666"/>
-                                    </View>
-                                    <Text style={styles.timeText}>
-                                        {getWalkingTime(restaurant?.distance_km ?? 0)} min walking
-                                    </Text>
-                                </View>
-                                <View style={styles.timeRow}>
-                                    <View style={styles.timeIcon}>
-                                        <Ionicons name="car-outline" size={20} color="#666666"/>
-                                    </View>
-                                    <Text style={styles.timeText}>
-                                        {getDrivingTime(restaurant?.distance_km ?? 0)} min driving
-                                    </Text>
-                                </View>
-                            </View>
-
+                    <View style={styles.badgesRow}>
+                        <View style={styles.badgesContainer}>
+                            {renderBadges()}
+                        </View>
+                        <View style={styles.toggleContainer}>
                             <PickUpDeliveryToggle/>
                         </View>
                     </View>
@@ -497,24 +470,25 @@ const styles = StyleSheet.create({
         marginTop: -24,
         paddingHorizontal: 20,
         paddingTop: 24,
+        paddingBottom: 8,
     },
     titleRow: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        marginBottom: 12,
+        marginBottom: 8,
     },
     mainRestaurantTitle: {
         fontFamily: "Poppins-SemiBold",
-        fontSize: 28,
+        fontSize: 26,
         fontWeight: '700',
         color: '#1A1A1A',
         flex: 1,
     },
     infoButton: {
-        width: 44,
-        height: 44,
-        borderRadius: 22,
+        width: 40,
+        height: 40,
+        borderRadius: 20,
         backgroundColor: '#F5F5F5',
         alignItems: 'center',
         justifyContent: 'center',
@@ -528,122 +502,84 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: '#F8F8F8',
-        paddingHorizontal: 12,
-        paddingVertical: 6,
+        paddingHorizontal: 10,
+        paddingVertical: 4,
         borderRadius: 16,
     },
     ratingText: {
         fontFamily: "Poppins-Regular",
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: '600',
         color: '#1A1A1A',
         marginLeft: 4,
     },
     ratingCount: {
         fontFamily: "Poppins-Regular",
-        fontSize: 14,
+        fontSize: 12,
         color: '#666666',
         marginLeft: 4,
     },
     distanceBox: {
         backgroundColor: '#F8F8F8',
-        paddingHorizontal: 12,
-        paddingVertical: 6,
+        paddingHorizontal: 10,
+        paddingVertical: 4,
         borderRadius: 16,
         marginLeft: 8,
     },
     distanceText: {
         fontFamily: "Poppins-Regular",
-        fontSize: 14,
+        fontSize: 13,
         color: '#666666',
     },
     commentsButton: {
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: '#F8F8F8',
-        paddingHorizontal: 12,
-        paddingVertical: 8,
+        paddingHorizontal: 10,
+        paddingVertical: 6,
         borderRadius: 16,
     },
     commentsText: {
         fontFamily: "Poppins-Regular",
-        fontSize: 14,
+        fontSize: 13,
         color: '#666666',
-        marginLeft: 6,
+        marginLeft: 4,
     },
-    infoCard: {
-        backgroundColor: '#FFFFFF',
-        borderRadius: 16,
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-        marginTop: 16,
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-        elevation: 3,
-    },
-    // Enhanced Badge styles
-    badgesContainer: {
-        backgroundColor: '#FFFFFF',
-        borderRadius: 16,
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-        marginBottom: 16,
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-        elevation: 3,
-    },
-    badgesTitleRow: {
+    badgesRow: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 12,
+        marginTop: 8,
+        marginBottom: 8,
     },
-    seeAllText: {
-        fontFamily: "Poppins-Medium",
-        fontSize: 14,
-        color: '#50703C',
+    badgesContainer: {
+        width: '70%',
+    },
+    toggleContainer: {
+        width: '30%',
+        alignItems: 'flex-end',
+        justifyContent: 'center',
     },
     badgesList: {
-        paddingVertical: 8,
+        paddingVertical: 4,
+    },
+    emptyBadgesContainer: {
+        flexDirection: 'row',
+        justifyContent: 'flex-start',
+        paddingVertical: 4,
     },
     badgeItem: {
         flexDirection: 'column',
-        backgroundColor: '#FFFFFF',
-        borderRadius: 16,
-        padding: 12,
-        marginRight: 12,
         alignItems: 'center',
-        justifyContent: 'center',
-        minWidth: 100,
-        borderWidth: 1,
-        borderColor: '#50703C',
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 1,
-        },
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
-        elevation: 2,
+        marginRight: 10,
+        width: 70,
     },
     badgeIcon: {
-        width: 50,
-        height: 50,
-        borderRadius: 25,
-        backgroundColor: '#F0F8FF',
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: '#50703C',
         alignItems: 'center',
         justifyContent: 'center',
-        marginBottom: 8,
+        marginBottom: 4,
     },
     badgeIconLarge: {
         width: 80,
@@ -655,9 +591,9 @@ const styles = StyleSheet.create({
         marginBottom: 16,
     },
     badgeName: {
-        fontFamily: "Poppins-Medium",
-        fontSize: 12,
-        color: '#50703C',
+        fontFamily: "Poppins-Regular",
+        fontSize: 10,
+        color: '#333333',
         textAlign: 'center',
     },
     badgeModalContainer: {
@@ -694,32 +630,11 @@ const styles = StyleSheet.create({
         backgroundColor: "#50703C",
         marginTop: 12,
     },
-    cardTitle: {
-        fontFamily: "Poppins-Regular",
+    closeButtonText: {
+        color: "#fff",
         fontSize: 16,
-        fontWeight: '600',
-        color: '#1A1A1A',
-        marginBottom: 12,
-        paddingHorizontal: 2,
-    },
-    timeRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 8,
-    },
-    timeIcon: {
-        width: 32,
-        height: 32,
-        borderRadius: 16,
-        backgroundColor: '#F5F5F5',
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginRight: 12,
-    },
-    timeText: {
+        fontWeight: "600",
         fontFamily: "Poppins-Regular",
-        fontSize: 15,
-        color: '#666666',
     },
     modalContainer: {
         flex: 1,
@@ -759,12 +674,6 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingVertical: 8,
         borderRadius: 8,
-    },
-    closeButtonText: {
-        color: "#fff",
-        fontSize: 16,
-        fontWeight: "600",
-        fontFamily: "Poppins-Regular",
     },
     modalInfoText: {
         fontFamily: "Poppins-Regular",
