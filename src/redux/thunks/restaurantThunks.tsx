@@ -1,4 +1,3 @@
-// src/store/thunks/restaurantThunks.ts
 import {createAsyncThunk} from '@reduxjs/toolkit';
 import {
     addRestaurantComment,
@@ -8,6 +7,7 @@ import {
     getRestaurant,
     getRestaurantBadges,
     getRestaurantCommentAnalysis,
+    getRestaurantComments,
     getRestaurantsInProximity,
     updateRestaurant
 } from "@/src/redux/api/restaurantAPI";
@@ -18,6 +18,37 @@ import {Listing} from "@/src/types/api/listing/model";
 import {getListingsAPI} from "@/src/redux/api/listingsAPI";
 import {Pagination} from "@/src/types/states";
 
+export const getRecentRestaurantsThunk = createAsyncThunk(
+    'restaurant/getRecentRestaurants',
+    async (_, {rejectWithValue}) => {
+        try {
+            const token = await tokenService.getToken();
+            if (!token) {
+                return rejectWithValue('Authentication token is missing.');
+            }
+
+            const response = await fetch('https://freshdealbackend.azurewebsites.net/v1/user/recent-restaurants', {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (!response.ok) {
+                console.log('Failed to fetch recent restaurants');
+            }
+
+            const data = await response.json();
+            if (data.success) {
+                return data;
+            } else {
+                return rejectWithValue(data.message || 'Failed to fetch recent restaurants');
+            }
+        } catch (error: any) {
+            return rejectWithValue(error.message || 'Failed to fetch recent restaurants');
+        }
+    }
+);
 
 export const getRestaurantsByProximity = createAsyncThunk<
     Restaurant[],
@@ -55,8 +86,6 @@ export const getRestaurantsByProximity = createAsyncThunk<
     }
 );
 
-
-// Fetch Listings with optional filters and pagination
 export const getListingsThunk = createAsyncThunk<
     { listings: Listing[]; pagination: Pagination },
     { restaurantId: number; page?: number; perPage?: number }
@@ -75,7 +104,6 @@ export const getListingsThunk = createAsyncThunk<
     }
 );
 
-// Get a single restaurant
 export const getRestaurantThunk = createAsyncThunk<
     Restaurant,
     number,
@@ -91,7 +119,6 @@ export const getRestaurantThunk = createAsyncThunk<
     }
 );
 
-// Get all restaurants for owner
 createAsyncThunk<
     Restaurant[],
     void,
@@ -149,7 +176,6 @@ createAsyncThunk<
     }
 );
 
-// Delete restaurant
 createAsyncThunk<
     void,
     number,
@@ -169,7 +195,6 @@ createAsyncThunk<
     }
 );
 
-// src/redux/thunks/restaurantThunks.ts
 export const addRestaurantCommentThunk = createAsyncThunk<
     void,
     {
@@ -191,7 +216,6 @@ export const addRestaurantCommentThunk = createAsyncThunk<
                 return rejectWithValue('Authentication token is missing.');
             }
 
-            // Ensure all numeric values are integers
             const sanitizedData = {
                 ...commentData,
                 rating: parseInt(String(commentData.rating), 10),
@@ -212,17 +236,14 @@ export const getRestaurantBadgesThunk = createAsyncThunk<
     { rejectValue: string }
 >(
     'restaurant/getBadges',
-    async ({restaurantId}, {rejectWithValue}) => { // Destructure the parameter correctly
+    async ({restaurantId}, {rejectWithValue}) => {
         try {
             const token = await tokenService.getToken();
             if (!token) {
                 return rejectWithValue('Authentication token is missing.');
             }
 
-            // Make sure getRestaurantBadges returns { badges: string[] }
             const result = await getRestaurantBadges(restaurantId, token);
-            console.log(result);
-            // Return in the correct format
             return {badges: result};
         } catch (error: any) {
             return rejectWithValue('Failed to fetch restaurant badges: ' + error.message);
@@ -230,7 +251,6 @@ export const getRestaurantBadgesThunk = createAsyncThunk<
     }
 );
 
-// Add this to your existing restaurantThunks.ts file
 export const getRestaurantCommentAnalysisThunk = createAsyncThunk(
     'restaurant/getCommentAnalysis',
     async (restaurantId: number, {getState, rejectWithValue}) => {
@@ -240,14 +260,28 @@ export const getRestaurantCommentAnalysisThunk = createAsyncThunk(
                 return rejectWithValue('Authentication required');
             }
 
-            const commentAnalysis = await getRestaurantCommentAnalysis(restaurantId, user.token);
-            return commentAnalysis;
+            return await getRestaurantCommentAnalysis(restaurantId, user.token);
         } catch (error: any) {
             console.error('Error fetching restaurant comment analysis:', error);
             return rejectWithValue(
                 error.response?.data?.message ||
                 error.message ||
                 'Failed to fetch restaurant comment analysis'
+            );
+        }
+    }
+);
+
+export const getRestaurantCommentsThunk = createAsyncThunk(
+    'restaurant/getRestaurantComments',
+    async (restaurantId: number, {rejectWithValue}) => {
+        try {
+            return await getRestaurantComments(restaurantId);
+        } catch (error: any) {
+            return rejectWithValue(
+                error.response?.data?.message ||
+                error.message ||
+                'Failed to fetch restaurant comments'
             );
         }
     }

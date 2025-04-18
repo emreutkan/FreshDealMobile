@@ -1,20 +1,36 @@
 import React, {useEffect, useState} from 'react';
-import {FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
 import {RootState} from "@/src/types/store";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
 import {GoBackIcon} from "@/src/features/homeScreen/components/goBack";
-import {Ionicons} from "@expo/vector-icons";
+import {Ionicons, MaterialIcons} from "@expo/vector-icons";
 import {lightHaptic} from "@/src/utils/Haptics";
-import {getRestaurantCommentAnalysisThunk} from '@/src/redux/thunks/restaurantThunks';
+import {getRestaurantCommentAnalysisThunk, getRestaurantCommentsThunk} from '@/src/redux/thunks/restaurantThunks';
+import {Comment} from '@/src/types/api/restaurant/model';
+import {LinearGradient} from 'expo-linear-gradient';
 
-interface Comment {
-    id: number;
-    user_id: number;
-    comment: string;
-    rating: number;
-    timestamp: string;
-}
+const BadgeItem: React.FC<{ badge: { name: string, is_positive: boolean } }> = ({badge}) => {
+    const badgeColor = badge.is_positive ? '#50703C' : '#D32F2F';
+    const backgroundColor = badge.is_positive ? '#F0F9EB' : '#FFEBEE';
+    const iconName = badge.is_positive ? "checkmark-circle" : "close-circle";
+
+    const formatBadgeName = (name: string): string => {
+        return name
+            .split('_')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+    };
+
+    return (
+        <View style={[styles.badge, {backgroundColor}]}>
+            <Ionicons name={iconName} size={14} color={badgeColor} style={{marginRight: 4}}/>
+            <Text style={[styles.badgeText, {color: badgeColor}]}>
+                {formatBadgeName(badge.name)}
+            </Text>
+        </View>
+    );
+};
 
 const CommentCard: React.FC<{ comment: Comment }> = ({comment}) => {
     const formatDate = (dateString: string) => {
@@ -31,7 +47,7 @@ const CommentCard: React.FC<{ comment: Comment }> = ({comment}) => {
             <View style={styles.commentHeader}>
                 <View style={styles.userInfo}>
                     <View style={styles.avatarContainer}>
-                        <Ionicons name="person" size={20} color="#666666"/>
+                        <Ionicons name="person" size={20} color="#FFFFFF"/>
                     </View>
                     <Text style={styles.userName}>User {comment.user_id}</Text>
                 </View>
@@ -52,6 +68,14 @@ const CommentCard: React.FC<{ comment: Comment }> = ({comment}) => {
             </View>
 
             <Text style={styles.commentText}>{comment.comment}</Text>
+
+            {comment.badges && comment.badges.length > 0 && (
+                <View style={styles.badgesContainer}>
+                    {comment.badges.map((badge, index) => (
+                        <BadgeItem key={`${comment.id}-badge-${index}`} badge={badge}/>
+                    ))}
+                </View>
+            )}
         </View>
     );
 };
@@ -97,17 +121,20 @@ const RestaurantComments: React.FC = () => {
     const insets = useSafeAreaInsets();
     const dispatch = useDispatch();
     const [refreshing, setRefreshing] = useState(false);
-    const [showCommentsView, setShowCommentsView] = useState(true); // Toggle between comments and analysis
+    const [showAnalysisDetails, setShowAnalysisDetails] = useState(false);
 
     const restaurant = useSelector((state: RootState) => state.restaurant.selectedRestaurant);
-    const {commentAnalysis, commentAnalysisLoading, commentAnalysisError} = useSelector(
-        (state: RootState) => state.restaurant
-    );
-    const comments = restaurant.comments || [];
+    const {
+        commentAnalysis,
+        commentAnalysisLoading,
+        commentAnalysisError,
+        comments,
+        commentsLoading
+    } = useSelector((state: RootState) => state.restaurant);
 
-    // Fetch comment analysis when component mounts
     useEffect(() => {
-        if (restaurant.id && !commentAnalysis) {
+        if (restaurant.id) {
+            dispatch(getRestaurantCommentsThunk(restaurant.id));
             dispatch(getRestaurantCommentAnalysisThunk(restaurant.id));
         }
     }, [restaurant.id, dispatch]);
@@ -117,16 +144,89 @@ const RestaurantComments: React.FC = () => {
         setRefreshing(true);
 
         if (restaurant.id) {
-            dispatch(getRestaurantCommentAnalysisThunk(restaurant.id))
-                .finally(() => setRefreshing(false));
+            Promise.all([
+                dispatch(getRestaurantCommentsThunk(restaurant.id)),
+                dispatch(getRestaurantCommentAnalysisThunk(restaurant.id))
+            ]).finally(() => setRefreshing(false));
         } else {
             setRefreshing(false);
         }
     }, [restaurant.id, dispatch]);
 
-    const toggleView = () => {
+    const toggleAnalysisDetails = () => {
         lightHaptic();
-        setShowCommentsView(!showCommentsView);
+        setShowAnalysisDetails(!showAnalysisDetails);
+    };
+
+    const renderAnalysisSummary = () => {
+        if (commentAnalysisLoading) {
+            return (
+                <View style={styles.analysisLoading}>
+                    <ActivityIndicator size="small" color="#50703C"/>
+                    <Text style={styles.analysisLoadingText}>Analyzing reviews...</Text>
+                </View>
+            );
+        }
+
+        if (commentAnalysisError) {
+            return (
+                <TouchableOpacity
+                    style={styles.analysisError}
+                    onPress={() => {
+                        if (restaurant.id) {
+                            dispatch(getRestaurantCommentAnalysisThunk(restaurant.id));
+                        }
+                    }}
+                >
+                    <Ionicons name="refresh" size={20} color="#D32F2F"/>
+                    <Text style={styles.analysisErrorText}>Error loading analysis. Tap to retry.</Text>
+                </TouchableOpacity>
+            );
+        }
+
+        if (!commentAnalysis || commentAnalysis.comment_count === 0) {
+            return (
+                <View style={styles.analysisUnavailable}>
+                    <MaterialIcons name="analytics-off" size={22} color="#757575"/>
+                    <Text style={styles.analysisUnavailableText}>
+                        Not enough reviews for analysis
+                    </Text>
+                </View>
+            );
+        }
+
+        return (
+            <TouchableOpacity
+                style={styles.analysisSummary}
+                onPress={toggleAnalysisDetails}
+                activeOpacity={0.8}
+            >
+                <LinearGradient
+                    colors={['#F0F9EB', '#E8F5E9']}
+                    start={{x: 0, y: 0}}
+                    end={{x: 1, y: 0}}
+                    style={styles.analysisSummaryGradient}
+                >
+                    <View style={styles.analysisSummaryContent}>
+                        <View style={styles.analysisSummaryIconContainer}>
+                            <MaterialIcons name="analytics" size={24} color="#50703C"/>
+                        </View>
+                        <View style={styles.analysisSummaryTextContainer}>
+                            <Text style={styles.analysisSummaryTitle}>AI Review Analysis</Text>
+                            <Text style={styles.analysisSummarySubtitle}>
+                                Based on {commentAnalysis.comment_count} reviews
+                            </Text>
+                        </View>
+                        <Ionicons
+                            name={showAnalysisDetails ? "chevron-up" : "chevron-down"}
+                            size={24}
+                            color="#50703C"
+                            style={styles.chevronIcon}
+                        />
+                    </View>
+                </LinearGradient>
+            </TouchableOpacity>
+        );
     };
 
     return (
@@ -137,150 +237,75 @@ const RestaurantComments: React.FC = () => {
                 <View style={styles.headerRight}/>
             </View>
 
-            <View style={styles.ratingOverview}>
-                <View style={styles.ratingMain}>
-                    <Text style={styles.ratingNumber}>
-                        {(restaurant?.rating ?? 0).toFixed(1)}
-                    </Text>
-                    <View style={styles.starsContainer}>
-                        {[...Array(5)].map((_, index) => (
-                            <Ionicons
-                                key={index}
-                                name={index < (restaurant?.rating ?? 0) ? "star" : "star-outline"}
-                                size={20}
-                                color="#FFD700"
-                                style={{marginRight: 2}}
-                            />
-                        ))}
+            <View style={styles.ratingOverviewContainer}>
+                <LinearGradient
+                    colors={['#50703C', '#3E5A2E']}
+                    style={styles.ratingOverview}
+                >
+                    <View style={styles.ratingMain}>
+                        <Text style={styles.ratingNumber}>
+                            {(restaurant?.rating ?? 0).toFixed(1)}
+                        </Text>
+                        <View style={styles.starsContainer}>
+                            {[...Array(5)].map((_, index) => (
+                                <Ionicons
+                                    key={index}
+                                    name={index < (restaurant?.rating ?? 0) ? "star" : "star-outline"}
+                                    size={22}
+                                    color="#FFD700"
+                                    style={{marginRight: 4}}
+                                />
+                            ))}
+                        </View>
+                        <Text style={styles.ratingCount}>
+                            ({restaurant?.ratingCount ?? 0} reviews)
+                        </Text>
                     </View>
-                    <Text style={styles.ratingCount}>
-                        {restaurant?.ratingCount ?? 0} reviews
-                    </Text>
-                </View>
-
-                <View style={styles.viewToggleContainer}>
-                    <TouchableOpacity
-                        style={[
-                            styles.toggleButton,
-                            showCommentsView ? styles.activeToggle : styles.inactiveToggle
-                        ]}
-                        onPress={() => setShowCommentsView(true)}
-                    >
-                        <Text style={showCommentsView ? styles.activeToggleText : styles.inactiveToggleText}>
-                            All Comments
-                        </Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={[
-                            styles.toggleButton,
-                            !showCommentsView ? styles.activeToggle : styles.inactiveToggle
-                        ]}
-                        onPress={() => setShowCommentsView(false)}
-                    >
-                        <Text style={!showCommentsView ? styles.activeToggleText : styles.inactiveToggleText}>
-                            AI Analysis
-                        </Text>
-                    </TouchableOpacity>
-                </View>
+                </LinearGradient>
             </View>
 
-            {showCommentsView ? (
-                <FlatList
-                    data={comments}
-                    renderItem={({item}) => <CommentCard comment={item}/>}
-                    keyExtractor={(item) => item.id.toString()}
-                    contentContainerStyle={styles.listContainer}
-                    refreshControl={
-                        <RefreshControl
-                            refreshing={refreshing}
-                            onRefresh={onRefresh}
-                            colors={['#50703C']}
-                        />
-                    }
-                    ListEmptyComponent={() => (
-                        <View style={styles.emptyContainer}>
-                            <Ionicons name="chatbox-outline" size={48} color="#666"/>
-                            <Text style={styles.emptyText}>No reviews yet</Text>
-                        </View>
-                    )}
-                />
-            ) : (
-                <View style={styles.analysisContainer}>
-                    {commentAnalysisLoading ? (
-                        <View style={styles.loadingContainer}>
-                            <Text style={styles.loadingText}>Analyzing restaurant comments...</Text>
-                        </View>
-                    ) : commentAnalysisError ? (
-                        <View style={styles.errorContainer}>
-                            <Ionicons name="alert-circle-outline" size={48} color="#D32F2F"/>
-                            <Text style={styles.errorText}>{commentAnalysisError}</Text>
-                            <TouchableOpacity
-                                style={styles.retryButton}
-                                onPress={() => {
-                                    if (restaurant.id) {
-                                        dispatch(getRestaurantCommentAnalysisThunk(restaurant.id));
-                                    }
-                                }}
-                            >
-                                <Text style={styles.retryButtonText}>Retry</Text>
-                            </TouchableOpacity>
-                        </View>
-                    ) : !commentAnalysis ? (
-                        <View style={styles.emptyContainer}>
-                            <Ionicons name="analytics-outline" size={48} color="#666"/>
-                            <Text style={styles.emptyText}>No analysis available</Text>
-                        </View>
-                    ) : (
-                        <FlatList
-                            contentContainerStyle={styles.analysisListContainer}
-                            refreshControl={
-                                <RefreshControl
-                                    refreshing={refreshing}
-                                    onRefresh={onRefresh}
-                                    colors={['#50703C']}
-                                />
-                            }
-                            data={[1]} // Dummy data to make FlatList work
-                            renderItem={() => (
-                                <>
-                                    {commentAnalysis.comment_count > 0 ? (
-                                        <View style={styles.analysisInfoContainer}>
-                                            <Text style={styles.analysisInfoText}>
-                                                Analysis based on {commentAnalysis.comment_count} comments
-                                            </Text>
-                                            <Text style={styles.analysisDateText}>
-                                                Analyzed
-                                                on {new Date(commentAnalysis.analysis_date).toLocaleDateString()}
-                                            </Text>
-                                        </View>
-                                    ) : (
-                                        <View style={styles.analysisInfoContainer}>
-                                            <Text style={styles.analysisInfoText}>
-                                                Not enough comments for a detailed analysis
-                                            </Text>
-                                        </View>
-                                    )}
+            {renderAnalysisSummary()}
 
-                                    <CommentAnalysisCard
-                                        aspectType="good"
-                                        aspects={commentAnalysis.good_aspects}
-                                        title="What customers like"
-                                        iconName="thumbs-up"
-                                    />
-
-                                    <CommentAnalysisCard
-                                        aspectType="bad"
-                                        aspects={commentAnalysis.bad_aspects}
-                                        title="Areas for improvement"
-                                        iconName="thumbs-down"
-                                    />
-                                </>
-                            )}
-                            keyExtractor={() => "analysis"}
-                        />
-                    )}
+            {showAnalysisDetails && commentAnalysis && (
+                <View style={styles.analysisDetailsContainer}>
+                    <CommentAnalysisCard
+                        aspectType="good"
+                        aspects={commentAnalysis.good_aspects}
+                        title="What customers like"
+                        iconName="thumbs-up"
+                    />
+                    <CommentAnalysisCard
+                        aspectType="bad"
+                        aspects={commentAnalysis.bad_aspects}
+                        title="Areas for improvement"
+                        iconName="thumbs-down"
+                    />
                 </View>
             )}
+
+            <FlatList
+                data={comments}
+                renderItem={({item}) => <CommentCard comment={item}/>}
+                keyExtractor={(item) => item.id.toString()}
+                contentContainerStyle={styles.listContainer}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing || commentsLoading}
+                        onRefresh={onRefresh}
+                        colors={['#50703C']}
+                    />
+                }
+                ListEmptyComponent={() => (
+                    <View style={styles.emptyContainer}>
+                        <View style={styles.emptyIconContainer}>
+                            <Ionicons name="chatbox-outline" size={48} color="#CCCCCC"/>
+                        </View>
+                        <Text style={styles.emptyTitle}>No Reviews Yet</Text>
+                        <Text style={styles.emptyText}>Be the first to leave a review for this restaurant</Text>
+                    </View>
+                )}
+                showsVerticalScrollIndicator={false}
+            />
         </View>
     );
 };
@@ -288,7 +313,7 @@ const RestaurantComments: React.FC = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f8f9fa',
+        backgroundColor: '#FFFFFF',
     },
     header: {
         flexDirection: 'row',
@@ -296,34 +321,59 @@ const styles = StyleSheet.create({
         padding: 16,
         backgroundColor: '#FFFFFF',
         borderBottomWidth: 1,
-        borderBottomColor: '#f0f0f0',
+        borderBottomColor: '#F3F4F6',
     },
     headerTitle: {
         flex: 1,
         textAlign: 'center',
         fontSize: 20,
-        fontWeight: '600',
-        color: '#333',
+        fontWeight: '700',
+        color: '#111827',
         marginLeft: -24,
-        fontFamily: 'Poppins-Regular',
+        fontFamily: 'Poppins-Bold',
     },
     headerRight: {
         width: 24,
     },
+    ratingOverviewContainer: {
+        marginBottom: 16,
+    },
     ratingOverview: {
-        backgroundColor: '#FFFFFF',
         padding: 16,
-        marginBottom: 8,
+        borderBottomLeftRadius: 24,
+        borderBottomRightRadius: 24,
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        elevation: 4,
     },
     ratingMain: {
         alignItems: 'center',
-        marginBottom: 16,
+        justifyContent: 'center',
+        flexDirection: 'row',
+        gap: 10,
+        paddingVertical: 16,
+
+        borderRadius: 12,
+        backgroundColor: '#50703C',
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 1},
+        shadowOpacity: 0.05,
+        shadowRadius: 6,
+        elevation: 2,
+        marginHorizontal: 16,
+        marginBottom: 12,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.2)',
+
     },
     ratingNumber: {
-        fontSize: 48,
+        fontSize: 32,
         fontWeight: '700',
-        color: '#333',
+        color: '#FFFFFF',
         fontFamily: 'Poppins-Bold',
+        // marginBottom: 8,
     },
     starsContainer: {
         flexDirection: 'row',
@@ -331,229 +381,281 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     ratingCount: {
-        color: '#666',
-        fontSize: 14,
-        fontFamily: 'Poppins-Regular',
-    },
-    viewToggleContainer: {
-        flexDirection: 'row',
-        backgroundColor: '#f0f0f0',
-        borderRadius: 8,
-        padding: 2,
-        marginTop: 8,
-    },
-    toggleButton: {
-        flex: 1,
-        paddingVertical: 8,
-        alignItems: 'center',
-        borderRadius: 6,
-    },
-    activeToggle: {
-        backgroundColor: '#50703C',
-    },
-    inactiveToggle: {
-        backgroundColor: 'transparent',
-    },
-    activeToggleText: {
         color: '#FFFFFF',
+        fontSize: 15,
+        fontFamily: 'Poppins-Regular',
+        marginTop: 4,
+        opacity: 0.9,
+    },
+    analysisSummary: {
+        marginHorizontal: 16,
+        marginBottom: 16,
+        borderRadius: 12,
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 1},
+        shadowOpacity: 0.05,
+        shadowRadius: 6,
+        elevation: 2,
+    },
+    analysisSummaryGradient: {
+        borderRadius: 12,
+        overflow: 'hidden',
+    },
+    analysisSummaryContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 16,
+    },
+    analysisSummaryIconContainer: {
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        backgroundColor: '#FFFFFF',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    analysisSummaryTextContainer: {
+        flex: 1,
+        marginLeft: 16,
+    },
+    analysisSummaryTitle: {
+        fontSize: 16,
         fontWeight: '600',
+        color: '#333',
+        fontFamily: 'Poppins-SemiBold',
+    },
+    analysisSummarySubtitle: {
+        fontSize: 14,
+        color: '#666',
         fontFamily: 'Poppins-Regular',
     },
-    inactiveToggleText: {
-        color: '#666666',
+    chevronIcon: {
+        marginLeft: 8,
+    },
+    analysisLoading: {
+        backgroundColor: '#F9FAFB',
+        padding: 20,
+        marginHorizontal: 16,
+        marginBottom: 16,
+        borderRadius: 12,
+        alignItems: 'center',
+        flexDirection: 'row',
+        justifyContent: 'center',
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 1},
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
+        elevation: 1,
+    },
+    analysisLoadingText: {
+        color: '#666',
         fontFamily: 'Poppins-Regular',
+        marginLeft: 8,
+    },
+    analysisError: {
+        backgroundColor: '#FEF2F2',
+        padding: 16,
+        marginHorizontal: 16,
+        marginBottom: 16,
+        borderRadius: 12,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    analysisErrorText: {
+        color: '#D32F2F',
+        fontFamily: 'Poppins-Regular',
+        marginLeft: 8,
+    },
+    analysisUnavailable: {
+        backgroundColor: '#F9FAFB',
+        padding: 20,
+        marginHorizontal: 16,
+        marginBottom: 16,
+        borderRadius: 12,
+        alignItems: 'center',
+        flexDirection: 'row',
+        justifyContent: 'center',
+    },
+    analysisUnavailableText: {
+        color: '#666',
+        fontFamily: 'Poppins-Regular',
+        marginLeft: 8,
+    },
+    analysisDetailsContainer: {
+        padding: 16,
+        backgroundColor: '#FFFFFF',
+        marginBottom: 8,
     },
     listContainer: {
         padding: 16,
+        paddingTop: 8,
     },
     commentCard: {
         backgroundColor: '#FFFFFF',
-        borderRadius: 12,
-        padding: 16,
-        marginBottom: 12,
+        borderRadius: 16,
+        padding: 20,
+        marginBottom: 16,
         shadowColor: '#000',
         shadowOffset: {width: 0, height: 2},
-        shadowOpacity: 0.05,
-        shadowRadius: 3.84,
+        shadowOpacity: 0.06,
+        shadowRadius: 6,
         elevation: 2,
+        borderWidth: 1,
+        borderColor: '#F3F4F6',
     },
     commentHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 8,
+        marginBottom: 12,
     },
     userInfo: {
         flexDirection: 'row',
         alignItems: 'center',
     },
     avatarContainer: {
-        width: 32,
-        height: 32,
-        borderRadius: 16,
-        backgroundColor: '#F5F5F5',
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        backgroundColor: '#50703C',
         alignItems: 'center',
         justifyContent: 'center',
-        marginRight: 8,
+        marginRight: 10,
     },
     userName: {
         fontSize: 16,
         fontWeight: '600',
-        color: '#333',
-        fontFamily: 'Poppins-Regular',
+        color: '#111827',
+        fontFamily: 'Poppins-SemiBold',
     },
     commentDate: {
-        color: '#666',
+        color: '#6B7280',
         fontSize: 14,
         fontFamily: 'Poppins-Regular',
     },
     ratingContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 8,
+        marginBottom: 12,
+        backgroundColor: '#F9FAFB',
+        paddingVertical: 6,
+        paddingHorizontal: 10,
+        borderRadius: 8,
+        alignSelf: 'flex-start',
     },
     ratingText: {
         marginLeft: 8,
-        color: '#666',
+        color: '#4B5563',
         fontSize: 14,
-        fontFamily: 'Poppins-Regular',
+        fontWeight: '500',
+        fontFamily: 'Poppins-Medium',
     },
     commentText: {
-        color: '#333',
-        fontSize: 14,
-        lineHeight: 20,
+        color: '#374151',
+        fontSize: 15,
+        lineHeight: 22,
         fontFamily: 'Poppins-Regular',
+        marginBottom: 16,
+    },
+    badgesContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 8,
+    },
+    badge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 20,
+    },
+    badgeText: {
+        fontSize: 12,
+        fontFamily: 'Poppins-Medium',
     },
     emptyContainer: {
-        flex: 1,
+        padding: 24,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    emptyIconContainer: {
+        width: 80,
+        height: 80,
+        borderRadius: 40,
+        backgroundColor: '#F9FAFB',
         justifyContent: 'center',
         alignItems: 'center',
-        paddingVertical: 32,
+        marginBottom: 16,
+    },
+    emptyTitle: {
+        fontSize: 18,
+        fontWeight: '600',
+        color: '#111827',
+        marginBottom: 8,
+        fontFamily: 'Poppins-SemiBold',
     },
     emptyText: {
-        marginTop: 8,
-        color: '#666',
-        fontSize: 16,
-        fontFamily: 'Poppins-Regular',
-    },
-    // Analysis styles
-    analysisContainer: {
-        flex: 1,
-        backgroundColor: '#f8f9fa',
-    },
-    analysisListContainer: {
-        padding: 16,
-    },
-    analysisInfoContainer: {
-        backgroundColor: '#FFFFFF',
-        borderRadius: 12,
-        padding: 16,
-        marginBottom: 12,
-        alignItems: 'center',
-    },
-    analysisInfoText: {
-        fontSize: 16,
-        color: '#333',
-        fontFamily: 'Poppins-Regular',
+        color: '#6B7280',
         textAlign: 'center',
-    },
-    analysisDateText: {
-        fontSize: 14,
-        color: '#666',
+        fontSize: 15,
         fontFamily: 'Poppins-Regular',
-        marginTop: 4,
+        lineHeight: 22,
     },
     analysisCard: {
         borderRadius: 12,
-        padding: 16,
-        marginBottom: 12,
+        padding: 20,
+        marginBottom: 16,
         shadowColor: '#000',
-        shadowOffset: {width: 0, height: 2},
+        shadowOffset: {width: 0, height: 1},
         shadowOpacity: 0.05,
-        shadowRadius: 3.84,
-        elevation: 2,
+        shadowRadius: 6,
+        elevation: 1,
     },
     goodAspectsCard: {
-        backgroundColor: '#F1F8E9',
+        backgroundColor: '#F0F9EB',
         borderLeftWidth: 4,
         borderLeftColor: '#50703C',
     },
     badAspectsCard: {
-        backgroundColor: '#FFEBEE',
+        backgroundColor: '#FEF2F2',
         borderLeftWidth: 4,
-        borderLeftColor: '#D32F2F',
+        borderLeftColor: '#DC2626',
     },
     aspectsHeader: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 12,
+        marginBottom: 16,
     },
     aspectsTitle: {
         fontSize: 18,
         fontWeight: '600',
-        marginLeft: 8,
-        fontFamily: 'Poppins-Regular',
+        marginLeft: 12,
+        fontFamily: 'Poppins-SemiBold',
     },
     goodTitle: {
         color: '#50703C',
     },
     badTitle: {
-        color: '#D32F2F',
+        color: '#DC2626',
     },
     aspectsList: {
-        marginLeft: 8,
+        paddingLeft: 8,
     },
     aspectItem: {
         flexDirection: 'row',
         alignItems: 'flex-start',
-        marginBottom: 8,
+        marginBottom: 12,
     },
     aspectIcon: {
         marginTop: 2,
-        marginRight: 8,
+        marginRight: 12,
     },
     aspectText: {
         flex: 1,
-        fontSize: 14,
-        lineHeight: 20,
-        color: '#333',
-        fontFamily: 'Poppins-Regular',
-    },
-    loadingContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: 20,
-    },
-    loadingText: {
-        fontSize: 16,
-        color: '#666',
-        textAlign: 'center',
-        fontFamily: 'Poppins-Regular',
-    },
-    errorContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: 20,
-    },
-    errorText: {
-        fontSize: 16,
-        color: '#D32F2F',
-        textAlign: 'center',
-        marginTop: 8,
-        marginBottom: 16,
-        fontFamily: 'Poppins-Regular',
-    },
-    retryButton: {
-        backgroundColor: '#50703C',
-        paddingHorizontal: 20,
-        paddingVertical: 10,
-        borderRadius: 8,
-    },
-    retryButtonText: {
-        color: '#FFFFFF',
-        fontWeight: '600',
+        fontSize: 15,
+        lineHeight: 22,
+        color: '#374151',
         fontFamily: 'Poppins-Regular',
     },
 });

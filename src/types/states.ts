@@ -1,5 +1,5 @@
 import {RestaurantSearchResult} from "@/src/types/api/search/responses";
-import {Restaurant} from "@/src/types/api/restaurant/model";
+import {Comment, RecentRestaurant, Restaurant} from "@/src/types/api/restaurant/model";
 import {Listing} from "@/src/types/api/listing/model";
 import {CartItem} from "@/src/types/api/cart/model";
 import {Address} from "@/src/types/api/address/model";
@@ -8,15 +8,12 @@ import {UserRankResponse} from "@/src/redux/api/userAPI";
 
 export interface RestaurantSearchResults {
     results: RestaurantSearchResult[];
-
 }
-
 
 export interface PurchaseState {
     activeOrders: Purchase[];
     loadingActiveOrders: boolean;
     activeOrdersError: string | null;
-
     previousOrders: Purchase[];
     loadingPreviousOrders: boolean;
     previousOrdersError: string | null;
@@ -28,15 +25,12 @@ export interface PurchaseState {
         hasNext: boolean;
         hasPrev: boolean;
     };
-
     currentOrder: Purchase | null;
     loadingCurrentOrder: boolean;
     currentOrderError: string | null;
-
     creatingPurchase: boolean;
     createPurchaseError: string | null;
     lastCreatedPurchases: Purchase[] | null;
-
     restaurantPurchases: Purchase[];
     loadingRestaurantPurchases: boolean;
     restaurantPurchasesError: string | null;
@@ -54,7 +48,6 @@ export interface AddressState {
     loading: boolean;
     error: string | null;
 }
-
 
 export interface Pagination {
     total: number;
@@ -83,7 +76,6 @@ export interface CommentAnalysis {
     bad_aspects: string[];
 }
 
-
 export interface RestaurantState {
     restaurantsProximity: Restaurant[];
     restaurantsProximityStatus: 'idle' | 'loading' | 'succeeded' | 'failed';
@@ -103,7 +95,12 @@ export interface RestaurantState {
     commentAnalysis: CommentAnalysis | null;
     commentAnalysisLoading: boolean;
     commentAnalysisError: string | null;
-
+    recentRestaurants: RecentRestaurant[];
+    recentRestaurantsLoading: boolean;
+    recentRestaurantsError: string | null;
+    comments: Comment[];
+    commentsLoading: boolean;
+    commentsError: string | null;
 }
 
 export interface UserState {
@@ -149,3 +146,9 @@ export interface Achievement {
     discount_percentage?: number;
 }
 
+export interface UserRank {
+    rank: number;
+    total_discount: number;
+    user_id: number;
+    user_name: string;
+}

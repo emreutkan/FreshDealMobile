@@ -91,26 +91,6 @@ const RestaurantInfoSection: React.FC = () => {
         }
     };
 
-    // Calculate header translation based on scroll position
-    const headerTranslate = scrollY.interpolate({
-        inputRange: [0, 300],
-        outputRange: [0, -300],
-        extrapolate: 'clamp'
-    });
-
-    // Calculate title opacity for mini header
-    const miniHeaderOpacity = scrollY.interpolate({
-        inputRange: [100, 150],
-        outputRange: [0, 1],
-        extrapolate: 'clamp'
-    });
-
-    // Calculate main content opacity
-    const contentOpacity = scrollY.interpolate({
-        inputRange: [0, 150],
-        outputRange: [1, 0],
-        extrapolate: 'clamp'
-    });
 
     // Badge detail modal
     const BadgeDetailModal = () => {

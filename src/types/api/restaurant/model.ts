@@ -1,10 +1,15 @@
-interface RestaurantComment {
+export interface Comment {
     id: number;
     user_id: number;
     comment: string;
     rating: number;
-    timestamp: string; // iso
+    timestamp: string;
+    badges: {
+        name: string;
+        is_positive: boolean;
+    }[];
 }
+
 
 export interface Restaurant {
     id: number;
@@ -27,9 +32,17 @@ export interface Restaurant {
     maxDeliveryDistance: number | null;
     deliveryFee: number | null;
     minOrderAmount: number | null;
-    comments?: RestaurantComment[];
+    comments?: Comment[];
     badges?: string[]; // Add this field
 
 
 }
+
+export interface RecentRestaurant {
+    restaurant_id: number;
+    restaurant_name: string;
+    image_url: string;
+    last_order_date: string;
+}
+
 

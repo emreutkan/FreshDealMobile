@@ -9,7 +9,7 @@ import {GoBackIcon} from "@/src/features/homeScreen/components/goBack";
 import ListingCard from "@/src/features/RestaurantScreen/components/listingsCard";
 import {setDeliveryMethod, setSelectedRestaurant} from "@/src/redux/slices/restaurantSlice";
 import {fetchCart} from "@/src/redux/thunks/cartThunks";
-import {Ionicons} from "@expo/vector-icons";
+import {Ionicons, MaterialIcons} from "@expo/vector-icons";
 import type {NativeStackNavigationProp} from "@react-navigation/native-stack";
 import {RootStackParamList} from "@/src/utils/navigation";
 import {useNavigation} from "@react-navigation/native";
@@ -28,6 +28,7 @@ const CartScreen: React.FC = () => {
     useEffect(() => {
         dispatch(fetchCart());
     }, [dispatch]);
+
     useEffect(() => {
         if (cartItems.length > 0) {
             const firstCartItem = cartItems[0];
@@ -46,7 +47,6 @@ const CartScreen: React.FC = () => {
                 return isInCart;
             });
 
-            // Log the final filtered listings
             console.log('Final filtered listings:', ListingsInCart);
             if (restaurant) {
                 dispatch(setSelectedRestaurant(restaurant));
@@ -68,26 +68,31 @@ const CartScreen: React.FC = () => {
 
     const totalPickUpPrice = ListingsInCart.reduce((sum, item) => {
         const cartItem = cartItems.find(ci => ci.listing_id === item.id);
-        const quantity = cartItem?.count || 1; // Default to 1 if count is not found
+        const quantity = cartItem?.count || 1;
         return sum + (item.pick_up_price || 0) * quantity;
     }, 0);
+
     const totalDeliveryPrice = ListingsInCart.reduce((sum, item) => {
         const cartItem = cartItems.find(ci => ci.listing_id === item.id);
-        const quantity = cartItem?.count || 1; // Default to 1 if count is not found
+        const quantity = cartItem?.count || 1;
         return sum + (item.delivery_price || 0) * quantity;
     }, 0);
 
     const currentTotal = isPickup ? totalPickUpPrice : totalDeliveryPrice;
+
     const calculateItemSubtotal = (listing: any, isPickup: boolean) => {
         const cartItem = cartItems.find(ci => ci.listing_id === listing.id);
         const quantity = cartItem?.count || 1;
         const price = isPickup ? listing.pick_up_price : listing.delivery_price;
         return (price || 0) * quantity;
     };
+
     const restaurant = restaurantsProximity.find(r => r.id === (cartItems[0]?.restaurant_id));
     const totalItemsCount = cartItems.reduce((sum, item) => sum + (item.count || 1), 0);
-    type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+    const deliveryFee = !isPickup && restaurant?.deliveryFee ? restaurant.deliveryFee : 0;
+    const finalTotal = currentTotal + deliveryFee;
 
+    type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
     const navigation = useNavigation<NavigationProp>();
 
     return (
@@ -100,21 +105,17 @@ const CartScreen: React.FC = () => {
                         <Text style={styles.badgeText}>{totalItemsCount}</Text>
                     </View>
                 </View>
-                <View style={{
-                    flexDirection: 'row',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    width: '100%'
-                }}>
-                    {restaurant && (
+
+                {restaurant && (
+                    <View style={styles.headerBottom}>
                         <View style={styles.restaurantInfo}>
-                            <Ionicons name="business" size={20} color="#666666"/>
+                            <Ionicons name="business" size={20} color="#50703C"/>
                             <Text style={styles.restaurantName}>{restaurant.restaurantName}</Text>
                         </View>
-                    )}
 
-                    <PickUpDeliveryToggle layout="row"/>
-                </View>
+                        <PickUpDeliveryToggle layout="row"/>
+                    </View>
+                )}
             </View>
 
             {ListingsInCart.length > 0 ? (
@@ -122,6 +123,7 @@ const CartScreen: React.FC = () => {
                     <ScrollView
                         style={styles.scrollView}
                         showsVerticalScrollIndicator={false}
+                        contentContainerStyle={styles.scrollViewContent}
                     >
                         <View style={styles.cardsContainer}>
                             <ListingCard
@@ -136,30 +138,59 @@ const CartScreen: React.FC = () => {
 
                     <View style={styles.bottomSection}>
                         <View style={styles.summaryContainer}>
-                            {ListingsInCart.map(listing => (
-                                <View key={listing.id} style={styles.summaryRow}>
-                                    <Text style={styles.summaryLabel}>
-                                        {listing.title} (x{cartItems.find(ci => ci.listing_id === listing.id)?.count || 1})
-                                    </Text>
-                                    <Text style={styles.summaryValue}>
-                                        {calculateItemSubtotal(listing, isPickup).toFixed(2)} TL
-                                    </Text>
-                                </View>
-                            ))}
-                            {!isPickup && restaurant && restaurant.deliveryFee && (
+                            {/*<Text style={styles.summaryTitle}>Order Summary</Text>*/}
+
+                            {/*{ListingsInCart.map(listing => {*/}
+                            {/*    const cartItem = cartItems.find(ci => ci.listing_id === listing.id);*/}
+                            {/*    const quantity = cartItem?.count || 1;*/}
+                            {/*    const itemSubtotal = calculateItemSubtotal(listing, isPickup);*/}
+
+                            {/*    return (*/}
+                            {/*        <View key={listing.id} style={styles.summaryRow}>*/}
+                            {/*            <View style={styles.summaryItemDetails}>*/}
+                            {/*                <Text style={styles.itemQuantity}>{quantity}x</Text>*/}
+                            {/*                <Text style={styles.summaryLabel}>{listing.title}</Text>*/}
+                            {/*            </View>*/}
+                            {/*            <Text style={styles.summaryValue}>*/}
+                            {/*                {itemSubtotal.toFixed(2)} TL*/}
+                            {/*            </Text>*/}
+                            {/*        </View>*/}
+                            {/*    );*/}
+                            {/*})}*/}
+
+                            {/*<View style={styles.divider}/>*/}
+
+                            {/*<View style={styles.summaryRow}>*/}
+                            {/*    <Text style={styles.subtotalLabel}>Subtotal</Text>*/}
+                            {/*    <Text style={styles.subtotalValue}>{currentTotal.toFixed(2)} TL</Text>*/}
+                            {/*</View>*/}
+
+                            {!isPickup && restaurant && restaurant.deliveryFee > 0 && (
                                 <View style={styles.summaryRow}>
-                                    <Text style={styles.summaryLabel}>Delivery Fee</Text>
-                                    <Text style={styles.summaryValue}>{restaurant.deliveryFee.toFixed(2)} TL</Text>
+                                    <Text style={styles.subtotalLabel}>Subtotal</Text>
+                                    <Text style={styles.subtotalValue}>{currentTotal.toFixed(2)} TL</Text>
                                 </View>
                             )}
-                            <View style={styles.divider}/>
+
+                            {!isPickup && restaurant && restaurant.deliveryFee > 0 && (
+                                <View>
+                                    <View style={styles.summaryRow}>
+                                        <Text style={styles.subtotalLabel}>Delivery Fee</Text>
+                                        <Text style={styles.subtotalValue}>{restaurant.deliveryFee.toFixed(2)} TL</Text>
+                                    </View>
+                                    <View style={styles.divider}/>
+                                </View>
+
+                            )}
+
                             <View style={styles.totalContainer}>
                                 <Text style={styles.totalLabel}>Total</Text>
                                 <Text style={styles.totalAmount}>
-                                    {(currentTotal + (!isPickup ? restaurant?.deliveryFee || 0 : 0)).toFixed(2)} TL
+                                    {finalTotal.toFixed(2)} TL
                                 </Text>
                             </View>
                         </View>
+
                         <TouchableOpacity
                             style={styles.checkoutButton}
                             activeOpacity={0.8}
@@ -168,17 +199,19 @@ const CartScreen: React.FC = () => {
                                 navigation.navigate('Checkout');
                             }}
                         >
-                            <Ionicons name="cart" size={24} color="#FFFFFF" style={styles.checkoutIcon}/>
-
+                            <MaterialIcons name="shopping-cart-checkout" size={24} color="#FFFFFF"
+                                           style={styles.checkoutIcon}/>
                             <Text style={styles.checkoutButtonText}>Proceed to Checkout</Text>
                         </TouchableOpacity>
                     </View>
                 </>
             ) : (
                 <View style={styles.emptyCartContainer}>
-                    <Ionicons name="cart-outline" size={100} color="#CCCCCC"/>
+                    <View style={styles.emptyIconContainer}>
+                        <Ionicons name="cart-outline" size={80} color="#50703C"/>
+                    </View>
                     <Text style={styles.emptyCartText}>Your cart is empty</Text>
-                    <Text style={styles.emptyCartSubtext}>Add items to get started</Text>
+                    <Text style={styles.emptyCartSubtext}>Add items from restaurants to get started</Text>
                     <TouchableOpacity
                         style={styles.continueShopping}
                         activeOpacity={0.8}
@@ -187,8 +220,8 @@ const CartScreen: React.FC = () => {
                             navigation.goBack()
                         }}
                     >
-                        <Ionicons name="business-outline" size={20} color="#FFFFFF" style={styles.shoppingIcon}/>
-                        <Text style={styles.continueShoppingText}>Continue Shopping</Text>
+                        <Ionicons name="restaurant-outline" size={20} color="#FFFFFF" style={styles.shoppingIcon}/>
+                        <Text style={styles.continueShoppingText}>Browse Restaurants</Text>
                     </TouchableOpacity>
                 </View>
             )}
@@ -199,58 +232,65 @@ const CartScreen: React.FC = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f8f9fa',
+        backgroundColor: '#F9FAFB',
     },
     header: {
         paddingHorizontal: scaleFont(16),
-        paddingBottom: scaleFont(16),
+        paddingVertical: scaleFont(16),
         backgroundColor: '#FFFFFF',
         borderBottomWidth: 1,
-        borderBottomColor: '#f0f0f0',
+        borderBottomColor: '#F3F4F6',
     },
     headerTop: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: scaleFont(8),
+        marginBottom: scaleFont(12),
+    },
+    headerBottom: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginTop: scaleFont(8),
     },
     headerTitle: {
         fontSize: scaleFont(20),
-        fontWeight: '600',
-        color: '#333',
+        fontWeight: '700',
+        color: '#111827',
         flex: 1,
         marginLeft: scaleFont(12),
-        fontFamily: 'Poppins-Regular',
+        fontFamily: 'Poppins-Bold',
     },
     badge: {
         backgroundColor: '#50703C',
-        borderRadius: 12,
-        minWidth: 24,
-        height: 24,
+        borderRadius: 20,
+        minWidth: 28,
+        height: 28,
         alignItems: 'center',
         justifyContent: 'center',
         paddingHorizontal: 8,
     },
     badgeText: {
         color: '#FFFFFF',
-        fontSize: scaleFont(12),
+        fontSize: scaleFont(14),
         fontWeight: '600',
-        fontFamily: 'Poppins-Regular',
+        fontFamily: 'Poppins-SemiBold',
     },
     restaurantInfo: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginTop: scaleFont(8),
     },
     restaurantName: {
-        fontSize: scaleFont(14),
-        color: '#666666',
+        fontSize: scaleFont(15),
+        color: '#4B5563',
         marginLeft: scaleFont(8),
         fontWeight: '500',
-        fontFamily: 'Poppins-Regular',
+        fontFamily: 'Poppins-Medium',
     },
     scrollView: {
         flex: 1,
-        backgroundColor: '#f8f9fa',
+    },
+    scrollViewContent: {
+        paddingBottom: 20,
     },
     cardsContainer: {
         padding: scaleFont(16),
@@ -258,58 +298,100 @@ const styles = StyleSheet.create({
     bottomSection: {
         backgroundColor: '#FFFFFF',
         paddingHorizontal: scaleFont(16),
-        paddingVertical: scaleFont(20),
+        paddingTop: scaleFont(16),
+        paddingBottom: scaleFont(24),
         borderTopWidth: 1,
-        borderTopColor: '#f0f0f0',
+        borderTopColor: '#F3F4F6',
         shadowColor: '#000',
         shadowOffset: {
             width: 0,
             height: -3,
         },
-        shadowOpacity: 0.1,
-        shadowRadius: 3,
+        shadowOpacity: 0.05,
+        shadowRadius: 6,
         elevation: 5,
     },
     summaryContainer: {
         marginBottom: scaleFont(20),
+        backgroundColor: '#F9FAFB',
+        borderRadius: 12,
+        padding: scaleFont(16),
+    },
+    summaryTitle: {
+        fontSize: scaleFont(16),
+        fontWeight: '600',
+        color: '#111827',
+        marginBottom: scaleFont(12),
+        fontFamily: 'Poppins-SemiBold',
     },
     summaryRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginBottom: scaleFont(8),
+        alignItems: 'center',
+        marginBottom: scaleFont(10),
+
+    },
+    summaryItemDetails: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flex: 1,
+    },
+    itemQuantity: {
+        fontSize: scaleFont(15),
+        fontWeight: '600',
+        color: '#50703C',
+        marginRight: scaleFont(8),
+        fontFamily: 'Poppins-SemiBold',
+        minWidth: 24,
     },
     summaryLabel: {
-        fontSize: scaleFont(14),
-        color: '#666666',
+        fontSize: scaleFont(15),
+        color: '#4B5563',
         fontFamily: 'Poppins-Regular',
+        flex: 1,
     },
     summaryValue: {
-        fontSize: scaleFont(14),
-        color: '#333333',
+        fontSize: scaleFont(15),
+        color: '#111827',
         fontWeight: '500',
-        fontFamily: 'Poppins-Regular',
+        fontFamily: 'Poppins-Medium',
+    },
+    subtotalLabel: {
+        fontSize: scaleFont(15),
+        color: '#4B5563',
+        fontFamily: 'Poppins-Medium',
+    },
+    subtotalValue: {
+        fontSize: scaleFont(15),
+        color: '#111827',
+        fontWeight: '600',
+        fontFamily: 'Poppins-SemiBold',
     },
     divider: {
         height: 1,
-        backgroundColor: '#f0f0f0',
+        backgroundColor: '#E5E7EB',
         marginVertical: scaleFont(12),
     },
     totalContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
+        // marginTop: scaleFont(8),
+        // paddingTop: scaleFont(12),
+        // borderTopWidth: 1,
+        borderTopColor: '#E5E7EB',
     },
     totalLabel: {
-        fontSize: scaleFont(18),
-        color: '#333333',
+        fontSize: scaleFont(16),
+        color: '#111827',
         fontWeight: '600',
-        fontFamily: 'Poppins-Regular',
+        fontFamily: 'Poppins-SemiBold',
     },
     totalAmount: {
-        fontSize: scaleFont(24),
+        fontSize: scaleFont(20),
         color: '#50703C',
         fontWeight: '700',
-        fontFamily: 'Poppins-Regular',
+        fontFamily: 'Poppins-Bold',
     },
     checkoutButton: {
         backgroundColor: '#50703C',
@@ -326,32 +408,41 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
         fontSize: scaleFont(16),
         fontWeight: '600',
-        fontFamily: 'Poppins-Regular',
+        fontFamily: 'Poppins-SemiBold',
     },
     emptyCartContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
         padding: scaleFont(20),
-        backgroundColor: '#f8f9fa',
+        backgroundColor: '#FFFFFF',
+    },
+    emptyIconContainer: {
+        width: 120,
+        height: 120,
+        borderRadius: 60,
+        backgroundColor: '#F0F9EB',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: scaleFont(20),
     },
     emptyCartText: {
-        fontSize: scaleFont(20),
-        color: '#333333',
-        fontWeight: '600',
-        marginTop: scaleFont(20),
+        fontSize: scaleFont(22),
+        color: '#111827',
+        fontWeight: '700',
         marginBottom: scaleFont(8),
-        fontFamily: 'Poppins-Regular',
+        fontFamily: 'Poppins-Bold',
     },
     emptyCartSubtext: {
-        fontSize: scaleFont(14),
-        color: '#666666',
-        marginBottom: scaleFont(24),
+        fontSize: scaleFont(15),
+        color: '#6B7280',
+        marginBottom: scaleFont(28),
         fontFamily: 'Poppins-Regular',
+        textAlign: 'center',
     },
     continueShopping: {
         backgroundColor: '#50703C',
-        paddingVertical: scaleFont(12),
+        paddingVertical: scaleFont(14),
         paddingHorizontal: scaleFont(24),
         borderRadius: scaleFont(12),
         flexDirection: 'row',
@@ -364,7 +455,8 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
         fontSize: scaleFont(16),
         fontWeight: '600',
-        fontFamily: 'Poppins-Regular',
+        fontFamily: 'Poppins-SemiBold',
     },
 });
+
 export default CartScreen;
