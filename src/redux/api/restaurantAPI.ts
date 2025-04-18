@@ -11,7 +11,7 @@ const GET_RESTAURANTS_IN_PROXIMITY_API_ENDPOINT = `${RESTAURANTS_ENDPOINT}/proxi
 export const getRestaurantsInProximity = async (
     latitude: number,
     longitude: number,
-    radius: number = 10, // Default to 10 km
+    radius: number = 10,
     token: string
 ): Promise<Restaurant[]> => {
     const functionName = 'getRestaurantsByProximityAPI';
@@ -192,7 +192,6 @@ export const getRestaurantBadges = async (
     }
 };
 
-// Add this to your existing restaurantAPI.ts file
 export const getRestaurantCommentAnalysis = async (
     restaurantId: number,
     token: string
@@ -208,6 +207,27 @@ export const getRestaurantCommentAnalysis = async (
         });
         logResponse(functionName, endpoint, response.data);
         return response.data;
+    } catch (error: any) {
+        logError(functionName, endpoint, error);
+        throw error;
+    }
+};
+
+export const getRestaurantComments = async (restaurantId: number): Promise<any> => {
+    const functionName = 'getRestaurantComments';
+    const endpoint = `${RESTAURANTS_ENDPOINT}/${restaurantId}/comments`;
+
+    logRequest(functionName, endpoint, {});
+
+    try {
+        const response = await axios.get(endpoint);
+        logResponse(functionName, endpoint, response.data);
+
+        if (!response.data.success) {
+            throw new Error(response.data.message || 'Failed to fetch comments');
+        }
+
+        return response.data.comments;
     } catch (error: any) {
         logError(functionName, endpoint, error);
         throw error;

@@ -7,6 +7,7 @@ import {
     getRestaurant,
     getRestaurantBadges,
     getRestaurantCommentAnalysis,
+    getRestaurantComments,
     getRestaurantsInProximity,
     updateRestaurant
 } from "@/src/redux/api/restaurantAPI";
@@ -266,6 +267,21 @@ export const getRestaurantCommentAnalysisThunk = createAsyncThunk(
                 error.response?.data?.message ||
                 error.message ||
                 'Failed to fetch restaurant comment analysis'
+            );
+        }
+    }
+);
+
+export const getRestaurantCommentsThunk = createAsyncThunk(
+    'restaurant/getRestaurantComments',
+    async (restaurantId: number, {rejectWithValue}) => {
+        try {
+            return await getRestaurantComments(restaurantId);
+        } catch (error: any) {
+            return rejectWithValue(
+                error.response?.data?.message ||
+                error.message ||
+                'Failed to fetch restaurant comments'
             );
         }
     }

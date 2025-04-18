@@ -4,11 +4,12 @@ import {
     getRecentRestaurantsThunk,
     getRestaurantBadgesThunk,
     getRestaurantCommentAnalysisThunk,
+    getRestaurantCommentsThunk,
     getRestaurantsByProximity,
     getRestaurantThunk,
 } from '@/src/redux/thunks/restaurantThunks';
 import {addFavoriteThunk, getFavoritesThunk, removeFavoriteThunk,} from "@/src/redux/thunks/userThunks";
-import {Pagination, RestaurantState} from "@/src/types/states";
+import {Comment, Pagination, RestaurantState} from "@/src/types/states";
 import {Restaurant} from "@/src/types/api/restaurant/model";
 import {Listing} from "@/src/types/api/listing/model";
 
@@ -81,6 +82,9 @@ const initialState: RestaurantState = {
     recentRestaurants: [],
     recentRestaurantsLoading: false,
     recentRestaurantsError: null,
+    comments: [],
+    commentsLoading: false,
+    commentsError: null,
 };
 
 const restaurantSlice = createSlice({
@@ -163,7 +167,7 @@ const restaurantSlice = createSlice({
                 }
             })
             .addCase(getRestaurantThunk.fulfilled, (state, action: PayloadAction<Restaurant>) => {
-                state.selectedRestaurant.comments = action.payload.comments || [];
+                state.selectedRestaurant = action.payload;
             })
             .addCase(getRestaurantCommentAnalysisThunk.pending, (state) => {
                 state.commentAnalysisLoading = true;
@@ -189,6 +193,19 @@ const restaurantSlice = createSlice({
             .addCase(getRecentRestaurantsThunk.rejected, (state, action) => {
                 state.recentRestaurantsLoading = false;
                 state.recentRestaurantsError = action.payload as string;
+            })
+            .addCase(getRestaurantCommentsThunk.pending, (state) => {
+                state.commentsLoading = true;
+                state.commentsError = null;
+            })
+            .addCase(getRestaurantCommentsThunk.fulfilled, (state, action: PayloadAction<Comment[]>) => {
+                state.commentsLoading = false;
+                state.comments = action.payload;
+                state.commentsError = null;
+            })
+            .addCase(getRestaurantCommentsThunk.rejected, (state, action) => {
+                state.commentsLoading = false;
+                state.commentsError = action.payload as string;
             });
     },
 });

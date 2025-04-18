@@ -53,14 +53,12 @@ const isRestaurantOpen = (
         return currentTime >= startTime && currentTime <= endTime;
     }
 
-
     return true;
 };
 
-// Calculate estimated delivery time based on distance
 const calculateDeliveryTime = (distanceKm: number): number => {
-    const baseTime = 15; // Base preparation time in minutes
-    const timePerKm = 5; // Additional minutes per kilometer
+    const baseTime = 15;
+    const timePerKm = 5;
     return Math.round(baseTime + (distanceKm * timePerKm));
 };
 
@@ -92,7 +90,6 @@ const RestaurantList: React.FC<RestaurantListProps> = ({restaurants}) => {
         const isOpen = isRestaurantOpen(item.workingDays, item.workingHoursStart, item.workingHoursEnd);
         const hasStock = item.listings > 0;
 
-        // Calculate distance if we have coordinates
         const distance = selectedAddress?.latitude && selectedAddress?.longitude && item.latitude && item.longitude
             ? calculateDistance(
                 selectedAddress.latitude,
@@ -105,8 +102,8 @@ const RestaurantList: React.FC<RestaurantListProps> = ({restaurants}) => {
         const deliveryTime = distance ? calculateDeliveryTime(distance) : 35;
         const distanceDisplay = distance
             ? distance < 1
-                ? `Within ${Math.round(distance * 1000)}m`
-                : `Within ${distance.toFixed(1)} km`
+                ? `${Math.round(distance * 1000)}m away`
+                : `${distance.toFixed(1)} km away`
             : 'Distance unavailable';
 
         const isDisabled = !isOpen || !hasStock;
@@ -123,20 +120,26 @@ const RestaurantList: React.FC<RestaurantListProps> = ({restaurants}) => {
                 style={styles.touchableContainer}
             >
                 <View style={styles.restaurantCard}>
-                    {item.image_url && (
+                    {item.image_url ? (
                         <Image
-                            source={{
-                                uri: item.image_url,
-                            }}
+                            source={{uri: item.image_url}}
                             style={styles.image}
                         />
-                    )
-
-                    }
+                    ) : (
+                        <View style={[styles.image, styles.placeholderImage]}>
+                            <MaterialIcons name="restaurant" size={48} color="#DDDDDD"/>
+                        </View>
+                    )}
 
                     {isDisabled && (
                         <View style={styles.overlay}>
                             <Text style={styles.overlayText}>{overlayMessage}</Text>
+                        </View>
+                    )}
+
+                    {item.category && (
+                        <View style={styles.categoryBadge}>
+                            <Text style={styles.categoryText}>{item.category}</Text>
                         </View>
                     )}
 
@@ -159,32 +162,54 @@ const RestaurantList: React.FC<RestaurantListProps> = ({restaurants}) => {
                                 {item.restaurantName || 'Unnamed Restaurant'}
                             </Text>
                             <View style={styles.ratingContainer}>
-                                <Ionicons name="star" size={16} color="#4CAF50"/>
+                                <Ionicons name="star" size={16} color="#50703C"/>
                                 <Text style={styles.rating}>{(item.rating ?? 0).toFixed(1)}</Text>
                                 <Text style={styles.reviewCount}>({item.ratingCount ?? 0}+)</Text>
                             </View>
                         </View>
 
-                        <View style={styles.infoRow}>
-                            <View style={styles.locationContainer}>
-                                <MaterialCommunityIcons name="run-fast" size={20} color="#50703C"/>
-                                <Text
-                                    style={styles.locationText}>{distanceDisplay}</Text>
+                        <Text style={styles.description} numberOfLines={2}>
+                            {item.restaurantDescription || 'No description available'}
+                        </Text>
+
+                        <View style={styles.infoGrid}>
+                            <View style={styles.infoItem}>
+                                <MaterialCommunityIcons name="map-marker-distance" size={18} color="#50703C"/>
+                                <Text style={styles.infoText}>{distanceDisplay}</Text>
                             </View>
+
+                            {item.delivery && (
+                                <View style={styles.infoItem}>
+                                    <MaterialIcons name="delivery-dining" size={18} color="#50703C"/>
+                                    <Text style={styles.infoText}>{deliveryTime} min</Text>
+                                </View>
+                            )}
+
+                            {item.pickup && (
+                                <View style={styles.infoItem}>
+                                    <MaterialCommunityIcons name="shopping-outline" size={18} color="#50703C"/>
+                                    <Text style={styles.infoText}>Pickup</Text>
+                                </View>
+                            )}
                         </View>
 
-                        {item.delivery && (
-                            <View style={styles.deliveryInfoContainer}>
-                                <View style={styles.timeAndPrice}>
-                                    <MaterialIcons name="delivery-dining" size={24} color="#50703C"/>
-                                    <Text style={styles.deliveryText}>{deliveryTime} min</Text>
-                                    <Text style={styles.dot}>•</Text>
-                                    <Text style={styles.priceText}>
-                                        {item.deliveryFee ? `${item.deliveryFee.toFixed(2)}TL` : 'Free Delivery'}
+                        <View style={styles.footer}>
+                            {item.deliveryFee && item.delivery ? (
+                                <View style={styles.footerItem}>
+                                    <Text style={styles.footerLabel}>Delivery Fee:</Text>
+                                    <Text style={styles.footerValue}>
+                                        {item.deliveryFee > 0 ? `${item.deliveryFee.toFixed(2)} TL` : 'Free'}
                                     </Text>
                                 </View>
-                            </View>
-                        )}
+                            ) : null}
+
+                            {item.minOrderAmount && item.delivery ? (
+                                <View style={styles.footerItem}>
+                                    <Text style={styles.footerLabel}>Min Order:</Text>
+                                    <Text style={styles.footerValue}>{item.minOrderAmount.toFixed(2)} TL</Text>
+                                </View>
+                            ) : null}
+                        </View>
                     </View>
                 </View>
             </TouchableOpacity>
@@ -201,8 +226,46 @@ const RestaurantList: React.FC<RestaurantListProps> = ({restaurants}) => {
         />
     );
 };
+
 const styles = StyleSheet.create({
-    // ... existing styles ...
+    listContainer: {
+        paddingHorizontal: 2,
+        paddingBottom: 16,
+        backgroundColor: "#fff",
+    },
+    touchableContainer: {
+        marginVertical: 8,
+        marginHorizontal: 4,
+        borderRadius: 16,
+        backgroundColor: '#fff',
+        overflow: 'hidden',
+        ...Platform.select({
+            ios: {
+                shadowColor: "#000",
+                shadowOffset: {width: 0, height: 3},
+                shadowOpacity: 0.1,
+                shadowRadius: 6,
+            },
+            android: {
+                elevation: 3,
+            },
+        }),
+    },
+    restaurantCard: {
+        overflow: "hidden",
+        borderRadius: 16,
+    },
+    image: {
+        position: "relative",
+        width: "100%",
+        height: 180,
+        resizeMode: "cover",
+    },
+    placeholderImage: {
+        backgroundColor: '#f5f5f5',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
     overlay: {
         position: 'absolute',
         top: 0,
@@ -221,44 +284,20 @@ const styles = StyleSheet.create({
         padding: 16,
         fontFamily: "Poppins-SemiBold",
     },
-    minOrderText: {
+    categoryBadge: {
+        position: 'absolute',
+        left: 12,
+        top: 12,
+        backgroundColor: 'rgba(80, 112, 60, 0.85)',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 20,
+    },
+    categoryText: {
+        color: 'white',
         fontSize: 12,
-        color: '#666',
-        marginTop: 4,
-        fontFamily: "Poppins-Regular",
-
-    },
-    listContainer: {
-        backgroundColor: "#fff",
-    },
-    touchableContainer: {
-
-        marginTop: 16,
-        // marginBottom: 16,
-        borderRadius: 12,
-        backgroundColor: '#fff',
-        ...Platform.select({
-            ios: {
-                shadowColor: "#000",
-                shadowOffset: {width: 0, height: 2},
-                shadowOpacity: 0.1,
-                shadowRadius: 4,
-            },
-            android: {
-                elevation: 2,
-            },
-        }),
-    },
-    restaurantCard: {
-
-        overflow: "hidden",
-        borderRadius: 12,
-    },
-    image: {
-        position: "relative",
-        width: "100%",
-        height: 160,
-        resizeMode: "cover",
+        fontWeight: '600',
+        fontFamily: "Poppins-SemiBold",
     },
     heartButton: {
         position: "absolute",
@@ -274,11 +313,11 @@ const styles = StyleSheet.create({
             ios: {
                 shadowColor: "#000",
                 shadowOffset: {width: 0, height: 2},
-                shadowOpacity: 0.1,
+                shadowOpacity: 0.15,
                 shadowRadius: 4,
             },
             android: {
-                elevation: 2,
+                elevation: 3,
             },
         }),
     },
@@ -295,74 +334,79 @@ const styles = StyleSheet.create({
     title: {
         flex: 1,
         fontSize: 18,
-        fontWeight: "600",
-        color: "#000",
+        fontWeight: "700",
+        color: "#111827",
         marginRight: 8,
-        fontFamily: "Poppins-Regular",
-        paddingBottom: 4,
+        fontFamily: "Poppins-Bold",
     },
     ratingContainer: {
         flexDirection: "row",
         alignItems: "center",
-        gap: 4,
+        backgroundColor: '#F0F9EB',
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 12,
+        gap: 2,
     },
     rating: {
-        fontFamily: "Poppins-Regular",
-
         fontSize: 14,
         fontWeight: "600",
-        color: "#000",
+        color: "#333",
+        fontFamily: "Poppins-SemiBold",
     },
     reviewCount: {
-        fontFamily: "Poppins-Regular",
-
-        fontSize: 14,
+        fontSize: 12,
         color: "#666",
+        fontFamily: "Poppins-Regular",
     },
-    infoRow: {
-        marginBottom: 8,
+    description: {
+        color: "#6B7280",
+        fontSize: 14,
+        marginBottom: 12,
+        lineHeight: 20,
+        fontFamily: "Poppins-Regular",
     },
-    locationContainer: {
+    infoGrid: {
+        flexDirection: "row",
+        flexWrap: "wrap",
+        marginVertical: 8,
+        gap: 12,
+    },
+    infoItem: {
         flexDirection: "row",
         alignItems: "center",
-        gap: 4,
+        gap: 6,
+        paddingVertical: 4,
     },
-    locationText: {
-        fontFamily: "Poppins-Regular",
-
+    infoText: {
         fontSize: 14,
-        color: "#666",
+        color: "#4B5563",
+        fontFamily: "Poppins-Regular",
     },
-    deliveryInfoContainer: {
+    footer: {
         flexDirection: "row",
         justifyContent: "space-between",
-        alignItems: "center",
+        marginTop: 12,
+        paddingTop: 12,
+        borderTopWidth: 1,
+        borderTopColor: "#F3F4F6",
     },
-    timeAndPrice: {
+    footerItem: {
         flexDirection: "row",
         alignItems: "center",
         gap: 4,
     },
-    deliveryText: {
+    footerLabel: {
+        fontSize: 13,
+        color: "#6B7280",
         fontFamily: "Poppins-Regular",
-
-        fontSize: 14,
-        color: "#666",
     },
-    dot: {
-        fontFamily: "Poppins-Regular",
-
-        fontSize: 14,
-        color: "#666",
-        marginHorizontal: 1,
+    footerValue: {
+        fontSize: 13,
+        fontWeight: "600",
+        color: "#50703C",
+        fontFamily: "Poppins-SemiBold",
     },
-    priceText: {
-        fontFamily: "Poppins-Regular",
-
-        fontSize: 14,
-        color: "#666",
-    },
-
 });
 
 export default RestaurantList;

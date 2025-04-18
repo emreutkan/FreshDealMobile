@@ -1,11 +1,10 @@
 import {RestaurantSearchResult} from "@/src/types/api/search/responses";
-import {Restaurant} from "@/src/types/api/restaurant/model";
+import {Comment, RecentRestaurant, Restaurant} from "@/src/types/api/restaurant/model";
 import {Listing} from "@/src/types/api/listing/model";
 import {CartItem} from "@/src/types/api/cart/model";
 import {Address} from "@/src/types/api/address/model";
 import {Purchase} from "@/src/types/api/purchase/model";
 import {UserRankResponse} from "@/src/redux/api/userAPI";
-import {RecentRestaurant} from "@/src/redux/slices/restaurantSlice";
 
 export interface RestaurantSearchResults {
     results: RestaurantSearchResult[];
@@ -99,6 +98,9 @@ export interface RestaurantState {
     recentRestaurants: RecentRestaurant[];
     recentRestaurantsLoading: boolean;
     recentRestaurantsError: string | null;
+    comments: Comment[];
+    commentsLoading: boolean;
+    commentsError: string | null;
 }
 
 export interface UserState {
