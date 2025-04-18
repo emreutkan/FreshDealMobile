@@ -1,6 +1,7 @@
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 import {
     getUserDataThunk,
+    getUserRankingsThunk,
     getUserRankThunk,
     loginUserThunk,
     registerUserThunk,
@@ -207,6 +208,21 @@ const userSlice = createSlice({
             })
             .addCase(getUserRankThunk.rejected, (state) => {
                 state.rankLoading = false;
+            })
+            // Adding the missing handlers for getUserRankingsThunk
+            .addCase(getUserRankingsThunk.pending, (state) => {
+                state.rankingsLoading = true;
+                state.error = null;
+            })
+            .addCase(getUserRankingsThunk.fulfilled, (state, action) => {
+                state.rankingsLoading = false;
+                state.rankings = action.payload;
+                console.log("Rankings stored in state:", action.payload);
+            })
+            .addCase(getUserRankingsThunk.rejected, (state, action) => {
+                state.rankingsLoading = false;
+                state.error = action.error?.message || 'Failed to fetch rankings';
+                console.log("Error storing rankings:", action.error);
             })
 
 

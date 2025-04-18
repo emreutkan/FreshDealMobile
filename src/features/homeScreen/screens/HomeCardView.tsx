@@ -2,11 +2,14 @@ import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {
     ActivityIndicator,
     Animated,
+    FlatList,
+    Modal,
     NativeScrollEvent,
     NativeSyntheticEvent,
     Platform,
     RefreshControl,
     ScrollView,
+    StatusBar,
     StyleSheet,
     Text,
     TouchableOpacity,
@@ -31,13 +34,27 @@ interface HomeCardViewProps {
     onScroll: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
 }
 
-const MIN_LOADING_DURATION = 0; // main loading duration (redux)
-const FILTER_LOADING_DURATION = 0; // duration for filter toggling/loading
+const MIN_LOADING_DURATION = 0;
+const FILTER_LOADING_DURATION = 0;
+
+const CATEGORIES = [
+    "All Categories",
+    "Baked Goods",
+    "Fruits & Vegetables",
+    "Meat & Seafood",
+    "Dairy Products",
+    "Ready Meals",
+    "Snacks",
+    "Beverages",
+    "Pantry Items",
+    "Frozen Foods",
+    "Organic Products"
+];
 
 const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll}) => {
     const scrollY = useRef(new Animated.Value(0)).current;
-    const HEADER_MAX_HEIGHT = 130; // Adjust based on your header's full height
-    const HEADER_MIN_HEIGHT = 0; // Adjust based on your header's minimum height
+    const HEADER_MAX_HEIGHT = 130;
+    const HEADER_MIN_HEIGHT = 0;
     const HEADER_SCROLL_DISTANCE = HEADER_MAX_HEIGHT - HEADER_MIN_HEIGHT;
     const headerHeight = scrollY.interpolate({
         inputRange: [0, HEADER_SCROLL_DISTANCE],
@@ -55,12 +72,9 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll}) => {
         (state: RootState) => state.restaurant
     );
 
-
-    // For the main loading animation from redux's `loading`
     const [showMainLoading, setShowMainLoading] = useState(restaurantsProximityLoading);
 
     const dispatch = useDispatch<AppDispatch>();
-    // For filtering transition loading animation
     const [filterLoading, setFilterLoading] = useState(false);
     const reduxRadius = useSelector((state: RootState) => state.restaurant.radius);
     const [localRadius, setLocalRadius] = useState(reduxRadius);
@@ -68,27 +82,27 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll}) => {
     const [shownPurchaseIds, setShownPurchaseIds] = useState<number[]>([]);
     const lastCreatedPurchases = useSelector((state: RootState) => state.purchase.lastCreatedPurchases);
     const [latestOrder, setLatestOrder] = useState<Purchase | null>(null);
+
+    // Category state
+    const [isCategoryModalVisible, setIsCategoryModalVisible] = useState(false);
+    const [selectedCategory, setSelectedCategory] = useState("All Categories");
+
     useEffect(() => {
         if (lastCreatedPurchases && lastCreatedPurchases.length > 0) {
-            // Filter out purchases we've already shown
             const newPurchases = lastCreatedPurchases.filter(
                 purchase => !shownPurchaseIds.includes(purchase.purchase_id)
             );
 
             if (newPurchases.length > 0) {
-                // Show toast for the first new purchase
                 const latestPurchase = newPurchases[0];
                 setLatestOrder(latestPurchase);
-
-                // Add this purchase ID to shown purchases
                 setShownPurchaseIds(prev => [...prev, latestPurchase.purchase_id]);
 
-                // Clean up old shown purchase IDs after some time
                 setTimeout(() => {
                     setShownPurchaseIds(prev =>
                         prev.filter(id => id !== latestPurchase.purchase_id)
                     );
-                }, 6000); // 6 seconds (1 second after toast disappears)
+                }, 6000);
             }
         }
     }, [lastCreatedPurchases]);
@@ -96,7 +110,6 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll}) => {
     useEffect(() => {
         lightHaptic().then(r => console.log(r));
     }, [localRadius]);
-
 
     useEffect(() => {
         let timer: NodeJS.Timeout;
@@ -121,29 +134,20 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll}) => {
         });
     }, [dispatch]);
 
-
     useEffect(() => {
         strongHaptic().then(r => console.log(r));
         dispatch(getRestaurantsByProximity());
-        dispatch(getRecentRestaurantsThunk()); // Add this line
-
+        dispatch(getRecentRestaurantsThunk());
     }, [dispatch, reduxRadius]);
 
-
-    // Combined overall loading state: either main loading or filter transition loading.
     const isLoading = showMainLoading || filterLoading;
 
-    // State for filters
     const [filters, setFilters] = useState({
         pickup: true,
         delivery: false,
         under30: false,
     });
 
-    const [isPriceExpanded, setIsPriceExpanded] = useState(false);
-    const [selectedPrice, setSelectedPrice] = useState<'$' | '$$' | '$$$' | null>(null);
-
-    // Helper to trigger the filter loading (200ms delay) every time a filter is toggled.
     const triggerFilterLoading = () => {
         setFilterLoading(true);
         setTimeout(() => {
@@ -154,7 +158,6 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll}) => {
     const handleToggleFilter = (filterId: 'pickup' | 'delivery' | 'under30') => {
         triggerFilterLoading();
         setFilters((prevFilters) => {
-            // When toggling either pickup or delivery, ensure at least one remains true.
             if (filterId === 'pickup' || filterId === 'delivery') {
                 const isCurrentlySelected = prevFilters[filterId];
                 const otherFilter = filterId === 'pickup' ? 'delivery' : 'pickup';
@@ -173,16 +176,14 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll}) => {
         });
     };
 
-    const togglePriceDropdown = () => {
-        // Trigger the filter loading animation when opening/closing the price dropdown.
-        triggerFilterLoading();
-        setIsPriceExpanded((prev) => !prev);
+    const toggleCategoryModal = () => {
+        setIsCategoryModalVisible(!isCategoryModalVisible);
     };
 
-    const handlePriceSelect = (price: '$' | '$$' | '$$$') => {
+    const handleCategorySelect = (category: string) => {
         triggerFilterLoading();
-        setSelectedPrice(price);
-        setIsPriceExpanded(false);
+        setSelectedCategory(category);
+        setIsCategoryModalVisible(false);
     };
 
     const filteredRestaurants = useMemo(() => {
@@ -190,19 +191,53 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll}) => {
         console.log('restaurantsProximity in HomeCardView:', restaurantsProximity);
 
         return restaurantsProximity.filter((restaurant) => {
+            // Filter by pickup/delivery
             if (filters.delivery && !filters.pickup && !restaurant.delivery) return false;
             if (filters.pickup && !filters.delivery && !restaurant.pickup) return false;
+
+            // Filter by distance for "under 30 min"
             if (restaurant.distance_km) {
                 if (filters.under30 && restaurant.distance_km > 3) return false;
             }
+
+            // Filter by category
+            if (selectedCategory !== "All Categories") {
+                // Check if the restaurant's category matches the selected category
+                if (restaurant.category !== selectedCategory) {
+                    return false;
+                }
+            }
+
             return true;
         });
+    }, [restaurantsProximity, filters, selectedCategory]);
 
-    }, [restaurantsProximity, filters]);
-
+    const renderCategoryItem = ({item}: { item: string }) => (
+        <TouchableOpacity
+            style={[
+                styles.categoryItem,
+                selectedCategory === item && styles.categoryItemSelected,
+            ]}
+            onPress={() => handleCategorySelect(item)}
+        >
+            <Text
+                style={[
+                    styles.categoryItemText,
+                    selectedCategory === item && styles.categoryItemTextSelected,
+                ]}
+            >
+                {item}
+            </Text>
+            {selectedCategory === item && (
+                <Feather name="check" size={18} color="#50703C"/>
+            )}
+        </TouchableOpacity>
+    );
 
     return (
         <View style={styles.safeArea}>
+            <StatusBar backgroundColor="transparent" barStyle="dark-content" translucent/>
+
             <Animated.View
                 style={[
                     styles.headerContainer,
@@ -217,7 +252,6 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll}) => {
                     }
                 ]}
             >
-
                 <View style={styles.topBar}>
                     <Text style={styles.title}>Restaurants Near You</Text>
                 </View>
@@ -231,7 +265,6 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll}) => {
                     <TouchableOpacity style={styles.iconButton}>
                         <Feather name="sliders" size={16} color="#333"/>
                     </TouchableOpacity>
-
 
                     <TouchableOpacity
                         style={[
@@ -268,21 +301,26 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll}) => {
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                        style={[styles.filterButton, isPriceExpanded && styles.filterButtonSelected]}
-                        onPress={togglePriceDropdown}
+                        style={[
+                            styles.filterButton,
+                            selectedCategory !== "All Categories" && styles.filterButtonSelected,
+                        ]}
+                        onPress={toggleCategoryModal}
                     >
                         <Text
                             style={[
                                 styles.filterText,
-                                isPriceExpanded && styles.filterTextSelected,
+                                selectedCategory !== "All Categories" && styles.filterTextSelected,
                             ]}
+                            numberOfLines={1}
+                            ellipsizeMode="tail"
                         >
-                            Price
+                            {selectedCategory}
                         </Text>
                         <Feather
-                            name={isPriceExpanded ? 'chevron-up' : 'chevron-down'}
+                            name={isCategoryModalVisible ? 'chevron-up' : 'chevron-down'}
                             size={14}
-                            color={isPriceExpanded ? '#FFF' : '#333'}
+                            color={selectedCategory !== "All Categories" ? '#FFF' : '#333'}
                             style={styles.dropdownIcon}
                         />
                     </TouchableOpacity>
@@ -306,29 +344,33 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll}) => {
                 </ScrollView>
             </Animated.View>
 
-            {isPriceExpanded && (
-                <View style={styles.priceDropdown}>
-                    {['$', '$$', '$$$'].map((price) => (
-                        <TouchableOpacity
-                            key={price}
-                            style={[
-                                styles.priceOption,
-                                selectedPrice === price && styles.filterButtonSelected,
-                            ]}
-                            onPress={() => handlePriceSelect(price as '$' | '$$' | '$$$')}
-                        >
-                            <Text
-                                style={[
-                                    styles.filterText,
-                                    selectedPrice === price && styles.filterTextSelected,
-                                ]}
-                            >
-                                {price}
-                            </Text>
-                        </TouchableOpacity>
-                    ))}
-                </View>
-            )}
+            <Modal
+                visible={isCategoryModalVisible}
+                transparent={true}
+                animationType="slide"
+                onRequestClose={() => setIsCategoryModalVisible(false)}
+            >
+                <TouchableOpacity
+                    style={styles.modalOverlay}
+                    activeOpacity={1}
+                    onPress={() => setIsCategoryModalVisible(false)}
+                >
+                    <View style={styles.categoryModal}>
+                        <View style={styles.categoryModalHeader}>
+                            <Text style={styles.categoryModalTitle}>Select Category</Text>
+                            <TouchableOpacity onPress={() => setIsCategoryModalVisible(false)}>
+                                <Feather name="x" size={24} color="#333"/>
+                            </TouchableOpacity>
+                        </View>
+                        <FlatList
+                            data={CATEGORIES}
+                            keyExtractor={(item) => item}
+                            renderItem={renderCategoryItem}
+                            showsVerticalScrollIndicator={false}
+                        />
+                    </View>
+                </TouchableOpacity>
+            </Modal>
 
             <View style={styles.container}>
                 {isLoading ? (
@@ -347,12 +389,11 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll}) => {
                         </Text>
                     </View>
                 ) : (
-
                     <Animated.ScrollView
-                        style={[styles.scrollContainer]}
+                        style={styles.scrollContainer}
                         contentContainerStyle={{
                             paddingTop: HEADER_MAX_HEIGHT,
-                            paddingBottom: 20, // Add some bottom padding
+                            paddingBottom: 20,
                             flexGrow: 1,
                         }}
                         onScroll={Animated.event(
@@ -376,7 +417,6 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll}) => {
                             />
                         }
                     >
-
                         <View>
                             {latestOrder && (
                                 <RecentOrderToast
@@ -385,6 +425,7 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll}) => {
                                 />
                             )}
                         </View>
+
                         <RecentRestaurants/>
 
                         <View style={styles.radiusContainer}>
@@ -393,19 +434,18 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll}) => {
                                 style={styles.slider}
                                 minimumValue={1}
                                 maximumValue={100}
-                                step={1} // Add step prop for whole numbers
+                                step={1}
                                 value={localRadius}
-                                onValueChange={(value) => setLocalRadius(Math.round(value))} // Update local state while sliding
+                                onValueChange={(value) => setLocalRadius(Math.round(value))}
                                 onSlidingComplete={(value) => {
                                     const roundedValue = Math.round(value);
                                     setLocalRadius(roundedValue);
-                                    dispatch(setRadius(roundedValue)); // Update Redux only when sliding ends
+                                    dispatch(setRadius(roundedValue));
                                 }}
                                 minimumTrackTintColor="#50703C"
                                 maximumTrackTintColor="#E5E7EB"
                                 thumbTintColor="#50703C"
                             />
-
                         </View>
 
 
@@ -413,29 +453,27 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll}) => {
                             restaurants={filteredRestaurants}
                         />
 
-
-                        <View style={styles.topBar}>
-                            <Text style={styles.Subtitle}>Explore</Text>
+                        <View style={styles.sectionContainer}>
+                            <Text style={styles.sectionTitle}>Explore</Text>
+                            <TouchableOpacity>
+                                <Text style={styles.seeAllText}>See All</Text>
+                            </TouchableOpacity>
                         </View>
 
                         <RestaurantList
                             restaurants={filteredRestaurants}
                         />
-
                     </Animated.ScrollView>
-
                 )}
-
             </View>
         </View>
     );
 };
 
-
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
-        backgroundColor: '#F9FAFB',
+        backgroundColor: '#FFFFFF',
     },
     container: {
         flex: 1,
@@ -443,57 +481,47 @@ const styles = StyleSheet.create({
     },
     scrollContainer: {
         flex: 1,
-        backgroundColor: '#F9FAFB',
+        backgroundColor: '#FFFFFF',
     },
-
     headerContainer: {
         backgroundColor: '#FFFFFF',
-        borderBottomWidth: 1,
-        borderBottomColor: '#E5E7EB',
-        overflow: 'hidden', // Ensure content doesn't overflow during animation
+        borderBottomWidth: 0,
+        overflow: 'hidden',
         ...Platform.select({
             ios: {
                 shadowColor: '#000',
-                shadowOffset: {width: 0, height: 2},
-                shadowOpacity: 0.1,
-                shadowRadius: 4,
+                shadowOffset: {width: 0, height: 1},
+                shadowOpacity: 0.05,
+                shadowRadius: 2,
             },
             android: {
-                elevation: 4,
+                elevation: 0,
             },
         }),
     },
-
-
     title: {
-        fontSize: 24,
-        fontWeight: '700',
+        fontSize: 28,
+        fontWeight: '800',
         color: '#111827',
-        marginBottom: 4,
-        fontFamily: 'Poppins-SemiBold',
+        fontFamily: 'Poppins-Bold',
+        letterSpacing: -0.5,
     },
     filterBar: {
         backgroundColor: '#FFFFFF',
-        paddingVertical: 12,
         maxHeight: 60,
     },
     filterContainer: {
         backgroundColor: '#FFFFFF',
         paddingBottom: 8,
-        borderBottomWidth: 1,
-        borderBottomColor: '#E5E7EB',
     },
-
     filterContentContainer: {
         paddingTop: 6,
-
         paddingHorizontal: 16,
         flexDirection: 'row',
         alignItems: 'center',
         gap: 8,
     },
     iconButton: {
-
         width: 40,
         height: 40,
         borderRadius: 20,
@@ -504,11 +532,11 @@ const styles = StyleSheet.create({
             ios: {
                 shadowColor: '#000',
                 shadowOffset: {width: 0, height: 1},
-                shadowOpacity: 0.1,
+                shadowOpacity: 0.05,
                 shadowRadius: 2,
             },
             android: {
-                elevation: 2,
+                elevation: 1,
             },
         }),
     },
@@ -520,8 +548,7 @@ const styles = StyleSheet.create({
         height: 40,
         backgroundColor: '#F3F4F6',
         borderRadius: 20,
-        borderWidth: 1,
-        borderColor: '#E5E7EB',
+        borderWidth: 0,
     },
     filterButtonSelected: {
         backgroundColor: '#50703C',
@@ -533,9 +560,8 @@ const styles = StyleSheet.create({
     filterText: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#50703C',
-        fontFamily: 'Poppins-Regular',
-
+        color: '#333333',
+        fontFamily: 'Poppins-SemiBold',
     },
     filterTextSelected: {
         color: '#FFFFFF',
@@ -543,52 +569,65 @@ const styles = StyleSheet.create({
     dropdownIcon: {
         marginLeft: 4,
     },
-    priceDropdown: {
-        margin: 16,
-        padding: 8,
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'flex-end',
+    },
+    categoryModal: {
         backgroundColor: '#FFFFFF',
-        borderRadius: 12,
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        padding: 16,
+        maxHeight: '70%',
         ...Platform.select({
             ios: {
                 shadowColor: '#000',
-                shadowOffset: {width: 0, height: 2},
+                shadowOffset: {width: 0, height: -3},
                 shadowOpacity: 0.1,
-                shadowRadius: 4,
+                shadowRadius: 5,
             },
             android: {
-                elevation: 4,
+                elevation: 5,
             },
         }),
     },
-    priceOption: {
+    categoryModalHeader: {
         flexDirection: 'row',
-        alignItems: 'center',
         justifyContent: 'space-between',
-        paddingVertical: 12,
-        paddingHorizontal: 16,
-        marginVertical: 2,
-        borderRadius: 8,
+        alignItems: 'center',
+        marginBottom: 16,
+        paddingBottom: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: '#E5E7EB',
     },
-    priceOptionSelected: {
-        backgroundColor: '#50703C',
+    categoryModalTitle: {
+        fontSize: 18,
+        fontWeight: '700',
+        color: '#111827',
+        fontFamily: 'Poppins-Bold',
     },
-    priceOptionText: {
+    categoryItem: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: '#F3F4F6',
+    },
+    categoryItemSelected: {
+        backgroundColor: '#F3F4F6',
+    },
+    categoryItemText: {
         fontSize: 16,
-        fontWeight: '600',
-        color: '#374151',
-        fontFamily: 'Poppins-Regular',
-
+        fontWeight: '500',
+        color: '#333333',
+        fontFamily: 'Poppins-Medium',
     },
-    priceDescription: {
-        fontSize: 14,
-        color: '#6B7280',
-        fontFamily: 'Poppins-Regular',
-
+    categoryItemTextSelected: {
+        color: '#50703C',
+        fontWeight: '700',
     },
-    priceOptionTextSelected: {
-        color: '#FFFFFF',
-    },
-
     loadingContainer: {
         flex: 1,
         justifyContent: 'center',
@@ -597,21 +636,19 @@ const styles = StyleSheet.create({
     },
     topBar: {
         paddingHorizontal: 16,
-        paddingTop: 16,
-        paddingBottom: 10,
+        paddingTop: 12,
         backgroundColor: '#FFFFFF',
         flexDirection: 'column',
         alignItems: 'flex-start',
-        overflow: 'hidden', // Ensure content doesn't overflow during animation
-        borderBottomWidth: 1,
-        borderBottomColor: '#E5E7EB',
+        overflow: 'hidden',
+        borderBottomWidth: 0,
     },
     loadingText: {
         marginTop: 16,
         fontSize: 16,
         color: '#374151',
         fontWeight: '500',
-        fontFamily: 'Poppins-Regular',
+        fontFamily: 'Poppins-Medium',
     },
     noDataContainer: {
         flex: 1,
@@ -634,8 +671,7 @@ const styles = StyleSheet.create({
         color: '#111827',
         marginBottom: 8,
         textAlign: 'center',
-        fontFamily: 'Poppins-Regular',
-
+        fontFamily: 'Poppins-Bold',
     },
     noDataMessage: {
         fontSize: 16,
@@ -643,20 +679,19 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         lineHeight: 24,
         fontFamily: 'Poppins-Regular',
-
     },
     radiusContainer: {
-        marginTop: 10,
+        marginTop: 16,
         backgroundColor: '#FFFFFF',
         padding: 16,
-        borderRadius: 12,
-        marginBottom: 16,
+        borderRadius: 16,
+        marginBottom: 24,
         ...Platform.select({
             ios: {
                 shadowColor: '#000',
-                shadowOffset: {width: 0, height: 2},
-                shadowOpacity: 0.1,
-                shadowRadius: 4,
+                shadowOffset: {width: 0, height: 8},
+                shadowOpacity: 0.08,
+                shadowRadius: 10,
             },
             android: {
                 elevation: 4,
@@ -666,24 +701,34 @@ const styles = StyleSheet.create({
     radiusText: {
         fontSize: 16,
         fontWeight: '600',
-        color: '#374151',
-        marginBottom: 8,
-        fontFamily: 'Poppins-Regular',
+        color: '#333333',
+        marginBottom: 12,
+        fontFamily: 'Poppins-SemiBold',
     },
     slider: {
         height: 40,
         width: '100%',
     },
-    Subtitle: {
-        fontSize: 20,
-        fontWeight: '700',
+    sectionContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginTop: 10,
+        marginBottom: 16,
+        paddingHorizontal: 8,
+    },
+    sectionTitle: {
+        fontSize: 24,
+        fontWeight: '800',
         color: '#111827',
-        marginBottom: 4,
-        fontFamily: 'Poppins-Regular',
-
+        fontFamily: 'Poppins-Bold',
+    },
+    seeAllText: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#50703C',
+        fontFamily: 'Poppins-SemiBold',
     }
-
-
 });
 
 export default HomeCardView;

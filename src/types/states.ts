@@ -143,3 +143,10 @@ export interface Achievement {
     unlocked?: boolean;
     discount_percentage?: number;
 }
+
+export interface UserRank {
+    rank: number;
+    total_discount: number;
+    user_id: number;
+    user_name: string;
+}

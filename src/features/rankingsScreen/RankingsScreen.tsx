@@ -1,5 +1,5 @@
 import React, {useEffect} from 'react';
-import {ActivityIndicator, FlatList, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {ActivityIndicator, FlatList, Platform, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
 import {Feather, MaterialCommunityIcons} from '@expo/vector-icons';
 import {useNavigation} from '@react-navigation/native';
@@ -21,6 +21,7 @@ const RankingsScreen: React.FC = () => {
 
     useEffect(() => {
         dispatch(getUserRankingsThunk());
+        console.log("Rankings in component:", rankings);
     }, [dispatch]);
 
     const renderRankItem = ({item}: { item: UserRank }) => {
@@ -28,13 +29,13 @@ const RankingsScreen: React.FC = () => {
         const getMedalIcon = (rank: number) => {
             switch (rank) {
                 case 1:
-                    return {name: 'medal', color: '#FFD700'}; // Gold
+                    return {name: 'medal', color: '#FFD700'};
                 case 2:
-                    return {name: 'medal', color: '#C0C0C0'}; // Silver
+                    return {name: 'medal', color: '#C0C0C0'};
                 case 3:
-                    return {name: 'medal', color: '#CD7F32'}; // Bronze
+                    return {name: 'medal', color: '#CD7F32'};
                 default:
-                    return {name: 'medal-outline', color: '#50703C'}; // Default
+                    return {name: 'medal-outline', color: '#50703C'};
             }
         };
 
@@ -58,7 +59,7 @@ const RankingsScreen: React.FC = () => {
                 </View>
 
                 <View style={styles.discountContainer}>
-                    <Text style={styles.discountAmount}>${item.total_discount.toFixed(2)}</Text>
+                    <Text style={styles.discountAmount}>${Math.abs(item.total_discount).toFixed(2)}</Text>
                 </View>
             </View>
         );
@@ -67,6 +68,8 @@ const RankingsScreen: React.FC = () => {
     const handleBack = () => {
         navigation.goBack();
     };
+
+    const hasRankings = Array.isArray(rankings) && rankings.length > 0;
 
     return (
         <View style={styles.container}>
@@ -79,6 +82,11 @@ const RankingsScreen: React.FC = () => {
             </View>
 
             <View style={styles.contentContainer}>
+                <View style={styles.infoCard}>
+                    <MaterialCommunityIcons name="trophy" size={24} color="#50703C"/>
+                    <Text style={styles.infoText}>Earn rewards by purchasing discounted items</Text>
+                </View>
+
                 <View style={styles.listHeader}>
                     <Text style={styles.rankHeaderText}>Rank</Text>
                     <Text style={styles.userHeaderText}>User</Text>
@@ -91,7 +99,7 @@ const RankingsScreen: React.FC = () => {
                         <Text style={styles.loadingText}>Loading rankings...</Text>
                     </View>
                 ) : (
-                    rankings.length > 0 ? (
+                    hasRankings ? (
                         <FlatList
                             data={rankings}
                             renderItem={renderRankItem}
@@ -114,28 +122,26 @@ const RankingsScreen: React.FC = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f8f9fa',
+        backgroundColor: '#FFFFFF',
     },
     header: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
         paddingHorizontal: 16,
-        paddingVertical: 12,
-        backgroundColor: 'white',
-        shadowColor: '#000',
-        shadowOffset: {width: 0, height: 2},
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
-        elevation: 2,
+        paddingVertical: 16,
+        backgroundColor: '#FFFFFF',
+        borderBottomWidth: 1,
+        borderBottomColor: '#F3F4F6',
     },
     backButton: {
         padding: 8,
     },
     headerTitle: {
-        fontSize: 18,
-        fontWeight: '600',
-        color: '#333',
+        fontSize: 20,
+        fontWeight: '700',
+        color: '#111827',
+        fontFamily: 'Poppins-Bold',
     },
     placeholder: {
         width: 40,
@@ -143,34 +149,54 @@ const styles = StyleSheet.create({
     contentContainer: {
         flex: 1,
         padding: 16,
+        backgroundColor: '#FFFFFF',
+    },
+    infoCard: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#F0F9EB',
+        padding: 16,
+        borderRadius: 12,
+        marginBottom: 20,
+    },
+    infoText: {
+        flex: 1,
+        marginLeft: 12,
+        fontSize: 14,
+        color: '#50703C',
+        fontWeight: '500',
+        fontFamily: 'Poppins-Medium',
     },
     listHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         paddingVertical: 12,
         borderBottomWidth: 1,
-        borderBottomColor: '#e0e0e0',
-        marginBottom: 8,
+        borderBottomColor: '#E5E7EB',
+        marginBottom: 12,
     },
     rankHeaderText: {
         flex: 1,
         fontSize: 14,
         fontWeight: '600',
-        color: '#666',
+        color: '#6B7280',
         textAlign: 'left',
+        fontFamily: 'Poppins-SemiBold',
     },
     userHeaderText: {
         flex: 2,
         fontSize: 14,
         fontWeight: '600',
-        color: '#666',
+        color: '#6B7280',
+        fontFamily: 'Poppins-SemiBold',
     },
     savingsHeaderText: {
         flex: 1,
         fontSize: 14,
         fontWeight: '600',
-        color: '#666',
+        color: '#6B7280',
         textAlign: 'right',
+        fontFamily: 'Poppins-SemiBold',
     },
     loadingContainer: {
         flex: 1,
@@ -179,7 +205,8 @@ const styles = StyleSheet.create({
     },
     loadingText: {
         marginTop: 16,
-        color: '#666',
+        color: '#6B7280',
+        fontFamily: 'Poppins-Regular',
     },
     listContent: {
         paddingBottom: 16,
@@ -188,17 +215,23 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: 'white',
-        padding: 12,
-        borderRadius: 8,
-        marginBottom: 8,
-        shadowColor: '#000',
-        shadowOffset: {width: 0, height: 1},
-        shadowOpacity: 0.05,
-        shadowRadius: 2,
-        elevation: 1,
+        padding: 16,
+        borderRadius: 12,
+        marginBottom: 10,
+        ...Platform.select({
+            ios: {
+                shadowColor: '#000',
+                shadowOffset: {width: 0, height: 2},
+                shadowOpacity: 0.05,
+                shadowRadius: 3,
+            },
+            android: {
+                elevation: 2,
+            },
+        }),
     },
     currentUserItem: {
-        backgroundColor: '#f0f9eb',
+        backgroundColor: '#F0F9EB',
         borderWidth: 1,
         borderColor: '#50703C',
     },
@@ -211,6 +244,8 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '600',
         marginLeft: 4,
+        fontFamily: 'Poppins-SemiBold',
+        color: '#374151',
     },
     userInfo: {
         flex: 2,
@@ -220,12 +255,15 @@ const styles = StyleSheet.create({
     userName: {
         fontSize: 16,
         fontWeight: '500',
+        color: '#111827',
+        fontFamily: 'Poppins-Medium',
     },
     currentUser: {
         fontSize: 14,
         color: '#50703C',
         marginLeft: 8,
         fontStyle: 'italic',
+        fontFamily: 'Poppins-Regular',
     },
     discountContainer: {
         flex: 1,
@@ -235,16 +273,19 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '600',
         color: '#50703C',
+        fontFamily: 'Poppins-SemiBold',
     },
     emptyContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+        paddingTop: 40,
     },
     emptyText: {
         marginTop: 16,
         fontSize: 18,
-        color: '#666',
+        color: '#6B7280',
+        fontFamily: 'Poppins-Regular',
     },
 });
 
