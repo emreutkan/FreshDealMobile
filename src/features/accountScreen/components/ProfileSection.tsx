@@ -1,7 +1,9 @@
 import React from 'react';
-import {StyleSheet, Text, TextInput, View} from 'react-native';
+import {Animated, StyleSheet, Text, TextInput, View} from 'react-native';
 import {useSelector} from "react-redux";
 import {RootState} from "@/src/types/store";
+import {LinearGradient} from 'expo-linear-gradient';
+import {Ionicons} from '@expo/vector-icons';
 
 interface ProfileSectionProps {
     isEditing: boolean,
@@ -20,7 +22,6 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
                                                            editedValues,
                                                            setEditedValues,
                                                        }) => {
-    // Get user initials for avatar
     const getInitials = (name: string) => {
         if (!name) return "?";
         const parts = name.split(' ');
@@ -30,43 +31,75 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
         return name.substring(0, 2).toUpperCase();
     };
 
-
     const name_surname = useSelector((state: RootState) => state.user.name_surname);
+    const spinValue = new Animated.Value(0);
+
+    // Spin animation for the avatar when editing
+    React.useEffect(() => {
+        if (isEditing) {
+            Animated.timing(spinValue, {
+                toValue: 1,
+                duration: 300,
+                useNativeDriver: true,
+            }).start();
+        } else {
+            Animated.timing(spinValue, {
+                toValue: 0,
+                duration: 300,
+                useNativeDriver: true,
+            }).start();
+        }
+    }, [isEditing]);
+
+    const spin = spinValue.interpolate({
+        inputRange: [0, 1],
+        outputRange: ['0deg', '360deg'],
+    });
 
     return (
         <View style={styles.container}>
             <View style={styles.profileHeader}>
-                <View style={styles.avatarContainer}>
-                    <Text style={styles.avatarText}>{getInitials(name_surname)}</Text>
-                </View>
+                <Animated.View
+                    style={[
+                        styles.avatarContainer,
+                        {transform: [{rotate: spin}]}
+                    ]}
+                >
+                    <LinearGradient
+                        colors={isEditing ? ['#50703C', '#7fa25c'] : ['#50703C', '#3d5a2c']}
+                        style={styles.avatarGradient}
+                    >
+                        <Text style={styles.avatarText}>{getInitials(name_surname)}</Text>
+                    </LinearGradient>
+                </Animated.View>
 
                 <View style={styles.nameContainer}>
                     {isEditing ? (
-                        <TextInput
-                            style={styles.nameInput}
-                            value={editedValues.name_surname}
-                            onChangeText={(text) =>
-                                setEditedValues((prev) => ({...prev, name_surname: text}))
-                            }
-                            placeholder="Full Name"
-                        />
+                        <View style={styles.editContainer}>
+                            <Ionicons
+                                name="pencil-outline"
+                                size={18}
+                                color="#50703C"
+                                style={styles.editIcon}
+                            />
+                            <TextInput
+                                style={styles.nameInput}
+                                value={editedValues.name_surname}
+                                onChangeText={(text) =>
+                                    setEditedValues((prev) => ({...prev, name_surname: text}))
+                                }
+                                placeholder="Full Name"
+                                placeholderTextColor="#aaa"
+                            />
+                        </View>
                     ) : (
-                        <Text style={styles.name}>{name_surname}</Text>
+                        <View>
+                            <Text style={styles.nameLabel}>ACCOUNT NAME</Text>
+                            <Text style={styles.name}>{name_surname}</Text>
+                        </View>
                     )}
                 </View>
             </View>
-
-            {/*/!* Money saved card *!/*/}
-            {/*<View style={styles.moneySavedContainer}>*/}
-            {/*    <View style={styles.moneySavedCard}>*/}
-            {/*        <Feather name="dollar-sign" size={24} color="#50703C"/>*/}
-
-            {/*        <Text style={styles.moneySavedValue}>*/}
-            {/*            {moneySaved}*/}
-            {/*        </Text>*/}
-            {/*        <Text style={styles.moneySavedLabel}>Total Money Saved</Text>*/}
-            {/*    </View>*/}
-            {/*</View>*/}
         </View>
     );
 };
@@ -78,68 +111,65 @@ const styles = StyleSheet.create({
     profileHeader: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 16,
+        marginBottom: 20,
     },
     avatarContainer: {
-        width: 60,
-        height: 60,
-        borderRadius: 30,
-        backgroundColor: '#50703C',
+        width: 70,
+        height: 70,
+        borderRadius: 35,
+        marginRight: 20,
+        elevation: 4,
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.2,
+        shadowRadius: 3,
+    },
+    avatarGradient: {
+        width: '100%',
+        height: '100%',
+        borderRadius: 35,
         justifyContent: 'center',
         alignItems: 'center',
-        marginRight: 16,
     },
     avatarText: {
         color: 'white',
-        fontSize: 24,
+        fontSize: 26,
         fontWeight: '600',
+        fontFamily: 'Poppins-SemiBold',
     },
     nameContainer: {
         flex: 1,
     },
+    nameLabel: {
+        fontSize: 12,
+        color: '#777',
+        marginBottom: 4,
+        fontFamily: 'Poppins-Regular',
+        letterSpacing: 0.5,
+    },
     name: {
-        fontSize: 24,
+        fontSize: 22,
         fontWeight: '600',
         color: '#333',
+        fontFamily: 'Poppins-SemiBold',
+    },
+    editContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderBottomWidth: 2,
+        borderBottomColor: '#50703C',
+        paddingBottom: 6,
+    },
+    editIcon: {
+        marginRight: 8,
     },
     nameInput: {
-        fontSize: 24,
-        fontWeight: '600',
+        flex: 1,
+        fontSize: 20,
+        fontWeight: '500',
         color: '#333',
-        borderBottomWidth: 1,
-        borderBottomColor: '#50703C',
-        paddingBottom: 4,
-    },
-    moneySavedContainer: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginTop: 12,
-    },
-    moneySavedCard: {
-        backgroundColor: '#fff',
-        borderRadius: 12,
-        padding: 16,
-        alignItems: 'center',
-        justifyContent: 'center',
-        shadowColor: '#000',
-        shadowOffset: {width: 0, height: 2},
-        shadowOpacity: 0.1,
-        shadowRadius: 3,
-        elevation: 2,
-        width: '90%',
-    },
-    moneySavedValue: {
-        fontSize: 24,
-        fontWeight: '700',
-        color: '#333',
-        marginTop: 8,
-        marginBottom: 4,
-    },
-    moneySavedLabel: {
-        fontSize: 14,
-        color: '#666',
-        marginTop: 4,
+        fontFamily: 'Poppins-Medium',
+        padding: 0,
     },
 });
 

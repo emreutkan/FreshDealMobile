@@ -165,6 +165,9 @@ const CartScreen: React.FC = () => {
                             {/*    <Text style={styles.subtotalValue}>{currentTotal.toFixed(2)} TL</Text>*/}
                             {/*</View>*/}
 
+                            {/*if restuarant delivery fee avaliable */}
+
+
                             {!isPickup && restaurant && restaurant.deliveryFee > 0 && (
                                 <View style={styles.summaryRow}>
                                     <Text style={styles.subtotalLabel}>Subtotal</Text>

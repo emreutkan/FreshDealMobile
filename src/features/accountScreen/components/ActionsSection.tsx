@@ -1,40 +1,124 @@
 import React from 'react';
-import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
-import {MaterialIcons} from '@expo/vector-icons';
+import {Animated, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {Ionicons} from '@expo/vector-icons';
 
 interface ActionsSectionProps {
     onPasswordReset: () => void;
     onLogout: () => void;
-    onDebugToken: () => void; // Add new prop for debug function
+    onDebugToken: () => void;
+    onEdit: () => void;
+    isEditing: boolean;
 }
+
+const ActionButton: React.FC<{
+    icon: string;
+    label: string;
+    color?: string;
+    onPress: () => void;
+    destructive?: boolean;
+    isActive?: boolean;
+}> = ({icon, label, color = "#50703C", onPress, destructive, isActive}) => {
+    const scaleAnim = React.useRef(new Animated.Value(1)).current;
+
+    const handlePressIn = () => {
+        Animated.spring(scaleAnim, {
+            toValue: 0.95,
+            useNativeDriver: true,
+            speed: 50,
+            bounciness: 5
+        }).start();
+    };
+
+    const handlePressOut = () => {
+        Animated.spring(scaleAnim, {
+            toValue: 1,
+            useNativeDriver: true,
+            speed: 50,
+            bounciness: 5
+        }).start();
+    };
+
+    return (
+        <Animated.View style={{transform: [{scale: scaleAnim}]}}>
+            <TouchableOpacity
+                style={[
+                    styles.actionItem,
+                    destructive && styles.destructiveAction,
+                    isActive && styles.activeAction
+                ]}
+                onPress={onPress}
+                onPressIn={handlePressIn}
+                onPressOut={handlePressOut}
+                activeOpacity={0.8}
+            >
+                <View style={[
+                    styles.actionIconContainer,
+                    {backgroundColor: isActive ? `${color}30` : `${color}10`}
+                ]}>
+                    <Ionicons
+                        name={icon as any}
+                        size={22}
+                        color={color}
+                    />
+                </View>
+                <Text style={[
+                    styles.actionText,
+                    destructive && styles.destructiveText,
+                    isActive && styles.activeText
+                ]}>
+                    {isActive && label.includes("Edit") ? "Save Profile" : label}
+                </Text>
+                <Ionicons
+                    name="chevron-forward"
+                    size={20}
+                    color={destructive ? "#D32F2F" : isActive ? color : "#CCCCCC"}
+                />
+            </TouchableOpacity>
+        </Animated.View>
+    );
+};
 
 const ActionsSection: React.FC<ActionsSectionProps> = ({
                                                            onPasswordReset,
                                                            onLogout,
                                                            onDebugToken,
+                                                           onEdit,
+                                                           isEditing
                                                        }) => {
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Account Actions</Text>
+            <View style={styles.sectionHeader}>
+                <Ionicons name="settings-outline" size={20} color="#50703C"/>
+                <Text style={styles.title}>Account Settings</Text>
+            </View>
 
-            <TouchableOpacity style={styles.actionItem} onPress={onPasswordReset}>
-                <MaterialIcons name="lock" size={24} color="#50703C"/>
-                <Text style={styles.actionText}>Change Password</Text>
-                <MaterialIcons name="chevron-right" size={24} color="#CCCCCC"/>
-            </TouchableOpacity>
+            <ActionButton
+                icon="person-outline"
+                label="Edit Profile"
+                onPress={onEdit}
+                isActive={isEditing}
+            />
 
-            <TouchableOpacity style={styles.actionItem} onPress={onLogout}>
-                <MaterialIcons name="logout" size={24} color="#D32F2F"/>
-                <Text style={[styles.actionText, styles.logoutText]}>Logout</Text>
-                <MaterialIcons name="chevron-right" size={24} color="#CCCCCC"/>
-            </TouchableOpacity>
+            <ActionButton
+                icon="lock-closed-outline"
+                label="Change Password"
+                onPress={onPasswordReset}
+            />
 
-            {/* Debug Button */}
-            <TouchableOpacity style={styles.actionItem} onPress={onDebugToken}>
-                <MaterialIcons name="bug-report" size={24} color="#4285F4"/>
-                <Text style={[styles.actionText, styles.debugText]}>Debug Token</Text>
-                <MaterialIcons name="chevron-right" size={24} color="#CCCCCC"/>
-            </TouchableOpacity>
+            <ActionButton
+                icon="bug-outline"
+                label="Debug Token"
+                color="#4285F4"
+                onPress={onDebugToken}
+            />
+
+            <ActionButton
+                icon="log-out-outline"
+                label="Logout"
+                color="#D32F2F"
+                onPress={onLogout}
+                destructive
+            />
         </View>
     );
 };
@@ -42,39 +126,62 @@ const ActionsSection: React.FC<ActionsSectionProps> = ({
 const styles = StyleSheet.create({
     container: {
         backgroundColor: '#FFFFFF',
-        borderRadius: 12,
+        borderRadius: 16,
         padding: 16,
         marginBottom: 16,
-        elevation: 2,
         shadowColor: '#000',
-        shadowOffset: {width: 0, height: 1},
+        shadowOffset: {width: 0, height: 3},
         shadowOpacity: 0.1,
-        shadowRadius: 1,
+        shadowRadius: 8,
+        elevation: 3,
+    },
+    sectionHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 16,
     },
     title: {
         fontSize: 18,
-        fontWeight: '600',
-        marginBottom: 16,
-        color: '#333333',
+        fontFamily: 'Poppins-SemiBold',
+        marginLeft: 8,
+        color: '#333',
     },
     actionItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 12,
+        paddingVertical: 14,
         borderBottomWidth: 1,
-        borderBottomColor: '#EEEEEE',
+        borderBottomColor: '#f0f0f0',
+    },
+    destructiveAction: {
+        borderBottomWidth: 0,
+    },
+    activeAction: {
+        backgroundColor: 'rgba(80, 112, 60, 0.05)',
+        borderRadius: 12,
+        marginVertical: 4,
+        paddingHorizontal: 8,
+    },
+    actionIconContainer: {
+        width: 42,
+        height: 42,
+        borderRadius: 21,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 14,
     },
     actionText: {
         flex: 1,
-        marginLeft: 12,
+        fontFamily: 'Poppins-Medium',
         fontSize: 16,
-        color: '#333333',
+        color: '#333',
     },
-    logoutText: {
+    destructiveText: {
         color: '#D32F2F',
     },
-    debugText: {
-        color: '#4285F4',
+    activeText: {
+        color: '#50703C',
+        fontFamily: 'Poppins-SemiBold',
     },
 });
 

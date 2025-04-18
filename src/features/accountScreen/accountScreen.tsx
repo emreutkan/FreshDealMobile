@@ -1,10 +1,19 @@
-import React, {useCallback, useEffect, useState} from 'react';
-import {ActivityIndicator, Alert, RefreshControl, ScrollView, StatusBar, StyleSheet, Text, View} from 'react-native';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
+import {
+    ActivityIndicator,
+    Alert,
+    Animated,
+    RefreshControl,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    View
+} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
 import {useNavigation} from '@react-navigation/native';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 
-import AccountHeader from './components/AccountHeader';
 import ProfileSection from './components/ProfileSection';
 import RankingCard from './components/RankingCard';
 import AchievementsSection from './components/AchievementsSection';
@@ -18,17 +27,16 @@ import {logout} from '@/src/redux/slices/userSlice';
 import {updateEmailThunk, updatePasswordThunk, updateUsernameThunk} from '@/src/redux/thunks/userThunks';
 import {AppDispatch} from '@/src/redux/store';
 import {fetchUserAchievementsThunk} from '@/src/redux/thunks/achievementThunks';
+import {useSafeAreaInsets} from "react-native-safe-area-context";
 
 export type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const AccountScreen: React.FC = () => {
-    console.log("[DEBUG][2025-04-06 20:08:58][emreutkan] AccountScreen: Component initializing");
 
-    // Redux and navigation hooks
     const dispatch = useDispatch<AppDispatch>();
     const navigation = useNavigation<NavigationProp>();
+    const scrollY = useRef(new Animated.Value(0)).current;
 
-    // Redux state - user data
     const {
         name_surname,
         email,
@@ -37,26 +45,20 @@ const AccountScreen: React.FC = () => {
         token
     } = useSelector((state: RootState) => state.user);
 
-    // Redux state - achievements data
     const {
         achievements = [],
         loading: achievementsLoading
     } = useSelector((state: RootState) => state.user);
 
-    console.log(`[DEBUG][2025-04-06 20:08:58][emreutkan] AccountScreen: User state loaded, achievements count: ${achievements.length}`);
 
-    // Local state for editing
     const [isEditing, setIsEditing] = useState(false);
     const [editedValues, setEditedValues] = useState({
         name_surname,
         email,
         phoneNumber,
     });
-
-    // Add state for refresh control
     const [refreshing, setRefreshing] = useState(false);
 
-    // Update edited values when user data changes
     useEffect(() => {
         setEditedValues({
             name_surname,
@@ -65,29 +67,22 @@ const AccountScreen: React.FC = () => {
         });
     }, [name_surname, email, phoneNumber]);
 
-    // Fetch achievements on initial load
     useEffect(() => {
-        console.log("[DEBUG][2025-04-06 20:08:58][emreutkan] AccountScreen: Initial fetch of achievements");
         dispatch(fetchUserAchievementsThunk());
     }, [dispatch]);
 
-    // Refresh function - now also refreshes achievements
     const onRefresh = useCallback(() => {
-        console.log("[DEBUG][2025-04-06 20:08:58][emreutkan] AccountScreen: Refreshing data");
         setRefreshing(true);
 
-        // Dispatch achievement thunk when refreshing
         dispatch(fetchUserAchievementsThunk())
             .finally(() => {
                 setTimeout(() => {
                     setRefreshing(false);
-                    console.log("[DEBUG][2025-04-06 20:08:58][emreutkan] AccountScreen: Refresh complete");
                 }, 300);
             });
 
     }, [dispatch]);
 
-    // Event Handlers
     const handleLogout = () => {
         Alert.alert('Logout', 'Are you sure you want to logout?', [
             {text: 'Cancel', style: 'cancel'},
@@ -182,7 +177,6 @@ const AccountScreen: React.FC = () => {
     };
 
     const handleViewAchievements = () => {
-        console.log("[DEBUG][2025-04-06 20:08:58][emreutkan] AccountScreen: View Achievements triggered with", achievements.length, "achievements");
 
         if (achievements.length === 0) {
             Alert.alert(
@@ -193,11 +187,9 @@ const AccountScreen: React.FC = () => {
             return;
         }
 
-        // Count unlocked achievements (ones with earned_at date)
         const unlockedCount = achievements.filter(a => !!a.earned_at).length;
         const totalCount = achievements.length;
 
-        // Create lists of unlocked and locked achievements
         const unlockedAchievements = achievements
             .filter(a => !!a.earned_at)
             .map(a => `✅ ${a.name}: ${a.description}${a.earned_at ? ` (${new Date(a.earned_at).toLocaleDateString()})` : ''}`)
@@ -217,7 +209,6 @@ const AccountScreen: React.FC = () => {
         );
     };
 
-
     const handleDebugToken = () => {
         if (token) {
             console.log('[DEBUG][2025-04-06 20:08:58][emreutkan] AccountScreen: User Token:', token);
@@ -236,22 +227,36 @@ const AccountScreen: React.FC = () => {
         );
     }
 
+
+    const insets = useSafeAreaInsets();
     return (
-        <>
+        <View style={[styles.mainContainer, {paddingTop: insets.top}]}>
+
             <StatusBar translucent backgroundColor="transparent" barStyle="dark-content"/>
-            <AccountHeader isEditing={isEditing} onEdit={handleEditInfo}/>
+
+            <Animated.View style={[
+                styles.animatedHeader,
+            ]}>
+            </Animated.View>
+
             <ScrollView
                 style={styles.safeArea}
+                contentContainerStyle={styles.scrollContent}
                 refreshControl={
                     <RefreshControl
                         refreshing={refreshing}
                         onRefresh={onRefresh}
-                        colors={['#50703C']} // Android
-                        tintColor="#50703C" // iOS
-                        title="Refreshing..." // iOS
-                        titleColor="#50703C" // iOS
+                        colors={['#50703C']}
+                        tintColor="#50703C"
+                        title="Refreshing..."
+                        titleColor="#50703C"
                     />
                 }
+                onScroll={Animated.event(
+                    [{nativeEvent: {contentOffset: {y: scrollY}}}],
+                    {useNativeDriver: false}
+                )}
+                scrollEventThrottle={16}
             >
                 <View style={styles.container}>
                     <ProfileSection
@@ -260,8 +265,7 @@ const AccountScreen: React.FC = () => {
                         setEditedValues={setEditedValues}
                     />
 
-                    <RankingCard
-                    />
+                    <RankingCard/>
 
                     {achievementsLoading ? (
                         <View style={styles.loadingSection}>
@@ -286,22 +290,44 @@ const AccountScreen: React.FC = () => {
                     <ActionsSection
                         onPasswordReset={handlePasswordReset}
                         onLogout={handleLogout}
-                        onDebugToken={handleDebugToken} // Pass debug handler to ActionsSection
+                        onDebugToken={handleDebugToken}
+                        onEdit={handleEditInfo}
+                        isEditing={isEditing}
                     />
                 </View>
             </ScrollView>
-        </>
+        </View>
     );
 };
 
 const styles = StyleSheet.create({
+    mainContainer: {
+        flex: 1,
+        backgroundColor: '#f8f9fa',
+    },
     safeArea: {
         flex: 1,
         backgroundColor: '#f8f9fa',
     },
+    scrollContent: {
+        paddingBottom: 24,
+    },
     container: {
         flex: 1,
         padding: 16,
+    },
+    animatedHeader: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 999,
+        backgroundColor: '#fff',
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 5,
     },
     loadingContainer: {
         flex: 1,
@@ -317,6 +343,7 @@ const styles = StyleSheet.create({
     loadingText: {
         marginTop: 8,
         color: '#666',
+        fontFamily: 'Poppins-Regular',
     }
 });
 

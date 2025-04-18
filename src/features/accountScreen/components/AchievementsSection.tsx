@@ -1,11 +1,12 @@
 import React, {useEffect, useState} from 'react';
-import {ScrollView, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
-import {MaterialCommunityIcons, MaterialIcons} from '@expo/vector-icons';
+import {Animated, ScrollView, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {Ionicons} from '@expo/vector-icons';
 import {useDispatch} from "react-redux";
 import {AppDispatch} from "@/src/redux/store";
 import {fetchUserAchievementsThunk} from "@/src/redux/thunks/achievementThunks";
 import type {NativeStackNavigationProp} from "@react-navigation/native-stack";
 import {RootStackParamList} from "@/src/utils/navigation";
+import {LinearGradient} from 'expo-linear-gradient';
 
 export interface Achievement {
     id: number;
@@ -22,23 +23,102 @@ interface AchievementsSectionProps {
     onViewAchievements: () => void;
 }
 
-// Map of achievement types to icon names (Material Community Icons)
 const ACHIEVEMENT_ICONS: { [key: string]: string } = {
     'FIRST_PURCHASE': 'trophy',
-    'PURCHASE_COUNT': 'shopping',
-    'WEEKLY_PURCHASE': 'calendar-week',
-    'STREAK': 'fire',
+    'PURCHASE_COUNT': 'basket',
+    'WEEKLY_PURCHASE': 'calendar',
+    'STREAK': 'flame',
     'BIG_SPENDER': 'cash',
     'ECO_WARRIOR': 'leaf',
-    'DEFAULT': 'medal',
+    'DEFAULT': 'ribbon',
 };
+
 export type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+
+const AchievementItem: React.FC<{
+    achievement: Achievement;
+    index: number;
+    totalAchievements: number;
+}> = ({achievement, index, totalAchievements}) => {
+    const iconName = ACHIEVEMENT_ICONS[achievement.achievement_type] || ACHIEVEMENT_ICONS.DEFAULT;
+    const isUnlocked = !!achievement.earned_at;
+    const fadeAnim = React.useRef(new Animated.Value(0)).current;
+
+    useEffect(() => {
+        Animated.timing(fadeAnim, {
+            toValue: 1,
+            duration: 400,
+            delay: index * 150,
+            useNativeDriver: true,
+        }).start();
+    }, []);
+
+    return (
+        <Animated.View
+            style={[
+                styles.achievementBadge,
+                {
+                    opacity: fadeAnim,
+                    transform: [{
+                        translateY: fadeAnim.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [20, 0]
+                        })
+                    }]
+                }
+            ]}
+        >
+            <LinearGradient
+                colors={isUnlocked
+                    ? ['rgba(80, 112, 60, 0.1)', 'rgba(80, 112, 60, 0.2)']
+                    : ['rgba(200, 200, 200, 0.1)', 'rgba(200, 200, 200, 0.2)']}
+                style={styles.badgeBackground}
+            >
+                <View style={[
+                    styles.badgeIconContainer,
+                    isUnlocked ? styles.unlockedIconContainer : styles.lockedIconContainer
+                ]}>
+                    <Ionicons
+                        name={iconName as any}
+                        size={26}
+                        color={isUnlocked ? '#50703C' : '#aaaaaa'}
+                    />
+                </View>
+
+                <Text style={[
+                    styles.achievementName,
+                    isUnlocked ? styles.unlockedText : styles.lockedText
+                ]}>
+                    {achievement.name}
+                </Text>
+
+                {achievement.threshold && !isUnlocked && (
+                    <Text style={styles.thresholdText}>
+                        Goal: {achievement.threshold}
+                    </Text>
+                )}
+
+                {isUnlocked && (
+                    <View style={styles.unlockedBadge}>
+                        <Ionicons name="checkmark-circle" size={14} color="#50703C"/>
+                        <Text style={styles.unlockedBadgeText}>Earned</Text>
+                    </View>
+                )}
+
+                {!isUnlocked && (
+                    <View style={styles.lockedIconWrapper}>
+                        <Ionicons name="lock-closed" size={14} color="#aaaaaa"/>
+                    </View>
+                )}
+            </LinearGradient>
+        </Animated.View>
+    );
+};
 
 const AchievementsSection: React.FC<AchievementsSectionProps> = ({
                                                                      achievements,
                                                                      onViewAchievements,
                                                                  }) => {
-    // Track whether we've already dispatched the thunk
     const [hasDispatchedFetch, setHasDispatchedFetch] = useState(false);
 
     console.log("[DEBUG][2025-04-06 20:02:59][emreutkan] AchievementsSection: Component rendering with",
@@ -49,9 +129,7 @@ const AchievementsSection: React.FC<AchievementsSectionProps> = ({
             JSON.stringify(achievements.slice(0, 2), null, 2));
     }
 
-    // Sort achievements by unlocked status (unlocked first)
     const sortedAchievements = [...(achievements || [])].sort((a, b) => {
-        // Determine unlocked status based on earned_at existence
         const aUnlocked = !!a.earned_at;
         const bUnlocked = !!b.earned_at;
 
@@ -63,6 +141,7 @@ const AchievementsSection: React.FC<AchievementsSectionProps> = ({
     console.log("[DEBUG][2025-04-06 20:02:59][emreutkan] AchievementsSection: Sorted achievements - Unlocked count:",
         sortedAchievements.filter(a => !!a.earned_at).length);
 
+    const unlockedCount = sortedAchievements.filter(a => !!a.earned_at).length;
     const dispatch = useDispatch<AppDispatch>();
 
     useEffect(() => {
@@ -76,66 +155,47 @@ const AchievementsSection: React.FC<AchievementsSectionProps> = ({
     return (
         <View style={styles.achievementsSection}>
             <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Achievements</Text>
-                <TouchableOpacity onPress={onViewAchievements}>
+                <View style={styles.headerLeftSection}>
+                    <Ionicons name="ribbon-outline" size={20} color="#50703C"/>
+                    <Text style={styles.sectionTitle}>Achievements</Text>
+
+                    <View style={styles.achievementCountContainer}>
+                        <Text style={styles.achievementCount}>
+                            {unlockedCount}/{achievements.length}
+                        </Text>
+                    </View>
+                </View>
+
+                <TouchableOpacity
+                    style={styles.viewAllButton}
+                    onPress={onViewAchievements}
+                >
                     <Text style={styles.viewAllText}>View All</Text>
+                    <Ionicons name="chevron-forward" size={16} color="#50703C"/>
                 </TouchableOpacity>
             </View>
 
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.achievementsScroll}>
-                {sortedAchievements.map((achievement) => {
-                    // Get icon name from mapping or use default
-                    const iconName = ACHIEVEMENT_ICONS[achievement.achievement_type] || ACHIEVEMENT_ICONS.DEFAULT;
-                    const isUnlocked = !!achievement.earned_at;
+            <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={styles.achievementsScroll}
+                contentContainerStyle={styles.scrollContent}
+            >
+                {sortedAchievements.map((achievement, index) => (
+                    <AchievementItem
+                        key={achievement.id}
+                        achievement={achievement}
+                        index={index}
+                        totalAchievements={achievements.length}
+                    />
+                ))}
 
-                    console.log(`[DEBUG][2025-04-06 20:02:59][emreutkan] AchievementsSection: Rendering achievement ${achievement.id} - ${achievement.name}, unlocked: ${isUnlocked}`);
-
-                    return (
-                        <View
-                            key={achievement.id}
-                            style={[
-                                styles.achievementBadge,
-                                !isUnlocked && styles.lockedAchievement
-                            ]}
-                        >
-                            <MaterialCommunityIcons
-                                name={iconName as any}
-                                size={24}
-                                color={isUnlocked ? '#50703C' : '#aaaaaa'}
-                            />
-                            <Text style={[
-                                styles.achievementName,
-                                !isUnlocked && styles.lockedText
-                            ]}>
-                                {achievement.name}
-                            </Text>
-
-                            {achievement.threshold && (
-                                <Text style={[
-                                    styles.thresholdText,
-                                    !isUnlocked && styles.lockedText
-                                ]}>
-                                    Required: {achievement.threshold}
-                                </Text>
-                            )}
-
-                            {isUnlocked && achievement.earned_at && (
-                                <Text style={styles.achievementDate}>
-                                    {new Date(achievement.earned_at).toLocaleDateString()}
-                                </Text>
-                            )}
-
-                            {!isUnlocked && (
-                                <MaterialIcons
-                                    name="lock"
-                                    size={12}
-                                    color="#aaaaaa"
-                                    style={styles.lockIcon}
-                                />
-                            )}
-                        </View>
-                    );
-                })}
+                {sortedAchievements.length === 0 && (
+                    <View style={styles.emptyStateContainer}>
+                        <Ionicons name="ribbon-outline" size={36} color="#CCCCCC"/>
+                        <Text style={styles.emptyStateText}>No achievements yet</Text>
+                    </View>
+                )}
             </ScrollView>
         </View>
     );
@@ -143,7 +203,7 @@ const AchievementsSection: React.FC<AchievementsSectionProps> = ({
 
 const styles = StyleSheet.create({
     achievementsSection: {
-        marginBottom: 16,
+        marginBottom: 20,
     },
     sectionHeader: {
         flexDirection: 'row',
@@ -151,70 +211,132 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginBottom: 12,
     },
+    headerLeftSection: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
     sectionTitle: {
-        fontFamily: 'Poppins-Regular',
         fontSize: 18,
-        fontWeight: '600',
+        fontFamily: 'Poppins-SemiBold',
         color: '#333',
-        marginBottom: 12,
-        paddingLeft: 4,
+        marginLeft: 8,
+    },
+    achievementCountContainer: {
+        backgroundColor: '#f0f0f0',
+        borderRadius: 12,
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+        marginLeft: 10,
+    },
+    achievementCount: {
+        color: '#666',
+        fontSize: 12,
+        fontFamily: 'Poppins-Medium',
+    },
+    viewAllButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(80, 112, 60, 0.1)',
+        paddingVertical: 6,
+        paddingHorizontal: 12,
+        borderRadius: 20,
     },
     viewAllText: {
         color: '#50703C',
         fontSize: 14,
-        fontWeight: '500',
+        fontFamily: 'Poppins-Medium',
+        marginRight: 4,
     },
     achievementsScroll: {
-        flexDirection: 'row',
+        marginTop: 8,
+    },
+    scrollContent: {
+        paddingRight: 20,
+        paddingBottom: 8,
     },
     achievementBadge: {
-        width: 120,
-        height: 120,
-        backgroundColor: '#FFFFFF',
-        borderRadius: 12,
-        padding: 12,
-        marginRight: 10,
+        width: 130,
+        height: 160,
+        marginRight: 12,
+        borderRadius: 16,
+        overflow: 'hidden',
+    },
+    badgeBackground: {
+        flex: 1,
+        padding: 16,
         alignItems: 'center',
         justifyContent: 'center',
-        shadowColor: '#000',
-        shadowOffset: {width: 0, height: 2},
-        shadowOpacity: 0.1,
-        shadowRadius: 3,
-        elevation: 2,
-        borderWidth: 1,
-        borderColor: '#e0e0e0',
     },
-    lockedAchievement: {
-        backgroundColor: '#f5f5f5',
-        borderColor: '#e0e0e0',
+    badgeIconContainer: {
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 12,
+    },
+    unlockedIconContainer: {
+        backgroundColor: 'rgba(80, 112, 60, 0.15)',
+        borderWidth: 1,
+        borderColor: 'rgba(80, 112, 60, 0.3)',
+    },
+    lockedIconContainer: {
+        backgroundColor: 'rgba(0, 0, 0, 0.05)',
+        borderWidth: 1,
+        borderColor: 'rgba(0, 0, 0, 0.1)',
     },
     achievementName: {
-        fontSize: 12,
-        color: '#333',
+        fontSize: 14,
         textAlign: 'center',
-        marginTop: 8,
-        fontWeight: '600',
+        fontFamily: 'Poppins-SemiBold',
+        marginBottom: 6,
+    },
+    unlockedText: {
+        color: '#333',
     },
     lockedText: {
-        color: '#aaaaaa',
+        color: '#999',
     },
     thresholdText: {
-        fontSize: 10,
-        color: '#555',
-        textAlign: 'center',
-        marginTop: 2,
-    },
-    achievementDate: {
-        fontSize: 10,
+        fontSize: 12,
         color: '#777',
         textAlign: 'center',
-        marginTop: 4,
+        fontFamily: 'Poppins-Regular',
     },
-    lockIcon: {
+    unlockedBadge: {
         position: 'absolute',
-        top: 8,
-        right: 8,
-    }
+        top: 10,
+        right: 10,
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(80, 112, 60, 0.15)',
+        borderRadius: 12,
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+    },
+    unlockedBadgeText: {
+        fontSize: 10,
+        color: '#50703C',
+        marginLeft: 2,
+        fontFamily: 'Poppins-Medium',
+    },
+    lockedIconWrapper: {
+        position: 'absolute',
+        top: 10,
+        right: 10,
+    },
+    emptyStateContainer: {
+        width: 200,
+        height: 160,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    emptyStateText: {
+        fontSize: 14,
+        color: '#999',
+        marginTop: 12,
+        fontFamily: 'Poppins-Regular',
+    },
 });
 
 export default AchievementsSection;
