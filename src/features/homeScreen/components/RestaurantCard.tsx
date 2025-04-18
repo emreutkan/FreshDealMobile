@@ -39,7 +39,7 @@ const isRestaurantOpen = (
     const currentDay = now.toLocaleDateString('en-US', {weekday: 'long'});
     const currentHour = now.getHours();
     const currentMinute = now.getMinutes();
-    
+
     if (!workingDays.includes(currentDay)) return false;
 
     if (workingHoursStart && workingHoursEnd) {
@@ -233,7 +233,8 @@ const styles = StyleSheet.create({
     },
     touchableContainer: {
 
-        marginBottom: 16,
+        marginTop: 16,
+        // marginBottom: 16,
         borderRadius: 12,
         backgroundColor: '#fff',
         ...Platform.select({

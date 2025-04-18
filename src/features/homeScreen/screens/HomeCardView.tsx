@@ -18,13 +18,14 @@ import {AppDispatch} from "@/src/redux/store";
 import {RootState} from "@/src/types/store";
 
 import {useDispatch, useSelector} from "react-redux";
-import {getRestaurantsByProximity} from "@/src/redux/thunks/restaurantThunks";
+import {getRecentRestaurantsThunk, getRestaurantsByProximity} from "@/src/redux/thunks/restaurantThunks";
 import FavoriteRestaurantList from "@/src/features/homeScreen/components/FavoriteRestaurantCard";
 import Slider from '@react-native-community/slider';
 import {setRadius} from "@/src/redux/slices/restaurantSlice";
 import {lightHaptic, strongHaptic} from "@/src/utils/Haptics";
 import {Purchase} from "@/src/types/api/purchase/model";
 import RecentOrderToast from "@/src/features/OrdersScreen/RenderOrdersToast";
+import RecentRestaurants from "@/src/features/homeScreen/components/RecentRestaurants";
 
 interface HomeCardViewProps {
     onScroll: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
@@ -124,6 +125,8 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll}) => {
     useEffect(() => {
         strongHaptic().then(r => console.log(r));
         dispatch(getRestaurantsByProximity());
+        dispatch(getRecentRestaurantsThunk()); // Add this line
+
     }, [dispatch, reduxRadius]);
 
 
@@ -382,6 +385,8 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll}) => {
                                 />
                             )}
                         </View>
+                        <RecentRestaurants/>
+
                         <View style={styles.radiusContainer}>
                             <Text style={styles.radiusText}>Search Radius: {localRadius}km</Text>
                             <Slider

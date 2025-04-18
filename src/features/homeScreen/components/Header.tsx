@@ -13,9 +13,7 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({activeTab, scrollY}) => {
     useEffect(() => {
         if (scrollY) {
-            console.log("ScrollY is present in Header");
             const scrollListener = scrollY.addListener((state) => {
-                console.log("Scroll value:", state.value);
             });
 
             return () => {

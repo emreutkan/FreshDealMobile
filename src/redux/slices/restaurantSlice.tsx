@@ -1,18 +1,23 @@
-// src/store/slices/restaurantSlice.ts
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 import {
     getListingsThunk,
+    getRecentRestaurantsThunk,
     getRestaurantBadgesThunk,
     getRestaurantCommentAnalysisThunk,
     getRestaurantsByProximity,
     getRestaurantThunk,
 } from '@/src/redux/thunks/restaurantThunks';
-
 import {addFavoriteThunk, getFavoritesThunk, removeFavoriteThunk,} from "@/src/redux/thunks/userThunks";
 import {Pagination, RestaurantState} from "@/src/types/states";
 import {Restaurant} from "@/src/types/api/restaurant/model";
 import {Listing} from "@/src/types/api/listing/model";
 
+export interface RecentRestaurant {
+    restaurant_id: number;
+    restaurant_name: string;
+    image_url: string;
+    last_order_date: string;
+}
 
 const emptyRestaurant: Restaurant = {
     id: 0,
@@ -37,10 +42,7 @@ const emptyRestaurant: Restaurant = {
     minOrderAmount: null,
     comments: [],
     badges: [],
-
-
 };
-
 
 const EmptyListing: Listing = {
     id: 0,
@@ -55,8 +57,7 @@ const EmptyListing: Listing = {
     available_for_delivery: false,
     available_for_pickup: false,
     consume_within: 0,
-}
-
+};
 
 const initialState: RestaurantState = {
     restaurantsProximity: [],
@@ -72,13 +73,14 @@ const initialState: RestaurantState = {
     selectedRestaurantListing: EmptyListing,
     listingsLoading: false,
     listingsError: null,
-
-    isPickup: true, // Default to pickup
+    isPickup: true,
     pagination: null,
     commentAnalysis: null,
     commentAnalysisLoading: false,
     commentAnalysisError: null,
-
+    recentRestaurants: [],
+    recentRestaurantsLoading: false,
+    recentRestaurantsError: null,
 };
 
 const restaurantSlice = createSlice({
@@ -95,14 +97,10 @@ const restaurantSlice = createSlice({
             } else if (!state.isPickup && !state.selectedRestaurant.delivery && state.selectedRestaurant.pickup) {
                 state.isPickup = true;
             }
-
         },
         setDeliveryMethod(state, action: PayloadAction<boolean>) {
-            console.log("state.isPickup", state.isPickup);
             state.isPickup = action.payload;
-            console.log("state.isPickup", state.isPickup);
         },
-
     },
     extraReducers: (builder) => {
         builder
@@ -115,12 +113,9 @@ const restaurantSlice = createSlice({
                 state.error = null;
             })
             .addCase(getRestaurantsByProximity.fulfilled, (state, action) => {
-                console.log("state before call", state.restaurantsProximity);
-
                 state.restaurantsProximityStatus = 'succeeded';
                 state.restaurantsProximityLoading = false;
                 state.restaurantsProximity = action.payload;
-
             })
             .addCase(getRestaurantsByProximity.rejected, (state, action) => {
                 state.restaurantsProximityStatus = 'failed';
@@ -137,19 +132,14 @@ const restaurantSlice = createSlice({
                 state.favoritesStatus = 'succeeded';
                 state.favoritesLoading = false;
                 state.favoriteRestaurantsIDs = action.payload.favorites;
-                console.log('Favorites:', action.payload);
             })
             .addCase(getFavoritesThunk.rejected, (state) => {
                 state.favoritesStatus = 'failed';
                 state.favoritesLoading = false;
-                // state.error = action.payload || 'Failed to fetch favorites';
             })
-
-
             .addCase(addFavoriteThunk.rejected, (state, action) => {
                 state.error = action.payload || 'Failed to add to favorites';
             })
-
             .addCase(removeFavoriteThunk.rejected, (state, action) => {
                 state.error = action.payload || 'Failed to remove from favorites';
             })
@@ -173,10 +163,6 @@ const restaurantSlice = createSlice({
                 }
             })
             .addCase(getRestaurantThunk.fulfilled, (state, action: PayloadAction<Restaurant>) => {
-                // TODO
-                // this api is actually better to use when finding selected restaurant compared to filtering restaurants in proximity and searching the restaurant.id
-                // but it's not implemented in the app
-                // so I just use this to get the comments for now, will change that later though :)
                 state.selectedRestaurant.comments = action.payload.comments || [];
             })
             .addCase(getRestaurantCommentAnalysisThunk.pending, (state) => {
@@ -192,7 +178,18 @@ const restaurantSlice = createSlice({
                 state.commentAnalysisLoading = false;
                 state.commentAnalysisError = action.payload as string;
             })
-        ;
+            .addCase(getRecentRestaurantsThunk.pending, (state) => {
+                state.recentRestaurantsLoading = true;
+                state.recentRestaurantsError = null;
+            })
+            .addCase(getRecentRestaurantsThunk.fulfilled, (state, action) => {
+                state.recentRestaurantsLoading = false;
+                state.recentRestaurants = action.payload.restaurants;
+            })
+            .addCase(getRecentRestaurantsThunk.rejected, (state, action) => {
+                state.recentRestaurantsLoading = false;
+                state.recentRestaurantsError = action.payload as string;
+            });
     },
 });
 
@@ -200,13 +197,10 @@ export const {
     setRadius,
     setSelectedRestaurant,
     setDeliveryMethod,
-
-
 } = restaurantSlice.actions;
-
 
 export const selectDeliveryMethod = (state: { restaurant: RestaurantState }) => ({
     isPickup: state.restaurant.isPickup,
-
 });
+
 export default restaurantSlice.reducer;
