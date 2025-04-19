@@ -177,36 +177,7 @@ const AccountScreen: React.FC = () => {
     };
 
     const handleViewAchievements = () => {
-
-        if (achievements.length === 0) {
-            Alert.alert(
-                'No Achievements Available',
-                'There are no achievements to display at the moment.',
-                [{text: 'OK'}]
-            );
-            return;
-        }
-
-        const unlockedCount = achievements.filter(a => !!a.earned_at).length;
-        const totalCount = achievements.length;
-
-        const unlockedAchievements = achievements
-            .filter(a => !!a.earned_at)
-            .map(a => `✅ ${a.name}: ${a.description}${a.earned_at ? ` (${new Date(a.earned_at).toLocaleDateString()})` : ''}`)
-            .join('\n');
-
-        const lockedAchievements = achievements
-            .filter(a => !a.earned_at)
-            .map(a => `🔒 ${a.name}: ${a.description}${a.threshold ? ` (Required: ${a.threshold})` : ''}`)
-            .join('\n');
-
-        Alert.alert(
-            'Achievements',
-            `You've unlocked ${unlockedCount} out of ${totalCount} achievements.\n\n` +
-            `UNLOCKED:\n${unlockedAchievements || 'None yet'}\n\n` +
-            `LOCKED:\n${lockedAchievements || 'None'}`,
-            [{text: 'OK'}]
-        );
+        navigation.navigate('Achievements');
     };
 
     const handleDebugToken = () => {
@@ -227,11 +198,9 @@ const AccountScreen: React.FC = () => {
         );
     }
 
-
     const insets = useSafeAreaInsets();
     return (
         <View style={[styles.mainContainer, {paddingTop: insets.top}]}>
-
             <StatusBar translucent backgroundColor="transparent" barStyle="dark-content"/>
 
             <Animated.View style={[

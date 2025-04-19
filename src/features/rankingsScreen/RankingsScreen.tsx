@@ -59,7 +59,7 @@ const RankingsScreen: React.FC = () => {
                 </View>
 
                 <View style={styles.discountContainer}>
-                    <Text style={styles.discountAmount}>${Math.abs(item.total_discount).toFixed(2)}</Text>
+                    <Text style={styles.discountAmount}>{Math.abs(item.total_discount).toFixed(2)} TL</Text>
                 </View>
             </View>
         );

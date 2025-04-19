@@ -373,7 +373,6 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         color: '#FFFFFF',
         fontFamily: 'Poppins-Bold',
-        // marginBottom: 8,
     },
     starsContainer: {
         flexDirection: 'row',
@@ -618,7 +617,7 @@ const styles = StyleSheet.create({
         borderLeftColor: '#50703C',
     },
     badAspectsCard: {
-        backgroundColor: '#FEF2F2',
+        backgroundColor: '#FFEBEE',
         borderLeftWidth: 4,
         borderLeftColor: '#DC2626',
     },

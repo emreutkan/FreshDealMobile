@@ -32,7 +32,8 @@ import {LinearGradient} from "expo-linear-gradient";
 
 
 type OrderDetailsRouteProp = RouteProp<RootStackParamList, 'OrderDetails'>;
-const BADGES = [
+
+const POSITIVE_BADGES = [
     {
         id: 'fresh',
         name: 'Fresh',
@@ -50,6 +51,27 @@ const BADGES = [
         name: 'Customer Friendly',
         icon: 'emoticon-happy-outline',
         description: 'Great customer service'
+    }
+];
+
+const NEGATIVE_BADGES = [
+    {
+        id: 'not_fresh',
+        name: 'Not Fresh',
+        icon: 'food-off',
+        description: 'Food quality was below expectations'
+    },
+    {
+        id: 'slow_delivery',
+        name: 'Slow Delivery',
+        icon: 'truck-delivery',
+        description: 'Delivery took longer than expected'
+    },
+    {
+        id: 'not_customer_friendly',
+        name: 'Poor Service',
+        icon: 'emoticon-sad-outline',
+        description: 'Customer service was unsatisfactory'
     }
 ];
 
@@ -186,8 +208,7 @@ const OrderDetails: React.FC = () => {
                 })
                 .catch((error) => {
                     Alert.alert(
-                        'Error',
-                        'Failed to submit rating. Please try again.'
+                        error.data?.message || "You have already rated this restaurant",
                     );
                     console.error('Rating submission error:', error);
                 });
@@ -225,6 +246,12 @@ const OrderDetails: React.FC = () => {
         }
     };
 
+    useEffect(() => {
+        if (rating > 0) {
+            setSelectedBadges([]);
+        }
+    }, [rating]);
+
     const RatingStars = () => {
         return (
             <View style={styles.ratingContainer}>
@@ -246,37 +273,47 @@ const OrderDetails: React.FC = () => {
     };
 
     const BadgeSelector = () => {
+        const currentBadges = rating >= 3 ? POSITIVE_BADGES : NEGATIVE_BADGES;
+
         return (
             <View style={styles.badgeSelectorContainer}>
                 <Text style={styles.badgeSelectorTitle}>
-                    What did you like about your order?
+                    {rating >= 3
+                        ? "What did you like about your order?"
+                        : "What issues did you experience?"}
                 </Text>
                 <View style={styles.badgesGrid}>
-                    {BADGES.map((badge) => (
+                    {currentBadges.map((badge) => (
                         <TouchableOpacity
                             key={badge.id}
                             style={[
                                 styles.badgeItem,
-                                selectedBadges.includes(badge.id) && styles.badgeItemSelected
+                                selectedBadges.includes(badge.id) &&
+                                (rating >= 3 ? styles.positiveBadgeSelected : styles.negativeBadgeSelected)
                             ]}
                             onPress={() => handleBadgeToggle(badge.id)}
                         >
-                            <View style={styles.badgeIconContainer}>
+                            <View style={[
+                                styles.badgeIconContainer,
+                                rating >= 3 ? styles.positiveBadgeIcon : styles.negativeBadgeIcon
+                            ]}>
                                 <MaterialCommunityIcons
                                     name={badge.icon}
                                     size={28}
-                                    color={selectedBadges.includes(badge.id) ? "#FFFFFF" : "#50703C"}
+                                    color={selectedBadges.includes(badge.id) ? "#FFFFFF" : (rating >= 3 ? "#50703C" : "#D32F2F")}
                                 />
                             </View>
                             <Text style={[
                                 styles.badgeName,
-                                selectedBadges.includes(badge.id) && styles.badgeNameSelected
+                                selectedBadges.includes(badge.id) && styles.badgeNameSelected,
+                                !selectedBadges.includes(badge.id) && rating < 3 && styles.negativeBadgeName
                             ]}>
                                 {badge.name}
                             </Text>
                             <Text style={[
                                 styles.badgeDescription,
-                                selectedBadges.includes(badge.id) && styles.badgeDescriptionSelected
+                                selectedBadges.includes(badge.id) && styles.badgeDescriptionSelected,
+                                !selectedBadges.includes(badge.id) && rating < 3 && styles.negativeBadgeDescription
                             ]} numberOfLines={2}>
                                 {badge.description}
                             </Text>
@@ -383,7 +420,7 @@ const OrderDetails: React.FC = () => {
                     <Text style={styles.ratingPrompt}>How was your order?</Text>
                     <RatingStars/>
 
-                    <BadgeSelector/>
+                    {rating > 0 && <BadgeSelector/>}
 
                     <Text style={styles.inputLabel}>Additional Comments</Text>
                     <TextInput
@@ -398,7 +435,8 @@ const OrderDetails: React.FC = () => {
                     <TouchableOpacity
                         style={[
                             styles.submitButton,
-                            {opacity: rating > 0 ? 1 : 0.5}
+                            {opacity: rating > 0 ? 1 : 0.5},
+                            rating < 3 && rating > 0 ? styles.submitButtonNegative : {}
                         ]}
                         onPress={handleSubmitRating}
                         disabled={rating === 0}
@@ -475,7 +513,7 @@ const OrderDetails: React.FC = () => {
                 <Image
                     source={{uri: currentOrder.completion_image_url}}
                     style={styles.completionImage}
-                    defaultSource={require('@/src/assets/images/icon.png')}
+                    // defaultSource={require('@/src/assets/images/icon.png')}
                 />
                 <LinearGradient
                     colors={['rgba(0,0,0,0.4)', 'transparent']}
@@ -936,18 +974,27 @@ const styles = StyleSheet.create({
         shadowRadius: 5,
         elevation: 1,
     },
-    badgeItemSelected: {
+    positiveBadgeSelected: {
         backgroundColor: '#50703C',
         borderColor: '#50703C',
+    },
+    negativeBadgeSelected: {
+        backgroundColor: '#D32F2F',
+        borderColor: '#D32F2F',
     },
     badgeIconContainer: {
         width: 50,
         height: 50,
         borderRadius: 25,
-        backgroundColor: 'rgba(80, 112, 60, 0.1)',
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: 8,
+    },
+    positiveBadgeIcon: {
+        backgroundColor: 'rgba(80, 112, 60, 0.1)',
+    },
+    negativeBadgeIcon: {
+        backgroundColor: 'rgba(211, 47, 47, 0.1)',
     },
     badgeName: {
         fontSize: 14,
@@ -955,6 +1002,9 @@ const styles = StyleSheet.create({
         fontFamily: 'Poppins-Medium',
         textAlign: 'center',
         marginBottom: 4,
+    },
+    negativeBadgeName: {
+        color: '#D32F2F',
     },
     badgeNameSelected: {
         color: '#FFFFFF',
@@ -964,6 +1014,9 @@ const styles = StyleSheet.create({
         color: '#999',
         textAlign: 'center',
         fontFamily: 'Poppins-Regular',
+    },
+    negativeBadgeDescription: {
+        color: 'rgba(211, 47, 47, 0.7)',
     },
     badgeDescriptionSelected: {
         color: '#FFFFFF',
@@ -1006,6 +1059,9 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 5,
         elevation: 3,
+    },
+    submitButtonNegative: {
+        backgroundColor: '#D32F2F',
     },
     submitButtonText: {
         color: '#FFFFFF',

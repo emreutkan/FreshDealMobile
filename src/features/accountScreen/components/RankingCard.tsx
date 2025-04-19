@@ -87,7 +87,8 @@ const RankingCard: React.FC = () => {
                             </View>
                             <View>
                                 <Text style={styles.savingsLabel}>Total Savings</Text>
-                                <Text style={styles.savingsText}>${totalDiscount.toFixed(2)}</Text>
+
+                                <Text style={styles.savingsText}>{Math.abs(totalDiscount.toFixed(2))} TL</Text>
                             </View>
                         </View>
                     </View>

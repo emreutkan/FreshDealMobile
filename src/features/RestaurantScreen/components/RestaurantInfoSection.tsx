@@ -30,31 +30,57 @@ const BADGE_INFO = {
         icon: 'food-apple',
         name: 'Fresh Ingredients',
         color: '#50703C',
-        description: 'Uses fresh, locally sourced ingredients'
+        description: 'Uses fresh, locally sourced ingredients',
+        positive: true
     },
     'fast_delivery': {
         icon: 'truck-fast',
         name: 'Fast Delivery',
         color: '#50703C',
-        description: 'Quick delivery times, usually under 30 minutes'
+        description: 'Quick delivery times, usually under 30 minutes',
+        positive: true
     },
     'customer_friendly': {
         icon: 'emoticon-happy-outline',
         name: 'Customer Friendly',
         color: '#50703C',
-        description: 'Known for exceptional customer service'
+        description: 'Known for exceptional customer service',
+        positive: true
     },
     'eco_friendly': {
         icon: 'leaf',
         name: 'Eco Friendly',
         color: '#50703C',
-        description: 'Uses sustainable practices and eco-friendly packaging'
+        description: 'Uses sustainable practices and eco-friendly packaging',
+        positive: true
     },
     'best_value': {
         icon: 'currency-usd',
         name: 'Best Value',
         color: '#50703C',
-        description: 'Great quality food at competitive prices'
+        description: 'Great quality food at competitive prices',
+        positive: true
+    },
+    'not_fresh': {
+        icon: 'food-off',
+        name: 'Not Fresh',
+        color: '#D32F2F',
+        description: 'Food quality may be inconsistent or below expectations',
+        positive: false
+    },
+    'slow_delivery': {
+        icon: 'truck-delivery',
+        name: 'Slow Delivery',
+        color: '#D32F2F',
+        description: 'Delivery times may be longer than average',
+        positive: false
+    },
+    'not_customer_friendly': {
+        icon: 'emoticon-sad-outline',
+        name: 'Poor Service',
+        color: '#D32F2F',
+        description: 'Customer service may be inconsistent or below expectations',
+        positive: false
     }
 };
 
@@ -113,7 +139,8 @@ const RestaurantInfoSection: React.FC = () => {
             icon: 'medal',
             name: selectedBadge,
             color: '#666666',
-            description: 'No description available'
+            description: 'No description available',
+            positive: true
         };
 
         return (
@@ -221,7 +248,8 @@ const RestaurantInfoSection: React.FC = () => {
                     const badgeInfo = BADGE_INFO[item] || {
                         icon: 'medal',
                         name: item,
-                        color: '#666666'
+                        color: '#666666',
+                        positive: true
                     };
 
                     return (
@@ -233,14 +261,22 @@ const RestaurantInfoSection: React.FC = () => {
                             }}
                             activeOpacity={0.7}
                         >
-                            <View style={styles.badgeIcon}>
+                            <View style={[
+                                styles.badgeIcon,
+                                {backgroundColor: badgeInfo.positive ? '#50703C' : '#D32F2F'}
+                            ]}>
                                 <MaterialCommunityIcons
                                     name={badgeInfo.icon}
                                     size={18}
                                     color="#FFFFFF"
                                 />
                             </View>
-                            <Text style={styles.badgeName}>{badgeInfo.name}</Text>
+                            <Text style={[
+                                styles.badgeName,
+                                {color: badgeInfo.positive ? '#333333' : '#D32F2F'}
+                            ]}>
+                                {badgeInfo.name}
+                            </Text>
                         </TouchableOpacity>
                     );
                 }}

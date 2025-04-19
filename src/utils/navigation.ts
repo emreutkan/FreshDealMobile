@@ -19,6 +19,7 @@ export type RootStackParamList = {
     OrderDetails: { orderId: number };
     Checkout: undefined;
     Rankings: undefined;
+    Achievements: undefined;
 };
 
 // If you're using useNavigation hook, you might want to add this type:
