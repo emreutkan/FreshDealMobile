@@ -477,7 +477,7 @@ const styles = StyleSheet.create({
     },
     container: {
         flex: 1,
-        paddingHorizontal: 16,
+        paddingHorizontal: 8,
     },
     scrollContainer: {
         flex: 1,
@@ -575,7 +575,7 @@ const styles = StyleSheet.create({
         justifyContent: 'flex-end',
     },
     categoryModal: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: '#F3F4F6',
         borderTopLeftRadius: 20,
         borderTopRightRadius: 20,
         padding: 16,
@@ -681,22 +681,22 @@ const styles = StyleSheet.create({
         fontFamily: 'Poppins-Regular',
     },
     radiusContainer: {
-        marginTop: 16,
-        backgroundColor: '#FFFFFF',
+        marginTop: 4,
+        backgroundColor: '#F3F4F6',
         padding: 16,
         borderRadius: 16,
-        marginBottom: 24,
-        ...Platform.select({
-            ios: {
-                shadowColor: '#000',
-                shadowOffset: {width: 0, height: 8},
-                shadowOpacity: 0.08,
-                shadowRadius: 10,
-            },
-            android: {
-                elevation: 4,
-            },
-        }),
+        marginBottom: 16,
+        //     ...Platform.select({
+        //         ios: {
+        //             shadowColor: '#000',
+        //             shadowOffset: {width: 0, height: 8},
+        //             shadowOpacity: 0.08,
+        //             shadowRadius: 10,
+        //         },
+        //         android: {
+        //             elevation: 4,
+        //         },
+        //     }),
     },
     radiusText: {
         fontSize: 16,

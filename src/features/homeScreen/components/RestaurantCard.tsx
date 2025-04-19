@@ -268,13 +268,13 @@ const styles = StyleSheet.create({
     },
     overlay: {
         position: 'absolute',
-        top: 0,
+        top: 100,
         left: 0,
         right: 0,
         bottom: 0,
         backgroundColor: 'rgba(0, 0, 0, 0.7)',
-        justifyContent: 'center',
-        alignItems: 'center',
+        // justifyContent: 'center',
+        // alignItems: 'center',
     },
     overlayText: {
         color: '#fff',

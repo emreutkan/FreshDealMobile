@@ -26,10 +26,12 @@ const CartBar: React.FC = () => {
 
 const styles = StyleSheet.create({
     container: {
-        position: 'absolute',
-        bottom: 25,
-        left: 20,
-        right: 20,
+        // position: 'absolute',
+        // bottom: 25,
+        // left: 20,
+        // right: 20,
+        // padding: 20,
+        margin: 20,
         backgroundColor: '#50703CFF', // Lighter green background
         paddingVertical: 16,
         borderRadius: 16,

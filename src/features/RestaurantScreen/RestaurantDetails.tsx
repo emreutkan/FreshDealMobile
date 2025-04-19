@@ -68,7 +68,6 @@ const RestaurantDetails: React.FC = () => {
                     )}
                 </View>
 
-                {/* Cart bar */}
                 {cart.cartItems.length > 0 && (
                     <CartBar/>
                 )}
