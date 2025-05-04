@@ -4,6 +4,7 @@ import {
     createRestaurant,
     deleteRestaurant,
     getAllRestaurants,
+    getRecentRestaurants,
     getRestaurant,
     getRestaurantBadges,
     getRestaurantCommentAnalysis,
@@ -26,24 +27,7 @@ export const getRecentRestaurantsThunk = createAsyncThunk(
             if (!token) {
                 return rejectWithValue('Authentication token is missing.');
             }
-
-            const response = await fetch('https://freshdealbackend.azurewebsites.net/v1/user/recent-restaurants', {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
-            });
-
-            if (!response.ok) {
-                console.log('Failed to fetch recent restaurants');
-            }
-
-            const data = await response.json();
-            if (data.success) {
-                return data;
-            } else {
-                return rejectWithValue(data.message || 'Failed to fetch recent restaurants');
-            }
+            return await getRecentRestaurants(token);
         } catch (error: any) {
             return rejectWithValue(error.message || 'Failed to fetch recent restaurants');
         }

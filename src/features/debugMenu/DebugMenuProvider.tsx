@@ -1,5 +1,5 @@
 import React, {useCallback, useState} from 'react';
-import {StyleSheet, TouchableWithoutFeedback, View} from 'react-native';
+import {StyleSheet, TouchableOpacity, View} from 'react-native';
 import {DebugMenu} from './DebugMenu';
 
 export const DebugMenuProvider: React.FC<{ children: React.ReactNode }> = ({children}) => {
@@ -22,17 +22,30 @@ export const DebugMenuProvider: React.FC<{ children: React.ReactNode }> = ({chil
     }, [touchCount, lastTouchTime]);
 
     return (
-        <TouchableWithoutFeedback onPress={handleTouch}>
-            <View style={styles.container}>
-                {children}
-                <DebugMenu visible={menuVisible} onClose={() => setMenuVisible(false)}/>
-            </View>
-        </TouchableWithoutFeedback>
+        <View style={styles.container}>
+            {children}
+            <TouchableOpacity
+                style={styles.debugTrigger}
+                onPress={handleTouch}
+                activeOpacity={1}
+            />
+            <DebugMenu visible={menuVisible} onClose={() => setMenuVisible(false)}/>
+        </View>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+    },
+    debugTrigger: {
+        position: 'absolute',
+        top: 50,
+        right: 50,
+        width: 50,
+        height: 50,
+        zIndex: 999,
+        // Uncomment for development to see the touch area
+        backgroundColor: 'rgba(255, 0, 0, 0.2)',
     },
 });

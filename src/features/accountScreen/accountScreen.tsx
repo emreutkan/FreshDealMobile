@@ -68,6 +68,8 @@ const AccountScreen: React.FC = () => {
     }, [name_surname, email, phoneNumber]);
 
     useEffect(() => {
+        // dispatch(getUserRankThunk());
+        // dispatch(getUserRankingsThunk());
         dispatch(fetchUserAchievementsThunk());
     }, [dispatch]);
 

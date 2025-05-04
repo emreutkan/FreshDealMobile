@@ -180,6 +180,7 @@ export const DebugMenu = ({visible, onClose}: { visible: boolean, onClose: () =>
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        marginTop: 50,
         backgroundColor: 'rgba(0, 0, 0, 0.9)',
     },
     header: {

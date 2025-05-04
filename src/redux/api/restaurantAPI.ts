@@ -7,6 +7,25 @@ import {CommentAnalysis} from "@/src/types/states";
 
 const RESTAURANTS_ENDPOINT = `${API_BASE_URL}/restaurants`;
 const GET_RESTAURANTS_IN_PROXIMITY_API_ENDPOINT = `${RESTAURANTS_ENDPOINT}/proximity`;
+const GET_RECENT_RESTAURANTS_ENDPOINT = `${API_BASE_URL}/user/recent-restaurants`;
+
+export const getRecentRestaurants = async (token: string): Promise<any> => {
+    const functionName = 'getRecentRestaurants';
+    const endpoint = GET_RECENT_RESTAURANTS_ENDPOINT;
+
+    logRequest(functionName, endpoint, {});
+
+    try {
+        const response = await axios.get(endpoint, {
+            headers: {Authorization: `Bearer ${token}`},
+        });
+        logResponse(functionName, endpoint, response.data);
+        return response.data;
+    } catch (error: any) {
+        logError(functionName, endpoint, error);
+        throw error;
+    }
+};
 
 export const getRestaurantsInProximity = async (
     latitude: number,
