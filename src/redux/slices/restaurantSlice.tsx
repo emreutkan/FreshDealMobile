@@ -72,7 +72,7 @@ const initialState: RestaurantState = {
     commentAnalysis: null,
     commentAnalysisLoading: false,
     commentAnalysisError: null,
-    recentRestaurants: [],
+    recentRestaurantIDs: [],
     recentRestaurantsLoading: false,
     recentRestaurantsError: null,
     comments: [],
@@ -181,7 +181,7 @@ const restaurantSlice = createSlice({
             })
             .addCase(getRecentRestaurantsThunk.fulfilled, (state, action) => {
                 state.recentRestaurantsLoading = false;
-                state.recentRestaurants = action.payload.restaurants;
+                state.recentRestaurantIDs = action.payload.restaurants;
             })
             .addCase(getRecentRestaurantsThunk.rejected, (state, action) => {
                 state.recentRestaurantsLoading = false;

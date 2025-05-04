@@ -1,5 +1,5 @@
 import {RestaurantSearchResult} from "@/src/types/api/search/responses";
-import {Comment, RecentRestaurant, Restaurant} from "@/src/types/api/restaurant/model";
+import {Comment, Restaurant} from "@/src/types/api/restaurant/model";
 import {Listing} from "@/src/types/api/listing/model";
 import {CartItem} from "@/src/types/api/cart/model";
 import {Address} from "@/src/types/api/address/model";
@@ -95,7 +95,7 @@ export interface RestaurantState {
     commentAnalysis: CommentAnalysis | null;
     commentAnalysisLoading: boolean;
     commentAnalysisError: string | null;
-    recentRestaurants: RecentRestaurant[];
+    recentRestaurantIDs: number[];
     recentRestaurantsLoading: boolean;
     recentRestaurantsError: string | null;
     comments: Comment[];
