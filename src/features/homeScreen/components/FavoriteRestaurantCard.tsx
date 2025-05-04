@@ -32,7 +32,7 @@ const FavoriteRestaurantList: React.FC<FavoriteRestaurantListProps> = ({restaura
 
     const debugFavorites = async () => {
         try {
-            const response = await dispatch(getFavoritesThunk()).unwrap();
+            const response = dispatch(getFavoritesThunk());
             Alert.alert('Debug Info', `Favorites Response:\n${JSON.stringify(response, null, 2)}`);
         } catch (error) {
             Alert.alert('Debug Error', `Error:\n${JSON.stringify(error, null, 2)}`);
