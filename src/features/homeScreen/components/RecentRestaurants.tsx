@@ -4,18 +4,17 @@ import {useDispatch, useSelector} from "react-redux";
 import {RootState} from "@/src/types/store";
 import {Ionicons, MaterialCommunityIcons} from "@expo/vector-icons";
 import {LinearGradient} from 'expo-linear-gradient';
-import {useNavigation} from "@react-navigation/native";
-import {NativeStackNavigationProp} from "@react-navigation/native-stack";
-import {RootStackParamList} from "@/src/utils/navigation";
+
 import {getRecentRestaurantsThunk} from "@/src/redux/thunks/restaurantThunks";
 import {AppDispatch} from "@/src/redux/store";
+import {useHandleRestaurantPress} from "@/src/hooks/handleRestaurantPress";
+import {isRestaurantOpen} from "@/src/utils/RestaurantFilters";
 
 const {width} = Dimensions.get('window');
 const RECENT_CARD_WIDTH = width * 0.35;
 const RECENT_CARD_MARGIN = 8;
 const CARD_HEIGHT = 130;
 
-type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'RestaurantDetails'>;
 
 const RecentRestaurants = () => {
     const dispatch = useDispatch<AppDispatch>();
@@ -23,7 +22,7 @@ const RecentRestaurants = () => {
         (state: RootState) => state.restaurant
     );
     const scrollX = React.useRef(new Animated.Value(0)).current;
-    const navigation = useNavigation<NavigationProp>();
+    const handleRestaurantPress = useHandleRestaurantPress();
 
     const recentRestaurants = restaurantsProximity.filter(restaurant =>
         recentRestaurantIDs.includes(restaurant.id)
@@ -49,14 +48,21 @@ const RecentRestaurants = () => {
         return null;
     }
 
+
     const renderRecentItem = ({item}: { item: any; index: number }) => {
+        const isOpen = isRestaurantOpen(item.workingDays, item.workingHoursStart, item.workingHoursEnd);
+        const hasStock = item.listings > 0;
+
+        const isDisabled = !isOpen || !hasStock;
+        const overlayMessage = !isOpen
+            ? 'Currently Closed'
+            : !hasStock
+                ? 'Out of Stock (Come back later!)'
+                : '';
         return (
             <TouchableOpacity
-                onPress={() => {
-                    navigation.navigate('RestaurantDetails', {
-                        restaurantId: item.id,
-                    });
-                }}
+                onPress={() => !isDisabled && handleRestaurantPress(item.id)}
+
                 activeOpacity={0.8}
                 style={styles.recentTouchableContainer}
             >

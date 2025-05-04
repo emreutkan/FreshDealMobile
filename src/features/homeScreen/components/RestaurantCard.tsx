@@ -8,53 +8,11 @@ import {Ionicons, MaterialCommunityIcons, MaterialIcons} from "@expo/vector-icon
 import {addFavoriteThunk, removeFavoriteThunk} from "@/src/redux/thunks/userThunks";
 import {useHandleRestaurantPress} from "@/src/hooks/handleRestaurantPress";
 import {tokenService} from "@/src/services/tokenService";
+import {calculateDistanceToRestaurant, isRestaurantOpen} from "@/src/utils/RestaurantFilters";
 
 interface RestaurantListProps {
     restaurants: Restaurant[];
 }
-
-const calculateDistance = (
-    lat1: number,
-    lon1: number,
-    lat2: number,
-    lon2: number
-): number => {
-    const R = 6371;
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a =
-        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-        Math.sin(dLon / 2) * Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
-};
-
-const isRestaurantOpen = (
-    workingDays: string[],
-    workingHoursStart?: string,
-    workingHoursEnd?: string
-): boolean => {
-    const now = new Date();
-    const currentDay = now.toLocaleDateString('en-US', {weekday: 'long'});
-    const currentHour = now.getHours();
-    const currentMinute = now.getMinutes();
-
-    if (!workingDays.includes(currentDay)) return false;
-
-    if (workingHoursStart && workingHoursEnd) {
-        const [startHour, startMinute] = workingHoursStart.split(':').map(Number);
-        const [endHour, endMinute] = workingHoursEnd.split(':').map(Number);
-
-        const currentTime = currentHour * 60 + currentMinute;
-        const startTime = startHour * 60 + startMinute;
-        const endTime = endHour * 60 + endMinute;
-
-        return currentTime >= startTime && currentTime <= endTime;
-    }
-
-    return true;
-};
 
 const calculateDeliveryTime = (distanceKm: number): number => {
     const baseTime = 15;
@@ -91,7 +49,7 @@ const RestaurantList: React.FC<RestaurantListProps> = ({restaurants}) => {
         const hasStock = item.listings > 0;
 
         const distance = selectedAddress?.latitude && selectedAddress?.longitude && item.latitude && item.longitude
-            ? calculateDistance(
+            ? calculateDistanceToRestaurant(
                 selectedAddress.latitude,
                 selectedAddress.longitude,
                 item.latitude,
