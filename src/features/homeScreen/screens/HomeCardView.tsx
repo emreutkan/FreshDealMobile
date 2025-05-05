@@ -112,7 +112,7 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll}) => {
     }, [localRadius]);
 
     useEffect(() => {
-        let timer: NodeJS.Timeout;
+        let timer: number;
         if (restaurantsProximityLoading) {
             setShowMainLoading(true);
         } else {
@@ -452,6 +452,7 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll}) => {
                         <FavoriteRestaurantList
                             restaurants={filteredRestaurants}
                         />
+
 
                         <View style={styles.sectionContainer}>
                             <Text style={styles.sectionTitle}>Explore</Text>

@@ -3,32 +3,8 @@ import {Marker} from "react-native-maps";
 import React, {useMemo, useState} from "react";
 import {Ionicons} from "@expo/vector-icons";
 import {Restaurant} from "@/src/types/api/restaurant/model";
+import {isRestaurantOpen} from "@/src/utils/RestaurantFilters";
 
-const isRestaurantOpen = (
-    workingDays: string[],
-    workingHoursStart?: string,
-    workingHoursEnd?: string
-): boolean => {
-    const now = new Date();
-    const currentDay = now.toLocaleDateString('en-US', {weekday: 'long'});
-    const currentHour = now.getHours();
-    const currentMinute = now.getMinutes();
-
-    if (!workingDays.includes(currentDay)) return false;
-
-    if (workingHoursStart && workingHoursEnd) {
-        const [startHour, startMinute] = workingHoursStart.split(':').map(Number);
-        const [endHour, endMinute] = workingHoursEnd.split(':').map(Number);
-
-        const currentTime = currentHour * 60 + currentMinute;
-        const startTime = startHour * 60 + startMinute;
-        const endTime = endHour * 60 + endMinute;
-
-        return currentTime >= startTime && currentTime <= endTime;
-    }
-
-    return true;
-};
 
 export const RestaurantMarker: React.FC<{
     restaurant: Restaurant;

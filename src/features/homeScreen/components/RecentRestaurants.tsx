@@ -4,26 +4,29 @@ import {useDispatch, useSelector} from "react-redux";
 import {RootState} from "@/src/types/store";
 import {Ionicons, MaterialCommunityIcons} from "@expo/vector-icons";
 import {LinearGradient} from 'expo-linear-gradient';
-import {useNavigation} from "@react-navigation/native";
-import {NativeStackNavigationProp} from "@react-navigation/native-stack";
-import {RootStackParamList} from "@/src/utils/navigation";
-import {format} from 'date-fns';
+
 import {getRecentRestaurantsThunk} from "@/src/redux/thunks/restaurantThunks";
+import {AppDispatch} from "@/src/redux/store";
+import {useHandleRestaurantPress} from "@/src/hooks/handleRestaurantPress";
+import {isRestaurantOpen} from "@/src/utils/RestaurantFilters";
 
 const {width} = Dimensions.get('window');
 const RECENT_CARD_WIDTH = width * 0.35;
 const RECENT_CARD_MARGIN = 8;
 const CARD_HEIGHT = 130;
 
-type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'RestaurantDetails'>;
 
 const RecentRestaurants = () => {
-    const dispatch = useDispatch();
-    const {recentRestaurants, recentRestaurantsLoading} = useSelector(
+    const dispatch = useDispatch<AppDispatch>();
+    const {recentRestaurantIDs, recentRestaurantsLoading, restaurantsProximity} = useSelector(
         (state: RootState) => state.restaurant
     );
     const scrollX = React.useRef(new Animated.Value(0)).current;
-    const navigation = useNavigation<NavigationProp>();
+    const handleRestaurantPress = useHandleRestaurantPress();
+
+    const recentRestaurants = restaurantsProximity.filter(restaurant =>
+        recentRestaurantIDs.includes(restaurant.id)
+    );
 
     const debugRecents = async () => {
         try {
@@ -35,9 +38,9 @@ const RecentRestaurants = () => {
     };
 
     const debugState = () => {
-        Alert.alert('Debug Info', `Current State:\nLoading: ${recentRestaurantsLoading}\nRecents: ${JSON.stringify(recentRestaurants?.map(r => ({
-            name: r.restaurant_name,
-            date: r.last_order_date
+        Alert.alert('Debug Info', `Current State:\nLoading: ${recentRestaurantsLoading}\nRecents: ${JSON.stringify(recentRestaurantIDs)}\nFiltered Restaurants: ${JSON.stringify(recentRestaurants.map(r => ({
+            name: r.restaurantName,
+            id: r.id
         })), null, 2)}`);
     };
 
@@ -45,14 +48,21 @@ const RecentRestaurants = () => {
         return null;
     }
 
-    const renderRecentItem = ({item, index}: { item: any; index: number }) => {
+
+    const renderRecentItem = ({item}: { item: any; index: number }) => {
+        const isOpen = isRestaurantOpen(item.workingDays, item.workingHoursStart, item.workingHoursEnd);
+        const hasStock = item.listings > 0;
+
+        const isDisabled = !isOpen || !hasStock;
+        const overlayMessage = !isOpen
+            ? 'Currently Closed'
+            : !hasStock
+                ? 'Out of Stock (Come back later!)'
+                : '';
         return (
             <TouchableOpacity
-                onPress={() => {
-                    navigation.navigate('RestaurantDetails', {
-                        restaurantId: item.restaurant_id,
-                    });
-                }}
+                onPress={() => !isDisabled && handleRestaurantPress(item.id)}
+
                 activeOpacity={0.8}
                 style={styles.recentTouchableContainer}
             >
@@ -75,12 +85,10 @@ const RecentRestaurants = () => {
                         <View style={styles.recentContentContainer}>
                             <View style={styles.dateBadge}>
                                 <MaterialCommunityIcons name="clock-outline" size={14} color="#fff"/>
-                                <Text style={styles.dateText}>
-                                    {format(new Date(item.last_order_date), 'MMM d')}
-                                </Text>
+                                <Text style={styles.dateText}>Recent</Text>
                             </View>
                             <Text style={styles.recentTitle} numberOfLines={2}>
-                                {item.restaurant_name}
+                                {item.restaurantName}
                             </Text>
                         </View>
                     </View>
@@ -110,7 +118,7 @@ const RecentRestaurants = () => {
             <Animated.FlatList
                 data={recentRestaurants}
                 renderItem={renderRecentItem}
-                keyExtractor={(item) => `recent-${item.restaurant_id}`}
+                keyExtractor={(item) => `recent-${item.id}`}
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.listContainer}

@@ -22,7 +22,7 @@ import HomeMapView from '@/src/features/homeScreen/screens/HomeMapView';
 import AccountScreen from '@/src/features/accountScreen/accountScreen';
 import Header from '@/src/features/homeScreen/components/Header';
 import Search from "@/src/features/search/Search";
-import {getRestaurantsByProximity} from "@/src/redux/thunks/restaurantThunks";
+import {getRecentRestaurantsThunk, getRestaurantsByProximity} from "@/src/redux/thunks/restaurantThunks";
 import {getFavoritesThunk} from "@/src/redux/thunks/userThunks";
 import {lightHaptic} from "@/src/utils/Haptics";
 import {BottomSheetModalProvider} from "@gorhom/bottom-sheet";
@@ -60,6 +60,7 @@ const HomeScreen: React.FC = () => {
                 console.log('Primary Address Data:', primaryAddressData);
                 dispatch(getRestaurantsByProximity());
                 dispatch(getFavoritesThunk());
+                dispatch(getRecentRestaurantsThunk());
             }
         }, [dispatch, primaryAddressData])
     );
