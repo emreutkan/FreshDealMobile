@@ -1,3 +1,4 @@
+// src/redux/slices/restaurantSlice.tsx
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 import {
     getListingsThunk,
@@ -51,6 +52,7 @@ const EmptyListing: Listing = {
     available_for_delivery: false,
     available_for_pickup: false,
     consume_within: 0,
+    fresh_score: 100,
 };
 
 const initialState: RestaurantState = {
