@@ -1,6 +1,6 @@
-// src/redux/slices/restaurantSlice.tsx
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 import {
+    getFlashDealsThunk,
     getListingsThunk,
     getRecentRestaurantsThunk,
     getRestaurantBadgesThunk,
@@ -37,6 +37,8 @@ const emptyRestaurant: Restaurant = {
     minOrderAmount: null,
     comments: [],
     badges: [],
+    flash_deals_available: false,
+    flash_deals_count: 0,
 };
 
 const EmptyListing: Listing = {
@@ -52,7 +54,6 @@ const EmptyListing: Listing = {
     available_for_delivery: false,
     available_for_pickup: false,
     consume_within: 0,
-    fresh_score: 100,
 };
 
 const initialState: RestaurantState = {
@@ -80,6 +81,9 @@ const initialState: RestaurantState = {
     comments: [],
     commentsLoading: false,
     commentsError: null,
+    flashDealsRestaurants: [],
+    flashDealsLoading: false,
+    flashDealsError: null,
 };
 
 const restaurantSlice = createSlice({
@@ -201,6 +205,19 @@ const restaurantSlice = createSlice({
             .addCase(getRestaurantCommentsThunk.rejected, (state, action) => {
                 state.commentsLoading = false;
                 state.commentsError = action.payload as string;
+            })
+            .addCase(getFlashDealsThunk.pending, (state) => {
+                state.flashDealsLoading = true;
+                state.flashDealsError = null;
+            })
+            .addCase(getFlashDealsThunk.fulfilled, (state, action) => {
+                state.flashDealsLoading = false;
+                state.flashDealsRestaurants = action.payload;
+                state.flashDealsError = null;
+            })
+            .addCase(getFlashDealsThunk.rejected, (state, action) => {
+                state.flashDealsLoading = false;
+                state.flashDealsError = action.payload as string;
             });
     },
 });
