@@ -29,7 +29,7 @@ const {width} = Dimensions.get('window');
 type OrdersScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 type OrdersScreenRouteProp = RouteProp<RootStackParamList, 'Orders'>;
 
-const OrderStatusBadge: React.FC<{ status: string }> = ({status}) => {
+export const OrderStatusBadge: React.FC<{ status: string }> = ({status}) => {
     const getStatusColor = () => {
         switch (status.toUpperCase()) {
             case 'PENDING':
