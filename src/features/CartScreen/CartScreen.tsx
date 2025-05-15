@@ -8,7 +8,7 @@ import {scaleFont} from "@/src/utils/ResponsiveFont";
 import {GoBackIcon} from "@/src/features/homeScreen/components/goBack";
 import ListingCard from "@/src/features/RestaurantScreen/components/listingsCard";
 import {setDeliveryMethod, setSelectedRestaurant} from "@/src/redux/slices/restaurantSlice";
-import {fetchCart} from "@/src/redux/thunks/cartThunks";
+import {fetchCart, resetCart} from "@/src/redux/thunks/cartThunks";
 import {Ionicons, MaterialIcons} from "@expo/vector-icons";
 import type {NativeStackNavigationProp} from "@react-navigation/native-stack";
 import {RootStackParamList} from "@/src/utils/navigation";
@@ -57,7 +57,18 @@ const CartScreen: React.FC = () => {
                     dispatch(setDeliveryMethod(true));
                 }
             } else {
-                Alert.alert('Restaurant not found', 'The restaurant is not in proximity. Cart will be cleared.');
+                Alert.alert(
+                    'Restaurant not found',
+                    'The restaurant is not in proximity. Cart will be cleared.',
+                    [
+                        {
+                            text: 'OK',
+                            onPress: () => {
+                                dispatch(resetCart());
+                            }
+                        }
+                    ]
+                );
             }
         }
     }, [cartItems, restaurantsProximity, dispatch]);

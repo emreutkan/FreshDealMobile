@@ -1,6 +1,6 @@
 import React, {useCallback, useContext, useEffect, useMemo, useRef, useState} from 'react';
-import {Animated, Dimensions, Image, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
-import {addItemToCart, fetchCart, removeItemFromCart, updateCartItem} from '@/src/redux/thunks/cartThunks';
+import {Alert, Animated, Dimensions, Image, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {addItemToCart, fetchCart, removeItemFromCart, resetCart, updateCartItem} from '@/src/redux/thunks/cartThunks';
 import {useDispatch, useSelector} from 'react-redux';
 import {AppDispatch} from '@/src/redux/store';
 import {RootState} from "@/src/types/store";
@@ -73,10 +73,34 @@ export const ListingCard: React.FC<ListingCardProps> = ({
         );
         const countInCart = cartItem ? cartItem.count : 0;
 
-        if (existingCartItems.length > 0) {
+        if (existingCartItems.length > 0 && !cartItem) {
             const existingRestaurantId = existingCartItems[0].restaurant_id;
             if (existingRestaurantId !== item.restaurant_id) {
-                alert('You can only add items from the same restaurant to your cart.');
+                Alert.alert(
+                    'Different Restaurant',
+                    'You can only add items from the same restaurant to your cart.',
+                    [
+                        {
+                            text: 'Keep Current Cart',
+                            style: 'cancel'
+                        },
+                        {
+                            text: 'Clear Cart & Add New Item',
+                            onPress: async () => {
+                                try {
+                                    await dispatch(resetCart());
+                                    // Wait a moment for the cart to be cleared then add the new item
+                                    setTimeout(() => {
+                                        dispatch(addItemToCart({payload: {listing_id: item.id}}));
+                                    }, 300);
+                                } catch (error) {
+                                    console.error('Error resetting cart:', error);
+                                    Alert.alert('Error', 'Could not clear your cart. Please try again.');
+                                }
+                            }
+                        }
+                    ]
+                );
                 return;
             }
         }
