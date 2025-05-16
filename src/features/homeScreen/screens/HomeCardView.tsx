@@ -30,7 +30,8 @@ import {Purchase} from "@/src/types/api/purchase/model";
 import RecentOrderToast from "@/src/features/OrdersScreen/RenderOrdersToast";
 import RecentRestaurants from "@/src/features/homeScreen/components/RecentRestaurants";
 import FlashDealsBottomSheet from "@/src/features/FlashDeals/FlashDealsBottomSheet";
-import {useFocusEffect} from '@react-navigation/native';
+import Recommendations from "@/src/features/homeScreen/components/Recommendations";
+import {getRecommendationsThunk} from '@/src/redux/thunks/recommendationThunks';
 
 interface HomeCardViewProps {
     onScroll: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
@@ -92,44 +93,6 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll}) => {
     const [isCategoryModalVisible, setIsCategoryModalVisible] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState("All Categories");
 
-    // Reference to scroll view for minimal scrolling
-    const scrollViewRef = useRef<ScrollView>(null);
-
-    // Reset scrollY when component mounts
-    useEffect(() => {
-        const resetScrollPosition = () => {
-            scrollY.setValue(0);
-        };
-
-        // Reset when component mounts
-        resetScrollPosition();
-
-        return () => {
-            // Reset when component unmounts to prevent stale values
-            resetScrollPosition();
-        };
-    }, []);
-
-    // Trigger minimal scroll when screen comes into focus
-    useFocusEffect(
-        useCallback(() => {
-            // Add minimal scroll to trigger component reload
-            setTimeout(() => {
-                if (scrollViewRef.current) {
-                    // First scroll a small distance up
-                    scrollViewRef.current.scrollTo({y: 5, animated: true});
-
-                    // Then scroll back down slightly after a delay
-                    setTimeout(() => {
-                        if (scrollViewRef.current) {
-                            scrollViewRef.current.scrollTo({y: 0, animated: true});
-                        }
-                    }, 0);
-                }
-            }, 0);
-        }, [])
-    );
-
     // Show flash deals when component mounts
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -181,7 +144,10 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll}) => {
     const onRefresh = useCallback(() => {
         strongHaptic().then(r => console.log(r));
         setRefreshing(true);
-        dispatch(getRestaurantsByProximity()).finally(() => {
+        Promise.all([
+            dispatch(getRestaurantsByProximity()),
+            dispatch(getRecommendationsThunk())
+        ]).finally(() => {
             setRefreshing(false);
         });
     }, [dispatch]);
@@ -190,6 +156,7 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll}) => {
         strongHaptic().then(r => console.log(r));
         dispatch(getRestaurantsByProximity());
         dispatch(getRecentRestaurantsThunk());
+        dispatch(getRecommendationsThunk());
     }, [dispatch, reduxRadius]);
 
     const isLoading = showMainLoading || filterLoading;
@@ -284,16 +251,6 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll}) => {
                 <Feather name="check" size={18} color="#50703C"/>
             )}
         </TouchableOpacity>
-    );
-
-    const handleScroll = Animated.event(
-        [{nativeEvent: {contentOffset: {y: scrollY}}}],
-        {
-            useNativeDriver: false,
-            listener: (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-                onScroll(event);
-            }
-        }
     );
 
     return (
@@ -452,14 +409,21 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll}) => {
                     </View>
                 ) : (
                     <Animated.ScrollView
-                        ref={scrollViewRef}
                         style={styles.scrollContainer}
                         contentContainerStyle={{
                             paddingTop: HEADER_MAX_HEIGHT,
                             paddingBottom: 20,
                             flexGrow: 1,
                         }}
-                        onScroll={handleScroll}
+                        onScroll={Animated.event(
+                            [{nativeEvent: {contentOffset: {y: scrollY}}}],
+                            {
+                                useNativeDriver: false,
+                                listener: (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+                                    onScroll(event);
+                                }
+                            }
+                        )}
                         scrollEventThrottle={16}
                         showsVerticalScrollIndicator={false}
                         refreshControl={
@@ -480,6 +444,9 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll}) => {
                                 />
                             )}
                         </View>
+
+                        {/* Add the Recommendations component right above RecentRestaurants */}
+                        <Recommendations/>
 
                         <RecentRestaurants/>
 
