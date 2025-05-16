@@ -10,6 +10,7 @@ import {tokenMiddleware} from "@/src/middleware/tokenMiddleware";
 import {restaurantMiddleware} from "@/src/middleware/restaurantMiddleware";
 import notificationReducer from '@/src/redux/slices/notificationSlice';
 import reportReducer from '@/src/redux/slices/reportSlice';
+import recommendationReducer from '@/src/redux/slices/recommendationSlice';
 
 const store = configureStore({
     reducer: {
@@ -21,7 +22,7 @@ const store = configureStore({
         purchase: purchaseReducer,
         notification: notificationReducer,
         report: reportReducer,
-
+        recommendation: recommendationReducer,
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware({
