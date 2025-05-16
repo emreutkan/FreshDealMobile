@@ -30,8 +30,8 @@ import {Purchase} from "@/src/types/api/purchase/model";
 import RecentOrderToast from "@/src/features/OrdersScreen/RenderOrdersToast";
 import RecentRestaurants from "@/src/features/homeScreen/components/RecentRestaurants";
 import FlashDealsBottomSheet from "@/src/features/FlashDeals/FlashDealsBottomSheet";
-import Recommendations from "@/src/features/homeScreen/components/Recommendations"; // Import the new component
-import {getRecommendationsThunk} from "@/src/redux/thunks/recommendationThunks";
+import Recommendations from "@/src/features/homeScreen/components/Recommendations";
+import {getRecommendationsThunk} from '@/src/redux/thunks/recommendationThunks';
 
 interface HomeCardViewProps {
     onScroll: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
@@ -152,7 +152,6 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll}) => {
         });
     }, [dispatch]);
 
-// In the initial loading useEffect, add:
     useEffect(() => {
         strongHaptic().then(r => console.log(r));
         dispatch(getRestaurantsByProximity());
@@ -446,7 +445,7 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll}) => {
                             )}
                         </View>
 
-                        {/* Add Recommendations component here, above RecentRestaurants */}
+                        {/* Add the Recommendations component right above RecentRestaurants */}
                         <Recommendations/>
 
                         <RecentRestaurants/>
