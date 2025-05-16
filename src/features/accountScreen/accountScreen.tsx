@@ -20,6 +20,7 @@ import AchievementsSection from './components/AchievementsSection';
 import InfoCards from './components/InfoCards';
 import OrdersSection from './components/OrdersSection';
 import ActionsSection from './components/ActionsSection';
+import EnvironmentalImpactCard from './components/EnvironmentalImpactCard';
 
 import {RootStackParamList} from '@/src/utils/navigation';
 import {RootState} from '@/src/types/store';
@@ -237,6 +238,8 @@ const AccountScreen: React.FC = () => {
                     />
 
                     <RankingCard/>
+
+                    <EnvironmentalImpactCard/>
 
                     {achievementsLoading ? (
                         <View style={styles.loadingSection}>
