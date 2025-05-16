@@ -30,6 +30,8 @@ import {Purchase} from "@/src/types/api/purchase/model";
 import RecentOrderToast from "@/src/features/OrdersScreen/RenderOrdersToast";
 import RecentRestaurants from "@/src/features/homeScreen/components/RecentRestaurants";
 import FlashDealsBottomSheet from "@/src/features/FlashDeals/FlashDealsBottomSheet";
+import Recommendations from "@/src/features/homeScreen/components/Recommendations"; // Import the new component
+import {getRecommendationsThunk} from "@/src/redux/thunks/recommendationThunks";
 
 interface HomeCardViewProps {
     onScroll: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
@@ -142,15 +144,20 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll}) => {
     const onRefresh = useCallback(() => {
         strongHaptic().then(r => console.log(r));
         setRefreshing(true);
-        dispatch(getRestaurantsByProximity()).finally(() => {
+        Promise.all([
+            dispatch(getRestaurantsByProximity()),
+            dispatch(getRecommendationsThunk())
+        ]).finally(() => {
             setRefreshing(false);
         });
     }, [dispatch]);
 
+// In the initial loading useEffect, add:
     useEffect(() => {
         strongHaptic().then(r => console.log(r));
         dispatch(getRestaurantsByProximity());
         dispatch(getRecentRestaurantsThunk());
+        dispatch(getRecommendationsThunk());
     }, [dispatch, reduxRadius]);
 
     const isLoading = showMainLoading || filterLoading;
@@ -438,6 +445,9 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll}) => {
                                 />
                             )}
                         </View>
+
+                        {/* Add Recommendations component here, above RecentRestaurants */}
+                        <Recommendations/>
 
                         <RecentRestaurants/>
 

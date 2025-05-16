@@ -170,3 +170,6 @@ export interface CommentAnalysis {
     key_positives: string[];
     key_negatives: string[];
 }
+
+export interface RecommendationState {
+}
