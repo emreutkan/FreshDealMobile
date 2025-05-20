@@ -39,7 +39,7 @@ const CheckoutScreen: React.FC = () => {
     const currentDay = format(currentDate, 'EEEE');
 
     const selectedAddressId = useSelector((state: RootState) => state.address.selectedAddressId);
-    const selectedAddress = useSelector((state: RootState) => state.address.addresses.find(address => address.id === selectedAddressId));
+    const selectedAddress = useSelector((state: RootState) => state.address.addresses.find(address => address.id === selectedAddressId?.toString()));
 
     const [startHours, startMinutes] = restaurant.workingHoursStart?.split(':') || ['0', '0'];
     const [endHours, endMinutes] = restaurant.workingHoursEnd?.split(':') || ['0', '0'];

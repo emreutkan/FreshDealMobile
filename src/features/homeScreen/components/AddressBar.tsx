@@ -72,19 +72,19 @@ const AddressBar: React.FC<AddressBarProps> = ({textColor}) => {
     };
 
     const renderAddressStreet = () => {
-        let selectedAddress = addresses.find((addr) => addr.id === selectedAddressID);
+        let selectedAddress = addresses.find((addr) => addr.id === selectedAddressID?.toString());
         if (!selectedAddress) return 'Select an address';
         return `${selectedAddress.street}`;
     };
 
     const renderAddressDistrict = () => {
-        let selectedAddress = addresses.find((addr) => addr.id === selectedAddressID);
+        let selectedAddress = addresses.find((addr) => addr.id === selectedAddressID?.toString());
         if (!selectedAddress) return 'Select an address';
         return `${selectedAddress.district}`;
     };
 
     const renderAddressItem = ({item}: { item: Address }) => {
-        const isSelected = item.id === selectedAddressID;
+        const isSelected = item.id === selectedAddressID?.toString();
 
         return (
             <View

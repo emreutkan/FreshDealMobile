@@ -7,16 +7,7 @@ import {fetchUserAchievementsThunk} from "@/src/redux/thunks/achievementThunks";
 import type {NativeStackNavigationProp} from "@react-navigation/native-stack";
 import {RootStackParamList} from "@/src/utils/navigation";
 import {LinearGradient} from 'expo-linear-gradient';
-
-export interface Achievement {
-    id: number;
-    name: string;
-    achievement_type: string;
-    badge_image_url: string;
-    description: string;
-    threshold?: number;
-    earned_at?: string;
-}
+import {Achievement} from "@/src/types/achievementTypes";
 
 interface AchievementsSectionProps {
     achievements: Achievement[];

@@ -103,7 +103,6 @@ const styles = StyleSheet.create({
         shadowOffset: {width: 0, height: 3},
         shadowOpacity: 0.1,
         shadowRadius: 8,
-        elevation: 3,
         overflow: 'hidden',
     },
     gradientBackground: {

@@ -3,7 +3,6 @@ import {Comment, Restaurant} from "@/src/types/api/restaurant/model";
 import {Listing} from "@/src/types/api/listing/model";
 import {CartItem} from "@/src/types/api/cart/model";
 import {Purchase} from "@/src/types/api/purchase/model";
-import {Notification} from "@/src/types/api/notification/model";
 
 export interface UserState {
     email: string;
@@ -126,22 +125,6 @@ export interface SearchState {
     error: string | null;
 }
 
-export interface NotificationState {
-    notifications: Notification[];
-    loading: boolean;
-    error: string | null;
-    unreadCount: number;
-    registrationToken: string | null;
-    registrationLoading: boolean;
-    registrationError: string | null;
-    permissionGranted: boolean;
-}
-
-export interface ReportState {
-    reports: any[];
-    reportLoading: boolean;
-    error: string | null;
-}
 
 export interface Pagination {
     current_page: number;
@@ -151,12 +134,14 @@ export interface Pagination {
 }
 
 export interface Achievement {
+    threshold: boolean;
+    achievement_type: string;
     id: number;
     name: string;
     description: string;
     image_url: string | null;
     acquired: boolean;
-    acquired_at: string | null;
+    earned_at: string | null;
 }
 
 export interface Ranking {
@@ -167,10 +152,10 @@ export interface Ranking {
 }
 
 export interface CommentAnalysis {
+    good_aspects: string[];
+    comment_count: number;
     bad_aspects: string[];
     key_positives: string[];
     key_negatives: string[];
 }
 
-export interface RecommendationState {
-}

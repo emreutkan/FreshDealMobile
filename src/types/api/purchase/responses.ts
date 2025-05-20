@@ -1,5 +1,3 @@
-// Add these new interfaces to your responses.ts file
-
 import {Purchase} from "@/src/types/api/purchase/model";
 
 export interface PurchaseOrder {

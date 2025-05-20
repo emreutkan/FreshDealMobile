@@ -185,10 +185,8 @@ const AccountScreen: React.FC = () => {
 
     const handleDebugToken = () => {
         if (token) {
-            console.log('[DEBUG][2025-04-06 20:08:58][emreutkan] AccountScreen: User Token:', token);
             Alert.alert('Debug Info', 'Token has been logged to console');
         } else {
-            console.log('[DEBUG][2025-04-06 20:08:58][emreutkan] AccountScreen: No token found');
             Alert.alert('Debug Info', 'No token found');
         }
     };

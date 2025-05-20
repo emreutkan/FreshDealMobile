@@ -27,7 +27,7 @@ const RestaurantList: React.FC<RestaurantListProps> = ({restaurants}) => {
 
     const selectedAddressID = useSelector((state: RootState) => state.address.selectedAddressId);
     const selectedAddress = useSelector((state: RootState) =>
-        state.address.addresses.find((address) => address.id === selectedAddressID)
+        state.address.addresses.find((address) => address.id === selectedAddressID?.toString())
     );
 
     const handleFavoritePress = useCallback((id: number) => {

@@ -24,6 +24,11 @@ export interface Restaurant {
     comments?: Comment[];
     flash_deals_available: boolean;
     flash_deals_count: number;
+    badges: {
+        name: string;
+        is_positive: boolean;
+    }[];
+
 }
 
 export interface Comment {
@@ -39,8 +44,3 @@ export interface Comment {
     should_highlight: boolean;
 }
 
-export interface CommentAnalysis {
-    good_aspects: string[];
-    bad_aspects: string[];
-    comment_count: number;
-}

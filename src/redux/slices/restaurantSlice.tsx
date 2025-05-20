@@ -54,6 +54,7 @@ const EmptyListing: Listing = {
     available_for_delivery: false,
     available_for_pickup: false,
     consume_within: 0,
+    fresh_score: 0,
 };
 
 const initialState: RestaurantState = {

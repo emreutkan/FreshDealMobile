@@ -5,10 +5,11 @@ import {Ionicons} from '@expo/vector-icons';
 import {useNavigation} from '@react-navigation/native';
 import {useDispatch, useSelector} from 'react-redux';
 import {LinearGradient} from 'expo-linear-gradient';
-
 import {RootState} from '@/src/types/store';
 import {AppDispatch} from '@/src/redux/store';
 import {fetchUserAchievementsThunk} from '@/src/redux/thunks/achievementThunks';
+import {Achievement} from '@/src/types/states';
+
 
 const ACHIEVEMENT_ICONS: { [key: string]: string } = {
     'FIRST_PURCHASE': 'trophy',
@@ -20,8 +21,9 @@ const ACHIEVEMENT_ICONS: { [key: string]: string } = {
     'DEFAULT': 'ribbon',
 };
 
+
 const AchievementCard: React.FC<{ achievement: Achievement, index: number }> = ({achievement, index}) => {
-    const isUnlocked = !!achievement.earned_at;
+    const isUnlocked = achievement.earned_at !== undefined && achievement.earned_at !== null;
     const fadeAnim = React.useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
@@ -34,7 +36,6 @@ const AchievementCard: React.FC<{ achievement: Achievement, index: number }> = (
     }, []);
 
     const iconName = ACHIEVEMENT_ICONS[achievement.achievement_type] || ACHIEVEMENT_ICONS.DEFAULT;
-
     return (
         <Animated.View style={[
             styles.achievementCard,
@@ -125,17 +126,19 @@ const AchievementsScreen: React.FC = () => {
         dispatch(fetchUserAchievementsThunk());
     }, [dispatch]);
 
-    const sortedAchievements = [...achievements].sort((a, b) => {
-        const aUnlocked = !!a.earned_at;
-        const bUnlocked = !!b.earned_at;
+    // Use explicit type assertion for achievements array
+    const sortedAchievements = [...(achievements as Achievement[])].sort((a, b) => {
+        // Use optional chaining for safer property access
+        const aUnlocked = a?.earned_at != null;
+        const bUnlocked = b?.earned_at != null;
 
         if (aUnlocked && !bUnlocked) return -1;
         if (!aUnlocked && bUnlocked) return 1;
         return 0;
     });
 
-    const unlockedCount = sortedAchievements.filter(a => !!a.earned_at).length;
-
+    // Also use type assertion and optional chaining here
+    const unlockedCount = (achievements as Achievement[]).filter(a => a?.earned_at != null).length;
     const handleRefresh = () => {
         setRefreshing(true);
         dispatch(fetchUserAchievementsThunk())

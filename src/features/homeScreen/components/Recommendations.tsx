@@ -19,6 +19,7 @@ import {RootState} from '@/src/types/store';
 import {getRecommendationsThunk} from '@/src/redux/thunks/recommendationThunks';
 import {useHandleRestaurantPress} from '@/src/hooks/handleRestaurantPress';
 import {isRestaurantOpen} from '@/src/utils/RestaurantFilters';
+import {Restaurant} from '@/src/types/api/restaurant/model';
 
 const {width} = Dimensions.get('window');
 const CARD_WIDTH = width * 0.35;
@@ -88,17 +89,11 @@ const Recommendations: React.FC = () => {
         return null;
     }
 
-    const renderRecommendedItem = ({item}) => {
+    const renderRecommendedItem = ({item}: { item: Restaurant }) => {
         const isOpen = isRestaurantOpen(item.workingDays, item.workingHoursStart, item.workingHoursEnd);
         const hasStock = item.listings > 0;
 
         const isDisabled = !isOpen || !hasStock;
-        const overlayMessage = !isOpen
-            ? 'Currently Closed'
-            : !hasStock
-                ? 'Out of Stock'
-                : '';
-
         return (
             <TouchableOpacity
                 onPress={() => !isDisabled && handleRestaurantPress(item.id)}
@@ -127,7 +122,7 @@ const Recommendations: React.FC = () => {
                                 <Text style={styles.badgeText}>Recommended</Text>
                             </View>
                             <Text style={styles.title} numberOfLines={2}>
-                                {item.restaurantName || item.name}
+                                {item.restaurantName}
                             </Text>
                         </View>
                     </View>
