@@ -167,6 +167,7 @@ export interface Ranking {
 }
 
 export interface CommentAnalysis {
+    bad_aspects: string[];
     key_positives: string[];
     key_negatives: string[];
 }

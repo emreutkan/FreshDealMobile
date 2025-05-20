@@ -38,3 +38,9 @@ export interface Comment {
     }[];
     should_highlight: boolean;
 }
+
+export interface CommentAnalysis {
+    good_aspects: string[];
+    bad_aspects: string[];
+    comment_count: number;
+}

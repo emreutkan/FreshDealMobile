@@ -9,7 +9,6 @@ import {LinearGradient} from 'expo-linear-gradient';
 import {RootState} from '@/src/types/store';
 import {AppDispatch} from '@/src/redux/store';
 import {fetchUserAchievementsThunk} from '@/src/redux/thunks/achievementThunks';
-import {Achievement} from './components/AchievementsSection';
 
 const ACHIEVEMENT_ICONS: { [key: string]: string } = {
     'FIRST_PURCHASE': 'trophy',
