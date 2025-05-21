@@ -141,6 +141,12 @@ const AccountScreen: React.FC = () => {
         );
     };
 
+    const handleDebugMenu = () => {
+        console.log('[DEBUG][2025-05-20 23:26:24][emreutkan] AccountScreen: Navigating to Debug Menu');
+        navigation.navigate('DebugMenu');
+    };
+
+
     const handleEditInfo = async () => {
         if (isEditing) {
             Alert.alert('Save Changes', 'Do you want to save these changes?', [
@@ -263,6 +269,7 @@ const AccountScreen: React.FC = () => {
                         onPasswordReset={handlePasswordReset}
                         onLogout={handleLogout}
                         onDebugToken={handleDebugToken}
+                        onDebugMenu={handleDebugMenu} // Add this new prop
                         onEdit={handleEditInfo}
                         isEditing={isEditing}
                     />

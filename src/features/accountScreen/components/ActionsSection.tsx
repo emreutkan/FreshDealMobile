@@ -6,6 +6,7 @@ interface ActionsSectionProps {
     onPasswordReset: () => void;
     onLogout: () => void;
     onDebugToken: () => void;
+    onDebugMenu: () => void; // Added new prop
     onEdit: () => void;
     isEditing: boolean;
 }
@@ -82,6 +83,7 @@ const ActionsSection: React.FC<ActionsSectionProps> = ({
                                                            onPasswordReset,
                                                            onLogout,
                                                            onDebugToken,
+                                                           onDebugMenu, // Added new parameter
                                                            onEdit,
                                                            isEditing
                                                        }) => {
@@ -112,6 +114,14 @@ const ActionsSection: React.FC<ActionsSectionProps> = ({
                 onPress={onDebugToken}
             />
 
+            {/* Added new Debug Menu button right below Debug Token */}
+            <ActionButton
+                icon="code-working-outline"
+                label="Debug Menu"
+                color="#4285F4"
+                onPress={onDebugMenu}
+            />
+
             <ActionButton
                 icon="log-out-outline"
                 label="Logout"
@@ -133,6 +143,7 @@ const styles = StyleSheet.create({
         shadowOffset: {width: 0, height: 3},
         shadowOpacity: 0.1,
         shadowRadius: 8,
+        elevation: 3,
     },
     sectionHeader: {
         flexDirection: 'row',
