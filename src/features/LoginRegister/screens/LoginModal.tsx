@@ -346,11 +346,14 @@ const styles = StyleSheet.create({
         borderColor: '#dee2e6',
         borderRadius: 4,
         alignItems: 'center',
+        opacity: 0.02, // fully transparent
+
     },
     debugButtonText: {
         color: '#6c757d',
         fontSize: 14,
-    },
+    }
+
 });
 
 export default LoginModal;

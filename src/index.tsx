@@ -1,4 +1,5 @@
 // App.tsx
+// IMPORTANT: Import the fix before anything else
 import React, {useCallback, useEffect, useState} from 'react';
 import * as Font from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
