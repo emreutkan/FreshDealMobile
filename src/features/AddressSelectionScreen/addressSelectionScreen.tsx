@@ -14,7 +14,7 @@ import {
     View,
 } from 'react-native';
 import {useDispatch} from 'react-redux';
-import MapView, {MapStyleElement, Marker, Region} from 'react-native-maps';
+import MapView, {MapStyleElement, Region} from 'react-native-maps';
 import * as Location from 'expo-location';
 import {FontAwesome6, Ionicons, MaterialCommunityIcons, MaterialIcons,} from '@expo/vector-icons';
 import debounce from 'lodash.debounce';
@@ -316,7 +316,7 @@ const AddressScreen: React.FC = () => {
                     setErrors((prev) => ({
                         ...prev,
                         [field]:
-                        field.charAt(0).toUpperCase() + field.slice(1) + ' is required',
+                            field.charAt(0).toUpperCase() + field.slice(1) + ' is required',
                     }));
                     return;
                 }
@@ -452,7 +452,6 @@ const AddressScreen: React.FC = () => {
                 showsCompass={true}
                 rotateEnabled={false}
             >
-                <Marker coordinate={{latitude: region.latitude, longitude: region.longitude}} opacity={0}/>
             </MapView>
 
             <View style={styles.centerMarkerContainer}>
@@ -650,7 +649,8 @@ const AddressScreen: React.FC = () => {
                                 onPress={handleAddressConfirm}
                                 title={isEditing ? 'Update Address' : 'Confirm Address'}
                                 variant="green"
-                                style={styles.confirmButton}
+                                style={[styles.confirmButton, {marginBottom: insets.bottom}]}
+
                             />
                         </View>
                     </ScrollView>
@@ -703,7 +703,7 @@ const styles = StyleSheet.create({
     },
     locationButton: {
         position: 'absolute',
-        bottom: 120,
+        bottom: 180,
         right: 24,
         width: 48,
         height: 48,
@@ -724,7 +724,7 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: '53%',
         left: '50%',
-        bottom: 'auto',
+        bottom: '42.9%',
         alignItems: 'center',
         justifyContent: 'center',
         transform: [{translateX: -24}, {translateY: -48}],
