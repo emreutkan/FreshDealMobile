@@ -42,8 +42,20 @@ const CommentCard: React.FC<{ comment: Comment }> = ({comment}) => {
         });
     };
 
+    // Apply a different style for highlighted comments
+    const cardStyle = [
+        styles.commentCard,
+        comment.should_highlight ? styles.highlightedCommentCard : null
+    ];
+
     return (
-        <View style={styles.commentCard}>
+        <View style={cardStyle}>
+            {comment.should_highlight && (
+                <View style={styles.highlightBadge}>
+                    <Ionicons name="star" size={14} color="#FFFFFF"/>
+                    <Text style={styles.highlightBadgeText}>Important Feedback</Text>
+                </View>
+            )}
             <View style={styles.commentHeader}>
                 <View style={styles.userInfo}>
                     <View style={styles.avatarContainer}>
@@ -502,6 +514,40 @@ const styles = StyleSheet.create({
         elevation: 2,
         borderWidth: 1,
         borderColor: '#F3F4F6',
+    },
+    // New style for highlighted comments
+    highlightedCommentCard: {
+        borderColor: '#50703C',
+        borderWidth: 2,
+        backgroundColor: '#FAFFF5',
+        shadowColor: '#50703C',
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        elevation: 4,
+    },
+    // New style for highlight badge
+    highlightBadge: {
+        position: 'absolute',
+        top: -10,
+        right: 16,
+        backgroundColor: '#50703C',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 16,
+        flexDirection: 'row',
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 2,
+        zIndex: 1,
+    },
+    highlightBadgeText: {
+        color: '#FFFFFF',
+        fontFamily: 'Poppins-Medium',
+        fontSize: 12,
+        marginLeft: 4,
     },
     commentHeader: {
         flexDirection: 'row',

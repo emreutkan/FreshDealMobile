@@ -28,10 +28,13 @@ export interface Restaurant {
 
 export interface Comment {
     id: number;
-    content: string;
+    comment: string;
     rating: number;
     user_id: number;
-    restaurant_id: number;
-    created_at: string;
-    user_name: string;
+    timestamp: string;
+    badges: {
+        name: string;
+        is_positive: boolean;
+    }[];
+    should_highlight: boolean;
 }
