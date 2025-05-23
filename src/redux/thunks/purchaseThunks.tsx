@@ -50,7 +50,7 @@ export const createPurchaseOrderAsync = createAsyncThunk<
             }
 
             const selectedAddressId = state.address.selectedAddressId;
-            const selectedAddress = state.address.addresses.find(address => address.id === selectedAddressId);
+            const selectedAddress = state.address.addresses.find(address => address.id === selectedAddressId?.toString());
             if (!selectedAddress) {
                 return rejectWithValue('Delivery address is required for delivery orders');
             }

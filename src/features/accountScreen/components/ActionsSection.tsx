@@ -6,6 +6,7 @@ interface ActionsSectionProps {
     onPasswordReset: () => void;
     onLogout: () => void;
     onDebugToken: () => void;
+    onDebugMenu: () => void; // Added new prop
     onEdit: () => void;
     isEditing: boolean;
 }
@@ -82,6 +83,7 @@ const ActionsSection: React.FC<ActionsSectionProps> = ({
                                                            onPasswordReset,
                                                            onLogout,
                                                            onDebugToken,
+                                                           onDebugMenu, // Added new parameter
                                                            onEdit,
                                                            isEditing
                                                        }) => {
@@ -110,6 +112,14 @@ const ActionsSection: React.FC<ActionsSectionProps> = ({
                 label="Debug Token"
                 color="#4285F4"
                 onPress={onDebugToken}
+            />
+
+            {/* Added new Debug Menu button right below Debug Token */}
+            <ActionButton
+                icon="code-working-outline"
+                label="Debug Menu"
+                color="#4285F4"
+                onPress={onDebugMenu}
             />
 
             <ActionButton

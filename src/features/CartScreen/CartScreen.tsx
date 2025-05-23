@@ -91,16 +91,10 @@ const CartScreen: React.FC = () => {
 
     const currentTotal = isPickup ? totalPickUpPrice : totalDeliveryPrice;
 
-    const calculateItemSubtotal = (listing: any, isPickup: boolean) => {
-        const cartItem = cartItems.find(ci => ci.listing_id === listing.id);
-        const quantity = cartItem?.count || 1;
-        const price = isPickup ? listing.pick_up_price : listing.delivery_price;
-        return (price || 0) * quantity;
-    };
 
     const restaurant = restaurantsProximity.find(r => r.id === (cartItems[0]?.restaurant_id));
     const totalItemsCount = cartItems.reduce((sum, item) => sum + (item.count || 1), 0);
-    const deliveryFee = !isPickup && restaurant?.deliveryFee ? restaurant.deliveryFee : 0;
+    const deliveryFee = (!isPickup && restaurant?.deliveryFee) || 0;
     const finalTotal = currentTotal + deliveryFee;
 
     type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -149,52 +143,22 @@ const CartScreen: React.FC = () => {
 
                     <View style={styles.bottomSection}>
                         <View style={styles.summaryContainer}>
-                            {/*<Text style={styles.summaryTitle}>Order Summary</Text>*/}
-
-                            {/*{ListingsInCart.map(listing => {*/}
-                            {/*    const cartItem = cartItems.find(ci => ci.listing_id === listing.id);*/}
-                            {/*    const quantity = cartItem?.count || 1;*/}
-                            {/*    const itemSubtotal = calculateItemSubtotal(listing, isPickup);*/}
-
-                            {/*    return (*/}
-                            {/*        <View key={listing.id} style={styles.summaryRow}>*/}
-                            {/*            <View style={styles.summaryItemDetails}>*/}
-                            {/*                <Text style={styles.itemQuantity}>{quantity}x</Text>*/}
-                            {/*                <Text style={styles.summaryLabel}>{listing.title}</Text>*/}
-                            {/*            </View>*/}
-                            {/*            <Text style={styles.summaryValue}>*/}
-                            {/*                {itemSubtotal.toFixed(2)} TL*/}
-                            {/*            </Text>*/}
-                            {/*        </View>*/}
-                            {/*    );*/}
-                            {/*})}*/}
-
-                            {/*<View style={styles.divider}/>*/}
-
-                            {/*<View style={styles.summaryRow}>*/}
-                            {/*    <Text style={styles.subtotalLabel}>Subtotal</Text>*/}
-                            {/*    <Text style={styles.subtotalValue}>{currentTotal.toFixed(2)} TL</Text>*/}
-                            {/*</View>*/}
-
-                            {/*if restuarant delivery fee avaliable */}
-
-
-                            {!isPickup && restaurant && restaurant.deliveryFee > 0 && (
+                            {!isPickup && restaurant && (restaurant.deliveryFee ?? 0) > 0 && (
                                 <View style={styles.summaryRow}>
                                     <Text style={styles.subtotalLabel}>Subtotal</Text>
                                     <Text style={styles.subtotalValue}>{currentTotal.toFixed(2)} TL</Text>
                                 </View>
                             )}
 
-                            {!isPickup && restaurant && restaurant.deliveryFee > 0 && (
+                            {!isPickup && restaurant && (restaurant.deliveryFee ?? 0) > 0 && (
                                 <View>
                                     <View style={styles.summaryRow}>
                                         <Text style={styles.subtotalLabel}>Delivery Fee</Text>
-                                        <Text style={styles.subtotalValue}>{restaurant.deliveryFee.toFixed(2)} TL</Text>
+                                        <Text
+                                            style={styles.subtotalValue}>{(restaurant.deliveryFee ?? 0).toFixed(2)} TL</Text>
                                     </View>
                                     <View style={styles.divider}/>
                                 </View>
-
                             )}
 
                             <View style={styles.totalContainer}>

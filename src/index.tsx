@@ -1,4 +1,5 @@
 // App.tsx
+// IMPORTANT: Import the fix before anything else
 import React, {useCallback, useEffect, useState} from 'react';
 import * as Font from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
@@ -8,7 +9,6 @@ import {store} from '@/src/redux/store';
 import * as Notifications from 'expo-notifications';
 import {initializeTokenService} from "@/src/services/tokenService";
 import {View} from 'react-native';
-import {DebugMenuProvider} from "@/src/features/debugMenu/DebugMenuProvider";
 
 SplashScreen.preventAutoHideAsync().then(r => console.log(r));
 
@@ -61,11 +61,9 @@ const App: React.FC = () => {
 
     return (
         <Provider store={store}>
-            <DebugMenuProvider>
-                <View style={{flex: 1}} onLayout={onLayoutRootView}>
-                    <AppContent/>
-                </View>
-            </DebugMenuProvider>
+            <View style={{flex: 1}} onLayout={onLayoutRootView}>
+                <AppContent/>
+            </View>
         </Provider>
     );
 };

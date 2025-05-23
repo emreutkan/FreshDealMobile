@@ -38,14 +38,14 @@ const Tab = createBottomTabNavigator();
 const HomeScreen: React.FC = () => {
     const addresses = useSelector((state: RootState) => state.address.addresses);
     const primaryAddressId = useSelector((state: RootState) => state.address.selectedAddressId);
-    const primaryAddressData = addresses.find((address) => address.id === primaryAddressId);
+    const primaryAddressData = addresses.find((address) => address.id === primaryAddressId?.toString());
     const dispatch = useDispatch<AppDispatch>();
     const scrollY = useRef(new Animated.Value(0)).current;
 
     // States for header and scroll behavior
     const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(false);
     const [isHeaderVisible, setIsHeaderVisible] = useState(true);
-    const [homeCardHeaderState, setHomeCardHeaderState] = useState(false);
+    const [, setHomeCardHeaderState] = useState(false);
     const [activeTab, setActiveTab] = useState('HomeCardView');
     const restaurantsProximity = useSelector((state: RootState) => state.restaurant.restaurantsProximity);
     const favoriteRestaurantsIDs = useSelector((state: RootState) => state.restaurant.favoriteRestaurantsIDs);
@@ -74,7 +74,6 @@ const HomeScreen: React.FC = () => {
         setIsHeaderVisible(routeName !== 'Account' && routeName !== 'Search'); // Hide header for Account and Search
         setActiveTab(routeName); // Update active tab state
         if (routeName === 'HomeCardView') {
-            // setIsHeaderCollapsed(homeCardHeaderState); // Restore HomeCardView header state
         } else if (routeName === 'HomeMapView') {
             setIsHeaderCollapsed(true); // Always collapse header for HomeMapView
         }

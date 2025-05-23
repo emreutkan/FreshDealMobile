@@ -1,6 +1,6 @@
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 
-interface RecommendationState {
+export interface RecommendationState {
     recommendationIds: number[];
     loading: boolean;
     error: string | null;

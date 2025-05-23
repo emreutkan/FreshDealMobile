@@ -34,7 +34,6 @@ export const getRecommendationsThunk = createAsyncThunk(
                 return rejectWithValue(response.message || 'Invalid response format');
             }
         } catch (error: any) {
-            console.error('[DEBUG][2025-05-16 22:31:50][emreutkanok] getRecommendationsThunk error:', error);
             dispatch(getRecommendationsFailed(error.message || 'Unknown error'));
             return rejectWithValue(error.message || 'Failed to fetch recommendations');
         }

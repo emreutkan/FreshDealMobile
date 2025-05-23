@@ -10,6 +10,7 @@ import {AppDispatch} from '@/src/redux/store';
 import {RootState} from '@/src/types/store';
 import {getUserRankingsThunk} from '@/src/redux/thunks/userThunks';
 import {UserRank} from "@/src/types/states";
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -71,15 +72,23 @@ const RankingsScreen: React.FC = () => {
 
     const hasRankings = Array.isArray(rankings) && rankings.length > 0;
 
+    const insets = useSafeAreaInsets();
     return (
-        <View style={styles.container}>
-            <View style={styles.header}>
-                <TouchableOpacity onPress={handleBack} style={styles.backButton}>
-                    <Feather name="arrow-left" size={24} color="#333"/>
-                </TouchableOpacity>
-                <Text style={styles.headerTitle}>Leaderboard</Text>
-                <View style={styles.placeholder}/>
-            </View>
+        <View
+            style={[
+                styles.container,
+                {
+                    paddingTop: insets.top,
+
+                },
+            ]}
+        > <View style={styles.header}>
+            <TouchableOpacity onPress={handleBack} style={styles.backButton}>
+                <Feather name="arrow-left" size={24} color="#333"/>
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Leaderboard</Text>
+            <View style={styles.placeholder}/>
+        </View>
 
             <View style={styles.contentContainer}>
                 <View style={styles.infoCard}>
@@ -129,7 +138,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
         paddingHorizontal: 16,
-        paddingVertical: 16,
         backgroundColor: '#FFFFFF',
         borderBottomWidth: 1,
         borderBottomColor: '#F3F4F6',

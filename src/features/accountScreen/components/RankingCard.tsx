@@ -88,7 +88,7 @@ const RankingCard: React.FC = () => {
                             <View>
                                 <Text style={styles.savingsLabel}>Total Savings</Text>
 
-                                <Text style={styles.savingsText}>{Math.abs(totalDiscount.toFixed(2))} TL</Text>
+                                <Text style={styles.savingsText}>{Math.abs(Number(totalDiscount.toFixed(2)))} TL</Text>
                             </View>
                         </View>
                     </View>
@@ -106,7 +106,6 @@ const styles = StyleSheet.create({
         shadowOffset: {width: 0, height: 3},
         shadowOpacity: 0.1,
         shadowRadius: 8,
-        elevation: 3,
         overflow: 'hidden',
     },
     gradientBackground: {
