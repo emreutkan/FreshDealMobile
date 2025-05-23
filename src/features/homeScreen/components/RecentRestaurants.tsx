@@ -2,7 +2,7 @@ import React from "react";
 import {Alert, Animated, Dimensions, Image, Platform, StyleSheet, Text, TouchableOpacity, View} from "react-native";
 import {useDispatch, useSelector} from "react-redux";
 import {RootState} from "@/src/types/store";
-import {Ionicons, MaterialCommunityIcons} from "@expo/vector-icons";
+import {MaterialCommunityIcons} from "@expo/vector-icons";
 import {LinearGradient} from 'expo-linear-gradient';
 
 import {getRecentRestaurantsThunk} from "@/src/redux/thunks/restaurantThunks";
@@ -104,15 +104,15 @@ const RecentRestaurants = () => {
                     <MaterialCommunityIcons name="history" size={20} color="#50703C"/>
                     <Text style={styles.headerTitle}>Recent Orders</Text>
                 </View>
-                <View style={styles.headerRight}>
-                    <TouchableOpacity onPress={debugState} style={styles.debugButton}>
-                        <Text style={styles.debugText}>State</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={debugRecents} style={styles.debugButton}>
-                        <Text style={styles.debugText}>API</Text>
-                    </TouchableOpacity>
-                    <Ionicons name="chevron-forward" size={20} color="#50703C"/>
-                </View>
+                {/*<View style={styles.headerRight}>*/}
+                {/*    <TouchableOpacity onPress={debugState} style={styles.debugButton}>*/}
+                {/*        <Text style={styles.debugText}>State</Text>*/}
+                {/*    </TouchableOpacity>*/}
+                {/*    <TouchableOpacity onPress={debugRecents} style={styles.debugButton}>*/}
+                {/*        <Text style={styles.debugText}>API</Text>*/}
+                {/*    </TouchableOpacity>*/}
+                {/*    <Ionicons name="chevron-forward" size={20} color="#50703C"/>*/}
+                {/*</View>*/}
             </View>
 
             <Animated.FlatList
