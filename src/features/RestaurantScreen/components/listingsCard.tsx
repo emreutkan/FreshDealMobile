@@ -8,7 +8,7 @@ import {Listing} from "@/src/types/api/listing/model";
 import {lightHaptic} from "@/src/utils/Haptics";
 import {BottomSheetModal, BottomSheetScrollView} from '@gorhom/bottom-sheet';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import {addDays, format} from 'date-fns';
+import {addHours, format} from 'date-fns';
 
 // Import our context
 import {ScrollContext} from "@/src/features/RestaurantScreen/RestaurantDetails";
@@ -139,7 +139,7 @@ export const ListingCard: React.FC<ListingCardProps> = ({
             (item) => item.listing_id === selectedListing.id
         );
         const countInCart = cartItem ? cartItem.count : 0;
-        const expiryDate = addDays(new Date(), selectedListing.consume_within || 1);
+        const expiryDate = addHours(new Date(), selectedListing.consume_within || 1);
 
         return (
             <BottomSheetModal
@@ -183,7 +183,7 @@ export const ListingCard: React.FC<ListingCardProps> = ({
                         <View style={styles.consumeWithinBadge}>
                             <Icon name="clock-outline" size={20} color="#DC2626"/>
                             <Text style={styles.consumeWithinText}>
-                                Consume within {selectedListing.consume_within} days
+                                Consume within {selectedListing.consume_within} hours
                             </Text>
                             <Text style={styles.expiryDate}>
                                 Before {format(expiryDate, 'MMM dd, yyyy')}

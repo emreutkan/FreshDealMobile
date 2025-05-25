@@ -63,6 +63,8 @@ export interface RestaurantState {
     flashDealsRestaurants: Restaurant[];
     flashDealsLoading: boolean;
     flashDealsError: string | null;
+    badgesLoading: boolean;
+    badgesError: string | null;
 }
 
 export interface AddressState {

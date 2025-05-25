@@ -113,9 +113,21 @@ const RestaurantInfoSection: React.FC = () => {
     const [showBadgeModal, setShowBadgeModal] = useState(false);
     const [selectedBadge, setSelectedBadge] = useState<string | null>(null);
 
+
+    const users_address = useSelector((state: RootState) => state.address.addresses.find((address) => address.is_primary));
+    const users_longitude = users_address?.longitude || 0;
+    const users_latitude = users_address?.latitude || 0;
     const restaurant = useSelector((state: RootState) => state.restaurant.selectedRestaurant);
+    const restaurant_longitude = restaurant.longitude || 0;
+    const restaurant_latitude = restaurant.latitude || 0;
     const badges = useSelector((state: RootState) => state.restaurant.selectedRestaurant.badges || []);
 
+
+    const distance = Math.sqrt(
+        Math.pow(restaurant_longitude - users_longitude, 2) +
+        Math.pow(restaurant_latitude - users_latitude, 2)
+    );
+    const distanceInKm = distance * 111; // Approximate conversion from degrees to km
     useEffect(() => {
         if (restaurant?.id) {
             dispatch(getRestaurantBadgesThunk({
@@ -245,6 +257,7 @@ const RestaurantInfoSection: React.FC = () => {
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 renderItem={({item}) => {
+                    // This correctly looks up both positive and negative badges
                     const badgeInfo = BADGE_INFO[item] || {
                         icon: 'medal',
                         name: item,
@@ -297,8 +310,7 @@ const RestaurantInfoSection: React.FC = () => {
                             </View>
                         ))}
                     </View>
-                )}
-            />
+                )}/>
         );
     };
 
@@ -397,7 +409,7 @@ const RestaurantInfoSection: React.FC = () => {
                             </View>
                             <View style={styles.distanceBox}>
                                 <Text style={styles.distanceText}>
-                                    {(restaurant?.distance_km ?? 0).toFixed(1)} km
+                                    {(distanceInKm ?? 0).toFixed(1)} km
                                 </Text>
                             </View>
                         </View>
