@@ -1,5 +1,5 @@
 import React from 'react';
-import {render} from '@testing-library/react-native';
+import {fireEvent, render} from '@testing-library/react-native'; // Added fireEvent
 import {ListingCard} from '@/src/features/RestaurantScreen/components/listingsCard';
 import {useDispatch, useSelector} from 'react-redux';
 import {fetchCart} from '@/src/redux/thunks/cartThunks';
@@ -75,7 +75,7 @@ const mockStore = {
 };
 
 // Create a wrapper component that provides the ScrollContext
-const ScrollContextProvider = ({children}) => {
+const ScrollContextProvider = ({children}: { children: React.ReactNode }) => {
     const scrollYValue = new Animated.Value(0);
     return (
         <ScrollContext.Provider value={{
@@ -88,7 +88,7 @@ const ScrollContextProvider = ({children}) => {
 };
 
 // Custom render function that includes the context provider
-const customRender = (ui, options = {}) => {
+const customRender = (ui: React.ReactElement, options = {}) => {
     return render(
         <ScrollContextProvider>{ui}</ScrollContextProvider>,
         options
@@ -101,7 +101,7 @@ beforeEach(() => {
     jest.clearAllMocks();
 
     // Mock useSelector to return our mock store data
-    (useSelector as jest.Mock).mockImplementation((selector) => {
+    (useSelector as jest.MockedFunction<typeof useSelector>).mockImplementation((selector) => {
         if (typeof selector === 'function') {
             return selector(mockStore);
         }
@@ -109,7 +109,7 @@ beforeEach(() => {
     });
 
     // Mock useDispatch to return a function that can be called with actions
-    (useDispatch as jest.Mock).mockReturnValue(jest.fn());
+    (useDispatch as jest.MockedFunction<typeof useDispatch>).mockReturnValue(jest.fn());
 });
 
 describe('ListingCard Component', () => {
@@ -121,7 +121,7 @@ describe('ListingCard Component', () => {
 
     test('displays correct pricing based on isPickup state', () => {
         // Mock with pickup mode
-        (useSelector as jest.Mock).mockImplementation((selector) => {
+        (useSelector as jest.MockedFunction<typeof useSelector>).mockImplementation((selector) => {
             if (typeof selector === 'function') {
                 return selector({
                     ...mockStore,
@@ -135,7 +135,7 @@ describe('ListingCard Component', () => {
         customRender(<ListingCard/>);
 
         // Change to delivery mode
-        (useSelector as jest.Mock).mockImplementation((selector) => {
+        (useSelector as jest.MockedFunction<typeof useSelector>).mockImplementation((selector) => {
             if (typeof selector === 'function') {
                 return selector({
                     ...mockStore,
@@ -153,5 +153,34 @@ describe('ListingCard Component', () => {
 
         // Verify fetchCart was called when the component mounted
         expect(fetchCart).toHaveBeenCalled();
+    });
+
+    test('renders the correct number of listings', () => {
+        const {getAllByTestId} = customRender(<ListingCard/>);
+        // Assuming each listing item has a testID like 'listing-item-{id}'
+        const listingItems = getAllByTestId(/^listing-item-/);
+        expect(listingItems.length).toBe(mockListings.length);
+    });
+
+    test('displays a message when no listings are available', () => {
+        (useSelector as jest.MockedFunction<typeof useSelector>).mockImplementation((selector) => {
+            if (typeof selector === 'function') {
+                return selector({
+                    ...mockStore,
+                    restaurant: {...mockStore.restaurant, selectedRestaurantListings: []},
+                });
+            }
+            return {...mockStore, restaurant: {...mockStore.restaurant, selectedRestaurantListings: []}};
+        });
+
+        const {getByText} = customRender(<ListingCard/>);
+        expect(getByText('No listings available.')).toBeTruthy();
+    });
+
+    test('addItemToCart is called when an item is added', () => {
+        const {getAllByText} = customRender(<ListingCard/>);
+        const addToCartButtons = getAllByText('Add to Cart');
+        fireEvent.press(addToCartButtons[0]);
+        expect(addItemToCart).toHaveBeenCalled();
     });
 });

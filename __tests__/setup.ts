@@ -93,6 +93,7 @@ jest.mock('react-native', () => {
         // StyleSheet mock
         StyleSheet: {
             create: jest.fn((styles) => styles),
+            flatten: jest.fn((style) => style), // Add this line
         },
         // Stub core components used in tests
         View: 'View',
@@ -172,6 +173,34 @@ jest.mock('@gorhom/bottom-sheet', () => ({
 
 // Mock vector icons
 jest.mock('react-native-vector-icons/MaterialCommunityIcons', () => 'Icon');
+jest.mock('@expo/vector-icons', () => ({
+    Ionicons: 'Ionicons',
+    MaterialIcons: 'MaterialIcons',
+    Feather: 'Feather',
+    MaterialCommunityIcons: 'MaterialCommunityIcons',
+}));
+
+// Mock expo-linear-gradient
+jest.mock('expo-linear-gradient', () => ({
+    LinearGradient: 'LinearGradient',
+}));
+
+// Mock expo-secure-store
+jest.mock('expo-secure-store', () => ({
+    getItemAsync: jest.fn(() => Promise.resolve(null)),
+    setItemAsync: jest.fn(() => Promise.resolve()),
+    deleteItemAsync: jest.fn(() => Promise.resolve()),
+}));
+
+jest.mock('react-native-safe-area-context', () => {
+    const inset = {top: 0, right: 0, bottom: 0, left: 0};
+    return {
+        SafeAreaProvider: jest.fn(({children}) => children),
+        SafeAreaConsumer: jest.fn(({children}) => children(inset)),
+        useSafeAreaInsets: jest.fn(() => inset),
+        useSafeAreaFrame: jest.fn(() => ({x: 0, y: 0, width: 390, height: 844})),
+    };
+});
 
 // Mock global fetch
 global.fetch = jest.fn(() =>

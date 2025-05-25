@@ -484,12 +484,13 @@ const OrderDetails: React.FC = () => {
     });
 
     const renderOrderStatus = () => {
-        if (!currentOrder.completion_image_url && currentOrder.status !== 'COMPLETED') {
+        if (!currentOrder.completion_image_url && currentOrder.status !== 'COMPLETED' && currentOrder.status !== 'REJECTED') {
             return (
                 <View style={styles.statusContainer}>
                     <View style={styles.statusIconContainer}>
                         <Ionicons name="hourglass-outline" size={24} color="#FFA500"/>
                     </View>
+
                     <Text style={styles.statusText}>
                         Waiting for restaurant to prepare and upload the food image
                     </Text>
@@ -503,6 +504,17 @@ const OrderDetails: React.FC = () => {
                     </View>
                     <Text style={[styles.statusText, styles.errorText]}>
                         Backend Error: Completion image missing
+                    </Text>
+                </View>
+            );
+        } else if (currentOrder.status === 'REJECTED') {
+            return (
+                <View style={styles.statusContainer}>
+                    <View style={styles.statusIconContainer}>
+                        <Ionicons name="close-circle-outline" size={24} color="#F44336"/>
+                    </View>
+                    <Text style={styles.statusText}>
+                        Your order was rejected by the restaurant
                     </Text>
                 </View>
             );
@@ -1215,3 +1227,4 @@ const styles = StyleSheet.create({
 });
 
 export default OrderDetails;
+
