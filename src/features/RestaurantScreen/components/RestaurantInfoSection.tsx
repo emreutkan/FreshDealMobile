@@ -24,6 +24,7 @@ import {AppDispatch} from "@/src/redux/store";
 import {getRestaurantBadgesThunk} from "@/src/redux/thunks/restaurantThunks";
 
 import {ScrollContext} from "@/src/features/RestaurantScreen/RestaurantDetails";
+import PunishmentHistorySection from "@/src/features/RestaurantScreen/components/PunishmentHistorySection";
 
 const BADGE_INFO = {
     'fresh': {
@@ -112,6 +113,7 @@ const RestaurantInfoSection: React.FC = () => {
     const [showInfoModal, setShowInfoModal] = useState(false);
     const [showBadgeModal, setShowBadgeModal] = useState(false);
     const [selectedBadge, setSelectedBadge] = useState<string | null>(null);
+    const [showPunishmentModal, setShowPunishmentModal] = useState(false);
 
 
     const users_address = useSelector((state: RootState) => state.address.addresses.find((address) => address.is_primary));
@@ -184,6 +186,39 @@ const RestaurantInfoSection: React.FC = () => {
                         >
                             <Text style={styles.closeButtonText}>Close</Text>
                         </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
+        );
+    };
+
+    const PunishmentHistoryModal = () => {
+        return (
+            <Modal
+                transparent
+                visible={showPunishmentModal}
+                animationType="slide"
+                onRequestClose={() => setShowPunishmentModal(false)}
+            >
+                <View style={styles.modalContainer}>
+                    <TouchableOpacity
+                        style={styles.backdrop}
+                        onPress={() => setShowPunishmentModal(false)}
+                    />
+                    <View style={styles.modalContent}>
+                        <View style={styles.modalHeader}>
+                            <Text style={styles.modalTitle}>Punishment History</Text>
+                            <TouchableOpacity
+                                style={styles.closeButton}
+                                onPress={() => setShowPunishmentModal(false)}
+                            >
+                                <Text style={styles.closeButtonText}>Close</Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        <View style={{flex: 1}}>
+                            <PunishmentHistorySection restaurantId={restaurant.id}/>
+                        </View>
                     </View>
                 </View>
             </Modal>
@@ -382,12 +417,20 @@ const RestaurantInfoSection: React.FC = () => {
                         <Text style={styles.mainRestaurantTitle} numberOfLines={1}>
                             {restaurant?.restaurantName || "Restaurant"}
                         </Text>
-                        <TouchableOpacity
-                            style={styles.infoButton}
-                            onPress={() => setShowInfoModal(true)}
-                        >
-                            <Ionicons name="information-circle-outline" size={24} color="#666666"/>
-                        </TouchableOpacity>
+                        <View style={styles.buttonsContainer}>
+                            <TouchableOpacity
+                                style={styles.warningButton}
+                                onPress={() => setShowPunishmentModal(true)}
+                            >
+                                <MaterialCommunityIcons name="alert-circle-outline" size={24} color="#D32F2F"/>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={styles.infoButton}
+                                onPress={() => setShowInfoModal(true)}
+                            >
+                                <Ionicons name="information-circle-outline" size={24} color="#666666"/>
+                            </TouchableOpacity>
+                        </View>
                     </View>
 
                     <View
@@ -436,6 +479,7 @@ const RestaurantInfoSection: React.FC = () => {
 
             <InformationMapModal/>
             <BadgeDetailModal/>
+            <PunishmentHistoryModal/>
         </Animated.View>
     );
 };
@@ -533,6 +577,10 @@ const styles = StyleSheet.create({
         color: '#1A1A1A',
         flex: 1,
     },
+    buttonsContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
     infoButton: {
         width: 40,
         height: 40,
@@ -540,7 +588,15 @@ const styles = StyleSheet.create({
         backgroundColor: '#F5F5F5',
         alignItems: 'center',
         justifyContent: 'center',
-        marginLeft: 12,
+        marginLeft: 8,
+    },
+    warningButton: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: '#FFEBEE',
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     ratingContainer: {
         flexDirection: 'row',

@@ -5,7 +5,6 @@ import {AppDispatch} from '@/src/redux/store';
 import {RootState} from "@/src/types/store";
 
 import {scaleFont} from '@/src/utils/ResponsiveFont';
-import AppleOTP from '@/src/features/LoginRegister/components/AppleOTPLogin';
 import PhoneInput from '@/src/features/LoginRegister/components/PhoneInput';
 import {
     setEmail,
@@ -16,7 +15,6 @@ import {
     setSelectedCode
 } from '@/src/redux/slices/userSlice';
 import {loginUserThunk} from '@/src/redux/thunks/userThunks';
-import GoogleOTP from "@/src/features/LoginRegister/components/GoogleOTP";
 import {Ionicons, MaterialIcons} from "@expo/vector-icons";
 import BaseInput from "@/src/features/LoginRegister/components/BaseInput";
 import {CustomButton} from "@/src/features/LoginRegister/components/CustomButton";
@@ -210,9 +208,9 @@ const LoginModal: React.FC<LoginModalProps> = ({switchToRegister}) => {
                             }} title="Login" loading={loading}
                                           variant={'green'}/>
 
-                            <CustomButton onPress={() => {
-                                dispatch(setPasswordLogin(false));
-                            }} title="Passwordless Login" loading={loading} variant={'green'}/>
+                            {/*<CustomButton onPress={() => {*/}
+                            {/*    dispatch(setPasswordLogin(false));*/}
+                            {/*}} title="Passwordless Login" loading={loading} variant={'green'}/>*/}
                         </View>
                     )}
                 </View>
@@ -223,8 +221,8 @@ const LoginModal: React.FC<LoginModalProps> = ({switchToRegister}) => {
                     <View style={styles.line}/>
                 </View>
 
-                <AppleOTP useCustomButton={true}/>
-                <GoogleOTP/>
+                {/*<AppleOTP useCustomButton={true}/>*/}
+                {/*<GoogleOTP/>*/}
 
                 {login_type === 'phone_number' ? (
                     <CustomButton onPress={() => handleLoginTypeChange('email')} title="Sign in with Email"
