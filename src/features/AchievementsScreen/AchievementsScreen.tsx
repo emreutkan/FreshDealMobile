@@ -10,7 +10,6 @@ import {AppDispatch} from '@/src/redux/store';
 import {fetchUserAchievementsThunk} from '@/src/redux/thunks/achievementThunks';
 import {Achievement} from '@/src/types/states';
 
-
 const ACHIEVEMENT_ICONS: { [key: string]: string } = {
     'FIRST_PURCHASE': 'trophy',
     'PURCHASE_COUNT': 'basket',
@@ -20,7 +19,6 @@ const ACHIEVEMENT_ICONS: { [key: string]: string } = {
     'ECO_WARRIOR': 'leaf',
     'DEFAULT': 'ribbon',
 };
-
 
 const AchievementCard: React.FC<{ achievement: Achievement, index: number }> = ({achievement, index}) => {
     const isUnlocked = achievement.earned_at !== undefined && achievement.earned_at !== null;
@@ -37,18 +35,20 @@ const AchievementCard: React.FC<{ achievement: Achievement, index: number }> = (
 
     const iconName = ACHIEVEMENT_ICONS[achievement.achievement_type] || ACHIEVEMENT_ICONS.DEFAULT;
     return (
-        <Animated.View style={[
-            styles.achievementCard,
-            {
-                opacity: fadeAnim,
-                transform: [{
-                    translateY: fadeAnim.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [20, 0]
-                    })
-                }]
-            }
-        ]}>
+        <Animated.View
+            testID={`achievement-card-${achievement.id}`}
+            style={[
+                styles.achievementCard,
+                {
+                    opacity: fadeAnim,
+                    transform: [{
+                        translateY: fadeAnim.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [20, 0]
+                        })
+                    }]
+                }
+            ]}>
             <LinearGradient
                 colors={isUnlocked
                     ? ['rgba(80, 112, 60, 0.1)', 'rgba(80, 112, 60, 0.15)']
@@ -60,6 +60,7 @@ const AchievementCard: React.FC<{ achievement: Achievement, index: number }> = (
                     isUnlocked ? styles.unlockedIconContainer : styles.lockedIconContainer
                 ]}>
                     <Ionicons
+                        testID={`achievement-icon-${achievement.id}`}
                         name={iconName as any}
                         size={30}
                         color={isUnlocked ? '#50703C' : '#aaaaaa'}
@@ -126,18 +127,15 @@ const AchievementsScreen: React.FC = () => {
         dispatch(fetchUserAchievementsThunk());
     }, [dispatch]);
 
-    // Use explicit type assertion for achievements array
     const sortedAchievements = [...(achievements as Achievement[])].sort((a, b) => {
-        // Use optional chaining for safer property access
         const aUnlocked = a?.earned_at != null;
         const bUnlocked = b?.earned_at != null;
 
         if (aUnlocked && !bUnlocked) return -1;
         if (!aUnlocked && bUnlocked) return 1;
-        return 0;
+        return a.name.localeCompare(b.name);
     });
 
-    // Also use type assertion and optional chaining here
     const unlockedCount = (achievements as Achievement[]).filter(a => a?.earned_at != null).length;
     const handleRefresh = () => {
         setRefreshing(true);
@@ -151,6 +149,7 @@ const AchievementsScreen: React.FC = () => {
         <View style={[styles.container, {paddingTop: insets.top}]}>
             <View style={styles.header}>
                 <TouchableOpacity
+                    testID="back-button"
                     style={styles.backButton}
                     onPress={() => navigation.goBack()}
                     activeOpacity={0.7}
@@ -189,6 +188,7 @@ const AchievementsScreen: React.FC = () => {
                 </View>
             ) : (
                 <FlatList
+                    testID="achievements-list"
                     data={sortedAchievements}
                     keyExtractor={(item) => item.id.toString()}
                     renderItem={({item, index}) => (
@@ -400,3 +400,4 @@ const styles = StyleSheet.create({
 });
 
 export default AchievementsScreen;
+

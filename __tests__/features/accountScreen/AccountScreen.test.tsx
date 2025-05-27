@@ -1,7 +1,7 @@
 import React from 'react';
 import {fireEvent, waitFor} from '@testing-library/react-native';
 import {renderWithProviders} from '../../testUtils';
-import AccountScreen from '@/src/features/accountScreen/accountScreen';
+import AccountScreen from '@/src/features/accountScreen/AccountScreen';
 import * as userThunks from '@/src/redux/thunks/userThunks';
 
 // Mock navigation
@@ -78,7 +78,7 @@ describe('AccountScreen', () => {
     });
 
     test('handles logout correctly', async () => {
-        const {getByText, store} = renderWithProviders(<AccountScreen/>, {initialState: mockInitialState});
+        const {getByText} = renderWithProviders(<AccountScreen/>, {initialState: mockInitialState});
 
         const logoutButton = getByText('Logout');
         fireEvent.press(logoutButton);
@@ -104,7 +104,7 @@ describe('AccountScreen', () => {
     });
 
     test('enters edit mode, changes name, and saves', async () => {
-        const {getByText, getByPlaceholderText, store} = renderWithProviders(
+        const {getByText, getByPlaceholderText} = renderWithProviders(
             <AccountScreen/>, {initialState: mockInitialState});
 
         // 1. Click "Edit Profile" to enter edit mode
