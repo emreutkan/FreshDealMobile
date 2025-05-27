@@ -8,11 +8,11 @@ import {renderWithProviders} from '../testUtils';
 
 // Mock modules
 jest.mock('@/src/redux/thunks/cartThunks', () => ({
-    addItemToCart: jest.fn(),
-    updateCartItem: jest.fn(),
-    removeItemFromCart: jest.fn(),
-    resetCart: jest.fn(),
-    fetchCart: jest.fn(() => () => Promise.resolve()), // Ensure fetchCart returns a function (thunk)
+    addItemToCart: jest.fn(() => () => Promise.resolve()), // Corrected mock for thunk
+    updateCartItem: jest.fn(() => () => Promise.resolve()), // Assuming this is also a thunk
+    removeItemFromCart: jest.fn(() => () => Promise.resolve()), // Assuming this is also a thunk
+    resetCart: jest.fn(() => () => Promise.resolve()), // Assuming this is also a thunk
+    fetchCart: jest.fn(() => () => Promise.resolve()),
 }));
 
 // Mock Alert from react-native
