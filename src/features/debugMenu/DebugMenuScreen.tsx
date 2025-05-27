@@ -1,15 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {
-    ActivityIndicator,
-    Alert,
-    ScrollView,
-    SectionList,
-    StyleSheet,
-    Switch,
-    Text,
-    TouchableOpacity,
-    View
-} from 'react-native';
+import {ActivityIndicator, ScrollView, SectionList, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import {Ionicons} from '@expo/vector-icons';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useDispatch, useSelector} from 'react-redux';
@@ -173,17 +163,6 @@ const DebugMenuScreen: React.FC = () => {
         }
     ];
 
-    const clearCache = () => {
-        console.log(`[DEBUG][${currentDate}][${currentUser}] Clearing application cache...`);
-        Alert.alert('Cache Cleared', 'Application cache has been cleared successfully.');
-    };
-
-    const resetReduxState = () => {
-        console.log(`[DEBUG][${currentDate}][${currentUser}] Resetting Redux state...`);
-        dispatch({type: 'RESET_REDUX_STATE'});
-        Alert.alert('Redux Reset', 'Redux state has been reset to initial values.');
-    };
-
 
     const renderStateSection = (title: string, data: any) => (
         <View style={styles.stateSection}>
@@ -222,15 +201,6 @@ const DebugMenuScreen: React.FC = () => {
                         <Text style={styles.sectionTitle}>System Information</Text>
                     </View>
 
-                    <View style={styles.infoItem}>
-                        <Text style={styles.infoLabel}>User:</Text>
-                        <Text style={styles.infoValue}>{currentUser}</Text>
-                    </View>
-
-                    <View style={styles.infoItem}>
-                        <Text style={styles.infoLabel}>Date:</Text>
-                        <Text style={styles.infoValue}>{currentDate}</Text>
-                    </View>
 
                     <View style={styles.infoItem}>
                         <Text style={styles.infoLabel}>Platform:</Text>
@@ -252,13 +222,6 @@ const DebugMenuScreen: React.FC = () => {
                         <Text style={styles.sectionTitle}>Debug Tools</Text>
                     </View>
 
-                    <TouchableOpacity style={styles.optionItem} onPress={clearCache}>
-                        <View style={styles.optionIconContainer}>
-                            <Ionicons name="refresh-outline" size={22} color="#4285F4"/>
-                        </View>
-                        <Text style={styles.optionText}>Clear Cache</Text>
-                        <Ionicons name="chevron-forward" size={20} color="#CCCCCC"/>
-                    </TouchableOpacity>
 
                     <TouchableOpacity
                         style={styles.optionItem}
@@ -284,12 +247,7 @@ const DebugMenuScreen: React.FC = () => {
                             {renderStateSection('Search State', state.search)}
                             {renderStateSection('Purchase State', state.purchase)}
 
-                            <TouchableOpacity
-                                style={styles.resetButton}
-                                onPress={resetReduxState}
-                            >
-                                <Text style={styles.resetButtonText}>Reset Redux State</Text>
-                            </TouchableOpacity>
+
                         </View>
                     )}
 
@@ -298,12 +256,7 @@ const DebugMenuScreen: React.FC = () => {
                             <Ionicons name="flask-outline" size={22} color="#4285F4"/>
                         </View>
                         <Text style={styles.optionText}>Environment</Text>
-                        <Switch
-                            trackColor={{false: "#767577", true: "#81b0ff"}}
-                            thumbColor={"#f4f3f4"}
-                            onValueChange={toggleEnvironment}
-                            value={false} // Get this from Redux
-                        />
+
                     </View>
                 </View>
 
