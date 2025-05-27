@@ -136,7 +136,7 @@ export interface Pagination {
 }
 
 export interface Achievement {
-    threshold: boolean;
+    threshold: number;
     achievement_type: string;
     id: number;
     name: string;

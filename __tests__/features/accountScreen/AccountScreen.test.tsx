@@ -1,8 +1,8 @@
 import React from 'react';
 import {fireEvent, waitFor} from '@testing-library/react-native';
 import {renderWithProviders} from '../../testUtils';
-import AccountScreen from '@/src/features/accountScreen/AccountScreen';
 import * as userThunks from '@/src/redux/thunks/userThunks';
+import AccountScreen from "@/src/features/accountScreen/accountScreen";
 
 // Mock navigation
 const mockNavigate = jest.fn();

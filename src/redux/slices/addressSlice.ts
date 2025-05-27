@@ -1,11 +1,10 @@
 // addressSlice.ts
 
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
-import {getUserDataThunk} from "@/src/redux/thunks/userThunks";
 import {addAddressAsync, deleteAddressAsync, setPrimaryAddress} from "@/src/redux/thunks/addressThunks";
 import {AddressState} from "@/src/types/states";
 import {Address} from "@/src/types/api/address/model";
-
+import {UserDataResponse} from "@/src/types/api/user/responses"; // Corrected import path
 
 const initialState: AddressState = {
     addresses: [],
@@ -32,8 +31,6 @@ const addressSlice = createSlice({
                 state.selectedAddressId = primaryAddress?.id || null;
             }
         },
-
-
     },
     extraReducers: (builder) => {
         builder
@@ -45,14 +42,13 @@ const addressSlice = createSlice({
                 state.error = null;
             })
             .addCase(addAddressAsync.fulfilled, (state) => {
-
                 state.loading = false;
             })
             .addCase(addAddressAsync.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload || 'Failed to add address';
             })
-            .addCase(getUserDataThunk.fulfilled, (state, action) => {
+            .addCase('user/getUserData/fulfilled', (state, action: PayloadAction<UserDataResponse>) => {
                 console.error("state addresses before" + state.addresses);
                 state.addresses = action.payload.user_address_list.map((address: any) => ({
                     id: address.id.toString(),
@@ -71,16 +67,13 @@ const addressSlice = createSlice({
                 }));
                 console.log("state addresses after" + state.addresses);
 
-
                 console.error('Selected address ID before:', state.selectedAddressId);
 
                 const primaryAddress = state.addresses.find(addr => addr.is_primary);
                 if (primaryAddress) {
                     state.selectedAddressId = primaryAddress.id;
                     console.log('Selected address ID after:', state.selectedAddressId);
-
                 }
-
             })
             .addCase(setPrimaryAddress.pending, (state) => {
                 console.log('Redux State - primary address pending');
@@ -91,7 +84,6 @@ const addressSlice = createSlice({
                 console.log('Redux State - Updated Primary Address:', action.payload);
                 state.loading = false;
                 state.error = null;
-
             })
             .addCase(setPrimaryAddress.rejected, (state, action) => {
                 state.loading = false;
@@ -104,17 +96,13 @@ const addressSlice = createSlice({
             .addCase(deleteAddressAsync.fulfilled, (state) => {
                 state.loading = false;
                 state.error = null;
-
             })
             .addCase(deleteAddressAsync.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload || 'Failed to delete address';
             });
-
     },
-
 });
-
 
 export const {addAddress, removeAddress} = addressSlice.actions;
 

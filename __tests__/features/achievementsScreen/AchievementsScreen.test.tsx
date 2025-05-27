@@ -2,8 +2,10 @@ import React from 'react';
 import {fireEvent, waitFor} from '@testing-library/react-native';
 import {renderWithProviders} from '../../testUtils';
 import AchievementsScreen from '@/src/features/AchievementsScreen/AchievementsScreen';
-import * as achievementThunks from '@/src/redux/thunks/achievementThunks';
 import {Achievement} from '@/src/types/states';
+
+// Import the thunk that will be mocked
+import {fetchUserAchievementsThunk} from '@/src/redux/thunks/achievementThunks';
 
 // Mock navigation
 const mockGoBack = jest.fn();
@@ -18,39 +20,40 @@ jest.mock('@react-navigation/native', () => ({
 
 // Mock achievement thunks
 jest.mock('@/src/redux/thunks/achievementThunks', () => ({
-    fetchUserAchievementsThunk: jest.fn(() => () => Promise.resolve([])),
+    __esModule: true, // This is important for ES modules
+    fetchUserAchievementsThunk: jest.fn(), // Initialize as a jest.fn()
 }));
 
 const mockAchievements: Achievement[] = [
     {
-        id: '1',
+        id: 1,
         name: 'First Purchase Master',
         description: 'Made your first purchase.',
         achievement_type: 'FIRST_PURCHASE',
         threshold: 1,
-        xp_reward: 10,
         earned_at: new Date().toISOString(),
-        progress: 1,
+        image_url: null,
+        acquired: true,
     },
     {
-        id: '2',
+        id: 2,
         name: 'Shopping Spree',
         description: 'Make 5 purchases.',
         achievement_type: 'PURCHASE_COUNT',
         threshold: 5,
-        xp_reward: 50,
         earned_at: null, // Locked
-        progress: 2,
+        image_url: null,
+        acquired: false,
     },
     {
-        id: '3',
+        id: 3,
         name: 'Eco Warrior',
         description: 'Save 10 items.',
         achievement_type: 'ECO_WARRIOR',
         threshold: 10,
-        xp_reward: 30,
         earned_at: new Date().toISOString(),
-        progress: 10,
+        image_url: null,
+        acquired: true,
     },
 ];
 
@@ -69,7 +72,7 @@ describe('AchievementsScreen', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         // Reset the mock implementation for fetchUserAchievementsThunk for each test if needed
-        (achievementThunks.fetchUserAchievementsThunk as jest.Mock).mockImplementation(() => () => Promise.resolve(mockAchievements));
+        (fetchUserAchievementsThunk as unknown as jest.Mock).mockImplementation(() => () => Promise.resolve(mockAchievements));
     });
 
     test('renders header and initial stats correctly', async () => {
@@ -102,9 +105,9 @@ describe('AchievementsScreen', () => {
     });
 
     test('shows loading indicator when achievements are loading', () => {
-        (achievementThunks.fetchUserAchievementsThunk as jest.Mock).mockImplementation(() => () => new Promise(() => {
+        (fetchUserAchievementsThunk as unknown as jest.Mock).mockImplementation(() => () => new Promise(() => {
         })); // Simulate pending promise
-        const {getByText, getByTestId} = renderWithProviders(<AchievementsScreen/>, {
+        const {getByText} = renderWithProviders(<AchievementsScreen/>, { // Removed getByTestId as it's unused
             initialState: {
                 ...initialState,
                 user: {...initialState.user, achievements: [], loading: true}, // Simulate loading state
@@ -117,7 +120,7 @@ describe('AchievementsScreen', () => {
     });
 
     test('shows empty state when no achievements are found', async () => {
-        (achievementThunks.fetchUserAchievementsThunk as jest.Mock).mockImplementation(() => () => Promise.resolve([])); // Return empty array
+        (fetchUserAchievementsThunk as unknown as jest.Mock).mockImplementation(() => () => Promise.resolve([])); // Return empty array
         const {getByText, findByText} = renderWithProviders(<AchievementsScreen/>, {
             initialState: {
                 ...initialState,
@@ -151,7 +154,7 @@ describe('AchievementsScreen', () => {
         fireEvent(flatList, 'refresh');
 
         await waitFor(() => {
-            expect(achievementThunks.fetchUserAchievementsThunk).toHaveBeenCalledTimes(2); // Initial call + refresh call
+            expect(fetchUserAchievementsThunk).toHaveBeenCalledTimes(2); // Initial call + refresh call
         });
     });
 

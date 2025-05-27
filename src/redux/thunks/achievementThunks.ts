@@ -1,7 +1,7 @@
 import {createAsyncThunk} from "@reduxjs/toolkit";
 import {Achievement, achievementApi} from "@/src/redux/api/achievementAPI";
 import {tokenService} from "@/src/services/tokenService";
-import {RootState} from "@/src/types/store";
+import {RootState} from "@/src/redux/store"; // Updated import
 
 export interface CombinedAchievementsData {
     achievements: Achievement[];
@@ -90,3 +90,4 @@ export const fetchUserAchievementsThunk = createAsyncThunk<
         }
     }
 );
+

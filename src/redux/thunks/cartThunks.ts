@@ -1,6 +1,6 @@
 import {createAsyncThunk} from "@reduxjs/toolkit";
 import {addToCartAPI, getUsersCartItemsAPI, removeFromCart, resetCartAPI, updateCartAPI} from "@/src/redux/api/cartAPI";
-import {RootState} from "@/src/types/store";
+import {RootState} from "@/src/redux/store"; // Updated import
 import {CartItem} from "@/src/types/api/cart/model";
 import {CartOperationResponse} from "@/src/types/api/cart/responses";
 import {AddToCartPayload, UpdateCartItemPayload} from "@/src/types/api/cart/requests";

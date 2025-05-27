@@ -11,7 +11,7 @@ import {
 } from "@/src/redux/thunks/userThunks";
 import {verifyCode} from "@/src/redux/api/authAPI";
 import {UserState} from "@/src/types/states";
-import {CombinedAchievementsData, fetchUserAchievementsThunk} from '../thunks/achievementThunks';
+import {CombinedAchievementsData} from '../thunks/achievementThunks';
 import {UserRankResponse} from "@/src/redux/api/userAPI";
 
 
@@ -184,16 +184,20 @@ const userSlice = createSlice({
             })
 
             // Achievement fetching cases with separate loading state
-            .addCase(fetchUserAchievementsThunk.pending, (state) => {
+            .addCase('achievements/fetchUserAchievements/pending', (state) => {
                 state.achievementsLoading = true;
                 state.error = null;
             })
-            .addCase(fetchUserAchievementsThunk.fulfilled, (state, action: PayloadAction<CombinedAchievementsData>) => {
+            .addCase('achievements/fetchUserAchievements/fulfilled', (state, action: PayloadAction<CombinedAchievementsData>) => {
                 state.achievementsLoading = false;
-                state.achievements = action.payload.achievements;
+                state.achievements = action.payload.achievements.map(ach => ({
+                    ...ach,
+                    image_url: ach.badge_image_url, // Map badge_image_url to image_url
+                    acquired: !!ach.earned_at // Determine acquired based on earned_at
+                }));
 
             })
-            .addCase(fetchUserAchievementsThunk.rejected, (state, action) => {
+            .addCase('achievements/fetchUserAchievements/rejected', (state, action) => {
                 state.achievementsLoading = false;
                 state.error = action.error?.message || 'Failed to fetch achievements';
             })
@@ -214,9 +218,14 @@ const userSlice = createSlice({
                 state.rankingsLoading = true;
                 state.error = null;
             })
-            .addCase(getUserRankingsThunk.fulfilled, (state, action) => {
+            .addCase(getUserRankingsThunk.fulfilled, (state, action: PayloadAction<UserRankResponse[]>) => {
                 state.rankingsLoading = false;
-                state.rankings = action.payload;
+                state.rankings = action.payload.map(rank => ({
+                    user_id: rank.user_id,
+                    name: rank.user_name, // Map user_name to name
+                    total_discount_earned: rank.total_discount, // Map total_discount to total_discount_earned
+                    rank: rank.rank
+                }));
                 console.log("Rankings stored in state:", action.payload);
             })
             .addCase(getUserRankingsThunk.rejected, (state, action) => {
@@ -243,3 +252,4 @@ export const {
 } = userSlice.actions;
 
 export default userSlice.reducer;
+
