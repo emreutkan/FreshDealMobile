@@ -23,10 +23,9 @@ import {
 import {tokenService} from '@/src/services/tokenService';
 import {getFavoritesThunk} from '@/src/redux/thunks/userThunks';
 import {fetchCart} from '@/src/redux/thunks/cartThunks';
+import {getRecommendationsThunk} from '@/src/redux/thunks/recommendationThunks';
 
 const DebugMenuScreen: React.FC = () => {
-    const currentDate = "2025-05-21 00:13:36"; // Current date from your system
-    const currentUser = "emreutkan"; // Current username from your system
 
     const [showingReduxState, setShowingReduxState] = useState(false);
     const [testingApi, setTestingApi] = useState(false);
@@ -106,6 +105,33 @@ const DebugMenuScreen: React.FC = () => {
             ]
         },
         {
+            title: "Recommendations API",
+            data: [
+                {
+                    name: "Test Recommended Restaurants",
+                    action: async () => {
+                        try {
+                            setTestingApi(true);
+                            setSelectedEndpoint("Recommended Restaurants");
+                            const response = await dispatch(getRecommendationsThunk()).unwrap();
+                            // Include both API response and current Redux state
+                            setApiTestResults({
+                                apiResponse: response,
+                                reduxState: state.recommendation
+                            });
+                        } catch (error) {
+                            setApiTestResults({
+                                error: JSON.stringify(error),
+                                reduxState: state.recommendation
+                            });
+                        } finally {
+                            setTestingApi(false);
+                        }
+                    }
+                }
+            ]
+        },
+        {
             title: "User APIs",
             data: [
                 {
@@ -158,10 +184,6 @@ const DebugMenuScreen: React.FC = () => {
         Alert.alert('Redux Reset', 'Redux state has been reset to initial values.');
     };
 
-    const toggleEnvironment = (value) => {
-        console.log(`[DEBUG][${currentDate}][${currentUser}] Setting environment to: ${value ? 'PRODUCTION' : 'DEVELOPMENT'}`);
-        dispatch({type: 'SET_ENVIRONMENT', payload: value ? 'PRODUCTION' : 'DEVELOPMENT'});
-    };
 
     const renderStateSection = (title: string, data: any) => (
         <View style={styles.stateSection}>

@@ -95,6 +95,12 @@ const defaultMockState = {
         cartItems: [],
         loading: false,
         error: null
+    },
+    recommendation: {
+        recommendationIds: ['1'],
+        loading: false,
+        error: null,
+        status: 'succeeded'
     }
 };
 
