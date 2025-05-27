@@ -10,18 +10,22 @@ try {
 
 // Mock NativePlatformConstantsIOS to provide getConstants for Platform
 try {
-    jest.mock('react-native/Libraries/Utilities/NativePlatformConstantsIOS', () => ({
-        getConstants: () => ({
-            osVersion: '0',
-            forceTouchAvailable: false,
-            interfaceIdiom: 'handset',
-            isTesting: false,
-            reactNativeVersion: {major: 0, minor: 0, patch: 0, prerelease: null},
-            systemName: 'iOS',
-            isDisableAnimations: false,
-            isMacCatalyst: false
-        })
-    }));
+    jest.mock('react-native/Libraries/Utilities/NativePlatformConstantsIOS', () => {
+        const RN = jest.requireActual('react-native/Libraries/Utilities/NativePlatformConstantsIOS');
+        return {
+            ...RN,
+            getConstants: () => ({
+                osVersion: '0',
+                forceTouchAvailable: false,
+                interfaceIdiom: 'handset',
+                isTesting: true, // Ensure isTesting is true
+                reactNativeVersion: {major: 0, minor: 0, patch: 0, prerelease: null},
+                systemName: 'iOS',
+                isDisableAnimations: false,
+                isMacCatalyst: false
+            })
+        };
+    });
 } catch (e) {
     // ignore if missing
 }
@@ -54,35 +58,86 @@ try {
 
 // Mock TurboModuleRegistry to provide DeviceInfo constants and avoid missing DevMenu module
 try {
-    jest.mock('react-native/Libraries/TurboModule/TurboModuleRegistry', () => ({
-        // Provide DeviceInfo.getConstants for Dimensions and stub other modules
-        get: jest.fn((name) => {
-            if (name === 'DeviceInfo') {
-                return {
-                    getConstants: () => ({
-                        Dimensions: {
-                            window: {width: 375, height: 812},
-                            screen: {width: 375, height: 812}
-                        }
-                    })
-                };
-            }
-            return {};
-        }),
-        getEnforcing: jest.fn((name) => {
-            if (name === 'DeviceInfo') {
-                return {
-                    getConstants: () => ({
-                        Dimensions: {
-                            window: {width: 375, height: 812},
-                            screen: {width: 375, height: 812}
-                        }
-                    })
-                };
-            }
-            return {};
-        }),
-    }));
+    jest.mock('react-native/Libraries/TurboModule/TurboModuleRegistry', () => {
+        const actualRegistry = jest.requireActual('react-native/Libraries/TurboModule/TurboModuleRegistry');
+        return {
+            ...actualRegistry,
+            get: jest.fn((name) => {
+                if (name === 'NativeAnimatedModule') { // Mock NativeAnimatedModule
+                    return {
+                        addListener: jest.fn(),
+                        removeListeners: jest.fn(),
+                        createAnimatedNode: jest.fn(),
+                        startListeningToAnimatedNodeValue: jest.fn(),
+                        stopListeningToAnimatedNodeValue: jest.fn(),
+                        connectAnimatedNodes: jest.fn(),
+                        disconnectAnimatedNodes: jest.fn(),
+                        startAnimatingNode: jest.fn(),
+                        stopAnimation: jest.fn(),
+                        setAnimatedNodeValue: jest.fn(),
+                        setAnimatedNodeOffset: jest.fn(),
+                        flattenAnimatedNodeOffset: jest.fn(),
+                        extractAnimatedNodeOffset: jest.fn(),
+                        connectAnimatedNodeToView: jest.fn(),
+                        disconnectAnimatedNodeFromView: jest.fn(),
+                        restoreDefaultValues: jest.fn(),
+                        dropAnimatedNode: jest.fn(),
+                        addAnimatedEventToView: jest.fn(),
+                        removeAnimatedEventFromView: jest.fn(),
+                        // Add any other methods your tests might need
+                    };
+                }
+                if (name === 'DeviceInfo') {
+                    return {
+                        getConstants: () => ({
+                            Dimensions: {
+                                window: {width: 375, height: 812, scale: 2, fontScale: 1},
+                                screen: {width: 375, height: 812, scale: 2, fontScale: 1}
+                            }
+                        })
+                    };
+                }
+                return actualRegistry.get(name);
+            }),
+            getEnforcing: jest.fn((name) => {
+                if (name === 'NativeAnimatedModule') { // Mock NativeAnimatedModule
+                    return {
+                        addListener: jest.fn(),
+                        removeListeners: jest.fn(),
+                        createAnimatedNode: jest.fn(),
+                        startListeningToAnimatedNodeValue: jest.fn(),
+                        stopListeningToAnimatedNodeValue: jest.fn(),
+                        connectAnimatedNodes: jest.fn(),
+                        disconnectAnimatedNodes: jest.fn(),
+                        startAnimatingNode: jest.fn(),
+                        stopAnimation: jest.fn(),
+                        setAnimatedNodeValue: jest.fn(),
+                        setAnimatedNodeOffset: jest.fn(),
+                        flattenAnimatedNodeOffset: jest.fn(),
+                        extractAnimatedNodeOffset: jest.fn(),
+                        connectAnimatedNodeToView: jest.fn(),
+                        disconnectAnimatedNodeFromView: jest.fn(),
+                        restoreDefaultValues: jest.fn(),
+                        dropAnimatedNode: jest.fn(),
+                        addAnimatedEventToView: jest.fn(),
+                        removeAnimatedEventFromView: jest.fn(),
+                        // Add any other methods your tests might need
+                    };
+                }
+                if (name === 'DeviceInfo') {
+                    return {
+                        getConstants: () => ({
+                            Dimensions: {
+                                window: {width: 375, height: 812, scale: 2, fontScale: 1},
+                                screen: {width: 375, height: 812, scale: 2, fontScale: 1}
+                            }
+                        })
+                    };
+                }
+                return actualRegistry.getEnforcing(name);
+            }),
+        };
+    });
 } catch (e) {
     // ignore if missing
 }
@@ -160,9 +215,7 @@ jest.mock('@/src/utils/Haptics', () => ({
 
 // Mock react-redux hooks
 jest.mock('react-redux', () => ({
-    ...jest.requireActual('react-redux'),
-    useDispatch: jest.fn().mockReturnValue(jest.fn()),
-    useSelector: jest.fn(),
+    ...jest.requireActual('react-redux'), // Keep other exports like Provider
 }));
 
 // Mock bottom sheet without using JSX
@@ -239,3 +292,26 @@ jest.mock('date-fns', () => ({
     format: jest.fn(() => 'May 25, 2025')
 }));
 
+jest.mock('react-native/Libraries/EventEmitter/NativeEventEmitter');
+
+// Mock for @react-navigation/native
+jest.mock('@react-navigation/native', () => {
+    const actualNav = jest.requireActual('@react-navigation/native');
+    const React = jest.requireActual('react'); // Ensure React is in scope for JSX
+    return {
+        ...actualNav,
+        useNavigation: () => ({
+            navigate: jest.fn(),
+            dispatch: jest.fn(),
+            goBack: jest.fn(),
+            isFocused: () => true,
+            addListener: jest.fn(() => jest.fn()), // Mock addListener to return a jest.fn()
+            removeListener: jest.fn(), // Mock removeListener
+        }),
+        useRoute: () => ({
+            params: {},
+        }),
+        // Modify this line to avoid empty JSX fragment issue with some parsers
+        NavigationContainer: ({children}: { children: React.ReactNode }) => children,
+    };
+});

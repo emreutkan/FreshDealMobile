@@ -76,7 +76,7 @@ describe('ListingCard Component', () => {
     test('renders correctly with listing data', () => {
         const {getByText} = renderWithProviders(
             <ScrollContext.Provider value={mockScrollContext}>
-                <ListingCard listing={mockListings[0]} isPickup={true}/>
+                <ListingCard listingList={[mockListings[0]]} isPickup={true}/>
             </ScrollContext.Provider>
         );
 
@@ -88,7 +88,7 @@ describe('ListingCard Component', () => {
     test('addItemToCart is called when an item is added', () => {
         const {getByText} = renderWithProviders(
             <ScrollContext.Provider value={mockScrollContext}>
-                <ListingCard listing={mockListings[0]} isPickup={true}/>
+                <ListingCard listingList={[mockListings[0]]} isPickup={true}/>
             </ScrollContext.Provider>
         );
 
