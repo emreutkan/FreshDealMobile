@@ -154,7 +154,15 @@ jest.mock('react-native', () => {
         View: 'View',
         Text: 'Text',
         Image: 'Image',
-        FlatList: 'FlatList',
+        FlatList: jest.fn(({data, renderItem, keyExtractor}) => {
+            const React = jest.requireActual('react');
+            if (!data || !renderItem) return null;
+            return data.map((item, index) => {
+                const key = keyExtractor ? keyExtractor(item, index) : index.toString();
+                // Ensure renderItem is called with an object that includes item and index
+                return React.createElement(React.Fragment, {key}, renderItem({item, index}));
+            });
+        }),
         ScrollView: 'ScrollView',
         TextInput: 'TextInput',
         TouchableOpacity: 'TouchableOpacity',
@@ -180,7 +188,14 @@ jest.mock('react-native', () => {
                 value: 0,
             })),
             View: 'AnimatedView',
-            FlatList: 'AnimatedFlatList',
+            FlatList: jest.fn(({data, renderItem, keyExtractor}) => {
+                const React = jest.requireActual('react');
+                if (!data || !renderItem) return null;
+                return data.map((item, index) => {
+                    const key = keyExtractor ? keyExtractor(item, index) : index.toString();
+                    return React.createElement(React.Fragment, {key}, renderItem({item, index}));
+                });
+            }),
             ScrollView: 'AnimatedScrollView',
         },
         // Platform mock
@@ -226,17 +241,36 @@ jest.mock('@gorhom/bottom-sheet', () => ({
 
 // Mock vector icons
 jest.mock('react-native-vector-icons/MaterialCommunityIcons', () => 'Icon');
-jest.mock('@expo/vector-icons', () => ({
-    Ionicons: 'Ionicons',
-    MaterialIcons: 'MaterialIcons',
-    Feather: 'Feather',
-    MaterialCommunityIcons: 'MaterialCommunityIcons',
-}));
+jest.mock('@expo/vector-icons', () => {
+    const React = jest.requireActual('react');
+    const {View} = jest.requireActual('react-native');
+    const createIconSet = (glyphMap: any, fontFamily: any, fontFile: any) => {
+        const Icon = (props: any) => React.createElement(View, {...props, testID: props.testID || 'mock-icon'});
+        Icon.glyphMap = glyphMap;
+        Icon.font = {[fontFamily]: fontFile};
+        Icon.fontFile = fontFile;
+        Icon.getRawGlyphMap = () => glyphMap;
+        Icon.getFontFamily = () => fontFamily;
+        return Icon;
+    };
+    return {
+        Ionicons: createIconSet({}, 'Ionicons', 'Ionicons.ttf'),
+        MaterialIcons: createIconSet({}, 'MaterialIcons', 'MaterialIcons.ttf'),
+        Feather: createIconSet({}, 'Feather', 'Feather.ttf'),
+        MaterialCommunityIcons: createIconSet({}, 'MaterialCommunityIcons', 'MaterialCommunityIcons.ttf'),
+        FontAwesome: createIconSet({}, 'FontAwesome', 'FontAwesome.ttf'),
+        // Add other icon sets if you use them
+    };
+});
 
 // Mock expo-linear-gradient
-jest.mock('expo-linear-gradient', () => ({
-    LinearGradient: 'LinearGradient',
-}));
+jest.mock('expo-linear-gradient', () => {
+    const React = jest.requireActual('react');
+    const {View} = jest.requireActual('react-native');
+    return {
+        LinearGradient: (props: any) => React.createElement(View, props),
+    };
+});
 
 // Mock expo-secure-store
 jest.mock('expo-secure-store', () => ({

@@ -25,6 +25,12 @@ jest.mock('@/src/redux/thunks/achievementThunks', () => ({
     fetchUserAchievementsThunk: jest.fn(() => () => Promise.resolve([])),
 }));
 
+// Mock userSlice actions like logout
+jest.mock('@/src/redux/slices/userSlice', () => ({
+    ...jest.requireActual('@/src/redux/slices/userSlice'), // keep other exports from the slice
+    logout: jest.fn(), // Mock the logout action creator
+}));
+
 // Mock Alert
 const mockAlert = jest.fn();
 const mockAlertPrompt = jest.fn();
