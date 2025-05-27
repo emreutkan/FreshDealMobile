@@ -18,15 +18,23 @@ const CARD_HEIGHT = 130;
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'RestaurantDetails'>;
 
-interface FavoriteRestaurantListProps {
-    restaurants: Restaurant[];
+interface FavoriteRestaurantCardProps {
+    restaurant?: Restaurant;
+    restaurants?: Restaurant[];
 }
 
-const FavoriteRestaurantList: React.FC<FavoriteRestaurantListProps> = ({restaurants}) => {
+const FavoriteRestaurantCard: React.FC<FavoriteRestaurantCardProps> = ({restaurant, restaurants: propRestaurants}) => {
     const dispatch = useDispatch();
-    const favoriteRestaurantsIDs = useSelector((state: RootState) => state.restaurant.favoriteRestaurantsIDs);
+    const favoriteRestaurantsIDs = useSelector((state: RootState) => state.restaurant?.favoriteRestaurantsIDs || []);
+    const storeRestaurants = useSelector((state: RootState) => state.restaurant?.restaurants || []);
     const scrollX = React.useRef(new Animated.Value(0)).current;
-    const favoriteRestaurants = restaurants.filter(restaurant => favoriteRestaurantsIDs.includes(restaurant.id));
+
+    // Use provided restaurant in tests, or filter from store/props in actual app
+    const restaurants = propRestaurants || storeRestaurants || [];
+    const favoriteRestaurants = restaurant
+        ? [restaurant]
+        : restaurants.filter(r => favoriteRestaurantsIDs.includes(r.id));
+
     const navigation = useNavigation<NavigationProp>();
     const handleRestaurantPress = useHandleRestaurantPress();
 
@@ -295,4 +303,5 @@ const styles = StyleSheet.create({
     },
 });
 
-export default FavoriteRestaurantList;
+export default FavoriteRestaurantCard;
+

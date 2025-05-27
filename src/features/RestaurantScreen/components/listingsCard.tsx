@@ -241,130 +241,128 @@ export const ListingCard: React.FC<ListingCardProps> = ({
         );
     };
 
-    const renderListingItem = ({item}: { item: Listing }) => {
-        const displayPrice = getDisplayPrice(item);
-        const cartItem = cart.cartItems.find(
-            (cartItem) => cartItem.listing_id === item.id
-        );
-        const countInCart = cartItem ? cartItem.count : 0;
-
-        const discountPercentage = item.original_price ? Math.round(((item.original_price - displayPrice) / item.original_price) * 100) : 0;
-
-        return (
-            <TouchableOpacity
-                style={[
-                    styles.listingCard,
-                    viewType === 'rectangle' && styles.listingCardRectangle
-                ]}
-                onPress={() => handleListingPress(item)}
-                activeOpacity={0.7}
-            >
-                <View style={[
-                    styles.cardContainer,
-                    viewType === 'rectangle' && styles.cardContainerRectangle
-                ]}>
-                    <Image
-                        source={{uri: item.image_url}}
-                        style={[
-                            styles.cardImage,
-                            viewType === 'rectangle' && styles.cardImageRectangle
-                        ]}
-                        resizeMode="cover"
-                    />
-                    <View
-                        style={[styles.freshScoreBadgeSmall, {
-                            backgroundColor: getFreshScoreColor(item.fresh_score) === '#059669' ? '#ECFDF5' : getFreshScoreColor(item.fresh_score) === '#F59E0B' ? '#FEF3C7' : '#FEE2E2',
-                            borderColor: getFreshScoreColor(item.fresh_score)
-                        }]}>
-                        <Icon
-                            name="leaf"
-                            size={10}
-                            color={getFreshScoreColor(item.fresh_score)}
-                            style={styles.freshScoreIconSmall}
-                        />
-                        <Text style={[styles.freshScoreSmallText, {
-                            color: getFreshScoreColor(item.fresh_score),
-                            fontWeight: '700'
-                        }]}>
-                            {Math.round(item.fresh_score)}% Fresh
-                        </Text>
-                    </View>
-                    <View style={[
-                        styles.cardContent,
-                        viewType === 'rectangle' && styles.cardContentRectangle
-                    ]}>
-                        <Text style={styles.cardTitle} numberOfLines={2}>
-                            {item.title}
-                        </Text>
-
-                        <View style={styles.priceAndCartContainer}>
-                            <View style={styles.priceContainer}>
-                                {item.original_price > displayPrice && (
-                                    <Text style={styles.originalPrice}>
-                                        {item.original_price} TL
-                                    </Text>
-                                )}
-                                <Text style={styles.currentPrice}>
-                                    {displayPrice} TL
-                                </Text>
-                                {item.original_price > displayPrice && viewType === 'rectangle' && (
-                                    <Text style={styles.savingsText}>
-                                        Save {discountPercentage}%
-                                    </Text>
-                                )}
-                            </View>
-
-                            <View style={styles.itemCartControls}>
-                                {countInCart > 0 ? (
-                                    <View style={styles.itemCartButtonsContainer}>
-                                        <TouchableOpacity
-                                            style={styles.itemCartButton}
-                                            onPress={() => handleRemoveFromCart(item)}
-                                        >
-                                            <Icon name="minus" size={16} color="#DC2626"/>
-                                        </TouchableOpacity>
-                                        <Text style={styles.itemCartCount}>{countInCart}</Text>
-                                        <TouchableOpacity
-                                            style={styles.itemCartButton}
-                                            onPress={() => handleAddToCart(item)}
-                                        >
-                                            <Icon name="plus" size={16} color="#059669"/>
-                                        </TouchableOpacity>
-                                    </View>
-                                ) : (
-                                    <TouchableOpacity
-                                        style={styles.itemAddButton}
-                                        onPress={() => handleAddToCart(item)}
-                                    >
-                                        <Icon name="plus" size={20} color="#059669"/>
-                                    </TouchableOpacity>
-                                )}
-                            </View>
-                        </View>
-                    </View>
-                </View>
-            </TouchableOpacity>
-        );
-    };
-
     return (
         <View style={styles.container}>
-            <Animated.FlatList
-                contentContainerStyle={{
-                    paddingTop: headerHeight || 0,
-                }}
-                data={listings}
-                renderItem={renderListingItem}
-                keyExtractor={(item) => item.id.toString()}
-                numColumns={viewType === 'cube' ? 2 : 1}
-                columnWrapperStyle={viewType === 'cube' ? styles.columnWrapper : undefined}
-                showsVerticalScrollIndicator={false}
-                onScroll={Animated.event(
-                    [{nativeEvent: {contentOffset: {y: scrollY}}}],
-                    {useNativeDriver: true}
-                )}
-                scrollEventThrottle={16}
-            />
+            {listings.length > 0 ? (
+                <Animated.FlatList
+                    contentContainerStyle={{
+                        paddingTop: headerHeight || 0,
+                    }}
+                    data={listings}
+                    renderItem={({item}) => (
+                        <TouchableOpacity
+                            testID={`listing-item-${item.id}`}
+                            style={[
+                                styles.listingCard,
+                                viewType === 'rectangle' && styles.listingCardRectangle
+                            ]}
+                            onPress={() => handleListingPress(item)}
+                            activeOpacity={0.7}
+                        >
+                            <View style={[
+                                styles.cardContainer,
+                                viewType === 'rectangle' && styles.cardContainerRectangle
+                            ]}>
+                                <Image
+                                    source={{uri: item.image_url}}
+                                    style={[
+                                        styles.cardImage,
+                                        viewType === 'rectangle' && styles.cardImageRectangle
+                                    ]}
+                                    resizeMode="cover"
+                                />
+                                <View
+                                    style={[styles.freshScoreBadgeSmall, {
+                                        backgroundColor: getFreshScoreColor(item.fresh_score) === '#059669' ? '#ECFDF5' : getFreshScoreColor(item.fresh_score) === '#F59E0B' ? '#FEF3C7' : '#FEE2E2',
+                                        borderColor: getFreshScoreColor(item.fresh_score)
+                                    }]}>
+                                    <Icon
+                                        name="leaf"
+                                        size={10}
+                                        color={getFreshScoreColor(item.fresh_score)}
+                                        style={styles.freshScoreIconSmall}
+                                    />
+                                    <Text style={[styles.freshScoreSmallText, {
+                                        color: getFreshScoreColor(item.fresh_score),
+                                        fontWeight: '700'
+                                    }]}>
+                                        {Math.round(item.fresh_score)}% Fresh
+                                    </Text>
+                                </View>
+                                <View style={[
+                                    styles.cardContent,
+                                    viewType === 'rectangle' && styles.cardContentRectangle
+                                ]}>
+                                    <Text style={styles.cardTitle} numberOfLines={2}>
+                                        {item.title}
+                                    </Text>
+
+                                    <View style={styles.priceAndCartContainer}>
+                                        <View style={styles.priceContainer}>
+                                            {item.original_price > getDisplayPrice(item) && (
+                                                <Text style={styles.originalPrice}>
+                                                    {item.original_price} TL
+                                                </Text>
+                                            )}
+                                            <Text style={styles.currentPrice}>
+                                                {getDisplayPrice(item)} TL
+                                            </Text>
+                                            {item.original_price > getDisplayPrice(item) && viewType === 'rectangle' && (
+                                                <Text style={styles.savingsText}>
+                                                    Save {Math.round(((item.original_price - getDisplayPrice(item)) / item.original_price) * 100)}%
+                                                </Text>
+                                            )}
+                                        </View>
+
+                                        <View style={styles.itemCartControls}>
+                                            {cart.cartItems.find(cartItem => cartItem.listing_id === item.id)?.count > 0 ? (
+                                                <View style={styles.itemCartButtonsContainer}>
+                                                    <TouchableOpacity
+                                                        style={styles.itemCartButton}
+                                                        onPress={() => handleRemoveFromCart(item)}
+                                                    >
+                                                        <Icon name="minus" size={16} color="#DC2626"/>
+                                                    </TouchableOpacity>
+                                                    <Text
+                                                        style={styles.itemCartCount}>{cart.cartItems.find(cartItem => cartItem.listing_id === item.id)?.count}</Text>
+                                                    <TouchableOpacity
+                                                        style={styles.itemCartButton}
+                                                        onPress={() => handleAddToCart(item)}
+                                                    >
+                                                        <Icon name="plus" size={16} color="#059669"/>
+                                                    </TouchableOpacity>
+                                                </View>
+                                            ) : (
+                                                <TouchableOpacity
+                                                    style={styles.itemAddButton}
+                                                    onPress={() => handleAddToCart(item)}
+                                                    accessibilityLabel="Add to Cart"
+                                                >
+                                                    <Text style={styles.hiddenText}>Add to Cart</Text>
+                                                    <Icon name="plus" size={20} color="#059669"/>
+                                                </TouchableOpacity>
+                                            )}
+                                        </View>
+                                    </View>
+                                </View>
+                            </View>
+                        </TouchableOpacity>
+                    )}
+                    keyExtractor={(item) => item.id.toString()}
+                    numColumns={viewType === 'cube' ? 2 : 1}
+                    columnWrapperStyle={viewType === 'cube' ? styles.columnWrapper : undefined}
+                    showsVerticalScrollIndicator={false}
+                    onScroll={Animated.event(
+                        [{nativeEvent: {contentOffset: {y: scrollY}}}],
+                        {useNativeDriver: true}
+                    )}
+                    scrollEventThrottle={16}
+                />
+            ) : (
+                <View style={styles.noListingsContainer}>
+                    <Text style={styles.noListingsText}>No listings available.</Text>
+                </View>
+            )}
             {renderBottomSheet()}
         </View>
     );
@@ -719,6 +717,19 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: '600',
     },
+    noListingsContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    noListingsText: {
+        fontSize: 18,
+        color: '#9CA3AF',
+    },
+    hiddenText: {
+        display: 'none',
+    },
 });
 
 export default ListingCard;
+

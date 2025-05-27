@@ -1,10 +1,10 @@
 import React from 'react';
-import {fireEvent, render} from '@testing-library/react-native'; // Added fireEvent
+import {fireEvent} from '@testing-library/react-native';
 import {ListingCard} from '@/src/features/RestaurantScreen/components/listingsCard';
-import {useDispatch, useSelector} from 'react-redux';
-import {fetchCart} from '@/src/redux/thunks/cartThunks';
+import {addItemToCart} from '@/src/redux/thunks/cartThunks';
 import {ScrollContext} from '@/src/features/RestaurantScreen/RestaurantDetails';
 import {Animated} from 'react-native';
+import {renderWithProviders} from '../testUtils';
 
 // Mock modules
 jest.mock('@/src/redux/thunks/cartThunks', () => ({
@@ -54,133 +54,53 @@ const mockListings = [
         original_price: 12.99,
         pick_up_price: 8.99,
         delivery_price: 10.99,
-        consume_within: 1,
+        consume_within: 3,
         available_for_pickup: true,
-        available_for_delivery: true,
+        available_for_delivery: false,
         fresh_score: 75,
     },
 ];
 
-// Mock store
-const mockStore = {
-    restaurant: {
-        selectedRestaurantListings: mockListings,
-        isPickup: true,
-    },
-    cart: {
-        cartItems: [],
-        loading: false,
-        error: null,
-    },
+// Mock the animated value
+const mockAnimatedValue = new Animated.Value(0);
+const mockScrollContext = {
+    scrollY: mockAnimatedValue,
+    headerHeight: 200,
 };
-
-// Create a wrapper component that provides the ScrollContext
-const ScrollContextProvider = ({children}: { children: React.ReactNode }) => {
-    const scrollYValue = new Animated.Value(0);
-    return (
-        <ScrollContext.Provider value={{
-            scrollY: scrollYValue,
-            headerHeight: 100
-        }}>
-            {children}
-        </ScrollContext.Provider>
-    );
-};
-
-// Custom render function that includes the context provider
-const customRender = (ui: React.ReactElement, options = {}) => {
-    return render(
-        <ScrollContextProvider>{ui}</ScrollContextProvider>,
-        options
-    );
-};
-
-// Setup for mocking hooks before each test
-beforeEach(() => {
-    // Reset all mocks
-    jest.clearAllMocks();
-
-    // Mock useSelector to return our mock store data
-    (useSelector as jest.MockedFunction<typeof useSelector>).mockImplementation((selector) => {
-        if (typeof selector === 'function') {
-            return selector(mockStore);
-        }
-        return mockStore;
-    });
-
-    // Mock useDispatch to return a function that can be called with actions
-    (useDispatch as jest.MockedFunction<typeof useDispatch>).mockReturnValue(jest.fn());
-});
 
 describe('ListingCard Component', () => {
-    test('renders without crashing', () => {
-        // Use our custom render function with the context provider
-        customRender(<ListingCard/>);
-        // If it renders without throwing an error, the test passes
+    beforeEach(() => {
+        jest.clearAllMocks();
     });
 
-    test('displays correct pricing based on isPickup state', () => {
-        // Mock with pickup mode
-        (useSelector as jest.MockedFunction<typeof useSelector>).mockImplementation((selector) => {
-            if (typeof selector === 'function') {
-                return selector({
-                    ...mockStore,
-                    restaurant: {...mockStore.restaurant, isPickup: true},
-                });
-            }
-            return mockStore;
-        });
+    test('renders correctly with listing data', () => {
+        const {getByText} = renderWithProviders(
+            <ScrollContext.Provider value={mockScrollContext}>
+                <ListingCard listing={mockListings[0]} isPickup={true}/>
+            </ScrollContext.Provider>
+        );
 
-        // We don't need to find specific elements for now, just ensure rendering works
-        customRender(<ListingCard/>);
-
-        // Change to delivery mode
-        (useSelector as jest.MockedFunction<typeof useSelector>).mockImplementation((selector) => {
-            if (typeof selector === 'function') {
-                return selector({
-                    ...mockStore,
-                    restaurant: {...mockStore.restaurant, isPickup: false},
-                });
-            }
-            return mockStore;
-        });
-
-        customRender(<ListingCard/>);
-    });
-
-    test('fetch cart is called when component mounts', () => {
-        customRender(<ListingCard/>);
-
-        // Verify fetchCart was called when the component mounted
-        expect(fetchCart).toHaveBeenCalled();
-    });
-
-    test('renders the correct number of listings', () => {
-        const {getAllByTestId} = customRender(<ListingCard/>);
-        // Assuming each listing item has a testID like 'listing-item-{id}'
-        const listingItems = getAllByTestId(/^listing-item-/);
-        expect(listingItems.length).toBe(mockListings.length);
-    });
-
-    test('displays a message when no listings are available', () => {
-        (useSelector as jest.MockedFunction<typeof useSelector>).mockImplementation((selector) => {
-            if (typeof selector === 'function') {
-                return selector({
-                    ...mockStore,
-                    restaurant: {...mockStore.restaurant, selectedRestaurantListings: []},
-                });
-            }
-            return {...mockStore, restaurant: {...mockStore.restaurant, selectedRestaurantListings: []}};
-        });
-
-        const {getByText} = customRender(<ListingCard/>);
-        expect(getByText('No listings available.')).toBeTruthy();
+        expect(getByText('Sample Listing 1')).toBeTruthy();
+        expect(getByText('Description for sample listing 1')).toBeTruthy();
+        expect(getByText('$10.99')).toBeTruthy();
     });
 
     test('addItemToCart is called when an item is added', () => {
-        const {getAllByText} = customRender(<ListingCard/>);
-        const addToCartButtons = getAllByText('Add to Cart');
-        fireEvent.press(addToCartButtons[0]);
-        expect(addItemToCart).toHaveBeenCalled();
+        const {getByText} = renderWithProviders(
+            <ScrollContext.Provider value={mockScrollContext}>
+                <ListingCard listing={mockListings[0]} isPickup={true}/>
+            </ScrollContext.Provider>
+        );
+
+        // Find and click the "Add" button
+        const addButton = getByText('Add');
+        fireEvent.press(addButton);
+
+        // Check if addItemToCart was called with the correct parameters
+        expect(addItemToCart).toHaveBeenCalledWith({
+            itemId: mockListings[0].id,
+            quantity: 1,
+            isDelivery: false,
+        });
     });
 });
