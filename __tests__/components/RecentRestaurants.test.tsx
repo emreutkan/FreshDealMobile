@@ -5,7 +5,7 @@ import {renderWithProviders} from '../testUtils';
 describe('RecentRestaurants Component', () => {
     test('renders without crashing', () => {
         const {getByText} = renderWithProviders(<RecentRestaurants/>);
-        expect(getByText(/Recently Viewed/)).toBeTruthy();
+        expect(getByText(/Recent Orders/)).toBeTruthy();
     });
 });
 

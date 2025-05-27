@@ -12,7 +12,7 @@ jest.mock('@/src/redux/thunks/cartThunks', () => ({
     updateCartItem: jest.fn(),
     removeItemFromCart: jest.fn(),
     resetCart: jest.fn(),
-    fetchCart: jest.fn(),
+    fetchCart: jest.fn(() => () => Promise.resolve()), // Ensure fetchCart returns a function (thunk)
 }));
 
 // Mock Alert from react-native
