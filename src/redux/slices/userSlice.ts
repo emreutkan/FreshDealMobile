@@ -183,7 +183,6 @@ const userSlice = createSlice({
                 state.error = action.error?.message || 'Failed to get user data';
             })
 
-            // Achievement fetching cases with separate loading state
             .addCase('achievements/fetchUserAchievements/pending', (state) => {
                 state.achievementsLoading = true;
                 state.error = null;
