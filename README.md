@@ -3,7 +3,7 @@
 ![FreshDeal Logo](src/assets/images/logo.png)
 
 [![GitHub Issues](https://img.shields.io/github/issues/FreshDealApp/FreshDealMobile)](https://github.com/FreshDealApp/FreshDealMobile/issues)
-[![License](https://img.shields.io/github/license/FreshDealApp/FreshDealMobile)](LICENSE)
+[![License: All Rights Reserved](https://img.shields.io/badge/License-All%20Rights%20Reserved-red.svg)](LICENSE)
 
 ## Overview
 
@@ -173,7 +173,15 @@ submitting pull requests. Make sure to also review our [Code of Conduct](CODE_OF
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+Copyright (c) 2024 Irfan Emre Utkan
+
+All Rights Reserved.
+
+This software is made publicly available for educational and demonstrative purposes only.  
+No permission is granted to copy, modify, distribute, or use any part of this software, including but not limited to
+code, designs, or documentation.
+
+The software is provided "as is," without warranty of any kind.
 
 ## 📬 Contact
 
