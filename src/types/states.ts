@@ -63,6 +63,8 @@ export interface RestaurantState {
     flashDealsRestaurants: Restaurant[];
     flashDealsLoading: boolean;
     flashDealsError: string | null;
+    badgesLoading: boolean;
+    badgesError: string | null;
 }
 
 export interface AddressState {
@@ -134,7 +136,7 @@ export interface Pagination {
 }
 
 export interface Achievement {
-    threshold: boolean;
+    threshold: number;
     achievement_type: string;
     id: number;
     name: string;

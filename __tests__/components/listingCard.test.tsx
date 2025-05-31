@@ -1,0 +1,117 @@
+import React from 'react';
+import {fireEvent} from '@testing-library/react-native';
+import {ListingCard} from '@/src/features/RestaurantScreen/components/listingsCard';
+import {addItemToCart} from '@/src/redux/thunks/cartThunks';
+import {ScrollContext} from '@/src/features/RestaurantScreen/RestaurantDetails';
+import {Animated} from 'react-native';
+import {renderWithProviders} from '../testUtils';
+
+// Mock modules
+jest.mock('@/src/redux/thunks/cartThunks', () => ({
+    addItemToCart: jest.fn(() => () => Promise.resolve()), // Corrected mock for thunk
+    updateCartItem: jest.fn(() => () => Promise.resolve()), // Assuming this is also a thunk
+    removeItemFromCart: jest.fn(() => () => Promise.resolve()), // Assuming this is also a thunk
+    resetCart: jest.fn(() => () => Promise.resolve()), // Assuming this is also a thunk
+    fetchCart: jest.fn(() => () => Promise.resolve()),
+}));
+
+// Mock Alert from react-native
+jest.mock('react-native', () => {
+    const RN = jest.requireActual('react-native');
+    return {
+        ...RN,
+        Alert: {
+            ...RN.Alert,
+            alert: jest.fn(),
+        },
+    };
+});
+
+// Sample mock data
+const mockListings = [
+    {
+        id: 1,
+        restaurant_id: 101,
+        title: 'Sample Listing 1',
+        description: 'Description for sample listing 1',
+        image_url: 'https://example.com/image1.jpg',
+        count: 5,
+        original_price: 15.99,
+        pick_up_price: 10.99,
+        delivery_price: 12.99,
+        consume_within: 2,
+        available_for_pickup: true,
+        available_for_delivery: true,
+        fresh_score: 85,
+    },
+    {
+        id: 2,
+        restaurant_id: 101,
+        title: 'Sample Listing 2',
+        description: 'Description for sample listing 2',
+        image_url: 'https://example.com/image2.jpg',
+        count: 3,
+        original_price: 12.99,
+        pick_up_price: 8.99,
+        delivery_price: 10.99,
+        consume_within: 3,
+        available_for_pickup: true,
+        available_for_delivery: false,
+        fresh_score: 75,
+    },
+];
+
+// Mock the animated value
+const mockAnimatedValue = new Animated.Value(0);
+const mockScrollContext = {
+    scrollY: mockAnimatedValue,
+    headerHeight: 200,
+};
+
+describe('ListingCard Component', () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+    });
+
+    test('renders correctly with listing data', () => {
+        const {getByText, queryByText} = renderWithProviders(
+            <ScrollContext.Provider value={mockScrollContext}>
+                <ListingCard listingList={[mockListings[0]]} isPickup={true}/>
+            </ScrollContext.Provider>
+        );
+
+        expect(getByText('Sample Listing 1')).toBeTruthy();
+        // Description is in the modal, so it should not be visible initially
+        expect(queryByText('Description for sample listing 1')).toBeNull();
+        // Check for the price, ensuring the correct one (pickup price) is displayed
+        // Note: The component uses 'TL' not '$'
+        expect(getByText('10.99 TL')).toBeTruthy();
+    });
+
+    test('addItemToCart is called when an item is added from modal', async () => {
+        const {getByText, findByText, getByTestId} = renderWithProviders(
+            <ScrollContext.Provider value={mockScrollContext}>
+                <ListingCard listingList={[mockListings[0]]} isPickup={true}/>
+            </ScrollContext.Provider>
+        );
+
+        // Press the listing card to open the modal
+        const listingCardTouchable = getByTestId('listing-item-1'); // Assuming listing card has this testID
+        fireEvent.press(listingCardTouchable);
+
+        // Wait for the modal to open and find the "Add to Cart" button
+        // The button text in the modal is "Add to Cart"
+        const addButtonInModal = await findByText('Add to Cart');
+        fireEvent.press(addButtonInModal);
+
+        // Check if addItemToCart was called with the correct parameters
+        // The thunk receives an object with a payload property
+        expect(addItemToCart).toHaveBeenCalledWith({
+            payload: {
+                listing_id: mockListings[0].id,
+                // quantity: 1, // The thunk addItemToCart likely defaults to quantity 1 or handles it internally
+                // isDelivery: false, // This might be derived from the isPickup prop or global state
+            }
+        });
+    });
+});

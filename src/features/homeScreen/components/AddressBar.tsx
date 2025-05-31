@@ -189,6 +189,7 @@ const AddressBar: React.FC<AddressBarProps> = ({textColor}) => {
                     activeOpacity={1}
                     accessibilityLabel="Open Address Selector"
                     accessibilityHint="Opens a modal to select or add a new address"
+                    testID="address-bar-button"
                 />
             </View>
 
@@ -419,3 +420,4 @@ const styles = StyleSheet.create({
 });
 
 export default AddressBar;
+

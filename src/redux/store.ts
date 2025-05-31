@@ -11,6 +11,7 @@ import {restaurantMiddleware} from "@/src/middleware/restaurantMiddleware";
 import notificationReducer from '@/src/redux/slices/notificationSlice';
 import reportReducer from '@/src/redux/slices/reportSlice';
 import recommendationReducer from '@/src/redux/slices/recommendationSlice';
+import punishmentHistorySlice from '@/src/redux/slices/PunishmentHistorySlice';
 
 const store = configureStore({
     reducer: {
@@ -23,6 +24,8 @@ const store = configureStore({
         notification: notificationReducer,
         report: reportReducer,
         recommendation: recommendationReducer,
+        punishmentHistory: punishmentHistorySlice,
+
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware({
@@ -37,3 +40,5 @@ const store = configureStore({
 
 export {store};
 export type AppDispatch = typeof store.dispatch;
+export type RootState = ReturnType<typeof store.getState>; // Define and export RootState
+

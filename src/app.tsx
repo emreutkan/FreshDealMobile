@@ -22,6 +22,7 @@ import RestaurantComments from "./features/RestaurantComments/RestaurantComments
 import RankingsScreen from "@/src/features/rankingsScreen/RankingsScreen";
 import AchievementsScreen from "@/src/features/AchievementsScreen/AchievementsScreen";
 import DebugMenuScreen from "@/src/features/debugMenu/DebugMenuScreen";
+import ChatbotScreen from "@/src/features/Chatbot/ChatbotScreen";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -76,6 +77,7 @@ const AppContent: React.FC = () => {
                             <Stack.Screen name="Achievements" component={AchievementsScreen}
                                           options={{headerShown: false}}/>
                             <Stack.Screen name="DebugMenu" component={DebugMenuScreen}/>
+                            <Stack.Screen name="Chatbot" component={ChatbotScreen} options={{headerShown: false}}/>
 
                         </Stack.Navigator>
                     </NavigationContainer>
@@ -92,3 +94,4 @@ const styles = StyleSheet.create({
 });
 
 export default AppContent;
+

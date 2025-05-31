@@ -144,6 +144,11 @@ const RestaurantComments: React.FC = () => {
         commentsLoading
     } = useSelector((state: RootState) => state.restaurant);
 
+    // Sort comments by timestamp (newest first)
+    const sortedComments = [...comments].sort((a, b) =>
+        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    );
+
     useEffect(() => {
         if (restaurant.id) {
             dispatch(getRestaurantCommentsThunk(restaurant.id));
@@ -296,7 +301,7 @@ const RestaurantComments: React.FC = () => {
             )}
 
             <FlatList
-                data={comments}
+                data={sortedComments}
                 renderItem={({item}) => <CommentCard comment={item}/>}
                 keyExtractor={(item) => item.id.toString()}
                 contentContainerStyle={styles.listContainer}

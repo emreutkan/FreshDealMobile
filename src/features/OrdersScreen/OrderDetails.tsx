@@ -4,13 +4,14 @@ import {
     Alert,
     Animated,
     Image,
+    KeyboardAvoidingView,
     Platform,
     ScrollView,
     StyleSheet,
     Text,
     TextInput,
     TouchableOpacity,
-    View
+    View,
 } from 'react-native';
 import {RouteProp, useRoute} from '@react-navigation/native';
 import {RootStackParamList} from '@/src/utils/navigation';
@@ -25,10 +26,11 @@ import {GoBackIcon} from "@/src/features/homeScreen/components/goBack";
 import {Ionicons, MaterialCommunityIcons, MaterialIcons} from "@expo/vector-icons";
 import {fetchOrderDetailsAsync} from "@/src/redux/thunks/purchaseThunks";
 import {addRestaurantCommentThunk} from "@/src/redux/thunks/restaurantThunks";
-import {BottomSheetModal, BottomSheetScrollView} from "@gorhom/bottom-sheet";
+import {BottomSheetModal} from "@gorhom/bottom-sheet";
 import axios from "axios";
 import {API_BASE_URL} from "@/src/redux/api/API";
 import {LinearGradient} from "expo-linear-gradient";
+import ReportModalContent from './ReportModalContent';
 
 
 type OrderDetailsRouteProp = RouteProp<RootStackParamList, 'OrderDetails'>;
@@ -252,25 +254,23 @@ const OrderDetails: React.FC = () => {
         }
     }, [rating]);
 
-    const RatingStars = () => {
-        return (
-            <View style={styles.ratingContainer}>
-                {[1, 2, 3, 4, 5].map((star) => (
-                    <TouchableOpacity
-                        key={star}
-                        style={styles.starButton}
-                        onPress={() => setRating(star)}
-                    >
-                        <Ionicons
-                            name={rating >= star ? "star" : "star-outline"}
-                            size={32}
-                            color={rating >= star ? "#FFD700" : "#CCCCCC"}
-                        />
-                    </TouchableOpacity>
-                ))}
-            </View>
-        );
-    };
+    const RatingStars = () => (
+        <View style={styles.ratingContainer}>
+            {[1, 2, 3, 4, 5].map((star) => (
+                <TouchableOpacity
+                    key={star}
+                    style={styles.starButton}
+                    onPress={() => setRating(star)}
+                >
+                    <Ionicons
+                        name={rating >= star ? "star" : "star-outline"}
+                        size={32}
+                        color={rating >= star ? "#FFD700" : "#CCCCCC"}
+                    />
+                </TouchableOpacity>
+            ))}
+        </View>
+    );
 
     const BadgeSelector = () => {
         const currentBadges = rating >= 3 ? POSITIVE_BADGES : NEGATIVE_BADGES;
@@ -338,73 +338,6 @@ const OrderDetails: React.FC = () => {
         return null;
     };
 
-    const ReportModalContent = () => (
-        <BottomSheetScrollView contentContainerStyle={styles.reportModalContent}>
-            <View style={styles.reportHeader}>
-                <Text style={styles.reportTitle}>Report an Issue</Text>
-                <TouchableOpacity style={styles.closeButtonContainer} onPress={handleCloseModal}>
-                    <Ionicons name="close" size={24} color="#666"/>
-                </TouchableOpacity>
-            </View>
-
-            <TouchableOpacity
-                style={styles.imageUploadContainer}
-                onPress={pickImage}
-            >
-                {reportImage ? (
-                    <>
-                        <Image
-                            source={{uri: reportImage}}
-                            style={styles.uploadedImage}
-                            resizeMode="cover"
-                        />
-                        <TouchableOpacity
-                            style={styles.changeImageButton}
-                            onPress={pickImage}
-                        >
-                            <Text style={styles.changeImageText}>Change Image</Text>
-                        </TouchableOpacity>
-                    </>
-                ) : (
-                    <>
-                        <MaterialIcons name="add-photo-alternate" size={50} color="#CCCCCC"/>
-                        <Text style={styles.uploadText}>Upload Image</Text>
-                        <Text style={styles.uploadSubText}>Tap to choose a photo</Text>
-                    </>
-                )}
-            </TouchableOpacity>
-
-            <Text style={styles.inputLabel}>Issue Description</Text>
-            <TextInput
-                style={styles.reportCommentInput}
-                placeholder="Describe what's wrong with your order..."
-                value={reportComment}
-                onChangeText={setReportComment}
-                multiline
-                placeholderTextColor="#999"
-            />
-
-            {uploadProgress > 0 && uploadProgress < 100 && (
-                <View style={styles.progressContainer}>
-                    <View style={[styles.progressBar, {width: `${uploadProgress}%`}]}/>
-                    <Text style={styles.progressText}>{`${Math.round(uploadProgress)}%`}</Text>
-                </View>
-            )}
-
-            <TouchableOpacity
-                style={[
-                    styles.reportSubmitButton,
-                    (!reportImage || !reportComment.trim()) && styles.reportSubmitButtonDisabled
-                ]}
-                onPress={handleSubmitReport}
-                disabled={!reportImage || !reportComment.trim() || uploadProgress > 0}
-            >
-                <Text style={styles.reportSubmitButtonText}>
-                    {uploadProgress > 0 ? 'Uploading...' : 'Submit Report'}
-                </Text>
-            </TouchableOpacity>
-        </BottomSheetScrollView>
-    );
 
     const renderRatingSection = () => {
         if (!currentOrder) {
@@ -428,8 +361,11 @@ const OrderDetails: React.FC = () => {
                         placeholder="Tell us more about your experience (optional)"
                         value={comment}
                         onChangeText={setComment}
-                        multiline
+                        multiline={true}
+                        numberOfLines={4}
                         placeholderTextColor="#999"
+                        textAlignVertical="top"
+                        autoCapitalize="sentences"
                     />
 
                     <TouchableOpacity
@@ -484,12 +420,13 @@ const OrderDetails: React.FC = () => {
     });
 
     const renderOrderStatus = () => {
-        if (!currentOrder.completion_image_url && currentOrder.status !== 'COMPLETED') {
+        if (!currentOrder.completion_image_url && currentOrder.status !== 'COMPLETED' && currentOrder.status !== 'REJECTED') {
             return (
                 <View style={styles.statusContainer}>
                     <View style={styles.statusIconContainer}>
                         <Ionicons name="hourglass-outline" size={24} color="#FFA500"/>
                     </View>
+
                     <Text style={styles.statusText}>
                         Waiting for restaurant to prepare and upload the food image
                     </Text>
@@ -506,6 +443,17 @@ const OrderDetails: React.FC = () => {
                     </Text>
                 </View>
             );
+        } else if (currentOrder.status === 'REJECTED') {
+            return (
+                <View style={styles.statusContainer}>
+                    <View style={styles.statusIconContainer}>
+                        <Ionicons name="close-circle-outline" size={24} color="#F44336"/>
+                    </View>
+                    <Text style={styles.statusText}>
+                        Your order was rejected by the restaurant
+                    </Text>
+                </View>
+            );
         }
 
         return (
@@ -513,7 +461,6 @@ const OrderDetails: React.FC = () => {
                 <Image
                     source={{uri: currentOrder.completion_image_url}}
                     style={styles.completionImage}
-                    // defaultSource={require('@/src/assets/images/icon.png')}
                 />
                 <LinearGradient
                     colors={['rgba(0,0,0,0.4)', 'transparent']}
@@ -528,156 +475,176 @@ const OrderDetails: React.FC = () => {
         );
     };
 
+    // FIX: Only wrap the whole screen, not inside modal
     return (
-        <View style={styles.container}>
-            <Animated.View style={[
-                styles.header,
-                {
-                    paddingTop: insets.top,
-                    backgroundColor: 'white',
-                    opacity: headerOpacity,
-                    borderBottomColor: 'rgba(0,0,0,0.1)',
-                    borderBottomWidth: 1
-                }
-            ]}>
-                <View style={styles.headerContent}>
-                    <GoBackIcon/>
-                    <Text style={styles.headerTitle} numberOfLines={1}>
-                        {currentOrder.listing_title}
-                    </Text>
-                    <ReportButton/>
-                </View>
-            </Animated.View>
-
-            <ScrollView
-                style={styles.scrollContainer}
-                contentContainerStyle={{paddingBottom: insets.bottom}}
-                showsVerticalScrollIndicator={false}
-                onScroll={Animated.event(
-                    [{nativeEvent: {contentOffset: {y: headerScrollAnim}}}],
-                    {useNativeDriver: false}
-                )}
-                scrollEventThrottle={16}
-            >
-                <View style={styles.headerPlaceholder}/>
-
-                <View style={styles.heroSection}>
-                    <Text style={styles.orderTitle}>{currentOrder.listing_title}</Text>
-
-                    <View style={styles.statusBadge} backgroundColor={getStatusColor()}>
-                        <Text style={styles.statusBadgeText}>
-                            {currentOrder.status}
+        <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={{flex: 1}}
+            keyboardVerticalOffset={Platform.OS === 'ios' ? 44 : 0}
+        >
+            <View style={styles.container}>
+                <Animated.View style={[
+                    styles.header,
+                    {
+                        paddingTop: insets.top,
+                        backgroundColor: 'white',
+                        opacity: headerOpacity,
+                        borderBottomColor: 'rgba(0,0,0,0.1)',
+                        borderBottomWidth: 1
+                    }
+                ]}>
+                    <View style={styles.headerContent}>
+                        <GoBackIcon/>
+                        <Text style={styles.headerTitle} numberOfLines={1}>
+                            {currentOrder.listing_title}
                         </Text>
+                        <ReportButton/>
+                    </View>
+                </Animated.View>
+
+                <ScrollView
+                    style={styles.scrollContainer}
+                    contentContainerStyle={{paddingBottom: insets.bottom + 80}}
+                    showsVerticalScrollIndicator={false}
+                    keyboardShouldPersistTaps="handled"
+                    onScroll={Animated.event(
+                        [{nativeEvent: {contentOffset: {y: headerScrollAnim}}}],
+                        {useNativeDriver: false}
+                    )}
+                    scrollEventThrottle={16}
+                >
+                    <View style={styles.headerPlaceholder}/>
+
+                    <View style={styles.heroSection}>
+                        <Text style={styles.orderTitle}>{currentOrder.listing_title}</Text>
+
+                        <View style={styles.statusBadge} backgroundColor={getStatusColor()}>
+                            <Text style={styles.statusBadgeText}>
+                                {currentOrder.status}
+                            </Text>
+                        </View>
+
+                        <View style={styles.orderIdRow}>
+                            <Text style={styles.orderId}>
+                                Order #{currentOrder.purchase_id}
+                            </Text>
+                            <Text style={styles.orderDate}>
+                                {new Date(currentOrder.purchase_date).toLocaleDateString('en-US', {
+                                    year: 'numeric',
+                                    month: 'short',
+                                    day: 'numeric'
+                                })}
+                            </Text>
+                        </View>
                     </View>
 
-                    <View style={styles.orderIdRow}>
-                        <Text style={styles.orderId}>
-                            Order #{currentOrder.purchase_id}
-                        </Text>
-                        <Text style={styles.orderDate}>
-                            {new Date(currentOrder.purchase_date).toLocaleDateString('en-US', {
-                                year: 'numeric',
-                                month: 'short',
-                                day: 'numeric'
-                            })}
-                        </Text>
-                    </View>
-                </View>
+                    {renderOrderStatus()}
 
-                {renderOrderStatus()}
+                    <View style={styles.card}>
+                        <View style={styles.sectionHeader}>
+                            <Ionicons name="information-circle-outline" size={20} color="#50703C"/>
+                            <Text style={styles.sectionTitle}>Order Information</Text>
+                        </View>
 
-                <View style={styles.card}>
-                    <View style={styles.sectionHeader}>
-                        <Ionicons name="information-circle-outline" size={20} color="#50703C"/>
-                        <Text style={styles.sectionTitle}>Order Information</Text>
-                    </View>
+                        {currentOrder.restaurant && (
+                            <View style={styles.detailRow}>
+                                <View style={styles.detailIconContainer}>
+                                    <Ionicons name="restaurant-outline" size={18} color="#50703C"/>
+                                </View>
+                                <Text style={styles.detailLabel}>Restaurant</Text>
+                                <Text style={styles.detailValue}>
+                                    {currentOrder.restaurant.name}
+                                </Text>
+                            </View>
+                        )}
 
-                    {currentOrder.restaurant && (
                         <View style={styles.detailRow}>
                             <View style={styles.detailIconContainer}>
-                                <Ionicons name="restaurant-outline" size={18} color="#50703C"/>
+                                <Ionicons name="cart-outline" size={18} color="#50703C"/>
                             </View>
-                            <Text style={styles.detailLabel}>Restaurant</Text>
+                            <Text style={styles.detailLabel}>Quantity</Text>
+                            <Text style={styles.detailValue}>{currentOrder.quantity}</Text>
+                        </View>
+
+                        <View style={styles.detailRow}>
+                            <View style={styles.detailIconContainer}>
+                                <Ionicons name={currentOrder.is_delivery ? "bicycle-outline" : "walk-outline"} size={18}
+                                          color="#50703C"/>
+                            </View>
+                            <Text style={styles.detailLabel}>Order Type</Text>
                             <Text style={styles.detailValue}>
-                                {currentOrder.restaurant.name}
+                                {currentOrder.is_delivery ? "Delivery" : "Pickup"}
                             </Text>
+                        </View>
+
+                        <View style={styles.detailRow}>
+                            <View style={styles.detailIconContainer}>
+                                <Ionicons name="cash-outline" size={18} color="#50703C"/>
+                            </View>
+                            <Text style={styles.detailLabel}>Amount</Text>
+                            <Text style={styles.detailValue}>
+                                {currentOrder.total_price}₺
+                            </Text>
+                        </View>
+
+                        <View style={styles.detailRow}>
+                            <View style={styles.detailIconContainer}>
+                                <Ionicons name="calendar-outline" size={18} color="#50703C"/>
+                            </View>
+                            <Text style={styles.detailLabel}>Date</Text>
+                            <Text style={styles.detailValue}>
+                                {new Date(currentOrder.purchase_date).toLocaleString()}
+                            </Text>
+                        </View>
+                    </View>
+
+                    {currentOrder.is_delivery && (
+                        <View style={styles.card}>
+                            <View style={styles.sectionHeader}>
+                                <Ionicons name="location-outline" size={20} color="#50703C"/>
+                                <Text style={styles.sectionTitle}>Delivery Information</Text>
+                            </View>
+                            <View style={styles.addressContainer}>
+                                <Text style={styles.addressText}>{currentOrder.delivery_address}</Text>
+                                {currentOrder.delivery_notes && (
+                                    <View style={styles.notesContainer}>
+                                        <Text style={styles.notesLabel}>Notes:</Text>
+                                        <Text style={styles.notesText}>{currentOrder.delivery_notes}</Text>
+                                    </View>
+                                )}
+                            </View>
                         </View>
                     )}
 
-                    <View style={styles.detailRow}>
-                        <View style={styles.detailIconContainer}>
-                            <Ionicons name="cart-outline" size={18} color="#50703C"/>
-                        </View>
-                        <Text style={styles.detailLabel}>Quantity</Text>
-                        <Text style={styles.detailValue}>{currentOrder.quantity}</Text>
-                    </View>
+                    {renderRatingSection()}
+                </ScrollView>
 
-                    <View style={styles.detailRow}>
-                        <View style={styles.detailIconContainer}>
-                            <Ionicons name={currentOrder.is_delivery ? "bicycle-outline" : "walk-outline"} size={18}
-                                      color="#50703C"/>
-                        </View>
-                        <Text style={styles.detailLabel}>Order Type</Text>
-                        <Text style={styles.detailValue}>
-                            {currentOrder.is_delivery ? "Delivery" : "Pickup"}
-                        </Text>
-                    </View>
+                <BottomSheetModal
+                    ref={bottomSheetModalRef}
+                    style={{flex: 1}}
+                    snapPoints={['125%']}
+                    backgroundStyle={styles.bottomSheetBackground}
+                    handleIndicatorStyle={styles.bottomSheetIndicator}
+                    keyboardBehavior="interactive"
+                    keyboardBlurBehavior="restore"
+                    android_keyboardInputMode="adjustResize"
+                >
+                    <ReportModalContent
+                        reportImage={reportImage}
+                        reportComment={reportComment}
+                        setReportComment={setReportComment}
+                        pickImage={pickImage}
+                        handleCloseModal={handleCloseModal}
+                        handleSubmitReport={handleSubmitReport}
+                        uploadProgress={uploadProgress}
+                        styles={styles}
+                    /> </BottomSheetModal>
 
-                    <View style={styles.detailRow}>
-                        <View style={styles.detailIconContainer}>
-                            <Ionicons name="cash-outline" size={18} color="#50703C"/>
-                        </View>
-                        <Text style={styles.detailLabel}>Amount</Text>
-                        <Text style={styles.detailValue}>
-                            {currentOrder.total_price}₺
-                        </Text>
-                    </View>
-
-                    <View style={styles.detailRow}>
-                        <View style={styles.detailIconContainer}>
-                            <Ionicons name="calendar-outline" size={18} color="#50703C"/>
-                        </View>
-                        <Text style={styles.detailLabel}>Date</Text>
-                        <Text style={styles.detailValue}>
-                            {new Date(currentOrder.purchase_date).toLocaleString()}
-                        </Text>
-                    </View>
+                <View style={[styles.floatingHeader, {paddingTop: insets.top}]}>
+                    <GoBackIcon/>
                 </View>
-
-                {currentOrder.is_delivery && (
-                    <View style={styles.card}>
-                        <View style={styles.sectionHeader}>
-                            <Ionicons name="location-outline" size={20} color="#50703C"/>
-                            <Text style={styles.sectionTitle}>Delivery Information</Text>
-                        </View>
-                        <View style={styles.addressContainer}>
-                            <Text style={styles.addressText}>{currentOrder.delivery_address}</Text>
-                            {currentOrder.delivery_notes && (
-                                <View style={styles.notesContainer}>
-                                    <Text style={styles.notesLabel}>Notes:</Text>
-                                    <Text style={styles.notesText}>{currentOrder.delivery_notes}</Text>
-                                </View>
-                            )}
-                        </View>
-                    </View>
-                )}
-
-                {renderRatingSection()}
-            </ScrollView>
-
-            <BottomSheetModal
-                ref={bottomSheetModalRef}
-                snapPoints={['75%']}
-                backgroundStyle={styles.bottomSheetBackground}
-                handleIndicatorStyle={styles.bottomSheetIndicator}
-            >
-                <ReportModalContent/>
-            </BottomSheetModal>
-
-            <View style={[styles.floatingHeader, {paddingTop: insets.top}]}>
-                <GoBackIcon/>
             </View>
-        </View>
+        </KeyboardAvoidingView>
     );
 };
 

@@ -1,7 +1,7 @@
 // userThunks.ts
 
 import {createAsyncThunk} from "@reduxjs/toolkit";
-import {RootState} from "@/src/types/store";
+import {RootState} from "@/src/redux/store"; // Updated import
 import {tokenService} from "@/src/services/tokenService";
 import {userApi, UserRankResponse} from "@/src/redux/api/userAPI";
 import {authApi} from "@/src/redux/api/authAPI";
@@ -23,7 +23,6 @@ import {
     UpdateUsernameResponse,
     UserDataResponse
 } from "@/src/types/api/user/responses";
-import {setToken} from "@/src/redux/slices/userSlice";
 
 export const loginUserThunk = createAsyncThunk<
     LoginResponse,
@@ -37,7 +36,6 @@ export const loginUserThunk = createAsyncThunk<
             console.log(response)
 
             if (response.token) {
-                dispatch(setToken(response.token));
                 await dispatch(getUserDataThunk({token: response.token}));
             }
 

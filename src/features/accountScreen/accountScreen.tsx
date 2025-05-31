@@ -146,6 +146,9 @@ const AccountScreen: React.FC = () => {
         navigation.navigate('DebugMenu');
     };
 
+    const handleChatbot = () => {
+        navigation.navigate('Chatbot');
+    };
 
     const handleEditInfo = async () => {
         if (isEditing) {
@@ -269,7 +272,8 @@ const AccountScreen: React.FC = () => {
                         onPasswordReset={handlePasswordReset}
                         onLogout={handleLogout}
                         onDebugToken={handleDebugToken}
-                        onDebugMenu={handleDebugMenu} // Add this new prop
+                        onDebugMenu={handleDebugMenu}
+                        onChatbot={handleChatbot}
                         onEdit={handleEditInfo}
                         isEditing={isEditing}
                     />
@@ -327,3 +331,4 @@ const styles = StyleSheet.create({
 });
 
 export default AccountScreen;
+
