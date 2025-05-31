@@ -20,6 +20,7 @@ export type RootStackParamList = {
     Rankings: undefined;
     Achievements: undefined;
     DebugMenu: undefined;
+    Chatbot: undefined; // Add Chatbot route
 };
 
 // If you're using useNavigation hook, you might want to add this type:

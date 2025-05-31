@@ -6,7 +6,8 @@ interface ActionsSectionProps {
     onPasswordReset: () => void;
     onLogout: () => void;
     onDebugToken: () => void;
-    onDebugMenu: () => void; // Added new prop
+    onDebugMenu: () => void;
+    onChatbot: () => void; // Add new prop for chatbot
     onEdit: () => void;
     isEditing: boolean;
 }
@@ -83,7 +84,8 @@ const ActionsSection: React.FC<ActionsSectionProps> = ({
                                                            onPasswordReset,
                                                            onLogout,
                                                            onDebugToken,
-                                                           onDebugMenu, // Added new parameter
+                                                           onDebugMenu,
+                                                           onChatbot, // Added new parameter
                                                            onEdit,
                                                            isEditing
                                                        }) => {
@@ -114,12 +116,19 @@ const ActionsSection: React.FC<ActionsSectionProps> = ({
                 onPress={onDebugToken}
             />
 
-            {/* Added new Debug Menu button right below Debug Token */}
             <ActionButton
                 icon="code-working-outline"
                 label="Debug Menu"
                 color="#4285F4"
                 onPress={onDebugMenu}
+            />
+
+            {/* Add new Chatbot button */}
+            <ActionButton
+                icon="chatbox-ellipses-outline"
+                label="Chatbot Assistant"
+                color="#50703C"
+                onPress={onChatbot}
             />
 
             <ActionButton
@@ -196,3 +205,4 @@ const styles = StyleSheet.create({
 });
 
 export default ActionsSection;
+
