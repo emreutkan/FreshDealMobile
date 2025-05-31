@@ -39,6 +39,7 @@ interface Message {
         }>;
         help_topics?: string[];
         navigation_tip?: string;
+        suggestion?: string[];
         [key: string]: any;
     };
 }
@@ -126,8 +127,11 @@ const ChatbotScreen: React.FC = () => {
                 token
             });
 
-            if (data.success) {
-                const {message, options, success, ...additionalInfo} = data;
+            // Handle both successful and unsuccessful responses from the API
+            // as long as they contain a message
+            if (data && data.message) {
+                // Extract all useful information regardless of success status
+                const {message, options, success, suggestion, ...additionalInfo} = data;
 
                 const botMessage: Message = {
                     id: (Date.now() + 1).toString(),
@@ -135,19 +139,15 @@ const ChatbotScreen: React.FC = () => {
                     sender: 'bot',
                     timestamp: new Date(),
                     options: options || [],
-                    additionalInfo: Object.keys(additionalInfo).length > 0 ? additionalInfo : undefined
+                    additionalInfo: {
+                        ...Object.keys(additionalInfo).length > 0 ? additionalInfo : {},
+                        ...(suggestion ? {suggestion: [suggestion]} : {})
+                    }
                 };
 
                 setMessages(prevMessages => [...prevMessages, botMessage]);
             } else {
-                const errorMessage: Message = {
-                    id: (Date.now() + 1).toString(),
-                    text: 'Sorry, I couldn\'t process your request. Please try again.',
-                    sender: 'bot',
-                    timestamp: new Date()
-                };
-
-                setMessages(prevMessages => [...prevMessages, errorMessage]);
+                throw new Error("Invalid response format");
             }
         } catch (error) {
             console.error(`Error sending message to ${API_BASE_URL}/api/chatbot/ask:`, error);
@@ -283,6 +283,18 @@ const ChatbotScreen: React.FC = () => {
                             </View>
                         )}
 
+                        {/* Suggestions */}
+                        {item.additionalInfo.suggestion && item.additionalInfo.suggestion.length > 0 && (
+                            <View style={styles.infoSection}>
+                                <Text style={styles.infoSectionTitle}>Suggestions:</Text>
+                                {item.additionalInfo.suggestion.map((suggestion, index) => (
+                                    <View key={index} style={styles.bulletPoint}>
+                                        <Text style={styles.bulletPointText}>{suggestion}</Text>
+                                    </View>
+                                ))}
+                            </View>
+                        )}
+
                         {/* Generic array data that hasn't been handled specifically */}
                         {Object.entries(item.additionalInfo).map(([key, value]) => {
                             // Skip already rendered sections and non-array values
@@ -294,6 +306,7 @@ const ChatbotScreen: React.FC = () => {
                                 key === 'navigation_tip' ||
                                 key === 'addresses' ||
                                 key === 'main_tabs' ||
+                                key === 'suggestion' ||
                                 !Array.isArray(value)
                             ) return null;
 
