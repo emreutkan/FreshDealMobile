@@ -3,7 +3,7 @@ const config = {
     // Replace jest-expo preset with a custom preset configuration
     preset: 'react-native',
     setupFiles: [
-        '<rootDir>/__tests__/setup.ts',
+        '<rootDir>/__test__/setup.ts',
         // Add react-native mocks that would normally be included in jest-expo
         './node_modules/react-native-gesture-handler/jestSetup.js'
     ],
@@ -14,7 +14,7 @@ const config = {
         '^@/(.*)$': '<rootDir>/$1'
     },
     testMatch: [
-        '**/__tests__/**/*.test.[jt]s?(x)'
+        '**/__test__/**/*.test.[jt]s?(x)'
     ],
     moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
     // Use jsdom instead of node environment for React components
