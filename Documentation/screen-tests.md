@@ -34,3 +34,21 @@ Verifies basic reducers in the user slice including updating email/phone data, s
 
 ## restaurantSlice.test.ts
 Checks core reducers of the restaurant slice such as updating the search radius and adjusting the pickup flag when a restaurant is selected.
+
+## LandingScreen.test.tsx
+Ensures the landing screen redirects to the home stack when a token already exists in redux state.
+
+## AccountScreen.test.tsx
+Checks that user achievements are fetched on mount by dispatching the appropriate thunk.
+
+## DebugMenuScreen.test.tsx
+Verifies that tapping the Redux inspection option reveals state sections and that API buttons dispatch their actions.
+
+## FlashDealsBottomSheet.test.tsx
+Tests that opening the flash deals bottom sheet triggers a fetch for available flash deals.
+
+## CartIcon.test.tsx
+Confirms that pressing the cart icon navigates to the Cart screen.
+
+## addressSlice.test.ts
+Covers basic reducers of the address slice including adding and removing addresses and updating the selected ID.
