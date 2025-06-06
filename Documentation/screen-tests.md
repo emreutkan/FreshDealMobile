@@ -12,10 +12,19 @@ Checks that typing into the search input updates the local state and that the am
 Ensures the favourites screen shows a loading indicator when restaurant data is being fetched, displays an empty state message when there are no favourite restaurants and renders the favourites list when favourites exist.
 
 ## ChatbotScreen.test.tsx
-Mimics starting a chatbot conversation and sending a message. It verifies that the initial bot reply is rendered and that sending a message results in an API call and shows the bot\'s response.
+Mimics starting a chatbot conversation and sending a message. It verifies that the initial bot reply is rendered and that sending a message results in an API call and shows the bot's response.
 
 ## RankingsScreen.test.tsx
 Confirms that the leaderboard screen fetches rankings when mounted and reacts properly to loading, empty and populated state variations.
+
+## CartScreen.test.tsx
+Covers behaviours of the shopping cart screen. It checks that the cart thunk is dispatched on mount, that the empty cart state is shown when there are no items and that the checkout button appears when items are present.
+
+## HomeScreen.test.tsx
+Ensures the home screen routes to the address selection screen when the user has no saved addresses and shows the main home views once an address exists.
+
+## OrdersScreen.test.tsx
+Verifies the orders screen dispatches a fetch for active orders on mount and renders the empty state message when there are no active orders.
 
 ## PickUpDeliveryToggle.test.tsx
 Tests the delivery method toggle component ensuring the correct buttons render depending on restaurant capabilities and that tapping them dispatches the expected action.
