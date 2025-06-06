@@ -52,3 +52,18 @@ Confirms that pressing the cart icon navigates to the Cart screen.
 
 ## addressSlice.test.ts
 Covers basic reducers of the address slice including adding and removing addresses and updating the selected ID.
+
+## notificationSlice.test.ts
+Tests setting the Expo push token and toggling the registration state in the notification slice.
+
+## recommendationSlice.test.ts
+Verifies loading, success and failure reducers for recommendations to ensure ids and errors are handled correctly.
+
+## cartSlice.test.ts
+Covers cart extra reducers including resetting on logout, handling cart fetch actions and clearing items on reset.
+
+## InfoCards.test.tsx
+Checks that the account info cards show static text when not editing and render an input field that calls `setEditedValues` when editing.
+
+## VerificationCodeInputField.test.tsx
+Tests the six-digit code input component and confirms that entering text calls the provided change handler.
