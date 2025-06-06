@@ -28,13 +28,15 @@ jest.mock('expo-linear-gradient', () => { const React=require('react'); const {V
 
 const dispatch = jest.fn();
 (useDispatch as jest.Mock).mockReturnValue(dispatch);
-(useSelector as jest.Mock).mockReturnValue({ restaurant: { flashDealsRestaurants: [], flashDealsLoading: false } });
+const baseState = { restaurant: { flashDealsRestaurants: [], flashDealsLoading: false } };
+(useSelector as jest.Mock).mockImplementation((sel) => sel(baseState));
 
 const noop = () => {};
 
 describe('FlashDealsBottomSheet', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    (useSelector as jest.Mock).mockImplementation((sel) => sel(baseState));
   });
 
   it('dispatches fetch when becoming visible', () => {

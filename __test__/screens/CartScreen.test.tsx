@@ -3,10 +3,15 @@ import { render } from '@testing-library/react-native';
 import CartScreen from '../../src/features/CartScreen/CartScreen';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchCart } from '../../src/redux/thunks/cartThunks';
+import { useNavigation } from '@react-navigation/native';
 
 jest.mock('react-redux', () => ({
   useSelector: jest.fn(),
   useDispatch: jest.fn()
+}));
+
+jest.mock('@react-navigation/native', () => ({
+  useNavigation: () => ({ navigate: jest.fn(), goBack: jest.fn() })
 }));
 
 jest.mock('../../src/redux/thunks/cartThunks', () => ({
@@ -36,6 +41,7 @@ const baseState = {
   restaurant: {
     restaurantsProximity: [] as any[],
     selectedRestaurantListings: [] as any[],
+    selectedRestaurant: { pickup: true, delivery: true },
     isPickup: true
   }
 };
