@@ -11,7 +11,10 @@ jest.mock('react-redux', () => ({
 
 jest.mock('@react-navigation/native', () => ({
   useFocusEffect: jest.fn((cb) => cb()),
-  useNavigation: () => ({ navigate: jest.fn() }),
+  useNavigation: () => ({ navigate: jest.fn() })
+}));
+
+jest.mock('@react-navigation/bottom-tabs', () => ({
   createBottomTabNavigator: () => ({
     Navigator: ({ children }: any) => <>{children}</>,
     Screen: ({ children }: any) => <>{children}</>

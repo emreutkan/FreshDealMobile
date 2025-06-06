@@ -405,6 +405,7 @@ const ChatbotScreen: React.FC = () => {
                         style={[styles.sendButton, (!inputText.trim() || isLoading) && styles.disabledButton]}
                         onPress={() => sendMessage(inputText)}
                         disabled={!inputText.trim() || isLoading}
+                        accessibilityRole="button"
                     >
                         {isLoading ? (
                             <ActivityIndicator size="small" color="#FFFFFF"/>

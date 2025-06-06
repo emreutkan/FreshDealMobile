@@ -20,7 +20,7 @@ jest.mock('@react-navigation/native', () => ({
 
 jest.mock('@expo/vector-icons', () => {
   const React = require('react');
-  return { Ionicons: (p: any) => <icon {...p} /> };
+  return { Ionicons: (p: any) => <icon {...p} />, MaterialCommunityIcons: (p: any) => <icon {...p} /> };
 });
 
 jest.mock('expo-linear-gradient', () => {
@@ -35,9 +35,19 @@ jest.mock('react-native-safe-area-context', () => ({
 
 const dispatch = jest.fn();
 (useDispatch as jest.Mock).mockReturnValue(dispatch);
-(useSelector as jest.Mock).mockImplementation((sel) => sel({
-  user: { name_surname: '', email: '', phoneNumber: '', loading: false, achievements: [] }
-}));
+const baseState = {
+  user: {
+    name_surname: '',
+    email: '',
+    phoneNumber: '',
+    loading: false,
+    achievements: [],
+    rank: 1,
+    totalDiscount: 0,
+    rankLoading: false
+  }
+};
+(useSelector as jest.Mock).mockImplementation((sel) => sel(baseState));
 
 describe('AccountScreen', () => {
   it('dispatches achievements fetch on mount', () => {

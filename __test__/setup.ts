@@ -9,3 +9,13 @@ jest.mock('expo-secure-store', () => ({
 }));
 // polyfill setImmediate used by Animated
 global.setImmediate = global.setImmediate || ((fn: any, ...args: any[]) => global.setTimeout(fn, 0, ...args));
+// polyfill clearImmediate which is used by some components like StatusBar
+global.clearImmediate = global.clearImmediate || ((id: any) => global.clearTimeout(id));
+
+// Mock expo-haptics to avoid NativeModule errors in tests
+jest.mock('expo-haptics', () => ({
+  impactAsync: jest.fn(),
+  notificationAsync: jest.fn(),
+  ImpactFeedbackStyle: {},
+  NotificationFeedbackType: {}
+}));

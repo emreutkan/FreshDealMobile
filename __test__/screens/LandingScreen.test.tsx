@@ -1,10 +1,13 @@
 import React from 'react';
 import { render } from '@testing-library/react-native';
 import Landing from '../../src/features/LoginRegister/screens/Landing';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
 
-jest.mock('react-redux', () => ({ useSelector: jest.fn() }));
+jest.mock('react-redux', () => ({
+  useSelector: jest.fn(),
+  useDispatch: () => jest.fn()
+}));
 
 jest.mock('@react-navigation/native', () => ({
   useNavigation: jest.fn(),
