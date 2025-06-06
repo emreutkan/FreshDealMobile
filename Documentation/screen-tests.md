@@ -13,3 +13,15 @@ Ensures the favourites screen shows a loading indicator when restaurant data is 
 
 ## ChatbotScreen.test.tsx
 Mimics starting a chatbot conversation and sending a message. It verifies that the initial bot reply is rendered and that sending a message results in an API call and shows the bot\'s response.
+
+## RankingsScreen.test.tsx
+Confirms that the leaderboard screen fetches rankings when mounted and reacts properly to loading, empty and populated state variations.
+
+## PickUpDeliveryToggle.test.tsx
+Tests the delivery method toggle component ensuring the correct buttons render depending on restaurant capabilities and that tapping them dispatches the expected action.
+
+## userSlice.test.ts
+Verifies basic reducers in the user slice including updating email/phone data, storing a token and clearing state on logout.
+
+## restaurantSlice.test.ts
+Checks core reducers of the restaurant slice such as updating the search radius and adjusting the pickup flag when a restaurant is selected.
