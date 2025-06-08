@@ -27,6 +27,12 @@ const CARD_HEIGHT = 130;
 const Recommendations: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
     const handleRestaurantPress = useHandleRestaurantPress();
+    const {
+        showClosedRestaurants,
+        showDelivery,
+        showPickup,
+        selectedCategory
+    } = useSelector((state: RootState) => state.globalFilters);
 
     // Get recommendations data from Redux store
     const {recommendationIds, loading, error, status} = useSelector(
@@ -70,6 +76,36 @@ const Recommendations: React.FC = () => {
         recommendationIds.includes(restaurant.id)
     );
 
+    // Apply all global filters
+    const filteredRestaurants = recommendedRestaurants.filter(restaurant => {
+        const isAvailable = isRestaurantAvailable(restaurant);
+        // Filter closed restaurants if setting is off
+        if (!showClosedRestaurants && !isAvailable) {
+            return false;
+        }
+
+        // Apply delivery/pickup filters
+        if (!showDelivery && !showPickup) {
+            // If neither option is selected, show all (shouldn't happen but just in case)
+        } else if (showDelivery && !showPickup) {
+            // Only show restaurants with delivery
+            if (!restaurant.delivery) return false;
+        } else if (!showDelivery && showPickup) {
+            // Only show restaurants with pickup
+            if (!restaurant.pickup) return false;
+        } else {
+            // Both options selected - show restaurants with either delivery OR pickup
+            if (!restaurant.delivery && !restaurant.pickup) return false;
+        }
+
+        // Apply category filter
+        if (selectedCategory !== 'all' && selectedCategory !== 'All Categories' && restaurant.category !== selectedCategory) {
+            return false;
+        }
+
+        return true;
+    });
+
     // Fetch recommendations when component mounts
     useEffect(() => {
         dispatch(getRecommendationsThunk());
@@ -94,7 +130,7 @@ const Recommendations: React.FC = () => {
     }
 
     // Don't show anything if there are no recommendations
-    if (error || status === 'failed' || !recommendedRestaurants || recommendedRestaurants.length === 0) {
+    if (error || status === 'failed' || !filteredRestaurants || filteredRestaurants.length === 0) { // Use filteredRestaurants
         return null;
     }
 
@@ -169,7 +205,7 @@ const Recommendations: React.FC = () => {
             </View>
 
             <FlatList
-                data={recommendedRestaurants}
+                data={filteredRestaurants} // Use filteredRestaurants
                 renderItem={renderRecommendedItem}
                 keyExtractor={(item) => `recommended-${item.id}`}
                 horizontal

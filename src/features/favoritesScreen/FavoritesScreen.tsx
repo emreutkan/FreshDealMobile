@@ -6,16 +6,60 @@ import RestaurantList from '@/src/features/homeScreen/components/RestaurantCard'
 import {MaterialIcons} from '@expo/vector-icons';
 import {useSafeAreaInsets} from "react-native-safe-area-context";
 import {GoBackIcon} from "@/src/features/homeScreen/components/goBack";
+import {Restaurant} from "@/src/types/api/restaurant/model";
 
 const FavoritesScreen: React.FC = () => {
     const insets = useSafeAreaInsets();
     const favoriteRestaurantsIDs = useSelector((state: RootState) => state.restaurant.favoriteRestaurantsIDs);
     const restaurants = useSelector((state: RootState) => state.restaurant.restaurantsProximity);
     const loading = useSelector((state: RootState) => state.restaurant.restaurantsProximityLoading);
+    const {
+        showClosedRestaurants,
+        deliveryOrPickup,
+        selectedCategory
+    } = useSelector((state: RootState) => state.globalFilters);
+
+    const isRestaurantOpen = (workingDays: string[], workingHoursStart?: string, workingHoursEnd?: string): boolean => {
+        const now = new Date();
+        const currentDay = now.toLocaleDateString('en-US', {weekday: 'long'});
+        if (!workingDays.includes(currentDay)) return false;
+        if (workingHoursStart && workingHoursEnd) {
+            const [startHour, startMinute] = workingHoursStart.split(':').map(Number);
+            const [endHour, endMinute] = workingHoursEnd.split(':').map(Number);
+            const currentHour = now.getHours();
+            const currentMinute = now.getMinutes();
+            const currentTime = currentHour * 60 + currentMinute;
+            const startTime = startHour * 60 + startMinute;
+            const endTime = endHour * 60 + endMinute;
+            if (endTime < startTime) {
+                return currentTime >= startTime || currentTime <= endTime;
+            }
+            return currentTime >= startTime && currentTime <= endTime;
+        }
+        return true;
+    };
+
+    const isRestaurantAvailable = (restaurant: Restaurant): boolean => {
+        return isRestaurantOpen(restaurant.workingDays, restaurant.workingHoursStart, restaurant.workingHoursEnd)
+            && restaurant.listings > 0;
+    };
 
     const favoriteRestaurants = useMemo(() => {
-        return restaurants.filter((restaurant) => favoriteRestaurantsIDs.includes(restaurant.id));
-    }, [restaurants, favoriteRestaurantsIDs]);
+        const initialFavorites = restaurants.filter((restaurant) => favoriteRestaurantsIDs.includes(restaurant.id));
+        return initialFavorites.filter(restaurant => {
+            const isAvailable = isRestaurantAvailable(restaurant);
+            if (!showClosedRestaurants && !isAvailable) {
+                return false;
+            }
+            if (deliveryOrPickup !== 'any' && !restaurant[deliveryOrPickup]) {
+                return false;
+            }
+            if (selectedCategory !== 'all' && restaurant.category !== selectedCategory) {
+                return false;
+            }
+            return true;
+        });
+    }, [restaurants, favoriteRestaurantsIDs, showClosedRestaurants, deliveryOrPickup, selectedCategory]);
 
     if (loading) {
         return (
@@ -186,3 +230,4 @@ const styles = StyleSheet.create({
 });
 
 export default FavoritesScreen;
+

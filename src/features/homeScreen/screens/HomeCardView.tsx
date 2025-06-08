@@ -32,6 +32,13 @@ import RecentRestaurants from "@/src/features/homeScreen/components/RecentRestau
 import FlashDealsBottomSheet from "@/src/features/FlashDeals/FlashDealsBottomSheet";
 import Recommendations from "@/src/features/homeScreen/components/Recommendations";
 import {getRecommendationsThunk} from '@/src/redux/thunks/recommendationThunks';
+import {
+    setSelectedCategory,
+    setShowClosedRestaurants,
+    setShowDelivery,
+    setShowPickup
+} from '@/src/redux/slices/globalFiltersSlice';
+import {Restaurant} from "@/src/types/api/restaurant/model";
 
 interface HomeCardViewProps {
     onScroll: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
@@ -85,14 +92,45 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll}) => {
     const reduxRadius = useSelector((state: RootState) => state.restaurant.radius);
     const [localRadius, setLocalRadius] = useState(reduxRadius);
 
+    const {showClosedRestaurants, showDelivery, showPickup, selectedCategory: globalSelectedCategory} = useSelector(
+        (state: RootState) => state.globalFilters
+    );
+
     const [shownPurchaseIds, setShownPurchaseIds] = useState<number[]>([]);
     const lastCreatedPurchases = useSelector((state: RootState) => state.purchase.lastCreatedPurchases);
     const [latestOrder, setLatestOrder] = useState<Purchase | null>(null);
 
     // Category state
     const [isCategoryModalVisible, setIsCategoryModalVisible] = useState(false);
-    const [selectedCategory, setSelectedCategory] = useState("All Categories");
     const scrollViewRef = useRef<ScrollView>(null);
+
+    const [under30Filter, setUnder30Filter] = useState(false);
+
+    // Define helper functions before they are used in useMemo
+    const isRestaurantOpen = useCallback((workingDays: string[], workingHoursStart?: string, workingHoursEnd?: string): boolean => {
+        const now = new Date();
+        const currentDay = now.toLocaleDateString('en-US', {weekday: 'long'});
+        if (!workingDays.includes(currentDay)) return false;
+        if (workingHoursStart && workingHoursEnd) {
+            const [startHour, startMinute] = workingHoursStart.split(':').map(Number);
+            const [endHour, endMinute] = workingHoursEnd.split(':').map(Number);
+            const currentHour = now.getHours();
+            const currentMinute = now.getMinutes();
+            const currentTime = currentHour * 60 + currentMinute;
+            const startTime = startHour * 60 + startMinute;
+            const endTime = endHour * 60 + endMinute;
+            if (endTime < startTime) { // Handles overnight
+                return currentTime >= startTime || currentTime <= endTime;
+            }
+            return currentTime >= startTime && currentTime <= endTime;
+        }
+        return true;
+    }, []);
+
+    const isRestaurantAvailable = useCallback((restaurant: Restaurant): boolean => {
+        return isRestaurantOpen(restaurant.workingDays, restaurant.workingHoursStart, restaurant.workingHoursEnd)
+            && restaurant.listings > 0;
+    }, [isRestaurantOpen]);
 
     // Reset scrollY when component mounts
     useEffect(() => {
@@ -207,12 +245,6 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll}) => {
 
     const isLoading = showMainLoading || filterLoading;
 
-    const [filters, setFilters] = useState({
-        pickup: true,
-        delivery: false,
-        under30: false,
-    });
-
     const triggerFilterLoading = () => {
         setFilterLoading(true);
         setTimeout(() => {
@@ -220,80 +252,68 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll}) => {
         }, FILTER_LOADING_DURATION);
     };
 
-    const handleToggleFilter = (filterId: 'pickup' | 'delivery' | 'under30') => {
+    const handleToggleUnder30Filter = () => {
         triggerFilterLoading();
-        setFilters((prevFilters) => {
-            if (filterId === 'pickup' || filterId === 'delivery') {
-                const isCurrentlySelected = prevFilters[filterId];
-                const otherFilter = filterId === 'pickup' ? 'delivery' : 'pickup';
-                if (isCurrentlySelected && !prevFilters[otherFilter]) {
-                    return {
-                        ...prevFilters,
-                        [filterId]: false,
-                        [otherFilter]: true,
-                    };
-                }
-            }
-            return {
-                ...prevFilters,
-                [filterId]: !prevFilters[filterId],
-            };
-        });
+        setUnder30Filter(prev => !prev);
     };
 
     const toggleCategoryModal = () => {
         setIsCategoryModalVisible(!isCategoryModalVisible);
     };
 
-    const handleCategorySelect = (category: string) => {
-        triggerFilterLoading();
-        setSelectedCategory(category);
-        setIsCategoryModalVisible(false);
-    };
-
     const filteredRestaurants = useMemo(() => {
         if (!restaurantsProximity) return [];
-        console.log('restaurantsProximity in HomeCardView:', restaurantsProximity);
 
         return restaurantsProximity.filter((restaurant) => {
-            // Filter by pickup/delivery
-            if (filters.delivery && !filters.pickup && !restaurant.delivery) return false;
-            if (filters.pickup && !filters.delivery && !restaurant.pickup) return false;
+            const isAvailable = isRestaurantAvailable(restaurant);
+            // Global filter: Show/Hide Closed Restaurants
+            if (!showClosedRestaurants && !isAvailable) return false;
 
-            // Filter by distance for "under 30 min"
-            if (restaurant.distance_km) {
-                if (filters.under30 && restaurant.distance_km > 3) return false;
+            // Global filter: Delivery/Pickup
+            // Only show restaurants that match at least one of the selected options
+            if (!showDelivery && !showPickup) {
+                // If neither option is selected, show all restaurants (no filtering)
+                // This prevents having no results when both are toggled off
+            } else if (showDelivery && !showPickup) {
+                // Only show restaurants with delivery
+                if (!restaurant.delivery) return false;
+            } else if (!showDelivery && showPickup) {
+                // Only show restaurants with pickup
+                if (!restaurant.pickup) return false;
+            } else {
+                // Both options selected - show restaurants with either delivery OR pickup
+                if (!restaurant.delivery && !restaurant.pickup) return false;
             }
 
-            // Filter by category
-            if (selectedCategory !== "All Categories") {
-                // Check if the restaurant's category matches the selected category
-                if (restaurant.category !== selectedCategory) {
-                    return false;
-                }
+            // Local filter: "under 30 min" (based on distance_km)
+            if (under30Filter && (restaurant.distance_km ? restaurant.distance_km > 3 : true)) return false;
+
+            // Global filter: Category
+            if (globalSelectedCategory !== "all" && globalSelectedCategory !== "All Categories" && restaurant.category !== globalSelectedCategory) {
+                return false;
             }
 
             return true;
         });
-    }, [restaurantsProximity, filters, selectedCategory]);
+    }, [restaurantsProximity, showClosedRestaurants, showDelivery, showPickup, globalSelectedCategory, under30Filter, isRestaurantAvailable]);
 
     const renderCategoryItem = ({item}: { item: string }) => (
         <TouchableOpacity
             style={[
                 styles.categoryItem,
-                selectedCategory === item && styles.categoryItemSelected,
+                globalSelectedCategory === item && styles.categoryItemSelected,
             ]}
-            onPress={() => handleCategorySelect(item)}
+            onPress={() => dispatch(setSelectedCategory(item))}
         >
             <Text
                 style={[
                     styles.categoryItemText,
-                    selectedCategory === item && styles.categoryItemTextSelected,
+                    globalSelectedCategory === item && styles.categoryItemTextSelected,
                 ]}
             >
                 {item}
             </Text>
-            {selectedCategory === item && (
+            {globalSelectedCategory === item && (
                 <Feather name="check" size={18} color="#50703C"/>
             )}
         </TouchableOpacity>
@@ -327,21 +347,27 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll}) => {
                     showsHorizontalScrollIndicator={false}
                     contentContainerStyle={styles.filterContentContainer}
                 >
-                    <TouchableOpacity style={styles.iconButton}>
+                    <TouchableOpacity style={styles.iconButton} onPress={toggleCategoryModal}>
                         <Feather name="sliders" size={16} color="#333"/>
                     </TouchableOpacity>
 
                     <TouchableOpacity
                         style={[
                             styles.filterButton,
-                            filters.pickup && styles.filterButtonSelected,
+                            showPickup && styles.filterButtonSelected,
                         ]}
-                        onPress={() => handleToggleFilter('pickup')}
+                        onPress={() => {
+                            // If pickup is currently on and we're toggling it off, make sure delivery is on
+                            if (showPickup && !showDelivery) {
+                                dispatch(setShowDelivery(true));
+                            }
+                            dispatch(setShowPickup(!showPickup));
+                        }}
                     >
                         <Text
                             style={[
                                 styles.filterText,
-                                filters.pickup && styles.filterTextSelected,
+                                showPickup && styles.filterTextSelected,
                             ]}
                         >
                             Pick Up
@@ -351,14 +377,20 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll}) => {
                     <TouchableOpacity
                         style={[
                             styles.filterButton,
-                            filters.delivery && styles.filterButtonSelected,
+                            showDelivery && styles.filterButtonSelected,
                         ]}
-                        onPress={() => handleToggleFilter('delivery')}
+                        onPress={() => {
+                            // If delivery is currently on and we're toggling it off, make sure pickup is on
+                            if (showDelivery && !showPickup) {
+                                dispatch(setShowPickup(true));
+                            }
+                            dispatch(setShowDelivery(!showDelivery));
+                        }}
                     >
                         <Text
                             style={[
                                 styles.filterText,
-                                filters.delivery && styles.filterTextSelected,
+                                showDelivery && styles.filterTextSelected,
                             ]}
                         >
                             Delivery
@@ -368,24 +400,24 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll}) => {
                     <TouchableOpacity
                         style={[
                             styles.filterButton,
-                            selectedCategory !== "All Categories" && styles.filterButtonSelected,
+                            globalSelectedCategory !== "all" && styles.filterButtonSelected,
                         ]}
                         onPress={toggleCategoryModal}
                     >
                         <Text
                             style={[
                                 styles.filterText,
-                                selectedCategory !== "All Categories" && styles.filterTextSelected,
+                                globalSelectedCategory !== "all" && styles.filterTextSelected,
                             ]}
                             numberOfLines={1}
                             ellipsizeMode="tail"
                         >
-                            {selectedCategory}
+                            {globalSelectedCategory === 'all' ? 'All Categories' : globalSelectedCategory.charAt(0).toUpperCase() + globalSelectedCategory.slice(1)}
                         </Text>
                         <Feather
                             name={isCategoryModalVisible ? 'chevron-up' : 'chevron-down'}
                             size={14}
-                            color={selectedCategory !== "All Categories" ? '#FFF' : '#333'}
+                            color={globalSelectedCategory !== "all" ? '#FFF' : '#333'}
                             style={styles.dropdownIcon}
                         />
                     </TouchableOpacity>
@@ -393,17 +425,34 @@ const HomeCardView: React.FC<HomeCardViewProps> = ({onScroll}) => {
                     <TouchableOpacity
                         style={[
                             styles.filterButton,
-                            filters.under30 && styles.filterButtonSelected,
+                            under30Filter && styles.filterButtonSelected,
                         ]}
-                        onPress={() => handleToggleFilter('under30')}
+                        onPress={handleToggleUnder30Filter}
                     >
                         <Text
                             style={[
                                 styles.filterText,
-                                filters.under30 && styles.filterTextSelected,
+                                under30Filter && styles.filterTextSelected,
                             ]}
                         >
                             Under 30 min
+                        </Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={[
+                            styles.filterButton,
+                            showClosedRestaurants && styles.filterButtonSelected,
+                        ]}
+                        onPress={() => dispatch(setShowClosedRestaurants(!showClosedRestaurants))}
+                    >
+                        <Text
+                            style={[
+                                styles.filterText,
+                                showClosedRestaurants && styles.filterTextSelected,
+                            ]}
+                        >
+                            {showClosedRestaurants ? "Showing Closed" : "Hiding Closed"}
                         </Text>
                     </TouchableOpacity>
                 </ScrollView>
@@ -757,17 +806,6 @@ const styles = StyleSheet.create({
         padding: 16,
         borderRadius: 16,
         marginBottom: 16,
-        //     ...Platform.select({
-        //         ios: {
-        //             shadowColor: '#000',
-        //             shadowOffset: {width: 0, height: 8},
-        //             shadowOpacity: 0.08,
-        //             shadowRadius: 10,
-        //         },
-        //         android: {
-        //             elevation: 4,
-        //         },
-        //     }),
     },
     radiusText: {
         fontSize: 16,
@@ -803,3 +841,4 @@ const styles = StyleSheet.create({
 });
 
 export default HomeCardView;
+

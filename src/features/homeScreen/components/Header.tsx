@@ -1,9 +1,19 @@
 import React, {useEffect} from 'react';
-import {Animated, Platform, StyleSheet, View} from 'react-native';
-import AddressBar from "@/src/features/homeScreen/components/AddressBar";
-import {scaleFont} from "@/src/utils/ResponsiveFont";
-import {useSafeAreaInsets} from "react-native-safe-area-context";
-import CartIcon from "@/src/features/RestaurantScreen/components/CartIcon";
+import {Animated, Platform, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import AddressBar from '@/src/features/homeScreen/components/AddressBar';
+import {scaleFont} from '@/src/utils/ResponsiveFont';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import CartIcon from '@/src/features/RestaurantScreen/components/CartIcon';
+import {useDispatch, useSelector} from 'react-redux';
+import {RootState} from '@/src/types/store';
+// Standardized import path using alias
+import {
+    setDeliveryOrPickup,
+    setSelectedCategory,
+    setShowClosedRestaurants
+} from '@/src/redux/slices/globalFiltersSlice';
+import {MaterialCommunityIcons} from '@expo/vector-icons';
+import {RestaurantCategoryType} from '@/src/types/api/restaurant/model';
 
 interface HeaderProps {
     activeTab: string;
@@ -13,7 +23,7 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({activeTab, scrollY}) => {
     useEffect(() => {
         if (scrollY) {
-            const scrollListener = scrollY.addListener((state) => {
+            const scrollListener = scrollY.addListener(() => {
             });
 
             return () => {
@@ -38,6 +48,29 @@ export const Header: React.FC<HeaderProps> = ({activeTab, scrollY}) => {
     }) || '#000000';
 
     const isMapView = activeTab === 'HomeMapView';
+    const dispatch = useDispatch();
+    const globalFilters = useSelector((state: RootState) => state.globalFilters);
+    const showClosedRestaurants = globalFilters?.showClosedRestaurants ?? true;
+    const deliveryOrPickup = globalFilters?.deliveryOrPickup ?? 'any';
+    const selectedCategory = globalFilters?.selectedCategory ?? 'all';
+
+    const toggleShowClosedRestaurants = () => {
+        dispatch(setShowClosedRestaurants(!showClosedRestaurants));
+    };
+
+    const cycleDeliveryOrPickup = () => {
+        const options: Array<'any' | 'delivery' | 'pickup'> = ['any', 'delivery', 'pickup'];
+        const currentIndex = options.indexOf(deliveryOrPickup);
+        const nextIndex = (currentIndex + 1) % options.length;
+        dispatch(setDeliveryOrPickup(options[nextIndex]));
+    };
+
+    const categories: Array<RestaurantCategoryType | 'all'> = ['all', 'pizza', 'burgers', 'sushi', 'dessert'];
+    const cycleSelectedCategory = () => {
+        const currentIndex = categories.indexOf(selectedCategory);
+        const nextIndex = (currentIndex + 1) % categories.length;
+        dispatch(setSelectedCategory(categories[nextIndex]));
+    };
 
     return (
         <Animated.View
@@ -62,6 +95,28 @@ export const Header: React.FC<HeaderProps> = ({activeTab, scrollY}) => {
                         <CartIcon/>
                     </View>
                 </View>
+                {!isMapView && (
+                    <View style={styles.filterContainer}>
+                        <TouchableOpacity onPress={toggleShowClosedRestaurants} style={styles.filterButton}>
+                            <MaterialCommunityIcons name={showClosedRestaurants ? "eye" : "eye-off"} size={20}
+                                                    color="#50703C"/>
+                            <Text style={styles.filterText}>Closed: {showClosedRestaurants ? 'Show' : 'Hide'}</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={cycleDeliveryOrPickup} style={styles.filterButton}>
+                            <MaterialCommunityIcons
+                                name={deliveryOrPickup === 'delivery' ? "truck-delivery" : deliveryOrPickup === 'pickup' ? "storefront" : "silverware-fork-knife"}
+                                size={20}
+                                color="#50703C"/>
+                            <Text
+                                style={styles.filterText}>{deliveryOrPickup.charAt(0).toUpperCase() + deliveryOrPickup.slice(1)}</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={cycleSelectedCategory} style={styles.filterButton}>
+                            <MaterialCommunityIcons name="format-list-bulleted-type" size={20} color="#50703C"/>
+                            <Text
+                                style={styles.filterText}>{selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)}</Text>
+                        </TouchableOpacity>
+                    </View>
+                )}
             </View>
         </Animated.View>
     );
@@ -121,6 +176,28 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'flex-end',
     },
+    filterContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        paddingVertical: 8,
+        borderTopWidth: 1,
+        borderTopColor: '#E5E7EB',
+    },
+    filterButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 15,
+        backgroundColor: '#f0f0f0',
+    },
+    filterText: {
+        marginLeft: 5,
+        fontSize: 12,
+        color: '#50703C',
+        fontFamily: 'Poppins-Medium',
+    },
 });
 
 export default Header;
+

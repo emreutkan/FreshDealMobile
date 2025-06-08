@@ -16,6 +16,12 @@ const RecentRestaurants = () => {
     const {recentRestaurantIDs, recentRestaurantsLoading, restaurantsProximity} = useSelector(
         (state: RootState) => state.restaurant
     );
+    const {
+        showClosedRestaurants,
+        showDelivery,
+        showPickup,
+        selectedCategory
+    } = useSelector((state: RootState) => state.globalFilters);
     const scrollX = React.useRef(new Animated.Value(0)).current;
     const handleRestaurantPress = useHandleRestaurantPress();
 
@@ -48,7 +54,37 @@ const RecentRestaurants = () => {
             && restaurant.listings > 0;
     };
 
-    if (recentRestaurantsLoading || !recentRestaurants || recentRestaurants.length === 0) {
+    // Apply all global filters
+    const filteredRestaurants = recentRestaurants.filter(restaurant => {
+        const isAvailable = isRestaurantAvailable(restaurant);
+        // Filter closed restaurants if setting is off
+        if (!showClosedRestaurants && !isAvailable) {
+            return false;
+        }
+
+        // Apply delivery/pickup filters
+        if (!showDelivery && !showPickup) {
+            // If neither option is selected, show all (shouldn't happen but just in case)
+        } else if (showDelivery && !showPickup) {
+            // Only show restaurants with delivery
+            if (!restaurant.delivery) return false;
+        } else if (!showDelivery && showPickup) {
+            // Only show restaurants with pickup
+            if (!restaurant.pickup) return false;
+        } else {
+            // Both options selected - show restaurants with either delivery OR pickup
+            if (!restaurant.delivery && !restaurant.pickup) return false;
+        }
+
+        // Apply category filter
+        if (selectedCategory !== 'all' && selectedCategory !== 'All Categories' && restaurant.category !== selectedCategory) {
+            return false;
+        }
+
+        return true;
+    });
+
+    if (recentRestaurantsLoading || !filteredRestaurants || filteredRestaurants.length === 0) {
         return null;
     }
 
@@ -113,7 +149,7 @@ const RecentRestaurants = () => {
             </View>
 
             <Animated.FlatList
-                data={recentRestaurants}
+                data={filteredRestaurants}
                 renderItem={renderRecentItem}
                 keyExtractor={(item) => `recent-${item.id}`}
                 horizontal

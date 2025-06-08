@@ -44,3 +44,4 @@ export interface Comment {
     should_highlight: boolean;
 }
 
+export type RestaurantCategoryType = string; // Ensure this line exists and is exported
