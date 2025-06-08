@@ -1,23 +1,18 @@
 import React from "react";
-import {Alert, Animated, Dimensions, Image, Platform, StyleSheet, Text, TouchableOpacity, View} from "react-native";
-import {useDispatch, useSelector} from "react-redux";
+import {Animated, Dimensions, Image, Platform, StyleSheet, Text, TouchableOpacity, View} from "react-native";
+import {useSelector} from "react-redux";
 import {RootState} from "@/src/types/store";
 import {MaterialCommunityIcons} from "@expo/vector-icons";
 import {LinearGradient} from 'expo-linear-gradient';
-
-import {getRecentRestaurantsThunk} from "@/src/redux/thunks/restaurantThunks";
-import {AppDispatch} from "@/src/redux/store";
 import {useHandleRestaurantPress} from "@/src/hooks/handleRestaurantPress";
-import {isRestaurantOpen} from "@/src/utils/RestaurantFilters";
+import {Restaurant} from "@/src/types/api/restaurant/model";
 
 const {width} = Dimensions.get('window');
 const RECENT_CARD_WIDTH = width * 0.35;
 const RECENT_CARD_MARGIN = 8;
 const CARD_HEIGHT = 130;
 
-
 const RecentRestaurants = () => {
-    const dispatch = useDispatch<AppDispatch>();
     const {recentRestaurantIDs, recentRestaurantsLoading, restaurantsProximity} = useSelector(
         (state: RootState) => state.restaurant
     );
@@ -28,45 +23,45 @@ const RecentRestaurants = () => {
         recentRestaurantIDs.includes(restaurant.id)
     );
 
-    const debugRecents = async () => {
-        try {
-            const response = await dispatch(getRecentRestaurantsThunk()).unwrap();
-            Alert.alert('Debug Info', `Recent Restaurants Response:\n${JSON.stringify(response, null, 2)}`);
-        } catch (error) {
-            Alert.alert('Debug Error', `Error:\n${JSON.stringify(error, null, 2)}`);
+    const isRestaurantOpen = (workingDays: string[], workingHoursStart?: string, workingHoursEnd?: string): boolean => {
+        const now = new Date();
+        const currentDay = now.toLocaleDateString('en-US', {weekday: 'long'});
+        if (!workingDays.includes(currentDay)) return false;
+        if (workingHoursStart && workingHoursEnd) {
+            const [startHour, startMinute] = workingHoursStart.split(':').map(Number);
+            const [endHour, endMinute] = workingHoursEnd.split(':').map(Number);
+            const currentHour = now.getHours();
+            const currentMinute = now.getMinutes();
+            const currentTime = currentHour * 60 + currentMinute;
+            const startTime = startHour * 60 + startMinute;
+            const endTime = endHour * 60 + endMinute;
+            if (endTime < startTime) {
+                return currentTime >= startTime || currentTime <= endTime;
+            }
+            return currentTime >= startTime && currentTime <= endTime;
         }
+        return true;
     };
 
-    const debugState = () => {
-        Alert.alert('Debug Info', `Current State:\nLoading: ${recentRestaurantsLoading}\nRecents: ${JSON.stringify(recentRestaurantIDs)}\nFiltered Restaurants: ${JSON.stringify(recentRestaurants.map(r => ({
-            name: r.restaurantName,
-            id: r.id
-        })), null, 2)}`);
+    const isRestaurantAvailable = (restaurant: Restaurant): boolean => {
+        return isRestaurantOpen(restaurant.workingDays, restaurant.workingHoursStart, restaurant.workingHoursEnd)
+            && restaurant.listings > 0;
     };
 
     if (recentRestaurantsLoading || !recentRestaurants || recentRestaurants.length === 0) {
         return null;
     }
 
+    const renderRecentItem = ({item}: { item: Restaurant; index: number }) => {
+        const isAvailable = isRestaurantAvailable(item);
 
-    const renderRecentItem = ({item}: { item: any; index: number }) => {
-        const isOpen = isRestaurantOpen(item.workingDays, item.workingHoursStart, item.workingHoursEnd);
-        const hasStock = item.listings > 0;
-
-        const isDisabled = !isOpen || !hasStock;
-        const overlayMessage = !isOpen
-            ? 'Currently Closed'
-            : !hasStock
-                ? 'Out of Stock (Come back later!)'
-                : '';
         return (
             <TouchableOpacity
-                onPress={() => !isDisabled && handleRestaurantPress(item.id)}
-
+                onPress={() => isAvailable && handleRestaurantPress(item.id, item)}
                 activeOpacity={0.8}
                 style={styles.recentTouchableContainer}
             >
-                <View style={styles.recentCard}>
+                <View style={[styles.recentCard, !isAvailable && styles.unavailableCard]}>
                     <View style={styles.recentImageContainer}>
                         {item.image_url ? (
                             <>
@@ -79,6 +74,17 @@ const RecentRestaurants = () => {
                         ) : (
                             <View style={styles.recentNoImageContainer}>
                                 <MaterialCommunityIcons name="food" size={24} color="#999"/>
+                            </View>
+                        )}
+
+                        {!isAvailable && (
+                            <View style={styles.unavailableOverlay}>
+                                <MaterialCommunityIcons name="clock-outline" size={20} color="#fff"/>
+                                <Text style={styles.unavailableText}>
+                                    {!isRestaurantOpen(item.workingDays, item.workingHoursStart, item.workingHoursEnd)
+                                        ? 'Closed'
+                                        : 'No Stock'}
+                                </Text>
                             </View>
                         )}
 
@@ -104,15 +110,6 @@ const RecentRestaurants = () => {
                     <MaterialCommunityIcons name="history" size={20} color="#50703C"/>
                     <Text style={styles.headerTitle}>Recent Orders</Text>
                 </View>
-                {/*<View style={styles.headerRight}>*/}
-                {/*    <TouchableOpacity onPress={debugState} style={styles.debugButton}>*/}
-                {/*        <Text style={styles.debugText}>State</Text>*/}
-                {/*    </TouchableOpacity>*/}
-                {/*    <TouchableOpacity onPress={debugRecents} style={styles.debugButton}>*/}
-                {/*        <Text style={styles.debugText}>API</Text>*/}
-                {/*    </TouchableOpacity>*/}
-                {/*    <Ionicons name="chevron-forward" size={20} color="#50703C"/>*/}
-                {/*</View>*/}
             </View>
 
             <Animated.FlatList
@@ -249,6 +246,28 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontFamily: 'Poppins-SemiBold',
     },
+    unavailableCard: {
+        opacity: 0.9,
+    },
+    unavailableOverlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0,0,0,0.6)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        flexDirection: 'row',
+        gap: 4,
+    },
+    unavailableText: {
+        color: '#fff',
+        fontSize: 14,
+        fontWeight: '600',
+        fontFamily: 'Poppins-SemiBold',
+    },
 });
 
 export default RecentRestaurants;
+

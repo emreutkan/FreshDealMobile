@@ -31,7 +31,7 @@ import axios from "axios";
 import {API_BASE_URL} from "@/src/redux/api/API";
 import {LinearGradient} from "expo-linear-gradient";
 import ReportModalContent from './ReportModalContent';
-
+import {apiClient} from "@/src/services/apiClient";
 
 type OrderDetailsRouteProp = RouteProp<RootStackParamList, 'OrderDetails'>;
 
@@ -94,6 +94,8 @@ const OrderDetails: React.FC = () => {
     const [reportImage, setReportImage] = useState<string | null>(null);
     const [reportComment, setReportComment] = useState('');
     const [headerScrollAnim] = useState(new Animated.Value(0));
+    const [existingRating, setExistingRating] = useState<any>(null);
+    const [loadingRatingStatus, setLoadingRatingStatus] = useState<boolean>(false);
 
     const bottomSheetModalRef = useRef<BottomSheetModal>(null);
 
@@ -207,6 +209,7 @@ const OrderDetails: React.FC = () => {
                     setRating(0);
                     setComment('');
                     setSelectedBadges([]);
+                    fetchRatingStatus();
                 })
                 .catch((error) => {
                     Alert.alert(
@@ -254,18 +257,44 @@ const OrderDetails: React.FC = () => {
         }
     }, [rating]);
 
-    const RatingStars = () => (
+    const fetchRatingStatus = useCallback(async () => {
+        if (token && currentOrder?.purchase_id) {
+            setLoadingRatingStatus(true);
+            try {
+                const status = await apiClient.getPurchaseRatingStatus(currentOrder.purchase_id, token);
+                if (status.success) {
+                    setExistingRating(status);
+                } else {
+                    setExistingRating(null);
+                }
+            } catch (error) {
+                console.error("Failed to fetch rating status:", error);
+                setExistingRating(null);
+            } finally {
+                setLoadingRatingStatus(false);
+            }
+        }
+    }, [token, currentOrder?.purchase_id]);
+
+    useEffect(() => {
+        if (currentOrder?.status === 'COMPLETED') {
+            fetchRatingStatus();
+        }
+    }, [currentOrder, fetchRatingStatus]);
+
+    const RatingStars = ({currentRating, onRate}: { currentRating: number, onRate?: (newRating: number) => void }) => (
         <View style={styles.ratingContainer}>
             {[1, 2, 3, 4, 5].map((star) => (
                 <TouchableOpacity
                     key={star}
                     style={styles.starButton}
-                    onPress={() => setRating(star)}
+                    onPress={() => onRate ? onRate(star) : {}}
+                    disabled={!onRate}
                 >
                     <Ionicons
-                        name={rating >= star ? "star" : "star-outline"}
+                        name={currentRating >= star ? "star" : "star-outline"}
                         size={32}
-                        color={rating >= star ? "#FFD700" : "#CCCCCC"}
+                        color={currentRating >= star ? "#FFD700" : "#CCCCCC"}
                     />
                 </TouchableOpacity>
             ))}
@@ -338,12 +367,38 @@ const OrderDetails: React.FC = () => {
         return null;
     };
 
-
     const renderRatingSection = () => {
         if (!currentOrder) {
             return <GoBackIcon/>;
         }
         if (currentOrder.status === 'COMPLETED') {
+            if (loadingRatingStatus) {
+                return (
+                    <View style={[styles.ratingSection, styles.loadingContainer, {paddingBottom: insets.bottom}]}>
+                        <ActivityIndicator size="small" color="#50703C"/>
+                        <Text style={styles.loadingText}>Loading rating...</Text>
+                    </View>
+                );
+            }
+
+            if (existingRating && existingRating.has_rating) {
+                return (
+                    <View style={[styles.ratingSection, {paddingBottom: insets.bottom}]}>
+                        <Text style={styles.sectionTitle}>Your Rating</Text>
+                        <RatingStars currentRating={existingRating.rating}/>
+                        {existingRating.comment && (
+                            <>
+                                <Text style={styles.inputLabel}>Your Comment:</Text>
+                                <Text style={styles.existingCommentText}>{existingRating.comment}</Text>
+                            </>
+                        )}
+                        <Text style={styles.ratingTimestampText}>
+                            Rated on: {new Date(existingRating.rating_timestamp).toLocaleDateString()}
+                        </Text>
+                    </View>
+                );
+            }
+
             return (
                 <View style={[styles.ratingSection, {paddingBottom: insets.bottom}]}>
                     <Text style={styles.sectionTitle}>
@@ -351,7 +406,7 @@ const OrderDetails: React.FC = () => {
                     </Text>
 
                     <Text style={styles.ratingPrompt}>How was your order?</Text>
-                    <RatingStars/>
+                    <RatingStars currentRating={rating} onRate={setRating}/>
 
                     {rating > 0 && <BadgeSelector/>}
 
@@ -475,7 +530,6 @@ const OrderDetails: React.FC = () => {
         );
     };
 
-    // FIX: Only wrap the whole screen, not inside modal
     return (
         <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -998,33 +1052,22 @@ const styles = StyleSheet.create({
         backgroundColor: '#F8F8F8',
         borderRadius: 12,
         padding: 16,
-        minHeight: 120,
-        textAlignVertical: 'top',
-        fontFamily: 'Poppins-Regular',
+        minHeight: 100,
+        marginBottom: 20,
         fontSize: 14,
+        fontFamily: 'Poppins-Regular',
         color: '#333',
-        marginBottom: 16,
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 1,
-        },
-        shadowOpacity: 0.05,
-        shadowRadius: 3,
-        elevation: 1,
     },
     submitButton: {
         backgroundColor: '#50703C',
         paddingVertical: 16,
         borderRadius: 12,
         alignItems: 'center',
+        justifyContent: 'center',
         shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 3,
-        },
+        shadowOffset: {width: 0, height: 2},
         shadowOpacity: 0.1,
-        shadowRadius: 5,
+        shadowRadius: 4,
         elevation: 3,
     },
     submitButtonNegative: {
@@ -1034,6 +1077,24 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
         fontSize: 16,
         fontFamily: 'Poppins-SemiBold',
+    },
+    existingCommentText: {
+        fontSize: 14,
+        fontFamily: 'Poppins-Regular',
+        color: '#333',
+        padding: 10,
+        backgroundColor: '#F8F9FA',
+        borderRadius: 8,
+        marginBottom: 10,
+        borderWidth: 1,
+        borderColor: '#E0E0E0',
+    },
+    ratingTimestampText: {
+        fontSize: 12,
+        fontFamily: 'Poppins-Regular',
+        color: '#666',
+        textAlign: 'right',
+        marginTop: 10,
     },
     reportButton: {
         width: 40,
@@ -1182,3 +1243,4 @@ const styles = StyleSheet.create({
 });
 
 export default OrderDetails;
+

@@ -134,12 +134,12 @@ const FavoriteRestaurantCard: React.FC<FavoriteRestaurantCardProps> = ({restaura
                     <Text style={styles.headerTitle}>Favorites</Text>
                 </View>
                 <View style={styles.headerRight}>
-                    <TouchableOpacity onPress={debugState} style={styles.debugButton}>
-                        <Text style={styles.debugText}>State</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={debugFavorites} style={styles.debugButton}>
-                        <Text style={styles.debugText}>API</Text>
-                    </TouchableOpacity>
+                    {/*<TouchableOpacity onPress={debugState} style={styles.debugButton}>*/}
+                    {/*    <Text style={styles.debugText}>State</Text>*/}
+                    {/*</TouchableOpacity>*/}
+                    {/*<TouchableOpacity onPress={debugFavorites} style={styles.debugButton}>*/}
+                    {/*    <Text style={styles.debugText}>API</Text>*/}
+                    {/*</TouchableOpacity>*/}
                     <TouchableOpacity onPress={() => navigation.navigate('FavoritesScreen')}>
                         <Ionicons name="chevron-forward" size={20} color="#50703C"/>
                     </TouchableOpacity>

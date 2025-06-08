@@ -1,7 +1,6 @@
 import React, {useEffect} from 'react';
 import {
     ActivityIndicator,
-    Alert,
     Dimensions,
     FlatList,
     Image,
@@ -11,14 +10,13 @@ import {
     TouchableOpacity,
     View
 } from 'react-native';
-import {Ionicons, MaterialCommunityIcons} from '@expo/vector-icons';
+import {MaterialCommunityIcons} from '@expo/vector-icons';
 import {LinearGradient} from 'expo-linear-gradient';
 import {useDispatch, useSelector} from 'react-redux';
 import {AppDispatch} from '@/src/redux/store';
 import {RootState} from '@/src/types/store';
 import {getRecommendationsThunk} from '@/src/redux/thunks/recommendationThunks';
 import {useHandleRestaurantPress} from '@/src/hooks/handleRestaurantPress';
-import {isRestaurantOpen} from '@/src/utils/RestaurantFilters';
 import {Restaurant} from '@/src/types/api/restaurant/model';
 
 const {width} = Dimensions.get('window');
@@ -39,6 +37,34 @@ const Recommendations: React.FC = () => {
         (state: RootState) => state.restaurant
     );
 
+    // Added isRestaurantOpen function
+    const isRestaurantOpen = (workingDays: string[], workingHoursStart?: string, workingHoursEnd?: string): boolean => {
+        const now = new Date();
+        const currentDay = now.toLocaleDateString('en-US', {weekday: 'long'});
+        if (!workingDays.includes(currentDay)) return false;
+        if (workingHoursStart && workingHoursEnd) {
+            const [startHour, startMinute] = workingHoursStart.split(':').map(Number);
+            const [endHour, endMinute] = workingHoursEnd.split(':').map(Number);
+            const currentHour = now.getHours();
+            const currentMinute = now.getMinutes();
+            const currentTime = currentHour * 60 + currentMinute;
+            const startTime = startHour * 60 + startMinute;
+            const endTime = endHour * 60 + endMinute;
+            // Handle overnight case (e.g. 22:00 - 02:00)
+            if (endTime < startTime) {
+                return currentTime >= startTime || currentTime <= endTime;
+            }
+            return currentTime >= startTime && currentTime <= endTime;
+        }
+        return true; // If no specific hours, assume open during working days
+    };
+
+    // Added isRestaurantAvailable function
+    const isRestaurantAvailable = (restaurant: Restaurant): boolean => {
+        return isRestaurantOpen(restaurant.workingDays, restaurant.workingHoursStart, restaurant.workingHoursEnd)
+            && restaurant.listings > 0;
+    };
+
     // Find restaurants in proximity data that match recommendation IDs
     const recommendedRestaurants = restaurantsProximity.filter(restaurant =>
         recommendationIds.includes(restaurant.id)
@@ -48,23 +74,6 @@ const Recommendations: React.FC = () => {
     useEffect(() => {
         dispatch(getRecommendationsThunk());
     }, [dispatch]);
-
-    // Debug functions
-    const debugRecommendations = async () => {
-        try {
-            const response = await dispatch(getRecommendationsThunk()).unwrap();
-            Alert.alert('Debug Info', `Recommendations Response:\n${JSON.stringify(response, null, 2)}`);
-        } catch (error) {
-            Alert.alert('Debug Error', `Error:\n${JSON.stringify(error, null, 2)}`);
-        }
-    };
-
-    const debugState = () => {
-        Alert.alert('Debug Info', `Current State:\nLoading: ${loading}\nIDs: ${JSON.stringify(recommendationIds)}\nFiltered Restaurants: ${JSON.stringify(recommendedRestaurants.map(r => ({
-            name: r.restaurantName,
-            id: r.id
-        })), null, 2)}`);
-    };
 
     // Don't show anything if we're still loading or if there are no recommendations
     if (loading || status === 'loading') {
@@ -90,17 +99,15 @@ const Recommendations: React.FC = () => {
     }
 
     const renderRecommendedItem = ({item}: { item: Restaurant }) => {
-        const isOpen = isRestaurantOpen(item.workingDays, item.workingHoursStart, item.workingHoursEnd);
-        const hasStock = item.listings > 0;
+        const isAvailable = isRestaurantAvailable(item); // Added availability check
 
-        const isDisabled = !isOpen || !hasStock;
         return (
             <TouchableOpacity
-                onPress={() => !isDisabled && handleRestaurantPress(item.id)}
+                onPress={() => isAvailable && handleRestaurantPress(item.id, item)} // Conditionally press
                 activeOpacity={0.8}
                 style={styles.cardTouchable}
             >
-                <View style={styles.card}>
+                <View style={[styles.card, !isAvailable && styles.unavailableCard]}> {/* Added unavailableCard style */}
                     <View style={styles.imageContainer}>
                         {item.image_url ? (
                             <>
@@ -113,6 +120,18 @@ const Recommendations: React.FC = () => {
                         ) : (
                             <View style={styles.noImageContainer}>
                                 <MaterialCommunityIcons name="food" size={24} color="#999"/>
+                            </View>
+                        )}
+
+                        {/* Added unavailable overlay */}
+                        {!isAvailable && (
+                            <View style={styles.unavailableOverlay}>
+                                <MaterialCommunityIcons name="clock-outline" size={20} color="#fff"/>
+                                <Text style={styles.unavailableText}>
+                                    {!isRestaurantOpen(item.workingDays, item.workingHoursStart, item.workingHoursEnd)
+                                        ? 'Closed'
+                                        : 'No Stock'}
+                                </Text>
                             </View>
                         )}
 
@@ -139,13 +158,13 @@ const Recommendations: React.FC = () => {
                     <Text style={styles.headerTitle}>Recommended For You</Text>
                 </View>
                 <View style={styles.headerRight}>
-                    <TouchableOpacity onPress={debugState} style={styles.debugButton}>
-                        <Text style={styles.debugText}>State</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={debugRecommendations} style={styles.debugButton}>
-                        <Text style={styles.debugText}>API</Text>
-                    </TouchableOpacity>
-                    <Ionicons name="chevron-forward" size={20} color="#50703C"/>
+                    {/*<TouchableOpacity onPress={debugState} style={styles.debugButton}>*/}
+                    {/*    <Text style={styles.debugText}>State</Text>*/}
+                    {/*</TouchableOpacity>*/}
+                    {/*<TouchableOpacity onPress={debugRecommendations} style={styles.debugButton}>*/}
+                    {/*    <Text style={styles.debugText}>API</Text>*/}
+                    {/*</TouchableOpacity>*/}
+                    {/*<Ionicons name="chevron-forward" size={20} color="#50703C"/>*/}
                 </View>
             </View>
 
@@ -241,6 +260,9 @@ const styles = StyleSheet.create({
             },
         }),
     },
+    unavailableCard: {
+        opacity: 0.9,
+    },
     imageContainer: {
         flex: 1,
         position: 'relative',
@@ -262,6 +284,24 @@ const styles = StyleSheet.create({
         right: 0,
         bottom: 0,
         height: '60%',
+    },
+    unavailableOverlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0,0,0,0.6)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        flexDirection: 'row',
+        gap: 4,
+    },
+    unavailableText: {
+        color: '#fff',
+        fontSize: 14,
+        fontWeight: '600',
+        fontFamily: 'Poppins-SemiBold',
     },
     contentContainer: {
         position: 'absolute',
@@ -299,3 +339,4 @@ const styles = StyleSheet.create({
 });
 
 export default Recommendations;
+

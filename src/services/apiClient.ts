@@ -42,6 +42,15 @@ class ApiClient {
         const response = await this.client(config);
         return response.data;
     }
+
+    async getPurchaseRatingStatus(purchaseId: number, token: string): Promise<any> {
+        return this.request<any>({
+            method: 'GET',
+            url: `/purchase/${purchaseId}/has-rating`,
+            token,
+        });
+    }
 }
 
 export const apiClient = new ApiClient(API_BASE_URL);
+
